@@ -33,12 +33,14 @@ def create_random_batch(
     ) = create_next_action_tensor_and_mask(action_space, next_available_actions)
     action_tensor = F.one_hot(actions, num_classes=action_space.n)
     batch = TransitionBatch(
-        states,
-        action_tensor,
-        rewards,
-        next_states,
-        next_available_actions_tensor_with_padding.expand(batch_size, -1, -1),
-        next_available_actions_mask.expand(batch_size, -1),
-        done,
+        state=states,
+        action=action_tensor,
+        reward=rewards,
+        next_state=next_states,
+        next_available_actions=next_available_actions_tensor_with_padding.expand(
+            batch_size, -1, -1
+        ),
+        next_available_actions_mask=next_available_actions_mask.expand(batch_size, -1),
+        done=done,
     )
     return batch, action_space

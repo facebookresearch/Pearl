@@ -46,15 +46,13 @@ class FIFOOffPolicyReplayBuffer(ReplayBuffer):
 
         self.memory.append(
             Transition(
-                *(
-                    state_tensor,
-                    action_tensor,
-                    reward_tensor,
-                    next_state_tensor,
-                    next_available_actions_tensor_with_padding,
-                    next_available_actions_mask,
-                    done_tensor,
-                )
+                state=state_tensor,
+                action=action_tensor,
+                reward=reward_tensor,
+                next_state=next_state_tensor,
+                next_available_actions=next_available_actions_tensor_with_padding,
+                next_available_actions_mask=next_available_actions_mask,
+                done=done_tensor,
             )
         )
 
@@ -70,7 +68,19 @@ class FIFOOffPolicyReplayBuffer(ReplayBuffer):
     # )
     def sample(self, batch_size: int) -> TransitionBatch:
         samples = random.sample(self.memory, batch_size)
-        return TransitionBatch(*(torch.cat(x) for x in zip(*samples)))
+        return TransitionBatch(
+            state=torch.cat([x.state for x in samples]),
+            action=torch.cat([x.action for x in samples]),
+            reward=torch.cat([x.reward for x in samples]),
+            next_state=torch.cat([x.next_state for x in samples]),
+            next_available_actions=torch.cat(
+                [x.next_available_actions for x in samples]
+            ),
+            next_available_actions_mask=torch.cat(
+                [x.next_available_actions_mask for x in samples]
+            ),
+            done=torch.cat([x.done for x in samples]),
+        )
 
     def __len__(self) -> int:
         return len(self.memory)

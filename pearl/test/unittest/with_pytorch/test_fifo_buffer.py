@@ -1,6 +1,7 @@
 #!/usr/bin/env fbpython
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
+from dataclasses import fields
 
 import torch
 
@@ -49,18 +50,27 @@ class TestFifoBuffer(unittest.TestCase):
         )
         action_tensor = F.one_hot(self.actions, num_classes=self.action_space.n)
         expected_batch = TransitionBatch(
-            self.states,
-            action_tensor,
-            self.rewards,
-            self.next_states,
-            next_available_actions_tensor_with_padding.expand(self.batch_size, -1, -1),
-            next_available_actions_mask.expand(self.batch_size, -1),
-            self.done,
+            state=self.states,
+            action=action_tensor,
+            reward=self.rewards,
+            next_state=self.next_states,
+            next_available_actions=next_available_actions_tensor_with_padding.expand(
+                self.batch_size, -1, -1
+            ),
+            next_available_actions_mask=next_available_actions_mask.expand(
+                self.batch_size, -1
+            ),
+            done=self.done,
         )
-        for i in range(4, len(expected_batch)):
-            # order might be different as sample has random there
-            x = expected_batch[i].tolist()
-            y = batch[i].tolist()
+        for field in fields(expected_batch):
+            field_name = field.name
+            x = getattr(expected_batch, field_name)
+            y = getattr(batch, field_name)
+            if x is None and y is None:
+                continue
+            # order might be different as sample is random there
+            x = x.tolist()
+            y = y.tolist()
             x.sort()
             y.sort()
             self.assertEqual(x, y)
