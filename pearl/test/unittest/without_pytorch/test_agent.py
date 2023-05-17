@@ -11,10 +11,7 @@ from pearl.contextual_bandits.reward_is_equal_to_ten_times_action_contextual_ban
     RewardIsEqualToTenTimesActionContextualBanditEnvironment,
 )
 from pearl.gym.gym_environment import GymEnvironment
-from pearl.online_learning.online_learning import (
-    episode_return,
-    online_learning_to_png_graph,
-)
+from pearl.online_learning.online_learning import episode_return, online_learning
 from pearl.pearl_agent import PearlAgent
 
 from pearl.policy_learners.tabular_q_learning import TabularQLearning
@@ -30,13 +27,13 @@ class TestAgentWithoutPyTorch(unittest.TestCase):
     def test_online_rl(self) -> None:
         env = FixedNumberOfStepsEnvironment(number_of_steps=100)
         agent = PearlAgent()
-        online_learning_to_png_graph(agent, env)
+        online_learning(agent, env)
 
     def test_tabular_q_learning_online_rl(self) -> None:
         env = GymEnvironment("FrozenLake-v1", is_slippery=False)
         agent = PearlAgent(policy_learner=TabularQLearning())
 
-        online_learning_to_png_graph(agent, env, number_of_episodes=1000)
+        online_learning(agent, env, number_of_episodes=1000)
 
         for _ in range(100):  # Should always reach the goal
             assert episode_return(agent, env, learn=False, exploit=True) == 1.0
@@ -57,7 +54,7 @@ class TestAgentWithoutPyTorch(unittest.TestCase):
             policy_learner=TabularQLearning(exploration_rate=0.1, learning_rate=0.1)
         )
 
-        online_learning_to_png_graph(agent, env, number_of_episodes=10000)
+        online_learning(agent, env, number_of_episodes=10000)
 
         # Should have learned to use action max_action with reward equal to max_action * 10
         for _ in range(100):
@@ -75,6 +72,6 @@ class TestAgentWithoutPyTorch(unittest.TestCase):
         )
         agent = PearlAgent(policy_learner=DummyContextualBanditPolicyLearner())
 
-        online_learning_to_png_graph(agent, env, number_of_episodes=10000)
+        online_learning(agent, env, number_of_episodes=10000)
 
         # Dummy does not actually learn, so there are no accuracy tests
