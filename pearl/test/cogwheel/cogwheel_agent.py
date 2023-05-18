@@ -5,7 +5,9 @@ Cogwheel wiki
 https://www.internalfb.com/intern/wiki/Cogwheel/
 
 To RUN:
-    buck2 run //pearl/test:cogwheel_agent-launcher
+    buck2 run //pearl:cogwheel_pearl_agent-launcher
+
+This takes a long time (usually 3 hours on a devserver), which is why it is on cogwheel where it will not time out.
 """
 import logging
 
