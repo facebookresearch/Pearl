@@ -7,8 +7,9 @@ import torch
 
 import torch.nn.functional as F
 from pearl.replay_buffer.fifo_off_policy_replay_buffer import FIFOOffPolicyReplayBuffer
+from pearl.replay_buffer.fifo_on_policy_replay_buffer import FIFOOnPolicyReplayBuffer
+from pearl.replay_buffer.tensor_based_replay_buffer import TensorBasedReplayBuffer
 from pearl.replay_buffer.transition import TransitionBatch
-from pearl.replay_buffer.utils import create_next_action_tensor_and_mask
 
 from pearl.utils.action_spaces import DiscreteActionSpace
 
@@ -45,7 +46,7 @@ class TestFifoBuffer(unittest.TestCase):
         (
             next_available_actions_tensor_with_padding,
             next_available_actions_mask,
-        ) = create_next_action_tensor_and_mask(
+        ) = TensorBasedReplayBuffer._create_next_action_tensor_and_mask(
             self.action_space, self.next_available_actions
         )
         action_tensor = F.one_hot(self.actions, num_classes=self.action_space.n)
@@ -74,3 +75,66 @@ class TestFifoBuffer(unittest.TestCase):
             x.sort()
             y.sort()
             self.assertEqual(x, y)
+
+    def test_on_poliy_buffer_sarsa_match(self) -> None:
+        """
+        This test is to ensure onpolicy buffer could correctly match SARSA pair
+        for single push
+        """
+        replay_buffer = FIFOOnPolicyReplayBuffer(self.batch_size * 4)
+        # push S0 A0 R0 S1
+        replay_buffer.push(
+            self.states[0],
+            self.actions[0],
+            self.rewards[0],
+            self.next_states[0],
+            self.next_available_actions,
+            self.action_space,
+            self.done[0],
+        )
+        # push S1 A1 R1 S2
+        replay_buffer.push(
+            self.next_states[0],
+            self.actions[1],
+            self.rewards[1],
+            self.next_states[1],
+            self.next_available_actions,
+            self.action_space,
+            self.done[1],
+        )
+        # expect S0 A0 R0 S1 A1 returned from sample
+        batch = replay_buffer.sample(1)
+        self.assertTrue(
+            torch.equal(
+                batch.state,
+                TensorBasedReplayBuffer._process_single_state(self.states[0]),
+            )
+        )
+        self.assertTrue(
+            torch.equal(
+                batch.action,
+                TensorBasedReplayBuffer._process_single_action(
+                    self.actions[0], self.action_space
+                ),
+            )
+        )
+        self.assertTrue(
+            torch.equal(
+                batch.reward,
+                TensorBasedReplayBuffer._process_single_reward(self.rewards[0]),
+            )
+        )
+        self.assertTrue(
+            torch.equal(
+                batch.next_state,
+                TensorBasedReplayBuffer._process_single_state(self.next_states[0]),
+            )
+        )
+        self.assertTrue(
+            torch.equal(
+                batch.next_action,
+                TensorBasedReplayBuffer._process_single_action(
+                    self.actions[1], self.action_space
+                ),
+            )
+        )

@@ -9,8 +9,8 @@ from typing import Tuple
 import torch
 import torch.nn.functional as F
 from pearl.api.action_space import ActionSpace
+from pearl.replay_buffer.tensor_based_replay_buffer import TensorBasedReplayBuffer
 from pearl.replay_buffer.transition import TransitionBatch
-from pearl.replay_buffer.utils import create_next_action_tensor_and_mask
 from pearl.utils.action_spaces import DiscreteActionSpace
 
 
@@ -30,7 +30,9 @@ def create_random_batch(
     (
         next_available_actions_tensor_with_padding,
         next_available_actions_mask,
-    ) = create_next_action_tensor_and_mask(action_space, next_available_actions)
+    ) = TensorBasedReplayBuffer._create_next_action_tensor_and_mask(
+        action_space, next_available_actions
+    )
     action_tensor = F.one_hot(actions, num_classes=action_space.n)
     batch = TransitionBatch(
         state=states,
