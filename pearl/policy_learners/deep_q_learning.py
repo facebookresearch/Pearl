@@ -29,6 +29,7 @@ class DeepQLearning(DeepTDLearning):
         training_rounds: int = 100,
         batch_size: int = 128,
         target_update_freq: int = 10,
+        soft_update_tau: float = 1.0,  # no soft update
         network_type: NetworkType = NetworkType.VANILLA,
         double: bool = False,
     ) -> None:
@@ -44,6 +45,7 @@ class DeepQLearning(DeepTDLearning):
             training_rounds=training_rounds,
             batch_size=batch_size,
             target_update_freq=target_update_freq,
+            soft_update_tau=soft_update_tau,
             network_type=network_type,
         )
         self._double = double

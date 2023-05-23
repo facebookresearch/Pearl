@@ -37,6 +37,7 @@ class DeepTDLearning(PolicyLearner):
         training_rounds: int = 100,
         batch_size: int = 128,
         target_update_freq: int = 10,
+        soft_update_tau: float = 0.1,
         network_type: NetworkType = NetworkType.VANILLA,
     ) -> None:
         super(DeepTDLearning, self).__init__(
@@ -48,6 +49,7 @@ class DeepTDLearning(PolicyLearner):
         self._learning_rate = learning_rate
         self._discount_factor = discount_factor
         self._target_update_freq = target_update_freq
+        self._soft_update_tau = soft_update_tau
 
         # TODO: Assumes Gym interface, fix it.
         def make_specified_network():
@@ -143,4 +145,15 @@ class DeepTDLearning(PolicyLearner):
 
         # Target Network Update
         if (self._training_steps + 1) % self._target_update_freq == 0:
-            self._Q_target.load_state_dict(self._Q.state_dict())
+            self._update_target_network()
+
+    def _update_target_network(self):
+        # Q_target = tao * Q_target + (1-tao)*Q
+        target_params = list(self._Q_target.parameters())
+        source_params = list(self._Q.parameters())
+        for target_param, source_param in zip(target_params, source_params):
+            new_param = (
+                self._soft_update_tau * source_param.data
+                + (1.0 - self._soft_update_tau) * target_param.data
+            )
+            target_param.data.copy_(new_param)
