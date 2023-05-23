@@ -76,6 +76,7 @@ class TabularQLearning(PolicyLearner):
             reward,
             next_state,
             _action_space,
+            _curr_available_actions,
             _next_available_actions,
             done,
         ) in replay_buffer.sample(1):

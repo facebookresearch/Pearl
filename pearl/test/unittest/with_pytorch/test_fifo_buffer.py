@@ -26,6 +26,7 @@ class TestFifoBuffer(unittest.TestCase):
         )
         self.next_states = torch.rand(self.batch_size, state_dim)
         self.action_space = DiscreteActionSpace(range(action_dim))
+        self.curr_available_actions = self.action_space
         self.next_available_actions = self.action_space
         self.done = torch.randint(2, (self.batch_size,)).float()
 
@@ -37,6 +38,7 @@ class TestFifoBuffer(unittest.TestCase):
                 self.actions[i],
                 self.rewards[i],
                 self.next_states[i],
+                self.curr_available_actions,
                 self.next_available_actions,
                 self.action_space,
                 self.done[i],
@@ -44,9 +46,16 @@ class TestFifoBuffer(unittest.TestCase):
         batch = replay_buffer.sample(self.batch_size)
 
         (
+            curr_available_actions_tensor_with_padding,
+            curr_available_actions_mask,
+        ) = TensorBasedReplayBuffer._create_action_tensor_and_mask(
+            self.action_space, self.curr_available_actions
+        )
+
+        (
             next_available_actions_tensor_with_padding,
             next_available_actions_mask,
-        ) = TensorBasedReplayBuffer._create_next_action_tensor_and_mask(
+        ) = TensorBasedReplayBuffer._create_action_tensor_and_mask(
             self.action_space, self.next_available_actions
         )
         action_tensor = F.one_hot(self.actions, num_classes=self.action_space.n)
@@ -55,6 +64,12 @@ class TestFifoBuffer(unittest.TestCase):
             action=action_tensor,
             reward=self.rewards,
             next_state=self.next_states,
+            curr_available_actions=next_available_actions_tensor_with_padding.expand(
+                self.batch_size, -1, -1
+            ),
+            curr_available_actions_mask=curr_available_actions_mask.expand(
+                self.batch_size, -1
+            ),
             next_available_actions=next_available_actions_tensor_with_padding.expand(
                 self.batch_size, -1, -1
             ),
@@ -88,6 +103,7 @@ class TestFifoBuffer(unittest.TestCase):
             self.actions[0],
             self.rewards[0],
             self.next_states[0],
+            self.curr_available_actions,
             self.next_available_actions,
             self.action_space,
             self.done[0],
@@ -98,6 +114,7 @@ class TestFifoBuffer(unittest.TestCase):
             self.actions[1],
             self.rewards[1],
             self.next_states[1],
+            self.curr_available_actions,
             self.next_available_actions,
             self.action_space,
             self.done[1],

@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Iterable, Optional
+from typing import Iterable
 
 import torch
 import torch.nn.functional as F
@@ -12,7 +12,6 @@ from pearl.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
 from pearl.policy_learners.policy_learner import PolicyLearner
-from pearl.replay_buffer.replay_buffer import ReplayBuffer
 from pearl.replay_buffer.transition import TransitionBatch
 from torch import optim
 
@@ -121,11 +120,11 @@ class DeepTDLearning(PolicyLearner):
         assert next_available_actions_batch.shape[0] == batch_size
         assert next_available_actions_mask_batch.shape[0] == batch_size
 
-        state_action_values = self._Q(
-            torch.cat([state_batch, action_batch], dim=1)
-        ).view(
-            (-1)
-        )  # (batch_size)
+        state_action_values = self._Q.get_batch_action_value(
+            state_batch=state_batch,
+            action_batch=action_batch,
+            curr_available_actions_batch=batch.curr_available_actions,
+        )
 
         # Compute the Bellman Target
         expected_state_action_values = (

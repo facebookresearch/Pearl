@@ -88,8 +88,9 @@ class PearlAgent(Agent):
             self._latest_action,
             action_result.reward,
             new_subjective_state,
-            self._action_space,
-            self._action_space,
+            self._action_space,  # curr_available_actions
+            self._action_space,  # next_available_actions
+            self._action_space,  # action_space
             action_result.done,
         )
 

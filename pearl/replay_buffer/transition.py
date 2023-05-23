@@ -15,8 +15,8 @@ class Transition:
     reward: torch.tensor
     next_state: torch.tensor
     next_action: Optional[torch.tensor] = None
-    current_available_actions: torch.tensor = None
-    current_available_actions_mask: torch.tensor = None
+    curr_available_actions: torch.tensor = None
+    curr_available_actions_mask: torch.tensor = None
     next_available_actions: torch.tensor = None
     next_available_actions_mask: torch.tensor = None
     done: torch.tensor = None
@@ -34,8 +34,8 @@ class TransitionBatch:
     reward: torch.tensor
     next_state: torch.tensor
     next_action: Optional[torch.tensor] = None
-    current_available_actions: torch.tensor = None
-    current_available_actions_mask: torch.tensor = None
+    curr_available_actions: torch.tensor = None
+    curr_available_actions_mask: torch.tensor = None
     next_available_actions: torch.tensor = None
     next_available_actions_mask: torch.tensor = None
     done: torch.tensor = None

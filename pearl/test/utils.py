@@ -25,12 +25,20 @@ def create_random_batch(
     next_states = torch.rand(batch_size, state_dim)
     action_space = DiscreteActionSpace(range(action_dim))
     next_available_actions = action_space
+    curr_available_actions = action_space
     done = torch.randint(2, (batch_size,)).float()
+
+    (
+        curr_available_actions_tensor_with_padding,
+        curr_available_actions_mask,
+    ) = TensorBasedReplayBuffer._create_action_tensor_and_mask(
+        action_space, curr_available_actions
+    )
 
     (
         next_available_actions_tensor_with_padding,
         next_available_actions_mask,
-    ) = TensorBasedReplayBuffer._create_next_action_tensor_and_mask(
+    ) = TensorBasedReplayBuffer._create_action_tensor_and_mask(
         action_space, next_available_actions
     )
     action_tensor = F.one_hot(actions, num_classes=action_space.n)
@@ -39,6 +47,10 @@ def create_random_batch(
         action=action_tensor,
         reward=rewards,
         next_state=next_states,
+        curr_available_actions=curr_available_actions_tensor_with_padding.expand(
+            batch_size, -1, -1
+        ),
+        curr_available_actions_mask=curr_available_actions_mask.expand(batch_size, -1),
         next_available_actions=next_available_actions_tensor_with_padding.expand(
             batch_size, -1, -1
         ),

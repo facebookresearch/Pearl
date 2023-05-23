@@ -29,22 +29,22 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         return torch.tensor([done]).float()  # (1)
 
     @staticmethod
-    def _create_next_action_tensor_and_mask(
-        action_space: ActionSpace, next_available_actions: ActionSpace
+    def _create_action_tensor_and_mask(
+        action_space: ActionSpace, available_actions: ActionSpace
     ) -> (torch.tensor, torch.tensor):
-        next_available_actions_tensor_with_padding = torch.zeros(
+        available_actions_tensor_with_padding = torch.zeros(
             (1, action_space.n, action_space.n)
         )  # (1 x action_space_size x action_dim)
-        next_available_actions_tensor = F.one_hot(
-            torch.arange(0, next_available_actions.n), num_classes=action_space.n
+        available_actions_tensor = F.one_hot(
+            torch.arange(0, available_actions.n), num_classes=action_space.n
         )  # (1 x available_action_space_size x action_dim)
-        next_available_actions_tensor_with_padding[
-            0, : next_available_actions.n, :
-        ] = next_available_actions_tensor
-        next_available_actions_mask = torch.zeros(
+        available_actions_tensor_with_padding[
+            0, : available_actions.n, :
+        ] = available_actions_tensor
+        available_actions_mask = torch.zeros(
             (1, action_space.n)
         )  # (1 x action_space_size)
-        next_available_actions_mask[0, next_available_actions.n :] = 1
-        next_available_actions_mask = next_available_actions_mask.bool()
+        available_actions_mask[0, available_actions.n :] = 1
+        available_actions_mask = available_actions_mask.bool()
 
-        return (next_available_actions_tensor_with_padding, next_available_actions_mask)
+        return (available_actions_tensor_with_padding, available_actions_mask)

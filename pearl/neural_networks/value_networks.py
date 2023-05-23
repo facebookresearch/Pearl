@@ -3,6 +3,9 @@ from typing import List, Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from pearl.policy_learners.extend_state_feature import (
+    extend_state_feature_by_available_action_space,
+)
 
 
 class VanillaValueNetwork(nn.Module):
@@ -25,6 +28,15 @@ class VanillaValueNetwork(nn.Module):
     def xavier_init(self):
         nn.init.xavier_normal_(self.fc1.weight)
         nn.init.xavier_normal_(self.fc2.weight)
+
+    def get_batch_action_value(
+        self,
+        state_batch: torch.Tensor,
+        action_batch: torch.Tensor,
+        curr_available_actions_batch=torch.Tensor,
+    ):
+        x = torch.cat([state_batch, action_batch], dim=1)
+        return self.forward(x).view(-1)  # (batch_size)
 
 
 class DuelingValueNetwork(nn.Module):
@@ -70,10 +82,9 @@ class DuelingValueNetwork(nn.Module):
         """
         The input x is the concatenation of features of [state , action] together
         The archtecture is as follows:
-        state --> feature_arch -----> value_arch --> value(s)--------------\
-                                 |                                         |
-                                 |                                          ---> add --> Q(s,a)
-        action --------------concat-> advantage_arch --> advantage(s, a)---/
+        state --> feature_arch -----> value_arch --> value(s)-----------------------\
+                                 |                                                   ---> add --> Q(s,a)
+        action --------------concat-> advantage_arch --> advantage(s, a)--- -mean --/
         """
         assert x.shape[-1] == self.state_dim + self.action_dim
         state_feature = x[..., 0 : self.state_dim]
@@ -89,5 +100,35 @@ class DuelingValueNetwork(nn.Module):
         feature_action = torch.cat((processed_state_feature, action_feature), dim=-1)
         assert feature_action.shape == x.shape
         advantage = self.advantage_arch(feature_action)
-
+        advantage_mean = torch.mean(advantage, dim=-2, keepdim=True)  # -2 is action dim
+        advantage = advantage - advantage_mean
         return value + advantage
+
+    def get_batch_action_value(
+        self,
+        state_batch: torch.Tensor,
+        action_batch: torch.Tensor,
+        curr_available_actions_batch=torch.Tensor,
+    ):
+        """
+        In DUELING_DQN, extend input tensor to include available actions before passing to Q network.
+        Then collect the q value of the specific action that we are interested in.
+        """
+        # calculate the q value of all available actions
+        state_multi_actions_batch = extend_state_feature_by_available_action_space(
+            state_batch=state_batch,
+            curr_available_actions_batch=curr_available_actions_batch,
+        )
+        # collect Q values of the given action
+        values_multi_actions = self.forward(
+            state_multi_actions_batch
+        )  # (batch_size x actions) , values of a single state with multi-actions
+
+        # gather only the q value of the action that we are interested in.
+        action_idx = (
+            torch.argmax(action_batch, dim=1).unsqueeze(-1).unsqueeze(-1)
+        )  # one_hot to decimal
+        state_action_values = torch.gather(values_multi_actions, 1, action_idx).view(
+            -1
+        )  # (batch_size), value of single state with single action of interest
+        return state_action_values

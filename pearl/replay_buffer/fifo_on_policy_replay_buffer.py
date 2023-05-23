@@ -25,16 +25,25 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
         action: Action,
         reward: float,
         next_state: SubjectiveState,
+        curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,
         action_space: ActionSpace,
         done: bool,
     ) -> None:
         (
+            curr_available_actions_tensor_with_padding,
+            curr_available_actions_mask,
+        ) = TensorBasedReplayBuffer._create_action_tensor_and_mask(
+            action_space, curr_available_actions
+        )
+
+        (
             next_available_actions_tensor_with_padding,
             next_available_actions_mask,
-        ) = TensorBasedReplayBuffer._create_next_action_tensor_and_mask(
+        ) = TensorBasedReplayBuffer._create_action_tensor_and_mask(
             action_space, next_available_actions
         )
+
         current_state = TensorBasedReplayBuffer._process_single_state(state)
         current_action = TensorBasedReplayBuffer._process_single_action(
             action, action_space
@@ -52,6 +61,8 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
                     reward=self.cache.reward,
                     next_state=self.cache.next_state,
                     next_action=current_action,
+                    curr_available_actions=self.cache.curr_available_actions,
+                    curr_available_actions_mask=self.cache.curr_available_actions_mask,
                     next_available_actions=self.cache.next_available_actions,
                     next_available_actions_mask=self.cache.next_available_actions_mask,
                     done=self.cache.done,
@@ -63,6 +74,8 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
             action=current_action,
             reward=TensorBasedReplayBuffer._process_single_reward(reward),
             next_state=TensorBasedReplayBuffer._process_single_state(next_state),
+            curr_available_actions=curr_available_actions_tensor_with_padding,
+            curr_available_actions_mask=curr_available_actions_mask,
             next_available_actions=next_available_actions_tensor_with_padding,
             next_available_actions_mask=next_available_actions_mask,
             done=TensorBasedReplayBuffer._process_single_done(done),
@@ -76,6 +89,12 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
             reward=torch.cat([x.reward for x in samples]),
             next_state=torch.cat([x.next_state for x in samples]),
             next_action=torch.cat([x.next_action for x in samples]),
+            curr_available_actions=torch.cat(
+                [x.curr_available_actions for x in samples]
+            ),
+            curr_available_actions_mask=torch.cat(
+                [x.curr_available_actions_mask for x in samples]
+            ),
             next_available_actions=torch.cat(
                 [x.next_available_actions for x in samples]
             ),
