@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -55,19 +55,39 @@ class PolicyLearner(ABC):
 
     def learn(
         self, replay_buffer: ReplayBuffer, batch_size: Optional[int] = None
-    ) -> None:
+    ) -> Dict[str, Any]:
         """
-        If batch_size is None, use definition from class
-        Otherwise, use customized input here
+        Args:
+            replay_buffer: buffer instance which learn is reading from
+            batch_size: size of data that we would like one round of train to work with
+                If batch_size is None, use definition from class
+                Otherwise, use customized input here
+
+        Returns:
+            A dictionary which includes useful metric to return to upperlevel for different purpose eg debugging
         """
         batch_size = self._batch_size if batch_size is None else batch_size
         if len(replay_buffer) < batch_size:
-            return
+            return {}
 
+        report = {}
         for _ in range(self._training_rounds):
             self._training_steps += 1
             batch = replay_buffer.sample(batch_size)
-            self.learn_batch(batch)
+            single_report = self.learn_batch(batch)
+            for k, v in single_report.items():
+                if k in report:
+                    report[k].append(v)
+                else:
+                    report[k] = [v]
+        return report
 
-    def learn_batch(self, batch: TransitionBatch) -> None:
+    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+        """
+        Args:
+            batch: batch of data that agent is learning from
+
+        Returns:
+            A dictionary which includes useful metric to return to upperlevel for different purpose eg debugging
+        """
         raise NotImplementedError("learn_batch is not implemented")

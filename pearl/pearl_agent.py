@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
@@ -96,10 +98,11 @@ class PearlAgent(Agent):
 
         self._subjective_state = new_subjective_state
 
-    def learn(self) -> None:
-        self.policy_learner.learn(self.replay_buffer)
+    def learn(self) -> Dict[str, Any]:
+        report = self.policy_learner.learn(self.replay_buffer)
         self.safety_module.learn(self.replay_buffer)
         self.history_summarization_module.learn(self.replay_buffer)
+        return report
 
     def learn_batch(self, batch: TransitionBatch) -> None:
         """

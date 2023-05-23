@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Iterable
+from typing import Any, Dict, Iterable
 
 import torch
 import torch.nn.functional as F
@@ -100,7 +100,7 @@ class DeepTDLearning(PolicyLearner):
     ) -> torch.tensor:
         pass
 
-    def learn_batch(self, batch: TransitionBatch) -> None:
+    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         state_batch = batch.state  # (batch_size x state_dim)
         action_batch = batch.action  # (batch_size x action_dim)
         reward_batch = batch.reward  # (batch_size)
@@ -146,6 +146,12 @@ class DeepTDLearning(PolicyLearner):
         # Target Network Update
         if (self._training_steps + 1) % self._target_update_freq == 0:
             self._update_target_network()
+
+        return {
+            "loss": torch.abs(state_action_values - expected_state_action_values)
+            .mean()
+            .item()
+        }
 
     def _update_target_network(self):
         # Q_target = tao * Q_target + (1-tao)*Q
