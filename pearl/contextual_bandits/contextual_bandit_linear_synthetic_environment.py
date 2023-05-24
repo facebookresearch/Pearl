@@ -19,14 +19,13 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
 
     Lihong Li, Wei Chu, John Langford, Robert E. Schapire (2010), "A Contextual-Bandit Approach to Personalized News Article Recommendation,"
 
-    the context for an arm is, at a minimum, a feature vector for the arm, but may be prepended with extra contextual information shared by all arms
-    (for example, a user for whom a news article is being recommended).
-    This implementation currently has no contextual information.
+    the context for an arm is the concatenation of the observation feature vector and the arm feature vevctor.
     """
 
     def __init__(
         self,
         action_space: ActionSpace,
+        observation_dim: int = 0,
         arm_feature_vector_dim: int = 4,
         reward_noise_sigma: float = 0.0,
         simple_linear_mapping: bool = False,
@@ -34,11 +33,13 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         """
         Args:
             action_space (ActionSpace): the environment's action space
+            observation_dim (int): the number of dimensions in the observation feature vector
             arm_feature_vector_dim (int): the number of dimensions in the feature representation of arms
             reward_noise_sigma (float): the standard deviation of the noise added to the reward
             simple_linear_mapping (bool): if True, reward is simply the sum of the arm features (debugging purposes)
         """
         self._action_space = action_space
+        self.observation_dim = observation_dim
         self._arm_feature_vector_dim = arm_feature_vector_dim
         self.reward_noise_sigma = reward_noise_sigma
         self._simple_linear_mapping = simple_linear_mapping
@@ -73,31 +74,32 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
     ) -> torch.nn.Module:
         """
         The function that maps context to reward (always linear).
-        The input dimension (in_features) is Environment arm_feature_vector_dim.
-        The output (reward) is a scalar, so outout dimension (out_features) is 1.
+        The input dimension (in_features) is observation dimension + arm feature vector dimension.
+        The output (reward) is a scalar, so output dimension (out_features) is 1.
         """
-        return torch.nn.Linear(in_features=self.arm_feature_vector_dim, out_features=1)
+        return torch.nn.Linear(
+            in_features=self.observation_dim + self.arm_feature_vector_dim,
+            out_features=1,
+        )
 
     def reset(self) -> (Observation, ActionSpace):
         """
         Provides the observation and action space to the agent.
         """
-        observation = None  # not dealing with contextual bandit yet
-        return observation, self.action_space
+        self._observation = torch.rand(self.observation_dim)
+        return self._observation, self.action_space
 
     def get_reward(self, action: Action) -> Value:
         """
         Given action, environment will return the reward associated of this action
         """
-        context = self.get_context_for_arm(
-            action=action  # action is index in action_space
-        )  # (num of actions * num of features)
+        context = self.get_context_for_arm(action)
         reward = self._compute_reward_from_context(context)
         return reward
 
     def get_context_for_arm(self, action: int) -> torch.Tensor:
         assert action in range(self._action_space.n)  # action is index in action_space
-        return self.features_of_all_arms[action]
+        return torch.cat([self._observation, self.features_of_all_arms[action]])
 
     def _compute_reward_from_context(
         self,
@@ -141,4 +143,4 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         pass
 
     def __str__(self):
-        return "Bandit with reward which is linearly mapped from context feature vector"
+        return "Bandit with reward linearly mapped from context feature vector"

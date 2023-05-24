@@ -10,11 +10,13 @@ from pearl.contextual_bandits.contextual_bandit_linear_synthetic_environment imp
 
 
 class TestContextualBanditEnvironment(unittest.TestCase):
-    def setUp(self, number_of_actions: int = 2) -> None:
+    def setUp(self, number_of_actions: int = 2, observation_dim: int = 3) -> None:
         self.env = ContextualBanditLinearSyntheticEnvironment(
-            action_space=gym.spaces.Discrete(number_of_actions)
+            action_space=gym.spaces.Discrete(number_of_actions),
+            observation_dim=observation_dim,
         )
         self.number_of_actions = number_of_actions
+        self.observation_dim = observation_dim
 
     def test_contextual_bandit_environment_reset(self) -> None:
         assert self.env.features_of_all_arms.shape == (
@@ -22,9 +24,8 @@ class TestContextualBanditEnvironment(unittest.TestCase):
             self.env.arm_feature_vector_dim,
         )
         observation, action_space = self.env.reset()
-        assert observation is None
+        assert observation.shape == torch.Size([self.env.observation_dim])
         assert action_space.n == self.number_of_actions
-
-    def test_contextual_bandit_environment_get_reward(self, action: int = 0):
-        reward = self.env.get_reward(action=action)
-        assert reward.shape == torch.Size([1])  # reward is scalar
+        if self.env.action_space.n > 0:
+            reward = self.env.get_reward(action=0)
+            assert reward.shape == torch.Size([1])  # reward is scalar
