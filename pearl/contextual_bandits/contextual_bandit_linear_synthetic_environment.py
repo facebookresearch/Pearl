@@ -45,7 +45,7 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         self._simple_linear_mapping = simple_linear_mapping
 
         self._features_of_all_arms = self._generate_features_of_all_arms()
-        self._linear_mapping = self.make_initial_linear_mapping()
+        self._linear_mapping = self._make_initial_linear_mapping()
 
     @property
     def action_space(self) -> ActionSpace:
@@ -59,17 +59,17 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
     def features_of_all_arms(self) -> torch.Tensor:
         return self._features_of_all_arms
 
+    @property
+    def linear_mapping(self) -> torch.nn.Module:
+        return self._linear_mapping
+
     def _generate_features_of_all_arms(self):
         features_of_all_arms = torch.rand(
             self.action_space.n, self.arm_feature_vector_dim
         )  # features of each arm. (num of action, num of features)
         return features_of_all_arms
 
-    @property
-    def linear_mapping(self) -> torch.nn.Module:
-        return self._linear_mapping
-
-    def make_initial_linear_mapping(
+    def _make_initial_linear_mapping(
         self,
     ) -> torch.nn.Module:
         """
@@ -93,11 +93,11 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         """
         Given action, environment will return the reward associated of this action
         """
-        context = self.get_context_for_arm(action)
+        context = self._get_context_for_arm(action)
         reward = self._compute_reward_from_context(context)
         return reward
 
-    def get_context_for_arm(self, action: int) -> torch.Tensor:
+    def _get_context_for_arm(self, action: int) -> torch.Tensor:
         assert action in range(self._action_space.n)  # action is index in action_space
         return torch.cat([self._observation, self.features_of_all_arms[action]])
 
