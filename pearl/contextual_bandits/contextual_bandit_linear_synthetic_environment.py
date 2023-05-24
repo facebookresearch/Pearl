@@ -10,7 +10,7 @@ from pearl.contextual_bandits.contextual_bandit_environment import (
 )
 
 
-class ContextualBanditLinearEnvironment(ContextualBanditEnvironment):
+class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
     """
     A Contextual Bandit Environment where the reward is linearly mapped from the context feature representation.
 

@@ -4,14 +4,14 @@ import unittest
 
 import gym
 import torch
-from pearl.contextual_bandits.contextual_bandit_linear_environment import (
-    ContextualBanditLinearEnvironment,
+from pearl.contextual_bandits.contextual_bandit_linear_synthetic_environment import (
+    ContextualBanditLinearSyntheticEnvironment,
 )
 
 
 class TestContextualBanditEnvironment(unittest.TestCase):
     def setUp(self, number_of_actions: int = 2) -> None:
-        self.env = ContextualBanditLinearEnvironment(
+        self.env = ContextualBanditLinearSyntheticEnvironment(
             action_space=gym.spaces.Discrete(number_of_actions)
         )
         self.number_of_actions = number_of_actions
