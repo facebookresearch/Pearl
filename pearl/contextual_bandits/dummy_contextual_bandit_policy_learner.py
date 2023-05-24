@@ -1,10 +1,10 @@
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.reward import Reward
+from pearl.contextual_bandits.contextual_bandit_base import ContextualBanditBase
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
-from pearl.policy_learners.contextual_bandit_base import ContextualBanditBase
 from pearl.policy_learners.exploration_module.no_exploration import NoExploration
 from pearl.replay_buffer.transition import TransitionBatch
 
