@@ -17,13 +17,13 @@ class TestContextualBanditEnvironment(unittest.TestCase):
         self.number_of_actions = number_of_actions
 
     def test_contextual_bandit_environment_reset(self) -> None:
-        obs, action_space = self.env.reset()
-        assert obs.shape[0] == action_space.n
-        assert action_space.n == self.number_of_actions
         assert self.env.features_of_all_arms.shape == (
-            action_space.n,
-            self.env.context_dim,
+            self.env.action_space.n,
+            self.env.arm_feature_vector_dim,
         )
+        observation, action_space = self.env.reset()
+        assert observation is None
+        assert action_space.n == self.number_of_actions
 
     def test_contextual_bandit_environment_get_reward(self, action: int = 0):
         reward = self.env.get_reward(action=action)

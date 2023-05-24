@@ -12,38 +12,35 @@ from pearl.contextual_bandits.contextual_bandit_environment import (
 
 class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
     """
-    A Contextual Bandit Environment where the reward is linearly mapped from the context feature representation.
+    A Contextual Bandit synthetic environment where the reward is linearly mapped from the context feature representation.
+    The purpose of this environment is to simulate the behavior of a Contextual Bandit where rewards are modeled linearly from the context features.
 
     Following
 
     Lihong Li, Wei Chu, John Langford, Robert E. Schapire (2010), "A Contextual-Bandit Approach to Personalized News Article Recommendation,"
 
-    the observation provided by the environment is a tensor concatenating the *context* for each arm of the bandit.
-    The context for an arm is, at a minimum, a feature vector for the arm, but may be prepended with extra contextual information shared by all arms
+    the context for an arm is, at a minimum, a feature vector for the arm, but may be prepended with extra contextual information shared by all arms
     (for example, a user for whom a news article is being recommended).
-    This implementation currently only provides the arms feature vectors in the observation.
+    This implementation currently has no contextual information.
     """
 
     def __init__(
         self,
         action_space: ActionSpace,
-        context_dim: int = 4,
+        arm_feature_vector_dim: int = 4,
         reward_noise_sigma: float = 0.0,
-        context_noise_sigma: float = 0.0,
         simple_linear_mapping: bool = False,
     ):
         """
         Args:
             action_space (ActionSpace): the environment's action space
-            context_dim (int): the number of dimensions in the feature representation of contexts
+            arm_feature_vector_dim (int): the number of dimensions in the feature representation of arms
             reward_noise_sigma (float): the standard deviation of the noise added to the reward
-            context_noise_sigma (float): the standard deviation of the noise added to the context
             simple_linear_mapping (bool): if True, reward is simply the sum of the arm features (debugging purposes)
         """
         self._action_space = action_space
-        self._context_dim = context_dim
+        self._arm_feature_vector_dim = arm_feature_vector_dim
         self.reward_noise_sigma = reward_noise_sigma
-        self.context_noise_sigma = context_noise_sigma
         self._simple_linear_mapping = simple_linear_mapping
 
         self._features_of_all_arms = self._generate_features_of_all_arms()
@@ -54,8 +51,8 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         return self._action_space
 
     @property
-    def context_dim(self) -> int:
-        return self._context_dim
+    def arm_feature_vector_dim(self) -> int:
+        return self._arm_feature_vector_dim
 
     @property
     def features_of_all_arms(self) -> torch.Tensor:
@@ -63,7 +60,7 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
 
     def _generate_features_of_all_arms(self):
         features_of_all_arms = torch.rand(
-            self.action_space.n, self.context_dim
+            self.action_space.n, self.arm_feature_vector_dim
         )  # features of each arm. (num of action, num of features)
         return features_of_all_arms
 
@@ -76,21 +73,16 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
     ) -> torch.nn.Module:
         """
         The function that maps context to reward (always linear).
-        The input dimension (in_features) is Environment context_dim.
+        The input dimension (in_features) is Environment arm_feature_vector_dim.
         The output (reward) is a scalar, so outout dimension (out_features) is 1.
         """
-        return torch.nn.Linear(in_features=self.context_dim, out_features=1)
+        return torch.nn.Linear(in_features=self.arm_feature_vector_dim, out_features=1)
 
     def reset(self) -> (Observation, ActionSpace):
         """
         Provides the observation and action space to the agent.
         """
-        features_of_available_arms = (
-            self.features_of_all_arms
-        )  # TODO [optional]: apply mask for available arms
-        observation = features_of_available_arms
-        if self.context_noise_sigma > 0.0:
-            observation += torch.rand_like(observation) * self.context_noise_sigma
+        observation = None  # not dealing with contextual bandit yet
         return observation, self.action_space
 
     def get_reward(self, action: Action) -> Value:
@@ -133,7 +125,7 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         reward = self.linear_mapping(context)
 
         if self.reward_noise_sigma > 0.0:
-            # # add some Gaussian noise to each reward
+            # add some Gaussian noise to each reward
             noise = torch.randn_like(reward) * self.reward_noise_sigma
             noisy_reward = reward + noise
             return noisy_reward
@@ -149,4 +141,4 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         pass
 
     def __str__(self):
-        return "Bandit with reward which is linearly mapped from arm's (action) feature vector (context)"
+        return "Bandit with reward which is linearly mapped from context feature vector"
