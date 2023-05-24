@@ -22,7 +22,7 @@ class TestContextualBanditEnvironment(unittest.TestCase):
         assert action_space.n == self.number_of_actions
         assert self.env.features_of_all_arms.shape == (
             action_space.n,
-            self.env.feature_dim,
+            self.env.context_dim,
         )
 
     def test_contextual_bandit_environment_get_reward(self, action: int = 0):
