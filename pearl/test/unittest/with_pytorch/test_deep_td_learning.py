@@ -5,10 +5,14 @@ import unittest
 
 import torch
 from pearl.policy_learners.deep_q_learning import DeepQLearning
+from pearl.policy_learners.deep_sarsa import DeepSARSA
+from pearl.policy_learners.exploration_module.epsilon_greedy_exploration import (
+    EGreedyExploration,
+)
 from pearl.test.utils import create_random_batch
 
 
-class TestDQN(unittest.TestCase):
+class TestDeepTDLearning(unittest.TestCase):
     def setUp(self):
         self.batch_size = 24
         self.state_dim = 10
@@ -54,3 +58,15 @@ class TestDQN(unittest.TestCase):
             if differ:
                 break
         self.assertTrue(differ)
+
+    def test_sarsa(self) -> None:
+        sarsa = DeepSARSA(
+            state_dim=self.state_dim,
+            action_space=self.action_space,
+            hidden_dims=[3],
+            training_rounds=1,
+            exploration_module=EGreedyExploration(0.05),
+        )
+        sa_value = sarsa._get_next_state_values(self.batch, self.batch_size)
+
+        self.assertEqual(sa_value.shape, (self.batch_size,))

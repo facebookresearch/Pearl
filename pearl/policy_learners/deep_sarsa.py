@@ -16,6 +16,14 @@ class DeepSARSA(DeepTDLearning):
         """
         For SARSA, next state values comes from committed next action + next state value
         """
-        # TODO we need act_batch here to get next actions
-        # implement in later diffs
-        raise NotImplementedError("implement act_batch and then continue here")
+        next_state_batch = batch.next_state  # (batch_size x state_dim)
+        next_action_batch = batch.next_action  # (batch_size x action_dim)
+
+        next_state_action_batch = torch.cat(
+            [next_state_batch, next_action_batch], dim=1
+        )  # (batch_size x (state_dim + action_dim))
+        next_state_action_values = self._Q_target(next_state_action_batch).view(
+            (batch_size,)
+        )  # (batch_size)
+
+        return next_state_action_values

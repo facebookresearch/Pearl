@@ -47,6 +47,7 @@ def create_random_batch(
         action=action_tensor,
         reward=rewards,
         next_state=next_states,
+        next_action=action_tensor,
         curr_available_actions=curr_available_actions_tensor_with_padding.expand(
             batch_size, -1, -1
         ),
