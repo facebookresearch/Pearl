@@ -2,7 +2,10 @@ from typing import Iterable, Optional
 
 import torch
 from pearl.api.action_space import ActionSpace
-from pearl.neural_networks.factory import NetworkType
+from pearl.neural_networks.value_networks import (
+    StateActionValueNetworkType,
+    VanillaStateActionValueNetwork,
+)
 from pearl.policy_learners.deep_td_learning import DeepTDLearning
 from pearl.policy_learners.exploration_module.epsilon_greedy_exploration import (
     EGreedyExploration,
@@ -30,7 +33,7 @@ class DeepQLearning(DeepTDLearning):
         batch_size: int = 128,
         target_update_freq: int = 10,
         soft_update_tau: float = 1.0,  # no soft update
-        network_type: NetworkType = NetworkType.VANILLA,
+        network_type: StateActionValueNetworkType = VanillaStateActionValueNetwork,
         double: bool = False,
     ) -> None:
         super(DeepQLearning, self).__init__(

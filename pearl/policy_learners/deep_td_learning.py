@@ -7,7 +7,10 @@ import torch.nn.functional as F
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
-from pearl.neural_networks.factory import network_maker, NetworkType
+from pearl.neural_networks.value_networks import (
+    StateActionValueNetworkType,
+    VanillaStateActionValueNetwork,
+)
 from pearl.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
@@ -38,7 +41,7 @@ class DeepTDLearning(PolicyLearner):
         batch_size: int = 128,
         target_update_freq: int = 10,
         soft_update_tau: float = 0.1,
-        network_type: NetworkType = NetworkType.VANILLA,
+        network_type: StateActionValueNetworkType = VanillaStateActionValueNetwork,
     ) -> None:
         super(DeepTDLearning, self).__init__(
             training_rounds=training_rounds,
@@ -53,12 +56,11 @@ class DeepTDLearning(PolicyLearner):
 
         # TODO: Assumes Gym interface, fix it.
         def make_specified_network():
-            return network_maker(
+            return network_type(
                 state_dim=state_dim,
                 action_dim=action_space.n,
                 hidden_dims=hidden_dims,
                 output_dim=1,
-                network_type=network_type,
             )
 
         self._Q = make_specified_network()

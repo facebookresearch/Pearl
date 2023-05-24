@@ -1,4 +1,13 @@
-from typing import List, Optional
+"""
+This module defines several types of value neural networks.
+
+Constants:
+    StateActionValueNetworkType: a type (and therefore a callable) getting state_dim, action_dim, hidden_dims, output_dim and producing a neural network with
+    able to evaluate a state-action pair, consisting of the concatenation of feature tensors for each one with the indicated dimensions.
+"""
+
+
+from typing import Callable, List, Optional
 
 import torch
 import torch.nn as nn
@@ -39,7 +48,16 @@ class VanillaValueNetwork(nn.Module):
         return self.forward(x).view(-1)  # (batch_size)
 
 
-class DuelingValueNetwork(nn.Module):
+class VanillaStateActionValueNetwork(VanillaValueNetwork):
+    def __init__(self, state_dim, action_dim, hidden_dims, output_dim):
+        super().__init__(
+            input_dim=state_dim + action_dim,
+            hidden_dims=hidden_dims,
+            output_dim=output_dim,
+        )
+
+
+class DuelingStateActionValueNetwork(nn.Module):
     def __init__(
         self,
         state_dim,
@@ -49,7 +67,7 @@ class DuelingValueNetwork(nn.Module):
         value_hidden_dims: Optional[List[int]] = None,
         advantage_hidden_dims: Optional[List[int]] = None,
     ):
-        super(DuelingValueNetwork, self).__init__()
+        super(DuelingStateActionValueNetwork, self).__init__()
         self.state_dim = state_dim
         self.action_dim = action_dim
 
@@ -132,3 +150,6 @@ class DuelingValueNetwork(nn.Module):
             -1
         )  # (batch_size), value of single state with single action of interest
         return state_action_values
+
+
+StateActionValueNetworkType = Callable[[int, int, List[int], int], nn.Module]
