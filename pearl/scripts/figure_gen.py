@@ -16,7 +16,20 @@ from pearl.online_learning.online_learning import online_learning_returns
 from pearl.pearl_agent import PearlAgent
 
 from pearl.policy_learners.deep_q_learning import DeepQLearning
+from pearl.policy_learners.deep_sarsa import DeepSARSA
 from pearl.replay_buffer.fifo_off_policy_replay_buffer import FIFOOffPolicyReplayBuffer
+from pearl.replay_buffer.fifo_on_policy_replay_buffer import FIFOOnPolicyReplayBuffer
+
+MA_WINDOW_SIZE = 100.0
+
+
+def moving_average(data):
+    return [
+        sum(data[int(i - MA_WINDOW_SIZE + 1) : i + 1]) / MA_WINDOW_SIZE
+        if i >= MA_WINDOW_SIZE
+        else sum(data[: i + 1]) * 1.0 / (i + 1)
+        for i in range(len(data))
+    ]
 
 
 def main():
@@ -44,17 +57,17 @@ def main():
         learn_after_episode=True,
     )
     plt.plot(returns, label="vanilla dqn")
+    plt.plot(moving_average(returns), label="dqn_ma")
     plt.xlabel("Episode")
     plt.ylabel("Return")
     agent = PearlAgent(
-        policy_learner=DeepQLearning(
+        policy_learner=DeepSARSA(
             env.observation_space.shape[0],
             env.action_space,
             [64, 64],
             training_rounds=20,
-            double=True,
         ),
-        replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+        replay_buffer=FIFOOnPolicyReplayBuffer(10000),
     )
     returns = online_learning_returns(
         agent,
@@ -62,8 +75,10 @@ def main():
         number_of_episodes=num_episodes,
         learn_after_episode=True,
     )
-    plt.plot(returns, label="double dqn")
-    plt.savefig("returns2.png")
+    plt.plot(returns, label="sarsa")
+    plt.plot(moving_average(returns), label="sarsa_ma")
+    plt.legend()
+    plt.savefig("figure_gen.png")
 
 
 if __name__ == "__main__":

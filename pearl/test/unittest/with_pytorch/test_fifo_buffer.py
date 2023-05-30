@@ -106,7 +106,7 @@ class TestFifoBuffer(unittest.TestCase):
             self.curr_available_actions,
             self.next_available_actions,
             self.action_space,
-            self.done[0],
+            False,
         )
         # push S1 A1 R1 S2
         replay_buffer.push(
@@ -117,7 +117,7 @@ class TestFifoBuffer(unittest.TestCase):
             self.curr_available_actions,
             self.next_available_actions,
             self.action_space,
-            self.done[1],
+            False,
         )
         # expect S0 A0 R0 S1 A1 returned from sample
         batch = replay_buffer.sample(1)
@@ -155,3 +155,22 @@ class TestFifoBuffer(unittest.TestCase):
                 ),
             )
         )
+
+    def test_on_poliy_buffer_ternimal_push(self) -> None:
+        """
+        This test is to ensure onpolicy buffer could push for terminal state
+        """
+        replay_buffer = FIFOOnPolicyReplayBuffer(self.batch_size * 4)
+        replay_buffer.push(
+            self.states[0],
+            self.actions[0],
+            self.rewards[0],
+            self.next_states[0],
+            self.curr_available_actions,
+            self.next_available_actions,
+            self.action_space,
+            True,
+        )
+        # expect one sample returned
+        batch = replay_buffer.sample(1)
+        self.assertTrue(batch.done[0])

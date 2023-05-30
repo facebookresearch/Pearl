@@ -68,18 +68,38 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
                     done=self.cache.done,
                 )
             )
-        # save current push into cache
-        self.cache = Transition(
-            state=current_state,
-            action=current_action,
-            reward=TensorBasedReplayBuffer._process_single_reward(reward),
-            next_state=TensorBasedReplayBuffer._process_single_state(next_state),
-            curr_available_actions=curr_available_actions_tensor_with_padding,
-            curr_available_actions_mask=curr_available_actions_mask,
-            next_available_actions=next_available_actions_tensor_with_padding,
-            next_available_actions_mask=next_available_actions_mask,
-            done=TensorBasedReplayBuffer._process_single_done(done),
-        )
+        if not done:
+            # save current push into cache
+            self.cache = Transition(
+                state=current_state,
+                action=current_action,
+                reward=TensorBasedReplayBuffer._process_single_reward(reward),
+                next_state=TensorBasedReplayBuffer._process_single_state(next_state),
+                curr_available_actions=curr_available_actions_tensor_with_padding,
+                curr_available_actions_mask=curr_available_actions_mask,
+                next_available_actions=next_available_actions_tensor_with_padding,
+                next_available_actions_mask=next_available_actions_mask,
+                done=TensorBasedReplayBuffer._process_single_done(done),
+            )
+        else:
+            # for terminal state, push directly
+            self.memory.append(
+                Transition(
+                    state=current_state,
+                    action=current_action,
+                    reward=TensorBasedReplayBuffer._process_single_reward(reward),
+                    next_state=TensorBasedReplayBuffer._process_single_state(
+                        next_state
+                    ),
+                    # this value doesnt matter, use current_action for same shape
+                    next_action=current_action,
+                    curr_available_actions=curr_available_actions_tensor_with_padding,
+                    curr_available_actions_mask=curr_available_actions_mask,
+                    next_available_actions=next_available_actions_tensor_with_padding,
+                    next_available_actions_mask=next_available_actions_mask,
+                    done=TensorBasedReplayBuffer._process_single_done(done),
+                )
+            )
 
     def sample(self, batch_size: int) -> TransitionBatch:
         samples = random.sample(self.memory, batch_size)
