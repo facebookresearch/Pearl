@@ -1,5 +1,3 @@
-from typing import Iterable
-
 import torch
 
 from pearl.api.action import Action
@@ -26,8 +24,9 @@ class UCBExploration(ValueExplorationBase):
         self,
         subjective_state: SubjectiveState,
         available_action_space: DiscreteActionSpace,
-        values: Iterable[float],
+        values: torch.Tensor,
         representation: torch.Tensor = None,
+        exploit_action: Action = None,
     ) -> Action:
         exploration_bonus = torch.zeros(
             (available_action_space.n)
@@ -39,7 +38,6 @@ class UCBExploration(ValueExplorationBase):
                 torch.log(self.action_executed) / self.action_execution_count[action]
             )
 
-        values = torch.tensor(values)  # (action_space_size)
         selected_action = torch.argmax(values + exploration_bonus).item()
         self.action_execution_count[selected_action] += 1
         self.action_executed += 1

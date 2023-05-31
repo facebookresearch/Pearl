@@ -1,3 +1,5 @@
+import torch
+
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.reward import Reward
@@ -25,13 +27,13 @@ class DummyContextualBanditPolicyLearner(ContextualBanditBase):
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
-    ) -> Action:
+    ) -> (Action, torch.Tensor):
         # Code making the decision
         # SubjectiveState will be the same type as the Observation coming out of the environment
         # if no history summarization module is being used.
         # If such a module is being used, the SubjectiveState will whatever type that module provides.
         action = 0
-        return action
+        return action, torch.rand(1)
 
     def learn_batch(self, batch: TransitionBatch) -> None:
         # Code doing the learning for the provided data

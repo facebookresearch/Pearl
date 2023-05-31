@@ -1,6 +1,8 @@
 from abc import ABC
 from typing import Any, Dict, Optional
 
+import torch
+
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
@@ -37,21 +39,25 @@ class PolicyLearner(ABC):
         available_action_space: ActionSpace,
         exploit: bool = False,
     ) -> Action:
-        exploit_action = self.exploit(subjective_state, available_action_space)
+        exploit_action, values = self.exploit(subjective_state, available_action_space)
 
         if exploit:
             return exploit_action
         else:
             return self._exploration_module.act(
-                subjective_state, available_action_space, exploit_action
+                subjective_state,
+                available_action_space,
+                exploit_action,
+                values=values,
             )
 
+    # Will be removed in the next diff.
     def exploit(
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
-    ) -> Action:
-        pass
+    ) -> (Action, torch.Tensor):
+        return action_space.sample(), torch.zeros(1)
 
     def learn(
         self, replay_buffer: ReplayBuffer, batch_size: Optional[int] = None

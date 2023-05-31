@@ -1,3 +1,5 @@
+import torch
+
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
@@ -18,5 +20,7 @@ class NoExploration(ExplorationModule):
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
         exploit_action: Action,
+        values: torch.Tensor = None,
+        representation: torch.Tensor = None,
     ) -> Action:
         return exploit_action

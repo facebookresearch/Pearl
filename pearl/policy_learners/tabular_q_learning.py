@@ -1,6 +1,8 @@
 import random
 from typing import Dict, Tuple
 
+import torch
+
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.reward import Value
@@ -52,7 +54,7 @@ class TabularQLearning(PolicyLearner):
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
-    ) -> Action:
+    ) -> (Action, torch.Tensor):
         # Choose the action with the highest Q-value for the current state.
         q_values_for_state = {
             action: self.q_values.get((subjective_state, action), 0)
@@ -66,7 +68,7 @@ class TabularQLearning(PolicyLearner):
         ]
         exploit_action = random.choice(best_actions)
 
-        return exploit_action
+        return exploit_action, torch.Tensor(list(q_values_for_state.values()))
 
     def learn(self, replay_buffer: ReplayBuffer) -> None:
         # We currently assume replay buffer only contains last transition (on-policy)
