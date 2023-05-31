@@ -1,4 +1,11 @@
+from abc import abstractmethod
+
+from pearl.api.action import Action
+
 from pearl.api.action_space import ActionSpace
+from pearl.history_summarization_modules.history_summarization_module import (
+    SubjectiveState,
+)
 from pearl.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
@@ -27,6 +34,14 @@ class ContextualBanditBase(PolicyLearner):
         self._action_space = action_space
         self._state_dim = state_dim
 
+    @abstractmethod
     def learn_batch(self, batch: TransitionBatch) -> None:
-        # This needs to be implemented based on what kinds of CB
-        raise NotImplementedError("learn_batch is not implemented")
+        pass
+
+    @abstractmethod
+    def exploit(
+        self,
+        subjective_state: SubjectiveState,
+        action_space: ActionSpace,
+    ) -> Action:
+        pass

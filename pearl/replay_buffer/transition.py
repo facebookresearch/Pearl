@@ -20,6 +20,7 @@ class Transition:
     next_available_actions: torch.tensor = None
     next_available_actions_mask: torch.tensor = None
     done: torch.tensor = None
+    weight: torch.tensor = None
 
 
 """
@@ -32,10 +33,11 @@ class TransitionBatch:
     state: torch.tensor
     action: torch.tensor
     reward: torch.tensor
-    next_state: torch.tensor
+    next_state: torch.tensor = None
     next_action: Optional[torch.tensor] = None
     curr_available_actions: torch.tensor = None
     curr_available_actions_mask: torch.tensor = None
     next_available_actions: torch.tensor = None
     next_available_actions_mask: torch.tensor = None
     done: torch.tensor = None
+    weight: torch.tensor = None
