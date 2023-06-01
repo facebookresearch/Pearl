@@ -39,9 +39,10 @@ class ContextualBanditBase(PolicyLearner):
         pass
 
     @abstractmethod
-    def exploit(
+    def act(
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
+        exploit: bool = False,
     ) -> Action:
         pass

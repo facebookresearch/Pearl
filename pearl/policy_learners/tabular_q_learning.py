@@ -50,11 +50,12 @@ class TabularQLearning(PolicyLearner):
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space
 
-    def exploit(
+    def act(
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
-    ) -> (Action, torch.Tensor):
+        exploit: bool = False,
+    ) -> Action:
         # Choose the action with the highest Q-value for the current state.
         q_values_for_state = {
             action: self.q_values.get((subjective_state, action), 0)
@@ -67,8 +68,14 @@ class TabularQLearning(PolicyLearner):
             if q_value == max_q_value
         ]
         exploit_action = random.choice(best_actions)
+        if exploit:
+            return exploit_action
 
-        return exploit_action, torch.Tensor(list(q_values_for_state.values()))
+        return self._exploration_module.act(
+            subjective_state,
+            action_space,
+            exploit_action,
+        )
 
     def learn(self, replay_buffer: ReplayBuffer) -> None:
         # We currently assume replay buffer only contains last transition (on-policy)

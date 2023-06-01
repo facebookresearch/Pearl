@@ -74,11 +74,12 @@ class DeepTDLearning(PolicyLearner):
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space
 
-    def exploit(
+    def act(
         self,
         subjective_state: SubjectiveState,
         available_action_space: ActionSpace,
-    ) -> (Action, torch.Tensor):
+        exploit: bool = False,
+    ) -> Action:
         # TODO: Assumes subjective state is a torch tensor and gym action space.
         # Fix the available action space.
         with torch.no_grad():
@@ -95,7 +96,15 @@ class DeepTDLearning(PolicyLearner):
             q_values = self._Q(state_action_pairs)  # (action_space_size, 1)
             exploit_action = torch.argmax(q_values).view((-1)).item()
 
-        return exploit_action, q_values
+        if exploit:
+            return exploit_action
+
+        return self._exploration_module.act(
+            subjective_state,
+            available_action_space,
+            exploit_action,
+            q_values,
+        )
 
     @abstractmethod
     def _get_next_state_values(

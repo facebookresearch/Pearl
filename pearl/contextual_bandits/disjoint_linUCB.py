@@ -72,9 +72,10 @@ class DisjointLinUCB(ContextualBanditBase):
             )
         return {}
 
-    def exploit(
+    def act(
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
+        exploit: bool = False,
     ) -> Action:
         raise NotImplementedError("Integrate with UCB exploration module")

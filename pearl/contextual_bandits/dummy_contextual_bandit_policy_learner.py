@@ -23,17 +23,18 @@ class DummyContextualBanditPolicyLearner(ContextualBanditBase):
             exploration_module=NoExploration(),
         )
 
-    def exploit(
+    def act(
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
-    ) -> (Action, torch.Tensor):
+        exploit: bool = False,
+    ) -> Action:
         # Code making the decision
         # SubjectiveState will be the same type as the Observation coming out of the environment
         # if no history summarization module is being used.
         # If such a module is being used, the SubjectiveState will whatever type that module provides.
         action = 0
-        return action, torch.rand(1)
+        return action
 
     def learn_batch(self, batch: TransitionBatch) -> None:
         # Code doing the learning for the provided data
