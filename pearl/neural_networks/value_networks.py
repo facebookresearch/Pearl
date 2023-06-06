@@ -15,28 +15,33 @@ import torch.nn.functional as F
 from pearl.policy_learners.extend_state_feature import (
     extend_state_feature_by_available_action_space,
 )
+from torch import Tensor
 
 
 class VanillaValueNetwork(nn.Module):
-    def __init__(self, input_dim, hidden_dims, output_dim):
+    def __init__(
+        self, input_dim: int, hidden_dims: Optional[List[int]], output_dim: int = 1
+    ) -> None:
+
         super(VanillaValueNetwork, self).__init__()
 
-        self.fc1 = nn.Linear(input_dim, hidden_dims[0])
-        hiddens = []
-        for i in range(len(hidden_dims) - 1):
-            hiddens.append(nn.Linear(hidden_dims[i], hidden_dims[i + 1]))
-            hiddens.append(nn.ReLU())
-        self.hiddens = nn.Sequential(*hiddens)
-        self.fc2 = nn.Linear(hidden_dims[-1], output_dim)
+        self._dims = [input_dim] + hidden_dims + [output_dim]
+        self._layers = []
+        for i in range(len(self._dims) - 2):
+            self._layers.append(nn.Linear(self._dims[i], self._dims[i + 1]))
+            self._layers.append(nn.ReLU())
 
-    def forward(self, x):
-        value = F.relu(self.fc1(x))
-        value = self.hiddens(value)
-        return self.fc2(value)
+        self._layers.append(nn.Linear(self._dims[-2], self._dims[-1]))
+        self._model = nn.Sequential(*self._layers)
 
-    def xavier_init(self):
-        nn.init.xavier_normal_(self.fc1.weight)
-        nn.init.xavier_normal_(self.fc2.weight)
+    def forward(self, x: Tensor) -> Tensor:
+        return self._model(x)
+
+    # default initialization in linear and conv layers of a nn.Sequential model is Kaiming
+    def xavier_init(self) -> None:
+        for layer in self._model:
+            if isinstance(layer, nn.Linear):
+                nn.init.xavier_normal_(layer.weight)
 
     def get_batch_action_value(
         self,
