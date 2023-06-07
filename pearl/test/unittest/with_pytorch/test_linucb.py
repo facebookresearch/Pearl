@@ -1,24 +1,25 @@
 #!/usr/bin/env fbpython
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
-import logging
 import unittest
 
 import torch
-from pearl.contextual_bandits.disjoint_linUCB import DisjointLinUCB
-from pearl.contextual_bandits.linUCB import LinUCB
-from pearl.policy_learners.exploration_module.no_exploration import NoExploration
+from pearl.contextual_bandits.disjoint_linear_bandit import DisjointLinearBandit
+from pearl.contextual_bandits.disjoint_linucb_exploration import (
+    DisjointLinUCBExploration,
+)
+from pearl.contextual_bandits.linear_bandit import LinearBandit
 from pearl.replay_buffer.transition import TransitionBatch
 from pearl.utils.action_spaces import DiscreteActionSpace
-
-logger = logging.getLogger(__name__)
 
 
 class TestLinUCB(unittest.TestCase):
     def test_disjoint_lin_ucb_learn_batch(self) -> None:
-        policy_learner = DisjointLinUCB(
+        action_space = DiscreteActionSpace(range(3))
+        policy_learner = DisjointLinearBandit(
             state_dim=2,
-            action_space=DiscreteActionSpace(range(3)),
-            exploration_module=NoExploration(),
+            action_space=action_space,
+            # UCB score == rewards
+            exploration_module=DisjointLinUCBExploration(alpha=0),
         )
         # y0 = x1  + x2
         # y1 = 2x1 + x2
@@ -43,6 +44,7 @@ class TestLinUCB(unittest.TestCase):
         policy_learner.learn_batch(batch)
         for i, action in enumerate(batch.action):
             action = action.item()
+            # check if linear regression works
             self.assertTrue(
                 torch.allclose(
                     policy_learner._linear_regressions[action](batch.state[i]),
@@ -50,11 +52,53 @@ class TestLinUCB(unittest.TestCase):
                     atol=1e-4,
                 )
             )
+        # since alpha = 0, act should return action with highest reward
+        # single state
+        self.assertEqual(
+            2,
+            policy_learner.act(
+                subjective_state=torch.tensor([2.0, 3.0]), action_space=action_space
+            ),
+        )
+        # batch state
+        self.assertTrue(
+            torch.all(
+                policy_learner.act(
+                    subjective_state=batch.state, action_space=action_space
+                )
+                == 2
+            )
+        )
+        # set a different alpha value to increase uncertainty value
+        policy_learner.exploration_module = DisjointLinUCBExploration(alpha=10)
+        # observe state [1,1] for action 1 and 2 many times, this will increase uncertainty of action0
+        # on this state, and give us act(1,1) -> 0
+        batch = TransitionBatch(
+            state=torch.tensor(
+                [
+                    [1.0, 1.0],
+                    [1.0, 1.0],
+                ]
+            ),
+            action=torch.tensor(
+                [1, 2],
+            ),
+            reward=torch.tensor([2.0, 3.0]),
+            weight=torch.tensor([1.0, 1.0]),
+        )
+        for _ in range(10):
+            policy_learner.learn_batch(batch)
+        self.assertEqual(
+            0,
+            policy_learner.act(
+                subjective_state=torch.tensor([1.0, 1.0]), action_space=action_space
+            ),
+        )
 
     def test_lin_ucb_learn_batch(self) -> None:
-        policy_learner = LinUCB(
+        policy_learner = LinearBandit(
             feature_dim=4,
-            exploration_module=NoExploration(),
+            exploration_module=DisjointLinUCBExploration(alpha=0),
         )
         # y = sum of state + sum of action
         batch = TransitionBatch(
@@ -98,15 +142,28 @@ class TestLinUCB(unittest.TestCase):
                 atol=1e-4,
             )
         )
+        # with ucb_alpha == 0, ucb scores == rewards
+        # we view action space as 1, in order to get ucb scores for given feature
+        ucb_scores = policy_learner.get_scores(
+            torch.cat([batch.state, batch.action], dim=1)
+        )
+        self.assertTrue(
+            torch.allclose(
+                ucb_scores,
+                batch.reward,
+                atol=1e-4,
+            )
+        )
+        self.assertEqual(ucb_scores.shape, batch.reward.shape)
 
     def test_lin_ucb_uncertainty(self) -> None:
         """
         Since A is init with zeros, the uncertainty should be proportional to number of obs
         """
 
-        policy_learner = LinUCB(
+        policy_learner = LinearBandit(
             feature_dim=2,
-            exploration_module=NoExploration(),
+            exploration_module=DisjointLinUCBExploration(alpha=1),
         )
 
         # 1st arm = [1, 0]
@@ -151,16 +208,16 @@ class TestLinUCB(unittest.TestCase):
         )
 
         policy_learner.learn_batch(batch)
-        _ = policy_learner._linear_regression(
-            torch.cat([batch.state[0], batch.action[0]])
-        )  # predict reward
 
         # test uncertainty of policy_learner (LinUCB)
+        features = torch.cat([batch.state, batch.action], dim=1)
+        # input is (batch_size, 2)
+        # expect output is (batch_size,)
+        ucb_scores = policy_learner.get_scores(features)
+        self.assertEqual(ucb_scores.shape, batch.reward.shape)
         A = policy_learner._linear_regression._A
         A_inv = torch.linalg.inv(A)
-        x = torch.cat([batch.state, batch.action], dim=1)
-        uncertainty = torch.diagonal(x @ A_inv @ x.t())
-        logger.info(uncertainty)
+        uncertainty = torch.diagonal(features @ A_inv @ features.t())
 
         # the 2nd arm's uncertainty is 10 times 1st arm's uncertainty
         uncertainty_ratio = torch.tensor(uncertainty[-1] / uncertainty[0])
@@ -171,5 +228,3 @@ class TestLinUCB(unittest.TestCase):
                 rtol=0.01,
             )
         )
-
-        return

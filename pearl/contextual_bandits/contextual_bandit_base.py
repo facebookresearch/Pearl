@@ -46,3 +46,14 @@ class ContextualBanditBase(PolicyLearner):
         exploit: bool = False,
     ) -> Action:
         pass
+
+    @abstractmethod
+    def get_scores(
+        self,
+        subjective_state: SubjectiveState,
+    ):
+        """
+        Returns:
+            Return scores trained by this contextual bandit algorithm
+        """
+        pass

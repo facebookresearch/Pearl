@@ -8,6 +8,9 @@ from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
+from pearl.policy_learners.exploration_module.exploration_module import (
+    ExplorationModule,
+)
 from pearl.policy_learners.exploration_module.no_exploration import NoExploration
 from pearl.replay_buffer.replay_buffer import ReplayBuffer
 from pearl.replay_buffer.transition import TransitionBatch
@@ -29,6 +32,14 @@ class PolicyLearner(ABC):
         self._training_rounds = training_rounds
         self._batch_size = batch_size
         self._training_steps = 0
+
+    @property
+    def exploration_module(self) -> ExplorationModule:
+        return self._exploration_module
+
+    @exploration_module.setter
+    def exploration_module(self, new_exploration_module) -> None:
+        self._exploration_module = new_exploration_module
 
     def reset(self, action_space: ActionSpace) -> None:
         pass

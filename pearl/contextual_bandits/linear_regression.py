@@ -61,9 +61,13 @@ class LinearRegression(torch.nn.Module):
 
     @property
     def coefs(self) -> torch.Tensor:
-        inv_A = self._A_inv_fallback_pinv()
+        inv_A = self.inv_A
         assert inv_A.size()[0] == self._b.size()[0]
         return torch.matmul(inv_A, self._b)
+
+    @property
+    def inv_A(self) -> torch.Tensor:
+        return self._A_inv_fallback_pinv()
 
     def _A_inv_fallback_pinv(self) -> torch.Tensor:
         """
@@ -91,6 +95,10 @@ class LinearRegression(torch.nn.Module):
     def __str__(self) -> str:
         return f"A:\n{self._A}\nb:\n{self._b}"
 
+    def named_parameters(self, prefix="", recurse=True, remove_duplicate=True):
+        yield ("_A", self._A)
+        yield ("_b", self._b)
+
 
 class AvgWeightLinearRegression(LinearRegression):
     def __init__(
@@ -100,6 +108,10 @@ class AvgWeightLinearRegression(LinearRegression):
         super(AvgWeightLinearRegression, self).__init__(feature_dim=feature_dim)
         # initialize sum of weights below at small values to avoid dividing by 0
         self._sum_weight = 1e-5 * torch.ones(1, dtype=torch.float)
+
+    @property
+    def sum_weight(self) -> torch.Tensor:
+        return self._sum_weight
 
     def train(self, x: torch.Tensor, y: torch.Tensor, weight: torch.Tensor) -> None:
         self._validate_train_inputs(x, y, weight)

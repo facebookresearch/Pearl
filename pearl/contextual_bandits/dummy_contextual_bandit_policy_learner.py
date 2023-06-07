@@ -39,3 +39,9 @@ class DummyContextualBanditPolicyLearner(ContextualBanditBase):
     def learn_batch(self, batch: TransitionBatch) -> None:
         # Code doing the learning for the provided data
         pass
+
+    def get_scores(
+        self,
+        subjective_state: SubjectiveState,
+    ) -> torch.Tensor:
+        raise NotImplementedError("Implement when necessary")
