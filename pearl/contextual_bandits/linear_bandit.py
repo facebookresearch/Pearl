@@ -6,7 +6,10 @@ import torch
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.contextual_bandits.contextual_bandit_base import ContextualBanditBase
-from pearl.contextual_bandits.linear_regression import AvgWeightLinearRegression
+from pearl.contextual_bandits.linear_regression import (
+    AvgWeightLinearRegression,
+    LinearRegression,
+)
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
@@ -58,6 +61,34 @@ class LinearBandit(ContextualBanditBase):
     ) -> Action:
         raise NotImplementedError("Leave this for future, when we have usecases")
 
+    @staticmethod
+    def get_linucb_scores(
+        subjective_state: SubjectiveState,
+        feature_dim: int,
+        exploration_module: UCBExplorationBase,
+        linear_regression: LinearRegression,
+    ) -> torch.Tensor:
+        # currently we only support joint ucb with LinearBandit
+        # which means we call get_scores N times for N actions
+        # for disjoint ucb, please use DisjointLinearBandit
+        available_action_space = DiscreteActionSpace([0])
+        subjective_state = subjective_state.view(
+            -1, feature_dim
+        )  # reshape to (batch_size, feature_dim)
+        values = linear_regression(subjective_state)  # (batch_size, )
+        values = values.unsqueeze(dim=1)  # change to (batch_size, 1)
+        # get_scores returns (batch_size, action_count) or (action_count)
+        # here our action count is 1, so delete that dimension by squeeze
+        return exploration_module.get_ucb_scores(
+            subjective_state=subjective_state,
+            values=values,
+            available_action_space=available_action_space,
+            # for linear bandit, all actions share same linear regression
+            representation={
+                action: linear_regression for action in range(available_action_space.n)
+            },
+        ).squeeze()
+
     def get_scores(
         self,
         subjective_state: SubjectiveState,
@@ -69,24 +100,9 @@ class LinearBandit(ContextualBanditBase):
         """
         # TODO generalize for all kinds of exploration module
         assert isinstance(self._exploration_module, UCBExplorationBase)
-        # currently we only support joint ucb with LinearBandit
-        # which means we call get_scores N times for N actions
-        # for disjoint ucb, please use DisjointLinearBandit
-        available_action_space = DiscreteActionSpace([0])
-        subjective_state = subjective_state.view(
-            -1, self._feature_dim
-        )  # reshape to (batch_size, feature_dim)
-        values = self._linear_regression(subjective_state)  # (batch_size, )
-        values = values.unsqueeze(dim=1)  # change to (batch_size, 1)
-        # get_scores returns (batch_size, action_count) or (action_count)
-        # here our action count is 1, so delete that dimension by squeeze
-        return self._exploration_module.get_ucb_scores(
+        return LinearBandit.get_linucb_scores(
             subjective_state=subjective_state,
-            values=values,
-            available_action_space=available_action_space,
-            # for linear bandit, all actions share same linear regression
-            representation={
-                action: self._linear_regression
-                for action in range(available_action_space.n)
-            },
-        ).squeeze()
+            feature_dim=self._feature_dim,
+            exploration_module=self._exploration_module,
+            linear_regression=self._linear_regression,
+        )

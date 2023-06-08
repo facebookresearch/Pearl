@@ -7,63 +7,70 @@ import torch
 from pearl.api.action import Action
 
 from pearl.api.action_space import ActionSpace
-from pearl.contextual_bandits.contextual_bandit_base import ContextualBanditBase
+from pearl.contextual_bandits.deep_bandit import DeepBandit
+from pearl.contextual_bandits.linear_bandit import LinearBandit
+from pearl.contextual_bandits.linear_regression import AvgWeightLinearRegression
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
-from pearl.neural_networks.value_networks import VanillaValueNetwork
 from pearl.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
 from pearl.replay_buffer.transition import TransitionBatch
-from torch import optim
 
 
-class DeepBandit(ContextualBanditBase):
+class DeepLinearBandit(DeepBandit):
     """
-    Policy Learner for Contextual Bandit with Deep Policy
+    Policy Learner for Contextual Bandit with:
+    features --> neural networks --> linear regression --> predicted rewards
     """
 
     def __init__(
         self,
         feature_dim: int,
-        hidden_dims: List[int],
+        hidden_dims: List[int],  # last one is the input dim for linear regression
         exploration_module: ExplorationModule,
-        output_dim: int = 1,
         training_rounds: int = 100,
         batch_size: int = 128,
         learning_rate: float = 0.001,
     ) -> None:
-        super(DeepBandit, self).__init__(
+        assert (
+            len(hidden_dims) >= 1
+        ), "hidden_dims should have at least one value to specify feature dim for linear regression"
+        DeepBandit.__init__(
+            self,
             feature_dim=feature_dim,
+            hidden_dims=hidden_dims[:-1],
+            output_dim=hidden_dims[-1],
             training_rounds=training_rounds,
             batch_size=batch_size,
             exploration_module=exploration_module,
         )
-        self._deep_represent_layers = VanillaValueNetwork(
-            input_dim=feature_dim,
-            hidden_dims=hidden_dims,
-            output_dim=output_dim,
-        )
-        self._optimizer = optim.AdamW(
-            self._deep_represent_layers.parameters(), lr=learning_rate, amsgrad=True
-        )
+        # TODO specify linear regression type when needed
+        self._linear_regression = AvgWeightLinearRegression(feature_dim=hidden_dims[-1])
+        self._linear_regression_dim = hidden_dims[-1]
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         input_features = torch.cat([batch.state, batch.action], dim=1)
 
         # forward pass
-        current_values = self._deep_represent_layers(input_features)
+        mlp_output = self._deep_represent_layers(input_features)
+        current_values = self._linear_regression(mlp_output)
         expected_values = batch.reward
 
         criterion = torch.nn.MSELoss()
         loss = criterion(current_values.view(expected_values.shape), expected_values)
 
         # Optimize the deep layer
+        # TODO how should we handle weight in NN training
         self._optimizer.zero_grad()
         loss.backward()
         self._optimizer.step()
-        return {"loss": loss.item()}
+        # Optimize linear regression
+        self._linear_regression.train(
+            mlp_output.detach(), expected_values, batch.weight
+        )
+        return {"mlp_loss": loss.item()}
 
     def act(
         self,
@@ -77,4 +84,10 @@ class DeepBandit(ContextualBanditBase):
         self,
         subjective_state: SubjectiveState,
     ) -> torch.Tensor:
-        return self._deep_represent_layers(subjective_state).squeeze()
+        processed_feature = self._deep_represent_layers(subjective_state)
+        return LinearBandit.get_linucb_scores(
+            subjective_state=processed_feature,
+            feature_dim=self._linear_regression_dim,
+            exploration_module=self._exploration_module,
+            linear_regression=self._linear_regression,
+        )

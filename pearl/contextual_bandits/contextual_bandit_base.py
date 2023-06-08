@@ -32,6 +32,10 @@ class ContextualBanditBase(PolicyLearner):
         )
         self._feature_dim = feature_dim
 
+    @property
+    def feature_dim(self) -> int:
+        return self._feature_dim
+
     @abstractmethod
     def learn_batch(self, batch: TransitionBatch) -> None:
         pass
