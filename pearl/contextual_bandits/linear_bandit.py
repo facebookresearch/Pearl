@@ -31,14 +31,12 @@ class LinearBandit(ContextualBanditBase):
         batch_size: int = 128,
     ) -> None:
         super(LinearBandit, self).__init__(
-            state_dim=feature_dim,  # not useful yet
-            action_space=None,  # not useful yet
+            feature_dim=feature_dim,
             training_rounds=training_rounds,
             batch_size=batch_size,
             exploration_module=exploration_module,
         )
         self._linear_regression = AvgWeightLinearRegression(feature_dim=feature_dim)
-        self._feature_dim = feature_dim
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """

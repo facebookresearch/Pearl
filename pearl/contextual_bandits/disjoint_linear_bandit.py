@@ -27,24 +27,22 @@ class DisjointLinearBandit(ContextualBanditBase):
 
     def __init__(
         self,
-        state_dim: int,
-        action_space: DiscreteActionSpace,
+        feature_dim: int,
+        action_count: int,
         exploration_module: ExplorationModule,
         training_rounds: int = 100,
         batch_size: int = 128,
     ) -> None:
         super(DisjointLinearBandit, self).__init__(
-            state_dim=state_dim,
-            action_space=action_space,
+            feature_dim=feature_dim,
             training_rounds=training_rounds,
             batch_size=batch_size,
             exploration_module=exploration_module,
         )
         # Currently our disjoint LinUCB usecase only use LinearRegression
         self._linear_regressions = [
-            LinearRegression(feature_dim=state_dim) for _ in range(action_space.n)
+            LinearRegression(feature_dim=feature_dim) for _ in range(action_count)
         ]
-        self._feature_dim = state_dim
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """

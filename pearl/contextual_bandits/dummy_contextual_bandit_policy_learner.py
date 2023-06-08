@@ -14,12 +14,12 @@ from pearl.replay_buffer.transition import TransitionBatch
 class DummyContextualBanditPolicyLearner(ContextualBanditBase):
     """
     A temporary class showing the structure of a context bandit policy learner.
+    TODO remove this class after we have integration test between environment and another CB policy learner
     """
 
     def __init__(self) -> None:
         super(DummyContextualBanditPolicyLearner, self).__init__(
-            state_dim=None,  # dummy
-            action_space=None,  # dummy
+            feature_dim=None,  # dummy
             exploration_module=NoExploration(),
         )
 

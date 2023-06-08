@@ -20,8 +20,7 @@ class ContextualBanditBase(PolicyLearner):
 
     def __init__(
         self,
-        state_dim: int,
-        action_space: ActionSpace,
+        feature_dim: int,
         exploration_module: ExplorationModule,
         training_rounds: int = 100,
         batch_size: int = 128,
@@ -31,8 +30,7 @@ class ContextualBanditBase(PolicyLearner):
             batch_size=batch_size,
             exploration_module=exploration_module,
         )
-        self._action_space = action_space
-        self._state_dim = state_dim
+        self._feature_dim = feature_dim
 
     @abstractmethod
     def learn_batch(self, batch: TransitionBatch) -> None:

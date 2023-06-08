@@ -20,8 +20,8 @@ class TestLinUCB(unittest.TestCase):
     def test_disjoint_lin_ucb_learn_batch(self) -> None:
         action_space = DiscreteActionSpace(range(3))
         policy_learner = DisjointLinearBandit(
-            state_dim=2,
-            action_space=action_space,
+            feature_dim=2,
+            action_count=action_space.n,
             # UCB score == rewards
             exploration_module=DisjointLinUCBExploration(alpha=0),
         )
