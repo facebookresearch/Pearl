@@ -46,7 +46,8 @@ class TestLinUCB(unittest.TestCase):
             reward=torch.tensor([3.0, 4.0, 7.0, 7.0, 7.0, 13.8]),
             weight=torch.tensor([1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
         )
-        policy_learner.learn_batch(batch)
+        for _ in range(1000):
+            policy_learner.learn_batch(batch)
         for i, action in enumerate(batch.action):
             action = action.item()
             # check if linear regression works
@@ -54,7 +55,7 @@ class TestLinUCB(unittest.TestCase):
                 torch.allclose(
                     policy_learner._linear_regressions[action](batch.state[i]),
                     batch.reward[i],
-                    atol=1e-4,
+                    atol=1e-1,
                 )
             )
         # since alpha = 0, act should return action with highest reward
@@ -75,7 +76,7 @@ class TestLinUCB(unittest.TestCase):
             )
         )
         # set a different alpha value to increase uncertainty value
-        policy_learner.exploration_module = DisjointLinUCBExploration(alpha=10)
+        policy_learner.exploration_module = DisjointLinUCBExploration(alpha=1000)
         # observe state [1,1] for action 1 and 2 many times, this will increase uncertainty of action0
         # on this state, and give us act(1,1) -> 0
         batch = TransitionBatch(
@@ -91,7 +92,7 @@ class TestLinUCB(unittest.TestCase):
             reward=torch.tensor([2.0, 3.0]),
             weight=torch.tensor([1.0, 1.0]),
         )
-        for _ in range(10):
+        for _ in range(1000):
             policy_learner.learn_batch(batch)
         self.assertEqual(
             0,

@@ -19,8 +19,12 @@ class NoExploration(ExplorationModule):
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
-        exploit_action: Action,
+        exploit_action: Action = None,
         values: torch.Tensor = None,
         representation: torch.Tensor = None,
     ) -> Action:
-        return exploit_action
+        if exploit_action is not None:
+            # TODO clean up to have NoExploration always argmax on values
+            return exploit_action
+        values = values.view(-1, action_space.n)
+        return torch.argmax(values, dim=1).squeeze()

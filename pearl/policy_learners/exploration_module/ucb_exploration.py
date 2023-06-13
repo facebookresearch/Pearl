@@ -73,7 +73,7 @@ class UCBExplorationBase(ValueExplorationBase):
     def act(
         self,
         subjective_state: SubjectiveState,
-        available_action_space: DiscreteActionSpace,
+        action_space: DiscreteActionSpace,
         values: torch.Tensor,
         representation: Any = None,
         exploit_action: Action = None,
@@ -88,11 +88,11 @@ class UCBExplorationBase(ValueExplorationBase):
         """
         ucb = self.get_ucb_scores(
             subjective_state=subjective_state,
-            available_action_space=available_action_space,
+            available_action_space=action_space,
             values=values,
             representation=representation,
         )
-        ucb = ucb.view(-1, available_action_space.n)  # batch_size, action_count
+        ucb = ucb.view(-1, action_space.n)  # batch_size, action_count
         selected_action = torch.argmax(ucb, dim=1)
         return selected_action.squeeze()
 
@@ -128,14 +128,14 @@ class VanillaUCBExploration(UCBExplorationBase):
     def act(
         self,
         subjective_state: SubjectiveState,
-        available_action_space: DiscreteActionSpace,
+        action_space: DiscreteActionSpace,
         values: torch.Tensor,
         representation: Any = None,
         exploit_action: Action = None,
     ) -> Action:
         selected_action = super().act(
             subjective_state,
-            available_action_space,
+            action_space,
             values,
             representation,
             exploit_action,

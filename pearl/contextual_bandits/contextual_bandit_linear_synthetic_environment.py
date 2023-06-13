@@ -97,6 +97,17 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         reward = self._compute_reward_from_context(context)
         return reward
 
+    def get_regret(self, action: Action) -> Value:
+        """
+        Given action, environment will return regret for choosing this action
+        regret == max(reward over all action) - reward for current action
+        """
+        rewards = [
+            self._compute_reward_from_context(self._get_context_for_arm(i))
+            for i in range(self._action_space.n)
+        ]
+        return max(rewards) - rewards[action]
+
     def _get_context_for_arm(self, action: int) -> torch.Tensor:
         assert action in range(self._action_space.n)  # action is index in action_space
         return torch.cat([self._observation, self.features_of_all_arms[action]])

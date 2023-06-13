@@ -88,7 +88,7 @@ class LinearBandit(ContextualBanditBase):
         assert values.shape == (batch_size, action_count)
         return self._exploration_module.act(
             subjective_state=subjective_state,
-            available_action_space=action_space,
+            action_space=action_space,
             values=values,
             representation=self._linear_regression,
         )

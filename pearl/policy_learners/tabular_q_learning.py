@@ -1,5 +1,5 @@
 import random
-from typing import Dict, Tuple
+from typing import Any, Dict, Tuple
 
 import torch
 
@@ -14,6 +14,7 @@ from pearl.policy_learners.exploration_module.epsilon_greedy_exploration import 
 )
 from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffer.replay_buffer import ReplayBuffer
+from pearl.replay_buffer.transition import TransitionBatch
 
 #  TODO make package names and organization more consistent
 
@@ -113,6 +114,9 @@ class TabularQLearning(PolicyLearner):
 
             if self.debug:
                 self.print_debug_information(state, action, reward, next_state, done)
+
+    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+        raise Exception("tabular_q_learning doesnt need learn_batch")
 
     def print_debug_information(self, state, action, reward, next_state, done):
         print("state:", state)

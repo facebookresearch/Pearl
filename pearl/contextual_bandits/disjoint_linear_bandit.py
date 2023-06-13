@@ -52,23 +52,26 @@ class DisjointLinearBandit(ContextualBanditBase):
 
         for action_idx, linear_regression in enumerate(self._linear_regressions):
             index = torch.nonzero(batch.action == action_idx).squeeze()
+            if index.numel() == 0:
+                continue
             context = torch.index_select(
                 batch.state,
                 dim=0,
                 index=index,
             )
-            if context.shape[0] == 0:
-                continue
             reward = torch.index_select(
                 batch.reward,
                 dim=0,
                 index=index,
             )
-            weight = torch.index_select(
-                batch.weight,
-                dim=0,
-                index=index,
-            )
+            if batch.weight is not None:
+                weight = torch.index_select(
+                    batch.weight,
+                    dim=0,
+                    index=index,
+                )
+            else:
+                weight = torch.ones(reward.shape)
             linear_regression.train(
                 x=context,
                 y=reward,
@@ -81,6 +84,7 @@ class DisjointLinearBandit(ContextualBanditBase):
         self,
         subjective_state: SubjectiveState,
         action_space: DiscreteActionSpace,
+        _exploit: bool = False,
     ) -> Action:
         # TODO static discrete action space only for now
         subjective_state = subjective_state.view(
@@ -100,7 +104,7 @@ class DisjointLinearBandit(ContextualBanditBase):
         values = values.permute(1, 0)
         return self._exploration_module.act(
             subjective_state=subjective_state,
-            available_action_space=action_space,
+            action_space=action_space,
             values=values,
             representation=self._linear_regressions,
         )

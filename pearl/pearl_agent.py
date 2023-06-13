@@ -9,7 +9,7 @@ from pearl.api.state import SubjectiveState
 from pearl.history_summarization_modules.identity_history_summarization_module import (
     IdentityHistorySummarizationModule,
 )
-from pearl.policy_learners.policy_learner import PolicyLearner
+from pearl.policy_learners.tabular_q_learning import TabularQLearning
 from pearl.replay_buffer.single_transition_replay_buffer import (
     SingleTransitionReplayBuffer,
 )
@@ -24,7 +24,7 @@ class PearlAgent(Agent):
     (and possibly factories down the line)
     """
 
-    default_policy_learner_type = PolicyLearner
+    default_policy_learner_type = TabularQLearning
     default_safety_module_type = IdentitySafetyModule
     default_history_summarization_module_type = IdentityHistorySummarizationModule
     default_replay_buffer_type = SingleTransitionReplayBuffer

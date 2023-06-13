@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 
 import torch
@@ -22,7 +22,7 @@ class PolicyLearner(ABC):
     """
 
     def __init__(
-        self, training_rounds: int = 100, batch_size: int = 128, **options
+        self, training_rounds: int = 100, batch_size: int = 1, **options
     ) -> None:
         self._exploration_module = (
             options["exploration_module"]
@@ -67,7 +67,7 @@ class PolicyLearner(ABC):
         """
         batch_size = self._batch_size if batch_size is None else batch_size
         if len(replay_buffer) < batch_size:
-            return {}
+            raise Exception("Nothing learnt, check if batch_size needs to be updated")
 
         report = {}
         for _ in range(self._training_rounds):
@@ -81,6 +81,7 @@ class PolicyLearner(ABC):
                     report[k] = [v]
         return report
 
+    @abstractmethod
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """
         Args:
@@ -89,4 +90,4 @@ class PolicyLearner(ABC):
         Returns:
             A dictionary which includes useful metric to return to upperlevel for different purpose eg debugging
         """
-        raise NotImplementedError("learn_batch is not implemented")
+        pass

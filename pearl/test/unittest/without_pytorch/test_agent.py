@@ -3,9 +3,6 @@
 import unittest
 
 import gym
-from pearl.contextual_bandits.dummy_contextual_bandit_policy_learner import (
-    DummyContextualBanditPolicyLearner,
-)
 
 from pearl.contextual_bandits.reward_is_equal_to_ten_times_action_contextual_bandit_environment import (
     RewardIsEqualToTenTimesActionContextualBanditEnvironment,
@@ -61,17 +58,3 @@ class TestAgentWithoutPyTorch(unittest.TestCase):
             assert (
                 episode_return(agent, env, learn=False, exploit=True) == max_action * 10
             )
-
-    def test_contextual_bandit_with_dummy_policy_learner_online_rl(self) -> None:
-        # Using a dummy contextual bandit policy learner.
-        # The dummy only exemplifies how to implement a CB algorithm more conveniently;
-        # it does not actually learn.
-        number_of_actions = 5
-        env = RewardIsEqualToTenTimesActionContextualBanditEnvironment(
-            action_space=gym.spaces.Discrete(number_of_actions)
-        )
-        agent = PearlAgent(policy_learner=DummyContextualBanditPolicyLearner())
-
-        online_learning(agent, env, number_of_episodes=10000)
-
-        # Dummy does not actually learn, so there are no accuracy tests
