@@ -100,7 +100,7 @@ class TestLinUCB(unittest.TestCase):
             ),
         )
 
-    def test_lin_ucb_learn_batch(self) -> None:
+    def test_lin_ucb(self) -> None:
         policy_learner = LinearBandit(
             feature_dim=4,
             exploration_module=DisjointLinUCBExploration(alpha=0),
@@ -160,6 +160,11 @@ class TestLinUCB(unittest.TestCase):
             )
         )
         self.assertEqual(ucb_scores.shape, batch.reward.shape)
+
+        # TEST ACT API
+        action_space = DiscreteActionSpace(batch.action.tolist())
+        # action 2 has feature vector as 3, 2, has highest sum
+        self.assertEqual(policy_learner.act(batch.state[0], action_space), 2)
 
     def test_lin_ucb_uncertainty(self) -> None:
         """

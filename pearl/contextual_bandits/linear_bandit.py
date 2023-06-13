@@ -4,7 +4,6 @@ from typing import Any, Dict
 
 import torch
 from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
 from pearl.contextual_bandits.contextual_bandit_base import ContextualBanditBase
 from pearl.contextual_bandits.linear_regression import (
     AvgWeightLinearRegression,
@@ -56,10 +55,43 @@ class LinearBandit(ContextualBanditBase):
     def act(
         self,
         subjective_state: SubjectiveState,
-        action_space: ActionSpace,
+        action_space: DiscreteActionSpace,
         exploit: bool = False,
     ) -> Action:
-        raise NotImplementedError("Leave this for future, when we have usecases")
+        """
+        Args:
+            subjective_state - state will be applied to different action vectors in action_space
+            action_space contains a list of action vector, currenly only support static space
+        Return:
+            action index chosen given state and action vectors
+        """
+        action_dim = action_space.action_dim
+        action_count = action_space.n
+
+        subjective_state = subjective_state.view(
+            -1, self._feature_dim - action_dim
+        )  # reshape to (batch_size, state_dim)
+        batch_size = subjective_state.shape[0]
+
+        expanded_state = subjective_state.unsqueeze(1).repeat(
+            1, action_count, 1
+        )  # expand to (batch_size, action_count, state_dim)
+
+        actions = action_space.to_tensor()  # (action_count, action_dim)
+        expanded_action = actions.unsqueeze(0).repeat(
+            batch_size, 1, 1
+        )  # batch_size, action_count, action_dim
+        new_feature = torch.cat(
+            [expanded_state, expanded_action], dim=2
+        )  # batch_size, action_count, feature_dim
+        values = self._linear_regression(new_feature)  # (batch_size, action_count)
+        assert values.shape == (batch_size, action_count)
+        return self._exploration_module.act(
+            subjective_state=subjective_state,
+            available_action_space=action_space,
+            values=values,
+            representation=self._linear_regression,
+        )
 
     @staticmethod
     def get_linucb_scores(
