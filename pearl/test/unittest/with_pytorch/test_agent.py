@@ -3,6 +3,7 @@
 import unittest
 
 from pearl.gym.gym_environment import GymEnvironment
+from pearl.neural_networks.value_networks import DuelingStateActionValueNetwork
 from pearl.online_learning.online_learning import online_learning_to_png_graph
 from pearl.pearl_agent import PearlAgent
 
@@ -26,6 +27,23 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+        )
+        online_learning_to_png_graph(
+            agent, env, number_of_episodes=10, learn_after_episode=True
+        )
+
+    def test_deep_td_learning_online_rl_sanity_check_dueling(self) -> None:
+        # make sure E2E is fine
+        env = GymEnvironment("CartPole-v1")
+        agent = PearlAgent(
+            policy_learner=DeepQLearning(
+                env.observation_space.shape[0],
+                env.action_space,
+                hidden_dims=[64, 64],
+                training_rounds=20,
+                network_type=DuelingStateActionValueNetwork,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
