@@ -10,7 +10,10 @@ from pearl.contextual_bandits.disjoint_linucb_exploration import (
     DisjointLinUCBExploration,
 )
 from pearl.gym.gym_environment import GymEnvironment
-from pearl.neural_networks.value_networks import DuelingStateActionValueNetwork
+from pearl.neural_networks.value_networks import (
+    DuelingStateActionValueNetwork,
+    TwoTowerStateActionValueNetwork,
+)
 from pearl.online_learning.online_learning import online_learning_to_png_graph
 from pearl.pearl_agent import PearlAgent
 
@@ -34,8 +37,8 @@ class TestAgentWithPyTorch(unittest.TestCase):
         env = GymEnvironment("CartPole-v1")
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                env.observation_space.shape[0],
-                env.action_space,
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
                 batch_size=1,
@@ -56,6 +59,28 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 hidden_dims=[64, 64],
                 training_rounds=20,
                 network_type=DuelingStateActionValueNetwork,
+                batch_size=1,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+        )
+        online_learning_to_png_graph(
+            agent, env, number_of_episodes=10, learn_after_episode=True
+        )
+
+    def test_deep_td_learning_online_rl_two_tower_network(self) -> None:
+        # make sure E2E is fine
+        env = GymEnvironment("CartPole-v1")
+        agent = PearlAgent(
+            policy_learner=DeepQLearning(
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                hidden_dims=[64, 64],
+                training_rounds=20,
+                network_type=TwoTowerStateActionValueNetwork,
+                state_output_dim=64,
+                action_output_dim=64,
+                state_hidden_dims=[64],
+                action_hidden_dims=[64],
                 batch_size=1,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),

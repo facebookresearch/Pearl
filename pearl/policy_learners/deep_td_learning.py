@@ -9,6 +9,7 @@ from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
 from pearl.neural_networks.value_networks import (
     StateActionValueNetworkType,
+    TwoTowerStateActionValueNetwork,
     VanillaStateActionValueNetwork,
 )
 from pearl.policy_learners.exploration_module.exploration_module import (
@@ -42,6 +43,10 @@ class DeepTDLearning(PolicyLearner):
         target_update_freq: int = 10,
         soft_update_tau: float = 0.1,
         network_type: StateActionValueNetworkType = VanillaStateActionValueNetwork,
+        state_output_dim=None,
+        action_output_dim=None,
+        state_hidden_dims=None,
+        action_hidden_dims=None,
     ) -> None:
         super(DeepTDLearning, self).__init__(
             training_rounds=training_rounds,
@@ -56,12 +61,24 @@ class DeepTDLearning(PolicyLearner):
 
         # TODO: Assumes Gym interface, fix it.
         def make_specified_network():
-            return network_type(
-                state_dim=state_dim,
-                action_dim=action_space.n,
-                hidden_dims=hidden_dims,
-                output_dim=1,
-            )
+            if network_type == TwoTowerStateActionValueNetwork:
+                return network_type(
+                    state_dim=state_dim,
+                    action_dim=action_space.n,
+                    hidden_dims=hidden_dims,
+                    state_output_dim=state_output_dim,
+                    action_output_dim=action_output_dim,
+                    state_hidden_dims=state_hidden_dims,
+                    action_hidden_dims=action_hidden_dims,
+                    output_dim=1,
+                )
+            else:
+                return network_type(
+                    state_dim=state_dim,
+                    action_dim=action_space.n,
+                    hidden_dims=hidden_dims,
+                    output_dim=1,
+                )
 
         self._Q = make_specified_network()
         self._Q_target = make_specified_network()

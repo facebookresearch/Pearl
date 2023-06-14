@@ -35,6 +35,10 @@ class DeepQLearning(DeepTDLearning):
         soft_update_tau: float = 1.0,  # no soft update
         network_type: StateActionValueNetworkType = VanillaStateActionValueNetwork,
         double: bool = False,
+        state_output_dim=None,
+        action_output_dim=None,
+        state_hidden_dims=None,
+        action_hidden_dims=None,
     ) -> None:
         super(DeepQLearning, self).__init__(
             exploration_module=exploration_module
@@ -50,6 +54,10 @@ class DeepQLearning(DeepTDLearning):
             target_update_freq=target_update_freq,
             soft_update_tau=soft_update_tau,
             network_type=network_type,
+            state_output_dim=state_output_dim,
+            action_output_dim=action_output_dim,
+            state_hidden_dims=state_hidden_dims,
+            action_hidden_dims=action_hidden_dims,
         )
         self._double = double
 

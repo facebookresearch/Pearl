@@ -157,4 +157,111 @@ class DuelingStateActionValueNetwork(nn.Module):
         return state_action_values
 
 
+"""
+One can make VanillaValueNetwork to be a special case of TwoTowerStateActionValueNetwork by initializing
+linear layers to be an identity map and stopping gradients. This however would be too complex.
+"""
+
+
+class TwoTowerNetwork(nn.Module):
+    def __init__(
+        self,
+        state_input_dim: int,
+        action_input_dim: int,
+        state_output_dim: int,
+        action_output_dim: int,
+        state_hidden_dims: Optional[List[int]],
+        action_hidden_dims: Optional[List[int]],
+        hidden_dims: Optional[List[int]],
+        output_dim: int = 1,
+    ) -> None:
+
+        super(TwoTowerNetwork, self).__init__()
+
+        """
+        Input: batch of state, batch of action. Output: batch of Q-values for (s,a) pairs
+        The two tower archtecture is as follows:
+        state ----> state_feature
+                            | concat ----> Q(s,a)
+        action ----> action_feature
+        """
+        self._state_input_dim = state_input_dim
+        self._state_features = VanillaValueNetwork(
+            input_dim=state_input_dim,
+            hidden_dims=state_hidden_dims,
+            output_dim=state_output_dim,
+        )
+        self._state_features.xavier_init()
+        self._action_features = VanillaValueNetwork(
+            input_dim=action_input_dim,
+            hidden_dims=action_hidden_dims,
+            output_dim=action_output_dim,
+        )
+        self._action_features.xavier_init()
+        self._interaction_features = VanillaValueNetwork(
+            input_dim=state_output_dim + action_output_dim,
+            hidden_dims=hidden_dims,
+            output_dim=output_dim,
+        )
+        self._interaction_features.xavier_init()
+
+    """ This is a horibble way to write this but I will leave it for refactoring which I plan to do next """
+
+    def forward(self, state_action: torch.Tensor):
+        state = state_action[..., : self._state_input_dim]
+        action = state_action[..., self._state_input_dim :]
+        output = self.get_batch_action_value(state_batch=state, action_batch=action)
+        return output
+
+    def get_batch_action_value(
+        self,
+        state_batch: torch.Tensor,
+        action_batch: torch.Tensor,
+        curr_available_actions_batch=torch.Tensor,
+    ):
+        state_batch_features = self._state_features.forward(state_batch)
+        """ this might need to be done in tensor_based_replay_buffer """
+        action_batch_features = self._action_features.forward(
+            action_batch.to(torch.float32)
+        )
+        x = torch.cat([state_batch_features, action_batch_features], dim=-1)
+        return self._interaction_features.forward(x).view(-1)  # (batch_size)
+
+
+"""
+With the same initialization parameters as the VanillaStateActionValue Network, i.e. without
+specifying the state_output_dims and/or action_outout_dims, we still add a linear layer to
+extract state and/or action features.
+"""
+
+
+class TwoTowerStateActionValueNetwork(TwoTowerNetwork):
+    def __init__(
+        self,
+        state_dim,
+        action_dim,
+        hidden_dims,
+        output_dim=1,
+        state_output_dim=None,
+        action_output_dim=None,
+        state_hidden_dims=None,
+        action_hidden_dims=None,
+    ) -> None:
+
+        super().__init__(
+            state_input_dim=state_dim,
+            action_input_dim=action_dim,
+            state_output_dim=state_dim
+            if state_output_dim is None
+            else state_output_dim,
+            action_output_dim=action_dim
+            if action_output_dim is None
+            else action_output_dim,
+            state_hidden_dims=[] if state_hidden_dims is None else state_hidden_dims,
+            action_hidden_dims=[] if action_hidden_dims is None else action_hidden_dims,
+            hidden_dims=hidden_dims,
+            output_dim=output_dim,
+        )
+
+
 StateActionValueNetworkType = Callable[[int, int, List[int], int], nn.Module]
