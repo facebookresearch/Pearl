@@ -26,7 +26,7 @@ class LinearRegression(torch.nn.Module):
         feature_dim: int,
     ) -> None:
         super(LinearRegression, self).__init__()
-        self._A = torch.eye(feature_dim)
+        self._A = 1e-2 * torch.eye(feature_dim)
         self._b = torch.zeros(feature_dim)
         self._feature_dim = feature_dim
 
