@@ -12,10 +12,7 @@ This takes a long time (usually 3 hours on a devserver), which is why it is on c
 import logging
 
 from pearl.gym.gym_environment import GymEnvironment
-from pearl.online_learning.online_learning import (
-    episode_return,
-    online_learning_returns,
-)
+from pearl.online_learning.online_learning import episode_return
 from pearl.pearl_agent import PearlAgent
 
 from pearl.policy_learners.deep_q_learning import DeepQLearning
@@ -23,32 +20,33 @@ from pearl.replay_buffer.fifo_off_policy_replay_buffer import FIFOOffPolicyRepla
 from windtunnel.cogwheel.test import cogwheel_test, CogwheelTest
 
 
-class TestDeepQLearning(CogwheelTest):
-    def setUp(self) -> None:
-        self.env = GymEnvironment("CartPole-v1")
-        self.agent = PearlAgent(
+class TestAgent(CogwheelTest):
+    @cogwheel_test
+    def test_dqn(self) -> None:
+        """
+        This test is checking if DQN will eventually get to 500 return for CartPole-v1
+        """
+        env = GymEnvironment("CartPole-v1")
+        agent = PearlAgent(
             policy_learner=DeepQLearning(
-                self.env.observation_space.shape[0],
-                self.env.action_space,
+                env.observation_space.shape[0],
+                env.action_space,
                 [64, 64],
                 training_rounds=20,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
-
-    @cogwheel_test
-    def test_deep_td_learning_online_rl(self) -> None:
-        online_learning_returns(
-            self.agent,
-            self.env,
-            number_of_episodes=1000,
-            learn_after_episode=True,
-        )
-        learnt = 500 in [episode_return(self.agent, self.env) for _ in range(100)]
-        self.assertEqual(learnt, True)
-        # Should keep cartpole upright at least once in 100 episodes.
+        counter = 0
+        while (
+            episode_return(agent=agent, env=env, learn=True, learn_after_episode=True)
+            != 500
+        ):
+            counter += 1
+            # we should be able to get to 500 within 100 episodes
+            # according to testplan in D46043013
+            self.assertGreater(100, counter)
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    TestDeepQLearning().main()
+    TestAgent().main()

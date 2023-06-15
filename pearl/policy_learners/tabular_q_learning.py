@@ -1,5 +1,5 @@
 import random
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import torch
 
@@ -78,7 +78,9 @@ class TabularQLearning(PolicyLearner):
             exploit_action,
         )
 
-    def learn(self, replay_buffer: ReplayBuffer) -> None:
+    def learn(
+        self, replay_buffer: ReplayBuffer, _batch_size: Optional[int] = None
+    ) -> None:
         # We currently assume replay buffer only contains last transition (on-policy)
         for (
             state,

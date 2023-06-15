@@ -34,6 +34,10 @@ class PolicyLearner(ABC):
         self._training_steps = 0
 
     @property
+    def batch_size(self) -> int:
+        return self._batch_size
+
+    @property
     def exploration_module(self) -> ExplorationModule:
         return self._exploration_module
 

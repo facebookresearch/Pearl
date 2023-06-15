@@ -120,6 +120,10 @@ def episode_return(
         step += 1
 
     if learn and learn_after_episode:
-        agent.learn()
+        if agent.policy_learner.batch_size > step - 1:
+            # if we dont set batch_size, learn will do nothing
+            agent.learn(batch_size=step - 1)
+        else:
+            agent.learn()
 
     return g
