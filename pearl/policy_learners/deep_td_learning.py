@@ -184,11 +184,12 @@ class DeepTDLearning(PolicyLearner):
 
     def _update_target_network(self):
         # Q_target = tao * Q_target + (1-tao)*Q
-        target_params = list(self._Q_target.parameters())
-        source_params = list(self._Q.parameters())
-        for target_param, source_param in zip(target_params, source_params):
-            new_param = (
-                self._soft_update_tau * source_param.data
-                + (1.0 - self._soft_update_tau) * target_param.data
+        target_net_state_dict = self._Q_target.state_dict()
+        source_net_state_dict = self._Q.state_dict()
+        for key in source_net_state_dict:
+            target_net_state_dict[key] = (
+                self._soft_update_tau * source_net_state_dict[key]
+                + (1 - self._soft_update_tau) * target_net_state_dict[key]
             )
-            target_param.data.copy_(new_param)
+
+        self._Q_target.load_state_dict(target_net_state_dict)
