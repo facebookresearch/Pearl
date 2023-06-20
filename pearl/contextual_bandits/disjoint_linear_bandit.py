@@ -86,7 +86,8 @@ class DisjointLinearBandit(ContextualBanditBase):
         action_space: DiscreteActionSpace,
         _exploit: bool = False,
     ) -> Action:
-        # TODO static discrete action space only for now
+        # TODO static discrete action space only without action vector
+        assert action_space.action_dim == 0
         subjective_state = subjective_state.view(
             -1, self._feature_dim
         )  # reshape to (batch_size, feature_dim)

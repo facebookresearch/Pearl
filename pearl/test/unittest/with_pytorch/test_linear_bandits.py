@@ -1,12 +1,11 @@
 #!/usr/bin/env fbpython
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+import copy
 import unittest
 
 import torch
-from pearl.contextual_bandits.disjoint_linucb_exploration import (
-    DisjointLinUCBExploration,
-)
 from pearl.contextual_bandits.linear_bandit import LinearBandit
+from pearl.contextual_bandits.linucb_exploration import LinUCBExploration
 from pearl.replay_buffer.transition import TransitionBatch
 from pearl.utils.action_spaces import DiscreteActionSpace
 
@@ -15,7 +14,7 @@ class TestLinearBandits(unittest.TestCase):
     def setUp(self):
         self.policy_learner = LinearBandit(
             feature_dim=4,
-            exploration_module=DisjointLinUCBExploration(alpha=0),
+            exploration_module=LinUCBExploration(alpha=0),
         )
         # y = sum of state + sum of action
         self.batch = TransitionBatch(
@@ -66,7 +65,7 @@ class TestLinearBandits(unittest.TestCase):
     def test_linear_ucb_scores(self) -> None:
         # with ucb_alpha == 0, ucb scores == rewards
         # we view action space as 1, in order to get ucb scores for given feature
-        self.policy_learner.exploration_module = DisjointLinUCBExploration(alpha=0)
+        self.policy_learner.exploration_module = LinUCBExploration(alpha=0)
         batch = self.batch
 
         ucb_scores = self.policy_learner.get_scores(
@@ -85,13 +84,18 @@ class TestLinearBandits(unittest.TestCase):
         """
         Given a list of action features, able to return action index with highest score
         """
+        policy_learner = copy.deepcopy(
+            self.policy_learner
+        )  # deep copy as we are going to change exploration module
         batch = self.batch
         action_space = DiscreteActionSpace(batch.action.tolist())
         # action 2 has feature vector as 3, 2, has highest sum
-        self.assertEqual(self.policy_learner.act(batch.state[0], action_space), 2)
+        self.assertEqual(policy_learner.act(batch.state[0], action_space), 2)
         # test with batch state
-        actions = self.policy_learner.act(batch.state, action_space)
+        actions = policy_learner.act(batch.state, action_space)
         self.assertEqual(actions.shape, batch.reward.shape)
+
+        policy_learner.exploration_module = LinUCBExploration(alpha=1)
 
     def test_linear_ucb_uncertainty(self) -> None:
         """
@@ -99,7 +103,7 @@ class TestLinearBandits(unittest.TestCase):
         """
         policy_learner = LinearBandit(
             feature_dim=2,
-            exploration_module=DisjointLinUCBExploration(alpha=1),
+            exploration_module=LinUCBExploration(alpha=1),
         )
 
         # 1st arm = [1, 0]

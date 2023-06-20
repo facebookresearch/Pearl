@@ -6,9 +6,7 @@ from pearl.contextual_bandits.contextual_bandit_linear_synthetic_environment imp
     ContextualBanditLinearSyntheticEnvironment,
 )
 from pearl.contextual_bandits.disjoint_linear_bandit import DisjointLinearBandit
-from pearl.contextual_bandits.disjoint_linucb_exploration import (
-    DisjointLinUCBExploration,
-)
+from pearl.contextual_bandits.linucb_exploration import DisjointLinUCBExploration
 from pearl.gym.gym_environment import GymEnvironment
 from pearl.neural_networks.value_networks import (
     DuelingStateActionValueNetwork,

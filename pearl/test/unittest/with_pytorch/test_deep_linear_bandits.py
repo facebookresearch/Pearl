@@ -4,9 +4,7 @@ import unittest
 
 import torch
 from pearl.contextual_bandits.deep_linear_bandit import DeepLinearBandit
-from pearl.contextual_bandits.disjoint_linucb_exploration import (
-    DisjointLinUCBExploration,
-)
+from pearl.contextual_bandits.linucb_exploration import LinUCBExploration
 from pearl.replay_buffer.transition import TransitionBatch
 
 
@@ -18,7 +16,7 @@ class TestDeepLinearBandits(unittest.TestCase):
             feature_dim=feature_dim,
             hidden_dims=[16, 16],
             learning_rate=0.01,
-            exploration_module=DisjointLinUCBExploration(alpha=0.1),
+            exploration_module=LinUCBExploration(alpha=0.1),
         )
         self.assertEqual(feature_dim, policy_learner.feature_dim)
         state = torch.randn(batch_size, 3)

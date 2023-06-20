@@ -8,7 +8,7 @@ from pearl.policy_learners.exploration_module.ucb_exploration import UCBExplorat
 from pearl.utils.action_spaces import DiscreteActionSpace
 
 
-class DisjointLinUCBExploration(UCBExplorationBase):
+class LinUCBExploration(UCBExplorationBase):
     """
     Exploration module for linear UCB with disjoint linear models
     paper: https://arxiv.org/pdf/1003.0146.pdf
@@ -33,17 +33,48 @@ class DisjointLinUCBExploration(UCBExplorationBase):
         available_action_space: DiscreteActionSpace,
         representation: Any = None,
     ) -> torch.Tensor:
+        """
+        Args:
+            subjective_state is the feature vector, if action feature and state feature needs to be concat
+                it should have been done at caller side, shape(batch_size, action_count, feature_dim) or (batch_size, feature_dim)
+            representation is one linear regression
+        Returns:
+            uncertainty with shape (batch_size, action_count) or (batch_size, 1)
+        """
+        A_inv = representation.inv_A
+        sum_weight = (
+            representation.sum_weight
+            if isinstance(representation, AvgWeightLinearRegression)
+            else 1
+        )
+        uncertainty = torch.sqrt(
+            self.batch_quadratic_form(subjective_state, A_inv) / sum_weight
+        )
+        return uncertainty
+
+
+class DisjointLinUCBExploration(LinUCBExploration):
+    """
+    Same as LinUCBExploration, just that now different action has different linear regression
+    """
+
+    def uncertainty(
+        self,
+        subjective_state: SubjectiveState,
+        available_action_space: DiscreteActionSpace,
+        representation: Any = None,
+    ) -> torch.Tensor:
+        """
+        Args:
+            representation: unlike LinUCBExploration, here it is a list for different actions
+        """
         uncertainty = []
-        for action in range(available_action_space.n):
-            A_inv = representation[action].inv_A
-            sum_weight = (
-                representation[action].sum_weight
-                if isinstance(representation, AvgWeightLinearRegression)
-                else 1
-            )
+        for linear_regression in representation:
             uncertainty.append(
-                torch.sqrt(
-                    self.batch_quadratic_form(subjective_state, A_inv) / sum_weight
+                super(DisjointLinUCBExploration, self).uncertainty(
+                    subjective_state=subjective_state,
+                    available_action_space=available_action_space,
+                    representation=linear_regression,
                 )
             )
         uncertainty = torch.stack(uncertainty)

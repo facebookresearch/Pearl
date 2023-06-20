@@ -62,11 +62,15 @@ class UCBExplorationBase(ValueExplorationBase):
         if self._alpha == 0:
             ucb_scores = values
         else:
-            ucb_scores = values + self._alpha * self.uncertainty(
+            uncertainty = self.uncertainty(
                 subjective_state=subjective_state,
                 available_action_space=available_action_space,
                 representation=representation,
             )
+            # a safe check before reshape uncertainty into values
+            assert uncertainty.numel() == values.numel()
+            uncertainty = uncertainty.view(values.shape)
+            ucb_scores = values + self._alpha * uncertainty
         return ucb_scores.squeeze()
 
     # TODO: We should make discrete action space itself iterable

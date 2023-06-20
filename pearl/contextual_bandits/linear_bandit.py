@@ -9,13 +9,13 @@ from pearl.contextual_bandits.linear_regression import (
     AvgWeightLinearRegression,
     LinearRegression,
 )
+from pearl.contextual_bandits.linucb_exploration import LinUCBExploration
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
 from pearl.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
-from pearl.policy_learners.exploration_module.ucb_exploration import UCBExplorationBase
 from pearl.replay_buffer.transition import TransitionBatch
 from pearl.utils.action_spaces import DiscreteActionSpace
 
@@ -66,6 +66,8 @@ class LinearBandit(ContextualBanditBase):
             action index chosen given state and action vectors
         """
         action_dim = action_space.action_dim
+        # It doesnt make sense to call act if we are not working with action vector
+        assert action_dim > 0
         action_count = action_space.n
 
         subjective_state = subjective_state.view(
@@ -87,7 +89,9 @@ class LinearBandit(ContextualBanditBase):
         values = self._linear_regression(new_feature)  # (batch_size, action_count)
         assert values.shape == (batch_size, action_count)
         return self._exploration_module.act(
-            subjective_state=subjective_state,
+            # TODO we might want to name this new_feature
+            # so exploration module doesnt need to worry about broadcast state to different action vector
+            subjective_state=new_feature,
             action_space=action_space,
             values=values,
             representation=self._linear_regression,
@@ -97,7 +101,7 @@ class LinearBandit(ContextualBanditBase):
     def get_linucb_scores(
         subjective_state: SubjectiveState,
         feature_dim: int,
-        exploration_module: UCBExplorationBase,
+        exploration_module: LinUCBExploration,
         linear_regression: LinearRegression,
     ) -> torch.Tensor:
         # currently we only support joint ucb with LinearBandit
@@ -116,9 +120,7 @@ class LinearBandit(ContextualBanditBase):
             values=values,
             available_action_space=available_action_space,
             # for linear bandit, all actions share same linear regression
-            representation={
-                action: linear_regression for action in range(available_action_space.n)
-            },
+            representation=linear_regression,
         ).squeeze()
 
     def get_scores(
@@ -131,7 +133,7 @@ class LinearBandit(ContextualBanditBase):
             Shape is (batch)
         """
         # TODO generalize for all kinds of exploration module
-        assert isinstance(self._exploration_module, UCBExplorationBase)
+        assert isinstance(self._exploration_module, LinUCBExploration)
         return LinearBandit.get_linucb_scores(
             subjective_state=subjective_state,
             feature_dim=self._feature_dim,
