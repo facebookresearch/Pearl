@@ -71,7 +71,26 @@ class DeepBandit(ContextualBanditBase):
         action_space: ActionSpace,
         exploit: bool = False,
     ) -> Action:
-        raise NotImplementedError("Implement when there is a usecase")
+        """
+        Args:
+            subjective_state - state will be applied to different action vectors in action_space
+            action_space contains a list of action vector, currenly only support static space
+        Return:
+            action index chosen given state and action vectors
+        """
+        # It doesnt make sense to call act if we are not working with action vector
+        assert action_space.action_dim > 0
+        action_count = action_space.n
+        new_feature = action_space.cat_state_tensor(subjective_state)
+        values = self._deep_represent_layers(new_feature).squeeze()
+        # batch_size * action_count
+        assert values.numel() == new_feature.shape[0] * action_count
+        return self._exploration_module.act(
+            subjective_state=subjective_state,
+            action_space=action_space,
+            values=values,
+            representation=None,  # fill in as needed in the future
+        )
 
     def get_scores(
         self,

@@ -7,6 +7,8 @@ from pearl.contextual_bandits.deep_bandit import DeepBandit
 from pearl.policy_learners.exploration_module.no_exploration import NoExploration
 from pearl.replay_buffer.transition import TransitionBatch
 
+from pearl.utils.action_spaces import DiscreteActionSpace
+
 
 class TestDeepContextualBandit(unittest.TestCase):
     def test_deep_basic(self) -> None:
@@ -31,6 +33,7 @@ class TestDeepContextualBandit(unittest.TestCase):
         for _ in range(1000):
             losses.append(policy_learner.learn_batch(batch)["loss"])
 
+        # TEST LEARN
         self.assertGreater(1e-2, losses[-1])
         self.assertTrue(
             torch.allclose(
@@ -41,3 +44,10 @@ class TestDeepContextualBandit(unittest.TestCase):
                 atol=0.1,
             )
         )
+
+        # TEST ACT
+        action_space = DiscreteActionSpace(batch.action.tolist())
+        actions = policy_learner.act(
+            subjective_state=batch.state, action_space=action_space
+        )
+        self.assertEqual(actions.shape, batch.reward.shape)
