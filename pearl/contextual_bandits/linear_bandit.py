@@ -65,29 +65,12 @@ class LinearBandit(ContextualBanditBase):
         Return:
             action index chosen given state and action vectors
         """
-        action_dim = action_space.action_dim
         # It doesnt make sense to call act if we are not working with action vector
-        assert action_dim > 0
+        assert action_space.action_dim > 0
         action_count = action_space.n
-
-        subjective_state = subjective_state.view(
-            -1, self._feature_dim - action_dim
-        )  # reshape to (batch_size, state_dim)
-        batch_size = subjective_state.shape[0]
-
-        expanded_state = subjective_state.unsqueeze(1).repeat(
-            1, action_count, 1
-        )  # expand to (batch_size, action_count, state_dim)
-
-        actions = action_space.to_tensor()  # (action_count, action_dim)
-        expanded_action = actions.unsqueeze(0).repeat(
-            batch_size, 1, 1
-        )  # batch_size, action_count, action_dim
-        new_feature = torch.cat(
-            [expanded_state, expanded_action], dim=2
-        )  # batch_size, action_count, feature_dim
+        new_feature = action_space.cat_state_tensor(subjective_state)
         values = self._linear_regression(new_feature)  # (batch_size, action_count)
-        assert values.shape == (batch_size, action_count)
+        assert values.shape == (new_feature.shape[0], action_count)
         return self._exploration_module.act(
             # TODO we might want to name this new_feature
             # so exploration module doesnt need to worry about broadcast state to different action vector

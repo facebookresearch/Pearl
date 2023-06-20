@@ -38,3 +38,34 @@ class DiscreteActionSpace(ActionSpace):
         if self.action_dim == 0:
             return torch.zeros(self.n, 0)
         return torch.Tensor(self.actions)
+
+    def cat_state_tensor(self, subjective_state: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+            subjective_state in shape (batch_size, state_dim) or (state_dim)
+        Returns:
+            cat subjective_state to every action and return a feature tensor with shape (batch_size, action_count, feature_dim)
+        """
+        action_dim = self.action_dim
+        state_dim = subjective_state.shape[-1]
+        action_count = self.n
+
+        subjective_state = subjective_state.view(
+            -1, state_dim
+        )  # reshape to (batch_size, state_dim)
+        batch_size = subjective_state.shape[0]
+
+        expanded_state = subjective_state.unsqueeze(1).repeat(
+            1, action_count, 1
+        )  # expand to (batch_size, action_count, state_dim)
+
+        actions = self.to_tensor()  # (action_count, action_dim)
+        expanded_action = actions.unsqueeze(0).repeat(
+            batch_size, 1, 1
+        )  # batch_size, action_count, action_dim
+        new_feature = torch.cat(
+            [expanded_state, expanded_action], dim=2
+        )  # batch_size, action_count, feature_dim
+
+        assert new_feature.shape == (batch_size, action_count, state_dim + action_dim)
+        return new_feature
