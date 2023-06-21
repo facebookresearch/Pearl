@@ -16,6 +16,7 @@ from pearl.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
 from pearl.replay_buffer.transition import TransitionBatch
+from pearl.utils.action_spaces import DiscreteActionSpace
 from torch import optim
 
 
@@ -95,5 +96,18 @@ class DeepBandit(ContextualBanditBase):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
+        action_space: DiscreteActionSpace = None,
     ) -> torch.Tensor:
-        return self._deep_represent_layers(subjective_state).squeeze()
+        """
+        Args:
+            subjective_state: tensor for state
+            action_space: basically a list of action features, when it is none, view subjective_state as feature
+        Return:
+            return mlp value with shape (batch_size, action_count)
+        """
+        feature = (
+            action_space.cat_state_tensor(subjective_state)
+            if action_space is not None
+            else subjective_state
+        )
+        return self._deep_represent_layers(feature).squeeze()

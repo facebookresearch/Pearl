@@ -68,8 +68,9 @@ class TestLinearBandits(unittest.TestCase):
         self.policy_learner.exploration_module = LinUCBExploration(alpha=0)
         batch = self.batch
 
+        # query scores by feature vector directly
         ucb_scores = self.policy_learner.get_scores(
-            torch.cat([batch.state, batch.action], dim=1)
+            subjective_state=torch.cat([batch.state, batch.action], dim=1)
         )
         self.assertTrue(
             torch.allclose(
@@ -79,6 +80,14 @@ class TestLinearBandits(unittest.TestCase):
             )
         )
         self.assertEqual(ucb_scores.shape, batch.reward.shape)
+
+        ucb_scores = self.policy_learner.get_scores(
+            subjective_state=batch.state,
+            action_space=DiscreteActionSpace(batch.action.tolist()),
+        )
+        self.assertEqual(
+            ucb_scores.shape, (batch.state.shape[0], batch.action.shape[0])
+        )
 
     def test_linear_ucb_act(self) -> None:
         """

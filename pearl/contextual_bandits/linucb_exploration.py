@@ -24,7 +24,6 @@ class LinUCBExploration(UCBExplorationBase):
         A shape: (Feature_dim, Feature_dim)
         output shape: (Batch)
         """
-        x = x.view(-1, A.shape[0])  # (batch_size, feature_size)
         return (torch.matmul(x, A) * x).sum(-1)
 
     def uncertainty(

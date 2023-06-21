@@ -82,26 +82,22 @@ class LinearBandit(ContextualBanditBase):
 
     @staticmethod
     def get_linucb_scores(
-        subjective_state: SubjectiveState,
+        feature: SubjectiveState,
         feature_dim: int,
         exploration_module: LinUCBExploration,
         linear_regression: LinearRegression,
+        action_space: DiscreteActionSpace,
     ) -> torch.Tensor:
         # currently we only support joint ucb with LinearBandit
         # which means we call get_scores N times for N actions
         # for disjoint ucb, please use DisjointLinearBandit
-        available_action_space = DiscreteActionSpace([0])
-        subjective_state = subjective_state.view(
-            -1, feature_dim
-        )  # reshape to (batch_size, feature_dim)
-        values = linear_regression(subjective_state)  # (batch_size, )
-        values = values.unsqueeze(dim=1)  # change to (batch_size, 1)
-        # get_scores returns (batch_size, action_count) or (action_count)
-        # here our action count is 1, so delete that dimension by squeeze
+        values = linear_regression(feature)  # (batch_size, )
         return exploration_module.get_ucb_scores(
-            subjective_state=subjective_state,
+            subjective_state=feature,
             values=values,
-            available_action_space=available_action_space,
+            available_action_space=action_space
+            if action_space is not None
+            else DiscreteActionSpace([0]),
             # for linear bandit, all actions share same linear regression
             representation=linear_regression,
         ).squeeze()
@@ -109,6 +105,7 @@ class LinearBandit(ContextualBanditBase):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
+        action_space: DiscreteActionSpace = None,
     ) -> torch.Tensor:
         """
         Returns:
@@ -117,9 +114,15 @@ class LinearBandit(ContextualBanditBase):
         """
         # TODO generalize for all kinds of exploration module
         assert isinstance(self._exploration_module, LinUCBExploration)
+        feature = (
+            action_space.cat_state_tensor(subjective_state)
+            if action_space is not None
+            else subjective_state
+        )
         return LinearBandit.get_linucb_scores(
-            subjective_state=subjective_state,
+            feature=feature,
             feature_dim=self._feature_dim,
             exploration_module=self._exploration_module,
             linear_regression=self._linear_regression,
+            action_space=action_space,
         )

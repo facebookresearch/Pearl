@@ -10,6 +10,7 @@ from pearl.api.action_space import ActionSpace
 from pearl.contextual_bandits.deep_bandit import DeepBandit
 from pearl.contextual_bandits.linear_bandit import LinearBandit
 from pearl.contextual_bandits.linear_regression import AvgWeightLinearRegression
+from pearl.contextual_bandits.linucb_exploration import LinUCBExploration
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
@@ -17,6 +18,7 @@ from pearl.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
 from pearl.replay_buffer.transition import TransitionBatch
+from pearl.utils.action_spaces import DiscreteActionSpace
 
 
 class DeepLinearBandit(DeepBandit):
@@ -83,11 +85,20 @@ class DeepLinearBandit(DeepBandit):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
+        action_space: DiscreteActionSpace = None,
     ) -> torch.Tensor:
-        processed_feature = self._deep_represent_layers(subjective_state)
+        # TODO generalize for all kinds of exploration module
+        assert isinstance(self._exploration_module, LinUCBExploration)
+        feature = (
+            action_space.cat_state_tensor(subjective_state)
+            if action_space is not None
+            else subjective_state
+        )
+        processed_feature = self._deep_represent_layers(feature)
         return LinearBandit.get_linucb_scores(
-            subjective_state=processed_feature,
+            feature=processed_feature,
             feature_dim=self._linear_regression_dim,
             exploration_module=self._exploration_module,
             linear_regression=self._linear_regression,
+            action_space=action_space,
         )

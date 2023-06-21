@@ -29,12 +29,15 @@ class TestDeepContextualBandit(unittest.TestCase):
             reward=state.sum(-1) + action.sum(-1),
             weight=torch.randn(batch_size),
         )
+
+        # TEST LEARN
         losses = []
         for _ in range(1000):
             losses.append(policy_learner.learn_batch(batch)["loss"])
 
-        # TEST LEARN
         self.assertGreater(1e-2, losses[-1])
+
+        # TEST get scores
         self.assertTrue(
             torch.allclose(
                 batch.reward,
@@ -44,6 +47,12 @@ class TestDeepContextualBandit(unittest.TestCase):
                 atol=0.1,
             )
         )
+        scores = policy_learner.get_scores(
+            subjective_state=batch.state,
+            action_space=DiscreteActionSpace(batch.action.tolist()),
+        )
+        # shape should be batch_size, action_count
+        self.assertEqual(scores.shape, (batch.state.shape[0], batch.action.shape[0]))
 
         # TEST ACT
         action_space = DiscreteActionSpace(batch.action.tolist())

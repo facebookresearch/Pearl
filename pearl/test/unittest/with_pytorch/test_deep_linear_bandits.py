@@ -6,6 +6,7 @@ import torch
 from pearl.contextual_bandits.deep_linear_bandit import DeepLinearBandit
 from pearl.contextual_bandits.linucb_exploration import LinUCBExploration
 from pearl.replay_buffer.transition import TransitionBatch
+from pearl.utils.action_spaces import DiscreteActionSpace
 
 
 class TestDeepLinearBandits(unittest.TestCase):
@@ -35,3 +36,9 @@ class TestDeepLinearBandits(unittest.TestCase):
         self.assertGreater(1e-2, losses[-1])
         # this is to ensure e2e run to get ucb score works
         policy_learner.get_scores(torch.randn(batch_size, feature_dim))
+        scores = policy_learner.get_scores(
+            subjective_state=batch.state,
+            action_space=DiscreteActionSpace(batch.action.tolist()),
+        )
+        # shape should be batch_size, action_count
+        self.assertEqual(scores.shape, (batch.state.shape[0], batch.action.shape[0]))
