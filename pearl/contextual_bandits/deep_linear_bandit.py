@@ -79,7 +79,26 @@ class DeepLinearBandit(DeepBandit):
         action_space: ActionSpace,
         exploit: bool = False,
     ) -> Action:
-        raise NotImplementedError("Implement when there is a usecase")
+        # It doesnt make sense to call act if we are not working with action vector
+        assert action_space.action_dim > 0
+
+        new_feature = action_space.cat_state_tensor(subjective_state)
+        mlp_values = self._deep_represent_layers(new_feature)
+        # `_linear_regression` is not nn.Linear(). It is a customized linear layer
+        # that can be updated by analytical method (matrix calculations) rather than gradient descent of torch optimizer.
+        values = self._linear_regression(mlp_values)
+
+        # batch_size * action_count
+        assert values.numel() == new_feature.shape[0] * action_space.n
+
+        # subjective_state=mlp_values makes sense for LinUCBExploration
+        # revisit for other exploration module
+        return self._exploration_module.act(
+            subjective_state=mlp_values,
+            action_space=action_space,
+            values=values,
+            representation=self._linear_regression,
+        )
 
     def get_scores(
         self,

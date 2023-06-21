@@ -42,3 +42,14 @@ class TestDeepLinearBandits(unittest.TestCase):
         )
         # shape should be batch_size, action_count
         self.assertEqual(scores.shape, (batch.state.shape[0], batch.action.shape[0]))
+
+        # TEST ACT API
+        action_space = DiscreteActionSpace(batch.action.tolist())
+        # act on one state
+        action = policy_learner.act(
+            subjective_state=state[0], action_space=action_space
+        )
+        self.assertTrue(action in range(batch_size))  # return action index
+        # act on a batch of states
+        action = policy_learner.act(subjective_state=state, action_space=action_space)
+        self.assertEqual(action.shape, batch.reward.shape)
