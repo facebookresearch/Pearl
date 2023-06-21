@@ -80,28 +80,6 @@ class LinearBandit(ContextualBanditBase):
             representation=self._linear_regression,
         )
 
-    @staticmethod
-    def get_linucb_scores(
-        feature: SubjectiveState,
-        feature_dim: int,
-        exploration_module: LinUCBExploration,
-        linear_regression: LinearRegression,
-        action_space: DiscreteActionSpace,
-    ) -> torch.Tensor:
-        # currently we only support joint ucb with LinearBandit
-        # which means we call get_scores N times for N actions
-        # for disjoint ucb, please use DisjointLinearBandit
-        values = linear_regression(feature)  # (batch_size, )
-        return exploration_module.get_ucb_scores(
-            subjective_state=feature,
-            values=values,
-            available_action_space=action_space
-            if action_space is not None
-            else DiscreteActionSpace([0]),
-            # for linear bandit, all actions share same linear regression
-            representation=linear_regression,
-        ).squeeze()
-
     def get_scores(
         self,
         subjective_state: SubjectiveState,
@@ -119,10 +97,12 @@ class LinearBandit(ContextualBanditBase):
             if action_space is not None
             else subjective_state
         )
-        return LinearBandit.get_linucb_scores(
-            feature=feature,
-            feature_dim=self._feature_dim,
-            exploration_module=self._exploration_module,
-            linear_regression=self._linear_regression,
-            action_space=action_space,
-        )
+        return self._exploration_module.get_ucb_scores(
+            subjective_state=feature,
+            values=self._linear_regression(feature),
+            # when action_space is None, we are querying score for one action
+            available_action_space=action_space
+            if action_space is not None
+            else DiscreteActionSpace([0]),
+            representation=self._linear_regression,
+        ).squeeze()

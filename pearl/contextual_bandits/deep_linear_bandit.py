@@ -8,7 +8,6 @@ from pearl.api.action import Action
 
 from pearl.api.action_space import ActionSpace
 from pearl.contextual_bandits.deep_bandit import DeepBandit
-from pearl.contextual_bandits.linear_bandit import LinearBandit
 from pearl.contextual_bandits.linear_regression import AvgWeightLinearRegression
 from pearl.contextual_bandits.linucb_exploration import LinUCBExploration
 from pearl.history_summarization_modules.history_summarization_module import (
@@ -95,10 +94,12 @@ class DeepLinearBandit(DeepBandit):
             else subjective_state
         )
         processed_feature = self._deep_represent_layers(feature)
-        return LinearBandit.get_linucb_scores(
-            feature=processed_feature,
-            feature_dim=self._linear_regression_dim,
-            exploration_module=self._exploration_module,
-            linear_regression=self._linear_regression,
-            action_space=action_space,
-        )
+        return self._exploration_module.get_ucb_scores(
+            subjective_state=processed_feature,
+            values=self._linear_regression(processed_feature),
+            # when action_space is None, we are querying score for one action
+            available_action_space=action_space
+            if action_space is not None
+            else DiscreteActionSpace([0]),
+            representation=self._linear_regression,
+        ).squeeze()
