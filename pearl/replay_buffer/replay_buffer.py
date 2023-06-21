@@ -15,5 +15,8 @@ class ReplayBuffer(ABC):
     def sample(self, batch_size) -> Iterable[Any]:
         pass
 
+    def empty(self) -> None:
+        pass
+
     def __len__(self) -> int:
         pass

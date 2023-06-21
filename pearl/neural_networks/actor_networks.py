@@ -28,11 +28,7 @@ class VanillaActorNetwork(nn.Module):
     def forward(self, x):
         value = F.relu(self.fc1(x))
         value = self.hiddens(value)
-        return F.softmax(self.fc2(value))
-
-    def xavier_init(self):
-        nn.init.xavier_normal_(self.fc1.weight)
-        nn.init.xavier_normal_(self.fc2.weight)
+        return F.softmax(self.fc2(value), dim=1)
 
 
 ActorNetworkType = Callable[[int, int, List[int], int], nn.Module]

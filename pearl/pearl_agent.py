@@ -98,10 +98,18 @@ class PearlAgent(Agent):
 
         self._subjective_state = new_subjective_state
 
-    def learn(self, batch_size: Optional[int] = None) -> Dict[str, Any]:
-        report = self.policy_learner.learn(self.replay_buffer, batch_size)
+    def learn(
+        self, batch_size: Optional[int] = None, dynamic_size: bool = False
+    ) -> Dict[str, Any]:
+        report = self.policy_learner.learn(
+            self.replay_buffer, batch_size, dynamic_size=dynamic_size
+        )
         self.safety_module.learn(self.replay_buffer)
         self.history_summarization_module.learn(self.replay_buffer)
+
+        if dynamic_size:
+            self.replay_buffer.empty()
+
         return report
 
     def learn_batch(self, batch: TransitionBatch) -> None:

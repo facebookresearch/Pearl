@@ -57,7 +57,10 @@ class PolicyLearner(ABC):
         pass
 
     def learn(
-        self, replay_buffer: ReplayBuffer, batch_size: Optional[int] = None
+        self,
+        replay_buffer: ReplayBuffer,
+        batch_size: Optional[int] = None,
+        dynamic_size: bool = False,
     ) -> Dict[str, Any]:
         """
         Args:
@@ -65,12 +68,17 @@ class PolicyLearner(ABC):
             batch_size: size of data that we would like one round of train to work with
                 If batch_size is None, use definition from class
                 Otherwise, use customized input here
+            dynamic_size: whether learning should happen by learning with all data in the replay buffer. Particularly
+                useful in on-policy learning algorithms.
 
         Returns:
             A dictionary which includes useful metric to return to upperlevel for different purpose eg debugging
         """
         batch_size = self._batch_size if batch_size is None else batch_size
-        if len(replay_buffer) < batch_size:
+
+        if dynamic_size:
+            batch_size = len(replay_buffer)
+        elif len(replay_buffer) < batch_size:
             raise Exception("Nothing learnt, check if batch_size needs to be updated")
 
         report = {}

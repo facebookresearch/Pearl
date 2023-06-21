@@ -16,7 +16,11 @@ from pearl.online_learning.online_learning import episode_return
 from pearl.pearl_agent import PearlAgent
 
 from pearl.policy_learners.deep_q_learning import DeepQLearning
+from pearl.policy_learners.policy_gradient import PolicyGradient
 from pearl.replay_buffer.fifo_off_policy_replay_buffer import FIFOOffPolicyReplayBuffer
+from pearl.replay_buffer.on_policy_episodic_replay_buffer import (
+    OnPolicyEpisodicReplayBuffer,
+)
 from windtunnel.cogwheel.test import cogwheel_test, CogwheelTest
 
 

@@ -14,6 +14,7 @@ def online_learning_to_png_graph(
     filename="returns.png",
     number_of_episodes=1000,
     learn_after_episode=False,
+    dynamic_size=False,
 ) -> None:
     """
     Runs online learning and generates a PNG graph of the returns.
@@ -26,7 +27,7 @@ def online_learning_to_png_graph(
     """
 
     returns = online_learning_returns(
-        agent, env, number_of_episodes, learn_after_episode
+        agent, env, number_of_episodes, learn_after_episode, dynamic_size
     )
 
     if filename is not None:
@@ -44,6 +45,7 @@ def online_learning_returns(
     env: Environment,
     number_of_episodes: int = 1000,
     learn_after_episode: bool = False,
+    dynamic_size: bool = False,
 ) -> List[Value]:
     returns = []
     online_learning(
@@ -52,6 +54,7 @@ def online_learning_returns(
         number_of_episodes=number_of_episodes,
         learn_after_episode=learn_after_episode,
         process_return=returns.append,
+        dynamic_size=dynamic_size,
     )
     return returns
 
@@ -62,6 +65,7 @@ def online_learning(
     number_of_episodes: int = 1000,
     learn_after_episode: bool = False,
     process_return: Callable[[Value], None] = lambda g: None,
+    dynamic_size: bool = False,
 ):
     """
     Performs online learning for a number of episodes.
@@ -72,6 +76,7 @@ def online_learning(
         number_of_episodes (int, optional): the number of episodes to run. Defaults to 1000.
         learn_after_episode (bool, optional): asks the agent to only learn after every episode. Defaults to False.
         process_return (Callable[[Value], None], optional): a callable for processing the returns of the episodes. Defaults to no-op.
+        dynamic_size (bool, optional): if True, the size of the each learning batch is equal to buffer length. Defaults to False.
     """
     for _ in range(number_of_episodes):
         g = episode_return(
@@ -80,6 +85,7 @@ def online_learning(
             learn=True,
             exploit=False,
             learn_after_episode=learn_after_episode,
+            dynamic_size=dynamic_size,
         )
         process_return(g)
 
@@ -90,6 +96,7 @@ def episode_return(
     learn: bool = False,
     exploit: bool = True,
     learn_after_episode: bool = False,
+    dynamic_size: bool = False,
 ):
     """
     Runs one episode and returns the total reward (return).
@@ -100,6 +107,7 @@ def episode_return(
         learn (bool, optional): Runs `agent.learn()` after every step. Defaults to False.
         exploit (bool, optional): asks the agent to only exploit. Defaults to False.
         learn_after_episode (bool, optional): asks the agent to only learn after every episode. Defaults to False.
+        dynamic_size (bool, optional): if True, the size of the each learning batch is equal to buffer length. Defaults to False.
 
     Returns:
         Value: the return of the episode.
@@ -115,15 +123,15 @@ def episode_return(
         g += action_result.reward
         agent.observe(action_result)
         if learn and not learn_after_episode:
-            agent.learn()
+            agent.learn(dynamic_size=dynamic_size)
         done = action_result.done
         step += 1
 
     if learn and learn_after_episode:
         if agent.policy_learner.batch_size > step - 1:
             # if we dont set batch_size, learn will do nothing
-            agent.learn(batch_size=step - 1)
+            agent.learn(batch_size=step - 1, dynamic_size=dynamic_size)
         else:
-            agent.learn()
+            agent.learn(dynamic_size=dynamic_size)
 
     return g

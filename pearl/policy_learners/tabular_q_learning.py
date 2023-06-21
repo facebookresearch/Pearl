@@ -79,7 +79,10 @@ class TabularQLearning(PolicyLearner):
         )
 
     def learn(
-        self, replay_buffer: ReplayBuffer, _batch_size: Optional[int] = None
+        self,
+        replay_buffer: ReplayBuffer,
+        _batch_size: Optional[int] = None,
+        dynamic_size: bool = False,
     ) -> None:
         # We currently assume replay buffer only contains last transition (on-policy)
         for (
