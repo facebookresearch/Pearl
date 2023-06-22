@@ -42,7 +42,13 @@ class TestAgent(CogwheelTest):
         )
         counter = 0
         while (
-            episode_return(agent=agent, env=env, learn=True, learn_after_episode=True)
+            episode_return(
+                agent=agent,
+                env=env,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+            )
             != 500
         ):
             counter += 1

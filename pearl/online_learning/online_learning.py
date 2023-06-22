@@ -128,10 +128,10 @@ def episode_return(
         step += 1
 
     if learn and learn_after_episode:
-        if agent.policy_learner.batch_size > step - 1:
-            # if we dont set batch_size, learn will do nothing
-            agent.learn(batch_size=step - 1, dynamic_size=dynamic_size)
-        else:
+        if len(agent.replay_buffer) >= agent.policy_learner.batch_size:
             agent.learn(dynamic_size=dynamic_size)
+        else:
+            # use dynamic_size if current replay buffer size is smaller than batch size
+            agent.learn(dynamic_size=True)
 
     return g
