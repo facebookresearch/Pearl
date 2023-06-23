@@ -59,12 +59,16 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
         )
 
         if done:
-            cum_returns = torch.cumsum(torch.tensor(self.reward_cache), dim=0)
+            reward_cache = torch.tensor(self.reward_cache)
+            # reverse cumsum (forward-looking). see https://github.com/pytorch/pytorch/issues/33520#issuecomment-812907290
+            cum_returns = (
+                reward_cache
+                + torch.sum(reward_cache, dim=0, keepdims=True)
+                - torch.cumsum(reward_cache, dim=0)
+            )
             for i in range(len(self.state_action_cache)):
                 cum_return = TensorBasedReplayBuffer._process_single_reward(
-                    torch.sum(torch.tensor(self.reward_cache)).item()
-                    - cum_returns[i].item()
-                    + self.reward_cache[i]
+                    cum_returns[i].item()
                 )
                 self.state_action_cache[i].reward = cum_return
                 self.memory.append(self.state_action_cache[i])
@@ -73,6 +77,10 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
             self.state_action_cache = []
 
     def sample(self, batch_size: int) -> TransitionBatch:
+        if batch_size > len(self):
+            raise ValueError(
+                f"Can't get a batch of size {batch_size} from a replay buffer with only {len(self)} elements"
+            )
         samples = random.sample(self.memory, batch_size)
         return TransitionBatch(
             state=torch.cat([x.state for x in samples]),
