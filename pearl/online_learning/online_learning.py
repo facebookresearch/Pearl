@@ -14,7 +14,7 @@ def online_learning_to_png_graph(
     filename="returns.png",
     number_of_episodes=1000,
     learn_after_episode=False,
-    dynamic_size=False,
+    on_policy=False,
 ) -> None:
     """
     Runs online learning and generates a PNG graph of the returns.
@@ -27,7 +27,7 @@ def online_learning_to_png_graph(
     """
 
     returns = online_learning_returns(
-        agent, env, number_of_episodes, learn_after_episode, dynamic_size
+        agent, env, number_of_episodes, learn_after_episode, on_policy
     )
 
     if filename is not None:
@@ -45,7 +45,7 @@ def online_learning_returns(
     env: Environment,
     number_of_episodes: int = 1000,
     learn_after_episode: bool = False,
-    dynamic_size: bool = False,
+    on_policy: bool = False,
 ) -> List[Value]:
     returns = []
     online_learning(
@@ -54,7 +54,7 @@ def online_learning_returns(
         number_of_episodes=number_of_episodes,
         learn_after_episode=learn_after_episode,
         process_return=returns.append,
-        dynamic_size=dynamic_size,
+        on_policy=on_policy,
     )
     return returns
 
@@ -65,7 +65,7 @@ def online_learning(
     number_of_episodes: int = 1000,
     learn_after_episode: bool = False,
     process_return: Callable[[Value], None] = lambda g: None,
-    dynamic_size: bool = False,
+    on_policy: bool = False,
 ):
     """
     Performs online learning for a number of episodes.
@@ -76,7 +76,7 @@ def online_learning(
         number_of_episodes (int, optional): the number of episodes to run. Defaults to 1000.
         learn_after_episode (bool, optional): asks the agent to only learn after every episode. Defaults to False.
         process_return (Callable[[Value], None], optional): a callable for processing the returns of the episodes. Defaults to no-op.
-        dynamic_size (bool, optional): if True, the size of the each learning batch is equal to buffer length. Defaults to False.
+        on_policy (bool, optional): if True, the size of the each learning batch is equal to buffer length. Defaults to False.
     """
     for _ in range(number_of_episodes):
         g = episode_return(
@@ -85,7 +85,7 @@ def online_learning(
             learn=True,
             exploit=False,
             learn_after_episode=learn_after_episode,
-            dynamic_size=dynamic_size,
+            on_policy=on_policy,
         )
         process_return(g)
 
@@ -96,7 +96,7 @@ def episode_return(
     learn: bool = False,
     exploit: bool = True,
     learn_after_episode: bool = False,
-    dynamic_size: bool = False,
+    on_policy: bool = False,
 ):
     """
     Runs one episode and returns the total reward (return).
@@ -107,7 +107,7 @@ def episode_return(
         learn (bool, optional): Runs `agent.learn()` after every step. Defaults to False.
         exploit (bool, optional): asks the agent to only exploit. Defaults to False.
         learn_after_episode (bool, optional): asks the agent to only learn after every episode. Defaults to False.
-        dynamic_size (bool, optional): if True, the size of the each learning batch is equal to buffer length. Defaults to False.
+        on_policy (bool, optional): if True, the size of the each learning batch is equal to buffer length. Defaults to False.
 
     Returns:
         Value: the return of the episode.
@@ -123,15 +123,15 @@ def episode_return(
         g += action_result.reward
         agent.observe(action_result)
         if learn and not learn_after_episode:
-            agent.learn(dynamic_size=dynamic_size)
+            agent.learn(on_policy=on_policy)
         done = action_result.done
         step += 1
 
     if learn and learn_after_episode:
         if len(agent.replay_buffer) >= agent.policy_learner.batch_size:
-            agent.learn(dynamic_size=dynamic_size)
+            agent.learn(on_policy=on_policy)
         else:
-            # use dynamic_size if current replay buffer size is smaller than batch size
-            agent.learn(dynamic_size=True)
+            # use on_policy if current replay buffer size is smaller than batch size
+            agent.learn(on_policy=True)
 
     return g

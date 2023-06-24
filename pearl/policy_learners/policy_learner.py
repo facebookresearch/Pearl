@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 
@@ -59,27 +60,24 @@ class PolicyLearner(ABC):
     def learn(
         self,
         replay_buffer: ReplayBuffer,
-        batch_size: Optional[int] = None,
-        dynamic_size: bool = False,
+        on_policy: bool = False,
     ) -> Dict[str, Any]:
         """
         Args:
             replay_buffer: buffer instance which learn is reading from
-            batch_size: size of data that we would like one round of train to work with
-                If batch_size is None, use definition from class
-                Otherwise, use customized input here
-            dynamic_size: whether learning should happen by learning with all data in the replay buffer. Particularly
+            on_policy: whether learning should happen by learning with all data in the replay buffer. Particularly
                 useful in on-policy learning algorithms.
 
         Returns:
             A dictionary which includes useful metric to return to upperlevel for different purpose eg debugging
         """
-        batch_size = self._batch_size if batch_size is None else batch_size
+        batch_size = self._batch_size
 
-        if dynamic_size:
+        if on_policy:
             batch_size = len(replay_buffer)
         elif len(replay_buffer) < batch_size:
-            raise Exception("Nothing learnt, check if batch_size needs to be updated")
+            logging.warning("We don't have enough data to learn.")
+            return {}
 
         report = {}
         for _ in range(self._training_rounds):
