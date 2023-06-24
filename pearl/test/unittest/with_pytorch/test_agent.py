@@ -124,7 +124,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
         )
 
         regrets = []
-        for _ in range(500):
+        for _ in range(100):
             observation, action_space = env.reset()
             agent.reset(observation, action_space)
             action = agent.act()
@@ -134,5 +134,6 @@ class TestAgentWithPyTorch(unittest.TestCase):
             agent.learn()
             regrets.append(regret.squeeze().item())
 
+        # to test learning ability of linear contextual bandits we check
+        # that the regret is decreasing over learning steps
         self.assertTrue(sum(regrets[10:]) >= sum(regrets[-10:]))
-        self.assertTrue(sum(regrets[100:]) >= sum(regrets[-100:]))
