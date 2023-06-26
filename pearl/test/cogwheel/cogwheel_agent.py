@@ -16,8 +16,11 @@ from pearl.online_learning.online_learning import episode_return
 from pearl.pearl_agent import PearlAgent
 
 from pearl.policy_learners.deep_q_learning import DeepQLearning
+
+from pearl.policy_learners.deep_sarsa import DeepSARSA
 from pearl.policy_learners.policy_gradient import PolicyGradient
 from pearl.replay_buffer.fifo_off_policy_replay_buffer import FIFOOffPolicyReplayBuffer
+from pearl.replay_buffer.fifo_on_policy_replay_buffer import FIFOOnPolicyReplayBuffer
 from pearl.replay_buffer.on_policy_episodic_replay_buffer import (
     OnPolicyEpisodicReplayBuffer,
 )
@@ -55,6 +58,66 @@ class TestAgent(CogwheelTest):
             # we should be able to get to 500 within 100 episodes
             # according to testplan in D46043013
             self.assertGreater(100, counter)
+
+    @cogwheel_test
+    def test_double_dqn(self) -> None:
+        """
+        This test is checking if double DQN will eventually get to 500 return for CartPole-v1
+        """
+        env = GymEnvironment("CartPole-v1")
+        agent = PearlAgent(
+            policy_learner=DeepQLearning(
+                env.observation_space.shape[0],
+                env.action_space,
+                [64, 64],
+                training_rounds=20,
+                double=True,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+        )
+        counter = 0
+        while (
+            episode_return(
+                agent=agent,
+                env=env,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+            )
+            != 500
+        ):
+            counter += 1
+            self.assertGreater(1000, counter)
+
+    @cogwheel_test
+    def test_sarsa(self) -> None:
+        """
+        This test is checking if SARSA will eventually get to 500 return for CartPole-v1
+        """
+        env = GymEnvironment("CartPole-v1")
+        agent = PearlAgent(
+            policy_learner=DeepSARSA(
+                env.observation_space.shape[0],
+                env.action_space,
+                [64, 64],
+                training_rounds=20,
+            ),
+            replay_buffer=FIFOOnPolicyReplayBuffer(10000),
+        )
+        # Give SARSA more than DQN, as it is expected to have worse performance
+        counter = 0
+        while (
+            episode_return(
+                agent=agent,
+                env=env,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+            )
+            != 500
+        ):
+            counter += 1
+            self.assertGreater(1000, counter)
 
 
 if __name__ == "__main__":
