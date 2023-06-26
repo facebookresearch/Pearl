@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 import torch
@@ -49,6 +50,12 @@ class LinUCBExploration(UCBExplorationBase):
         uncertainty = torch.sqrt(
             self.batch_quadratic_form(subjective_state, A_inv) / sum_weight
         )
+        nan_check = torch.isnan(uncertainty)
+        if torch.any(nan_check):
+            # nan doesnt make sense, it's usually caused by bad training data
+            # print out warning and set to 0
+            logging.warning("nan appeared in ucb uncertainty")
+            uncertainty[nan_check] = 0
         return uncertainty
 
 
@@ -65,13 +72,16 @@ class DisjointLinUCBExploration(LinUCBExploration):
     ) -> torch.Tensor:
         """
         Args:
+            subjective_state: this is feature vector in shape, batch_size, action_count, feature
             representation: unlike LinUCBExploration, here it is a list for different actions
         """
         uncertainty = []
-        for linear_regression in representation:
+        for i, linear_regression in enumerate(representation):
             uncertainty.append(
                 super(DisjointLinUCBExploration, self).uncertainty(
-                    subjective_state=subjective_state,
+                    subjective_state=subjective_state[
+                        :, i, :
+                    ],  # different action has different feature
                     available_action_space=available_action_space,
                     representation=linear_regression,
                 )

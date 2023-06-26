@@ -112,7 +112,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
         agent = PearlAgent(
             policy_learner=DisjointLinearBandit(
                 feature_dim=feature_dim,
-                action_count=action_space.n,
+                action_space=action_space,
                 exploration_module=DisjointLinUCBExploration(alpha=0.1),
                 batch_size=1,
             ),

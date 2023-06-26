@@ -18,7 +18,7 @@ class TestDisjointLinearBandits(unittest.TestCase):
         action_space = DiscreteActionSpace(range(3))
         policy_learner = DisjointLinearBandit(
             feature_dim=2,
-            action_count=action_space.n,
+            action_space=action_space,
             # UCB score == rewards
             exploration_module=DisjointLinUCBExploration(alpha=0),
         )
@@ -136,4 +136,45 @@ class TestDisjointLinearBandits(unittest.TestCase):
 
         self.assertTrue(
             all([a in range(0, action_space.n) for a in selected_actions.tolist()])
+        )
+
+    def test_ucb_action_vector(self) -> None:
+        """
+        This is to test discreate action space, but each action has a action vector
+        """
+        state_dim = 5
+        action_dim = 3
+        action_count = 3
+        batch_size = 10
+
+        action_space = DiscreteActionSpace(torch.randn(action_count, action_dim))
+        policy_learner = DisjointLinearBandit(
+            feature_dim=state_dim + action_dim,
+            action_space=action_space,
+            # uncertainty dominate
+            exploration_module=DisjointLinUCBExploration(alpha=1000),
+        )
+        batch = TransitionBatch(
+            state=torch.randn(batch_size, state_dim),
+            action=torch.randint(
+                low=1, high=3, size=(batch_size,)
+            ),  # this is action index
+            reward=torch.randn(batch_size),
+            weight=torch.ones(batch_size),
+        )
+        for _ in range(1000):
+            policy_learner.learn_batch(batch)
+        self.assertEqual(
+            0,
+            policy_learner.act(
+                subjective_state=batch.state[0], action_space=action_space
+            ),
+        )
+        self.assertTrue(
+            torch.all(
+                0
+                == policy_learner.act(
+                    subjective_state=batch.state, action_space=action_space
+                )
+            ),
         )

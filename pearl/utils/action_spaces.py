@@ -25,7 +25,9 @@ class DiscreteActionSpace(ActionSpace):
             yield action
 
     def __getitem__(self, index):
-        return self.actions[index]
+        if self.action_dim == 0:
+            return []  # no action vector
+        return self.actions[index]  # action vector
 
     @property
     def action_dim(self):

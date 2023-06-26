@@ -28,7 +28,7 @@ class DisjointLinearBandit(ContextualBanditBase):
     def __init__(
         self,
         feature_dim: int,
-        action_count: int,
+        action_space: DiscreteActionSpace,
         exploration_module: ExplorationModule,
         training_rounds: int = 100,
         batch_size: int = 128,
@@ -41,8 +41,9 @@ class DisjointLinearBandit(ContextualBanditBase):
         )
         # Currently our disjoint LinUCB usecase only use LinearRegression
         self._linear_regressions = [
-            LinearRegression(feature_dim=feature_dim) for _ in range(action_count)
+            LinearRegression(feature_dim=feature_dim) for _ in range(action_space.n)
         ]
+        self._discrete_action_space = action_space
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """
@@ -54,11 +55,18 @@ class DisjointLinearBandit(ContextualBanditBase):
             index = torch.nonzero(batch.action == action_idx).squeeze()
             if index.numel() == 0:
                 continue
-            context = torch.index_select(
+            state = torch.index_select(
                 batch.state,
                 dim=0,
                 index=index,
             )
+            # cat state with corresponding action tensor
+            expanded_action = (
+                torch.Tensor(self._discrete_action_space[action_idx])
+                .unsqueeze(0)
+                .expand(state.shape[0], -1)
+            )
+            context = torch.cat([state, expanded_action], dim=1)
             reward = torch.index_select(
                 batch.reward,
                 dim=0,
@@ -86,25 +94,24 @@ class DisjointLinearBandit(ContextualBanditBase):
         action_space: DiscreteActionSpace,
         _exploit: bool = False,
     ) -> Action:
-        # TODO static discrete action space only without action vector
-        assert action_space.action_dim == 0
-        subjective_state = subjective_state.view(
-            -1, self._feature_dim
-        )  # reshape to (batch_size, feature_dim)
+        # TODO static discrete action space only, so here action_space should == self._discrete_action_space
+        feature = self._discrete_action_space.cat_state_tensor(
+            subjective_state=subjective_state
+        )  # batch_size, action_count, feature_size
         # followed example in https://pytorch.org/docs for ensembling
-        def wrapper(params, buffers):
+        def wrapper(params, buffers, data):
             return torch.func.functional_call(
-                self._linear_regressions[0], (params, buffers), subjective_state
+                self._linear_regressions[0], (params, buffers), data
             )
 
-        params, buffers = stack_module_state(self._linear_regressions[: action_space.n])
-        values = torch.vmap(wrapper, (0, 0))(
-            params, buffers
+        params, buffers = stack_module_state(self._linear_regressions)
+        values = torch.vmap(wrapper, (0, 0, 1))(
+            params, buffers, feature
         )  # (action_count, batch_size)
         # change shape to (batch_size, action_count)
         values = values.permute(1, 0)
         return self._exploration_module.act(
-            subjective_state=subjective_state,
+            subjective_state=feature,
             action_space=action_space,
             values=values,
             representation=self._linear_regressions,

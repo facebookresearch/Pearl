@@ -48,8 +48,9 @@ class ThompsonSamplingExplorationLinearDisjoint(ValueExplorationBase):
         # DisJoint Linear Bandits
         # The representation is a list for different actions.
         values_sampled = []
-        for _, model in enumerate(representation):
-            score = self.sampling(subjective_state, model)
+        for i, model in enumerate(representation):
+            # subjective_state is in shape of batch_size, action_count, feature_dim
+            score = self.sampling(subjective_state[:, i, :], model)
             values_sampled.append(score)
         values_sampled = torch.stack(values_sampled)
 
