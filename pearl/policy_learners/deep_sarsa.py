@@ -48,6 +48,7 @@ class DeepSARSA(DeepTDLearning):
             exploration_module=exploration_module
             if exploration_module is not None
             else EGreedyExploration(0.05),
+            on_policy=True,
         )
 
     @torch.no_grad()

@@ -23,7 +23,11 @@ class PolicyLearner(ABC):
     """
 
     def __init__(
-        self, training_rounds: int = 100, batch_size: int = 1, **options
+        self,
+        on_policy: bool,
+        training_rounds: int = 100,
+        batch_size: int = 1,
+        **options
     ) -> None:
         self._exploration_module = (
             options["exploration_module"]
@@ -33,6 +37,7 @@ class PolicyLearner(ABC):
         self._training_rounds = training_rounds
         self._batch_size = batch_size
         self._training_steps = 0
+        self.on_policy = on_policy
 
     @property
     def batch_size(self) -> int:
@@ -60,22 +65,17 @@ class PolicyLearner(ABC):
     def learn(
         self,
         replay_buffer: ReplayBuffer,
-        on_policy: bool = False,
     ) -> Dict[str, Any]:
         """
         Args:
             replay_buffer: buffer instance which learn is reading from
-            on_policy: whether learning should happen by learning with all data in the replay buffer. Particularly
-                useful in on-policy learning algorithms.
 
         Returns:
             A dictionary which includes useful metric to return to upperlevel for different purpose eg debugging
         """
-        batch_size = self._batch_size
+        batch_size = self._batch_size if not self.on_policy else len(replay_buffer)
 
-        if on_policy:
-            batch_size = len(replay_buffer)
-        elif len(replay_buffer) < batch_size:
+        if len(replay_buffer) < batch_size:
             logging.warning("We don't have enough data to learn.")
             return {}
 

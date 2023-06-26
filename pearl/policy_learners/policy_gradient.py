@@ -45,6 +45,7 @@ class PolicyGradient(PolicyLearner):
             else PropensityExploration(),
             training_rounds=training_rounds,
             batch_size=batch_size,
+            on_policy=True,
         )
         self._action_space = action_space
         self._learning_rate = learning_rate

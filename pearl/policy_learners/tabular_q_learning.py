@@ -41,7 +41,8 @@ class TabularQLearning(PolicyLearner):
             debug (bool, optional): whether to print debug information to standard output. Defaults to False.
         """
         super(TabularQLearning, self).__init__(
-            exploration_module=EGreedyExploration(exploration_rate)
+            exploration_module=EGreedyExploration(exploration_rate),
+            on_policy=False,
         )
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor

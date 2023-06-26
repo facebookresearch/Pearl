@@ -23,7 +23,6 @@ from torch import optim
 # TODO: Only support discrete action space problems for now and assumes Gym action space.
 # Currently available actions is not used. Needs to be updated once we know the input structure
 # of production stack on this param.
-# TODO: Add a flag for on-policy vs off-policy to distinguish Q learning vs SARSA
 class DeepTDLearning(PolicyLearner):
     """
     An Abstract Class for Deep Temporal Difference learning policy learner.
@@ -35,6 +34,7 @@ class DeepTDLearning(PolicyLearner):
         action_space: ActionSpace,
         hidden_dims: Iterable[int],
         exploration_module: ExplorationModule,
+        on_policy: bool,
         learning_rate: float = 0.001,
         discount_factor: float = 0.99,
         capacity: int = 10000,
@@ -52,6 +52,7 @@ class DeepTDLearning(PolicyLearner):
             training_rounds=training_rounds,
             batch_size=batch_size,
             exploration_module=exploration_module,
+            on_policy=on_policy,
         )
         self._action_space = action_space
         self._learning_rate = learning_rate

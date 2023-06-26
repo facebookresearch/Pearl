@@ -98,12 +98,12 @@ class PearlAgent(Agent):
 
         self._subjective_state = new_subjective_state
 
-    def learn(self, on_policy: bool = False) -> Dict[str, Any]:
-        report = self.policy_learner.learn(self.replay_buffer, on_policy=on_policy)
+    def learn(self) -> Dict[str, Any]:
+        report = self.policy_learner.learn(self.replay_buffer)
         self.safety_module.learn(self.replay_buffer)
         self.history_summarization_module.learn(self.replay_buffer)
 
-        if on_policy:
+        if self.policy_learner.on_policy:
             self.replay_buffer.empty()
 
         return report

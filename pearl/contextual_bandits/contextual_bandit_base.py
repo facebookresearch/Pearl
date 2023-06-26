@@ -29,6 +29,7 @@ class ContextualBanditBase(PolicyLearner):
             training_rounds=training_rounds,
             batch_size=batch_size,
             exploration_module=exploration_module,
+            on_policy=False,
         )
         self._feature_dim = feature_dim
 
