@@ -119,6 +119,36 @@ class TestAgent(CogwheelTest):
             counter += 1
             self.assertGreater(1000, counter)
 
+    @cogwheel_test
+    def test_pg(self) -> None:
+        """
+        This test is checking if Policy Gradient will eventually get to 500 return for CartPole-v1
+        """
+        env = GymEnvironment("CartPole-v1")
+        agent = PearlAgent(
+            policy_learner=PolicyGradient(
+                env.observation_space.shape[0],
+                env.action_space,
+                [64, 64],
+                training_rounds=1,
+                batch_size=500,
+            ),
+            replay_buffer=OnPolicyEpisodicReplayBuffer(10000),
+        )
+        counter = 0
+        while (
+            episode_return(
+                agent=agent,
+                env=env,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+            )
+            != 500
+        ):
+            counter += 1
+            self.assertGreater(10000, counter)
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
