@@ -60,3 +60,48 @@ class ThompsonSamplingExplorationLinearDisjoint(ValueExplorationBase):
         )  # batch_size, action_count
         selected_action = torch.argmax(values_sampled, dim=1).squeeze()
         return selected_action
+
+
+class ThompsonSamplingExplorationLinear(ValueExplorationBase):
+    """
+    Thompson Sampling exploration module for the joint linear bandits.
+    """
+
+    def __init__(
+        self,
+    ) -> None:
+        super(ThompsonSamplingExplorationLinear, self).__init__()
+
+    def sampling(
+        self, subjective_state: SubjectiveState, linear_bandit_model: torch.nn.Module
+    ):
+        """
+        Given the linear bandit model, sample its parameters, and multiplies with feature to get predicted score.
+        """
+        thompson_sampling_coefs = (
+            torch.distributions.multivariate_normal.MultivariateNormal(
+                loc=linear_bandit_model.coefs,
+                covariance_matrix=linear_bandit_model.inv_A,
+            ).sample()
+        )
+        score = torch.matmul(subjective_state, thompson_sampling_coefs.t())
+        return score
+
+    def act(
+        self,
+        subjective_state: SubjectiveState,
+        action_space: DiscreteActionSpace,
+        values: torch.Tensor,
+        representation: Any = None,
+        exploit_action: Action = None,
+    ) -> Action:
+
+        # DisJoint Linear Bandits
+        # The representation is a nn.Module, e.g., a linear regression model.
+        # subjective_state is in shape of (batch_size, feature_dim)
+        score = self.sampling(subjective_state, representation)
+
+        # get the best action with the highest value
+        values_sampled = score.view(-1, action_space.n)  # (batch_size, )
+        selected_action = torch.argmax(values_sampled, dim=1).squeeze()
+        return selected_action

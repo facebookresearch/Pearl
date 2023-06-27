@@ -6,6 +6,9 @@ import unittest
 import torch
 from pearl.contextual_bandits.linear_bandit import LinearBandit
 from pearl.contextual_bandits.linucb_exploration import LinUCBExploration
+from pearl.policy_learners.exploration_module.thompson_sampling_exploration import (
+    ThompsonSamplingExplorationLinear,
+)
 from pearl.replay_buffer.transition import TransitionBatch
 from pearl.utils.action_spaces import DiscreteActionSpace
 
@@ -176,4 +179,25 @@ class TestLinearBandits(unittest.TestCase):
                 torch.tensor(10.0),  # the 1st arm occured 10 times than 2nd arm
                 rtol=0.01,
             )
+        )
+
+    def test_linear_thompson_sampling_act(self) -> None:
+        """
+        Given a list of action features, able to return action index with highest score
+        """
+        policy_learner = copy.deepcopy(
+            self.policy_learner
+        )  # deep copy as we are going to change exploration module
+
+        policy_learner.exploration_module = ThompsonSamplingExplorationLinear()
+        batch = self.batch
+        action_space = DiscreteActionSpace(batch.action.tolist())
+
+        # test with batch state
+        selected_actions = policy_learner.act(batch.state, action_space)
+        # self.assertEqual(actions.shape, batch.reward.shape)
+        self.assertTrue(selected_actions.shape[0] == batch.state.shape[0])
+
+        self.assertTrue(
+            all([a in range(0, action_space.n) for a in selected_actions.tolist()])
         )
