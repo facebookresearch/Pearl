@@ -113,7 +113,7 @@ class TestDisjointLinearBandits(unittest.TestCase):
             ),
         )
 
-    def test_thompson_sampling_act(self) -> None:
+    def test_thompson_sampling_disjoint_act(self) -> None:
         policy_learner = copy.deepcopy(
             self.policy_learner
         )  # deep copy as we are going to change exploration module
