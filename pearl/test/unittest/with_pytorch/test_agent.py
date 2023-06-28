@@ -2,24 +2,34 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
 
-from pearl.contextual_bandits.contextual_bandit_linear_synthetic_environment import (
-    ContextualBanditLinearSyntheticEnvironment,
-)
-from pearl.contextual_bandits.disjoint_linear_bandit import DisjointLinearBandit
-from pearl.contextual_bandits.linucb_exploration import DisjointLinUCBExploration
-from pearl.gym.gym_environment import GymEnvironment
-from pearl.neural_networks.value_networks import (
+from pearl.core.common.neural_networks.value_networks import (
     DuelingStateActionValueNetwork,
     TwoTowerStateActionValueNetwork,
 )
-from pearl.online_learning.online_learning import online_learning_to_png_graph
-from pearl.pearl_agent import PearlAgent
+from pearl.core.common.pearl_agent import PearlAgent
+from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
+    FIFOOffPolicyReplayBuffer,
+)
 
-from pearl.policy_learners.deep_q_learning import DeepQLearning
-from pearl.replay_buffer.discrete_contextual_bandit_replay_buffer import (
+from pearl.core.contextual_bandits.environment.contextual_bandit_linear_synthetic_environment import (
+    ContextualBanditLinearSyntheticEnvironment,
+)
+from pearl.core.contextual_bandits.policy_learners.disjoint_linear_bandit import (
+    DisjointLinearBandit,
+)
+from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exploration import (
+    DisjointLinUCBExploration,
+)
+from pearl.core.contextual_bandits.replay_buffer.discrete_contextual_bandit_replay_buffer import (
     DiscreteContextualBanditReplayBuffer,
 )
-from pearl.replay_buffer.fifo_off_policy_replay_buffer import FIFOOffPolicyReplayBuffer
+
+from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
+    DeepQLearning,
+)
+
+from pearl.gym.gym_environment import GymEnvironment
+from pearl.online_learning.online_learning import online_learning_to_png_graph
 from pearl.test.utils import create_random_batch
 from pearl.utils.action_spaces import DiscreteActionSpace
 

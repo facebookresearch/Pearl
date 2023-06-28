@@ -6,10 +6,16 @@ from dataclasses import fields
 import torch
 
 import torch.nn.functional as F
-from pearl.replay_buffer.fifo_off_policy_replay_buffer import FIFOOffPolicyReplayBuffer
-from pearl.replay_buffer.fifo_on_policy_replay_buffer import FIFOOnPolicyReplayBuffer
-from pearl.replay_buffer.tensor_based_replay_buffer import TensorBasedReplayBuffer
-from pearl.replay_buffer.transition import TransitionBatch
+from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
+    FIFOOffPolicyReplayBuffer,
+)
+from pearl.core.common.replay_buffer.fifo_on_policy_replay_buffer import (
+    FIFOOnPolicyReplayBuffer,
+)
+from pearl.core.common.replay_buffer.tensor_based_replay_buffer import (
+    TensorBasedReplayBuffer,
+)
+from pearl.core.common.replay_buffer.transition import TransitionBatch
 
 from pearl.utils.action_spaces import DiscreteActionSpace
 

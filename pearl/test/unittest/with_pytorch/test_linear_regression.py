@@ -4,10 +4,7 @@ import unittest
 
 import torch
 
-from pearl.contextual_bandits.linear_regression import (
-    AvgWeightLinearRegression,
-    LinearRegression,
-)
+from pearl.utils.linear_regression import AvgWeightLinearRegression, LinearRegression
 
 
 class TestLinearRegression(unittest.TestCase):

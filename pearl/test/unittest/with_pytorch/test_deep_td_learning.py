@@ -4,11 +4,13 @@ import copy
 import unittest
 
 import torch
-from pearl.policy_learners.deep_q_learning import DeepQLearning
-from pearl.policy_learners.deep_sarsa import DeepSARSA
-from pearl.policy_learners.exploration_module.epsilon_greedy_exploration import (
+from pearl.core.common.policy_learners.exploration_module.epsilon_greedy_exploration import (
     EGreedyExploration,
 )
+from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
+    DeepQLearning,
+)
+from pearl.core.sequential_decision_making.policy_learners.deep_sarsa import DeepSARSA
 from pearl.test.utils import create_random_batch
 
 

@@ -4,12 +4,16 @@ import copy
 import unittest
 
 import torch
-from pearl.contextual_bandits.disjoint_linear_bandit import DisjointLinearBandit
-from pearl.contextual_bandits.linucb_exploration import DisjointLinUCBExploration
-from pearl.policy_learners.exploration_module.thompson_sampling_exploration import (
+from pearl.core.common.replay_buffer.transition import TransitionBatch
+from pearl.core.contextual_bandits.policy_learners.disjoint_linear_bandit import (
+    DisjointLinearBandit,
+)
+from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exploration import (
+    DisjointLinUCBExploration,
+)
+from pearl.core.contextual_bandits.policy_learners.exploration_module.thompson_sampling_exploration import (
     ThompsonSamplingExplorationLinearDisjoint,
 )
-from pearl.replay_buffer.transition import TransitionBatch
 from pearl.utils.action_spaces import DiscreteActionSpace
 
 

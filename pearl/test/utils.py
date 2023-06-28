@@ -9,8 +9,10 @@ from typing import Tuple
 import torch
 import torch.nn.functional as F
 from pearl.api.action_space import ActionSpace
-from pearl.replay_buffer.tensor_based_replay_buffer import TensorBasedReplayBuffer
-from pearl.replay_buffer.transition import TransitionBatch
+from pearl.core.common.replay_buffer.tensor_based_replay_buffer import (
+    TensorBasedReplayBuffer,
+)
+from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.utils.action_spaces import DiscreteActionSpace
 
 

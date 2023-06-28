@@ -3,15 +3,17 @@
 import unittest
 
 import gym
+from pearl.core.common.pearl_agent import PearlAgent
 
-from pearl.contextual_bandits.reward_is_equal_to_ten_times_action_contextual_bandit_environment import (
+from pearl.core.contextual_bandits.environment.reward_is_equal_to_ten_times_action_contextual_bandit_environment import (
     RewardIsEqualToTenTimesActionContextualBanditEnvironment,
+)
+
+from pearl.core.sequential_decision_making.policy_learners.tabular_q_learning import (
+    TabularQLearning,
 )
 from pearl.gym.gym_environment import GymEnvironment
 from pearl.online_learning.online_learning import episode_return, online_learning
-from pearl.pearl_agent import PearlAgent
-
-from pearl.policy_learners.tabular_q_learning import TabularQLearning
 from pearl.utils.environments import FixedNumberOfStepsEnvironment
 
 

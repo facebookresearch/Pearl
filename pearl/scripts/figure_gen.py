@@ -11,14 +11,20 @@ import logging
 import sys
 
 import matplotlib.pyplot as plt
+from pearl.core.common.pearl_agent import PearlAgent
+from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
+    FIFOOffPolicyReplayBuffer,
+)
+from pearl.core.common.replay_buffer.fifo_on_policy_replay_buffer import (
+    FIFOOnPolicyReplayBuffer,
+)
+
+from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
+    DeepQLearning,
+)
+from pearl.core.sequential_decision_making.policy_learners.deep_sarsa import DeepSARSA
 from pearl.gym.gym_environment import GymEnvironment
 from pearl.online_learning.online_learning import online_learning_returns
-from pearl.pearl_agent import PearlAgent
-
-from pearl.policy_learners.deep_q_learning import DeepQLearning
-from pearl.policy_learners.deep_sarsa import DeepSARSA
-from pearl.replay_buffer.fifo_off_policy_replay_buffer import FIFOOffPolicyReplayBuffer
-from pearl.replay_buffer.fifo_on_policy_replay_buffer import FIFOOnPolicyReplayBuffer
 
 MA_WINDOW_SIZE = 100.0
 

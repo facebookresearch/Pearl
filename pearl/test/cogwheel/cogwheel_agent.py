@@ -11,19 +11,22 @@ This takes a long time (usually 3 hours on a devserver), which is why it is on c
 """
 import logging
 
+from pearl.core.common.pearl_agent import PearlAgent
+from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
+    FIFOOffPolicyReplayBuffer,
+)
+from pearl.core.common.replay_buffer.fifo_on_policy_replay_buffer import (
+    FIFOOnPolicyReplayBuffer,
+)
+
+from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
+    DeepQLearning,
+)
+
+from pearl.core.sequential_decision_making.policy_learners.deep_sarsa import DeepSARSA
+
 from pearl.gym.gym_environment import GymEnvironment
 from pearl.online_learning.online_learning import episode_return
-from pearl.pearl_agent import PearlAgent
-
-from pearl.policy_learners.deep_q_learning import DeepQLearning
-
-from pearl.policy_learners.deep_sarsa import DeepSARSA
-from pearl.policy_learners.policy_gradient import PolicyGradient
-from pearl.replay_buffer.fifo_off_policy_replay_buffer import FIFOOffPolicyReplayBuffer
-from pearl.replay_buffer.fifo_on_policy_replay_buffer import FIFOOnPolicyReplayBuffer
-from pearl.replay_buffer.on_policy_episodic_replay_buffer import (
-    OnPolicyEpisodicReplayBuffer,
-)
 from windtunnel.cogwheel.test import cogwheel_test, CogwheelTest
 
 

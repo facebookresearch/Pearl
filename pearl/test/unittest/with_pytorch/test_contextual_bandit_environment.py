@@ -4,7 +4,7 @@ import unittest
 
 import gym
 import torch
-from pearl.contextual_bandits.contextual_bandit_linear_synthetic_environment import (
+from pearl.core.contextual_bandits.environment.contextual_bandit_linear_synthetic_environment import (
     ContextualBanditLinearSyntheticEnvironment,
 )
 
