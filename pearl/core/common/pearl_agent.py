@@ -14,9 +14,6 @@ from pearl.core.common.replay_buffer.single_transition_replay_buffer import (
 )
 from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.core.common.safety_modules.identity_safety_module import IdentitySafetyModule
-from pearl.core.sequential_decision_making.policy_learners.tabular_q_learning import (
-    TabularQLearning,
-)
 
 
 class PearlAgent(Agent):
@@ -26,7 +23,6 @@ class PearlAgent(Agent):
     (and possibly factories down the line)
     """
 
-    default_policy_learner_type = TabularQLearning
     default_safety_module_type = IdentitySafetyModule
     default_history_summarization_module_type = IdentityHistorySummarizationModule
     default_replay_buffer_type = SingleTransitionReplayBuffer
@@ -34,7 +30,7 @@ class PearlAgent(Agent):
     # TODO: define a data structure that hosts the configs for a Pearl Agent
     def __init__(
         self,
-        policy_learner=None,
+        policy_learner,
         safety_module=None,
         replay_buffer=None,
         history_summarization_module=None,
@@ -42,16 +38,12 @@ class PearlAgent(Agent):
         """
         Initializes the PearlAgent.
         Args:
-            policy_learner: (optional) a PolicyLearner instance (default is PolicyLearner)
+            policy_learner: a PolicyLearner instance
             safety_module: (optional) a SafetyModule instance (default is IdentitySafetyModule)
             history_summarization_module: (optional) a HistorySummarizationModule instance (default is IdentityHistorySummarizationModule)
             replay_buffer: (optional) a replay buffer (default is single-transition replay buffer for now -- will very likely to change)
         """
-        self.policy_learner = (
-            PearlAgent.default_policy_learner_type()
-            if policy_learner is None
-            else policy_learner
-        )
+        self.policy_learner = policy_learner
         self.safety_module = (
             PearlAgent.default_safety_module_type()
             if safety_module is None
@@ -132,8 +124,7 @@ class PearlAgent(Agent):
 
     def __str__(self) -> str:
         items = []
-        if type(self.policy_learner) is not PearlAgent.default_policy_learner_type:
-            items.append(self.policy_learner)
+        items.append(self.policy_learner)
         if type(self.safety_module) is not PearlAgent.default_safety_module_type:
             items.append(self.safety_module)
         if (

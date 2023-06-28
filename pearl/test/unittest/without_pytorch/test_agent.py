@@ -25,7 +25,7 @@ class TestAgentWithoutPyTorch(unittest.TestCase):
 
     def test_online_rl(self) -> None:
         env = FixedNumberOfStepsEnvironment(number_of_steps=100)
-        agent = PearlAgent()
+        agent = PearlAgent(TabularQLearning())
         online_learning(agent, env)
 
     def test_tabular_q_learning_online_rl(self) -> None:
