@@ -18,12 +18,18 @@ from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
 from pearl.core.common.replay_buffer.fifo_on_policy_replay_buffer import (
     FIFOOnPolicyReplayBuffer,
 )
+from pearl.core.common.replay_buffer.on_policy_episodic_replay_buffer import (
+    OnPolicyEpisodicReplayBuffer,
+)
 
 from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
     DeepQLearning,
 )
 
 from pearl.core.sequential_decision_making.policy_learners.deep_sarsa import DeepSARSA
+from pearl.core.sequential_decision_making.policy_learners.policy_gradient import (
+    PolicyGradient,
+)
 
 from pearl.gym.gym_environment import GymEnvironment
 from pearl.online_learning.online_learning import episode_return
