@@ -11,6 +11,10 @@ This takes a long time (usually 3 hours on a devserver), which is why it is on c
 """
 import logging
 
+from pearl.core.common.neural_networks.value_networks import (
+    DuelingStateActionValueNetwork,
+)
+
 from pearl.core.common.pearl_agent import PearlAgent
 from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
@@ -141,6 +145,36 @@ class TestAgent(CogwheelTest):
                 batch_size=500,
             ),
             replay_buffer=OnPolicyEpisodicReplayBuffer(10000),
+        )
+        counter = 0
+        while (
+            episode_return(
+                agent=agent,
+                env=env,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+            )
+            != 500
+        ):
+            counter += 1
+            self.assertGreater(10000, counter)
+
+    def test_dueling_dqn(
+        self,
+        batch_size: int = 128,
+    ) -> None:
+        env = GymEnvironment("CartPole-v1")
+        agent = PearlAgent(
+            policy_learner=DeepQLearning(
+                env.observation_space.shape[0],
+                env.action_space,
+                hidden_dims=[64],
+                training_rounds=20,
+                network_type=DuelingStateActionValueNetwork,
+                batch_size=batch_size,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
         counter = 0
         while (

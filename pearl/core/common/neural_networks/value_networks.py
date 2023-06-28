@@ -73,6 +73,10 @@ class VanillaStateActionValueNetwork(VanillaValueNetwork):
 
 
 class DuelingStateActionValueNetwork(nn.Module):
+    """
+    Dueling architecture contains state arch, value arch, and advantage arch.
+    """
+
     def __init__(
         self,
         state_dim,
@@ -81,31 +85,30 @@ class DuelingStateActionValueNetwork(nn.Module):
         output_dim,
         value_hidden_dims: Optional[List[int]] = None,
         advantage_hidden_dims: Optional[List[int]] = None,
+        state_hidden_dims: Optional[List[int]] = None,
     ):
         super(DuelingStateActionValueNetwork, self).__init__()
         self.state_dim = state_dim
         self.action_dim = action_dim
 
-        # state feature arch
-        self.state_feature_arch = VanillaValueNetwork(
+        # state arch
+        self.state_arch = VanillaValueNetwork(
             input_dim=state_dim,
-            hidden_dims=hidden_dims,
-            output_dim=state_dim,
+            hidden_dims=hidden_dims if state_hidden_dims is None else state_hidden_dims,
+            output_dim=hidden_dims[-1],
         )
 
         # value arch
         self.value_arch = VanillaValueNetwork(
-            input_dim=state_dim,
-            hidden_dims=[state_dim // 2]
-            if value_hidden_dims is None
-            else value_hidden_dims,
+            input_dim=hidden_dims[-1],  # same as state_arch output dim
+            hidden_dims=hidden_dims if value_hidden_dims is None else value_hidden_dims,
             output_dim=output_dim,  # output_dim=1
         )
 
         # advantage arch
         self.advantage_arch = VanillaValueNetwork(
-            input_dim=state_dim + action_dim,
-            hidden_dims=[state_dim // 2]
+            input_dim=hidden_dims[-1] + action_dim,  # state_arch out dim + action_dim
+            hidden_dims=hidden_dims
             if advantage_hidden_dims is None
             else advantage_hidden_dims,
             output_dim=output_dim,  # output_dim=1
@@ -119,18 +122,17 @@ class DuelingStateActionValueNetwork(nn.Module):
             batch of Q(s,a): (batch_size)
 
         The archtecture is as follows:
-        state --> state_feature_arch -----> value_arch --> value(s)-----------------------\
+        state --> state_arch -----> value_arch --> value(s)-----------------------\
                                  |                                                   ---> add --> Q(s,a)
         action --------------concat-> advantage_arch --> advantage(s, a)--- -mean --/
         """
         assert state.shape[-1] == self.state_dim
         assert action.shape[-1] == self.action_dim
 
-        ## TODO: is a relu required here?
         # state feature arch : state --> feature
-        state_features = F.relu(
-            self.state_feature_arch(state)
-        )  # shape: (?, state_dim); state_dim is the output dimension of state_feature_arch mlp
+        state_features = self.state_arch(
+            state
+        )  # shape: (?, state_dim); state_dim is the output dimension of state_arch mlp
 
         # value arch : feature --> value
         state_value = self.value_arch(state_features)  # shape: (batch_size)
@@ -140,7 +142,6 @@ class DuelingStateActionValueNetwork(nn.Module):
             (state_features, action), dim=-1
         )  # shape: (?, state_dim + action_dim)
 
-        # assert feature_action.shape == x.shape
         advantage = self.advantage_arch(state_action_features)
         advantage_mean = torch.mean(
             advantage, dim=-2, keepdim=True

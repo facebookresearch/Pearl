@@ -57,7 +57,11 @@ class TestAgentWithPyTorch(unittest.TestCase):
             agent, env, number_of_episodes=10, learn_after_episode=True
         )
 
-    def test_deep_td_learning_online_rl_sanity_check_dueling(self) -> None:
+    def test_deep_td_learning_online_rl_sanity_check_dueling(
+        self,
+        number_of_episodes: int = 10,
+        batch_size: int = 128,
+    ) -> None:
         # make sure E2E is fine
         env = GymEnvironment("CartPole-v1")
         agent = PearlAgent(
@@ -67,12 +71,12 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 hidden_dims=[64, 64],
                 training_rounds=20,
                 network_type=DuelingStateActionValueNetwork,
-                batch_size=1,
+                batch_size=batch_size,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
         online_learning_to_png_graph(
-            agent, env, number_of_episodes=10, learn_after_episode=True
+            agent, env, number_of_episodes=number_of_episodes, learn_after_episode=True
         )
 
     def test_deep_td_learning_online_rl_two_tower_network(self) -> None:
