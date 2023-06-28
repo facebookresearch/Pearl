@@ -79,11 +79,12 @@ class DeepQLearning(DeepTDLearning):
         next_state_batch_repeated = torch.repeat_interleave(
             next_state_batch.unsqueeze(1), self._action_space.n, dim=1
         )  # (batch_size x action_space_size x state_dim)
-        next_state_action_batch = torch.cat(
-            [next_state_batch_repeated, next_available_actions_batch], dim=2
-        )  # (batch_size x action_space_size x (state_dim + action_dim))
-        next_state_action_values = self._Q_target(next_state_action_batch).view(
-            (batch_size, -1)
+
+        # for duelling, this does a forward pass; since the batch of next available actions is already input
+        next_state_action_values = self._Q_target.get_batch_action_value(
+            next_state_batch_repeated, next_available_actions_batch
+        ).view(
+            batch_size, -1
         )  # (batch_size x action_space_size)
 
         # Make sure that unavailable actions' Q values are assigned to -inf
@@ -92,7 +93,9 @@ class DeepQLearning(DeepTDLearning):
         # if double DQN, choose action from _Q with argmax, but use value from _Q_target
         # if non-double DQN, choose action from _Q_target with argmax, as well as value
         if self._double:
-            next_state_action_values_Q = self._Q(next_state_action_batch).view(
+            next_state_action_values_Q = self._Q.get_batch_action_value(
+                next_state_batch_repeated, next_available_actions_batch
+            ).view(
                 (batch_size, -1)
             )  # (batch_size x action_space_size)
 

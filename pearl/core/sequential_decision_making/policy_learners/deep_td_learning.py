@@ -108,10 +108,11 @@ class DeepTDLearning(PolicyLearner):
             actions = F.one_hot(
                 torch.arange(0, available_action_space.n)
             )  # (action_space_size, action_dim)
-            state_action_pairs = torch.cat(
-                [states_repeated, actions], dim=1
-            )  # (action_space_size x (state_dim + action_dim))
-            q_values = self._Q(state_action_pairs)  # (action_space_size, 1)
+
+            q_values = self._Q.get_batch_action_value(
+                states_repeated, actions
+            )  # this does a forward pass since all avaialble actions are already stacked together
+
             exploit_action = torch.argmax(q_values).view((-1)).item()
 
         if exploit:
@@ -156,7 +157,7 @@ class DeepTDLearning(PolicyLearner):
             state_batch=state_batch,
             action_batch=action_batch,
             curr_available_actions_batch=batch.curr_available_actions,
-        )
+        )  # for duelling, this takes care of the mean subtraction for advantage estimation
 
         # Compute the Bellman Target
         expected_state_action_values = (

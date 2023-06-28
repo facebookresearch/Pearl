@@ -43,15 +43,6 @@ class VanillaValueNetwork(nn.Module):
             if isinstance(layer, nn.Linear):
                 nn.init.xavier_normal_(layer.weight)
 
-    def get_batch_action_value(
-        self,
-        state_batch: torch.Tensor,
-        action_batch: torch.Tensor,
-        curr_available_actions_batch=torch.Tensor,
-    ):
-        x = torch.cat([state_batch, action_batch], dim=1)
-        return self.forward(x).view(-1)  # (batch_size)
-
 
 class VanillaStateActionValueNetwork(VanillaValueNetwork):
     def __init__(self, state_dim, action_dim, hidden_dims, output_dim):
@@ -60,6 +51,25 @@ class VanillaStateActionValueNetwork(VanillaValueNetwork):
             hidden_dims=hidden_dims,
             output_dim=output_dim,
         )
+
+    def get_batch_action_value(
+        self,
+        state_batch: torch.Tensor,
+        action_batch: torch.Tensor,
+        curr_available_actions_batch: Optional[torch.Tensor] = None,
+    ):
+        """
+        Args
+            batch of state: (batch_size, state_dim)
+            batch of action: (batch_size, action_dim)
+            curr_available_actions_batch is set to None for vanilla state action value network; and is only used
+            in the Duelling architecture (see there for more details)
+        Return
+            q values of (state, action) pairs: (batch_size)
+        """
+
+        x = torch.cat([state_batch, action_batch], dim=-1)
+        return self.forward(x).view(-1)
 
 
 class DuelingStateActionValueNetwork(nn.Module):
@@ -76,8 +86,8 @@ class DuelingStateActionValueNetwork(nn.Module):
         self.state_dim = state_dim
         self.action_dim = action_dim
 
-        # feature arch
-        self.feature_arch = VanillaValueNetwork(
+        # state feature arch
+        self.state_feature_arch = VanillaValueNetwork(
             input_dim=state_dim,
             hidden_dims=hidden_dims,
             output_dim=state_dim,
@@ -101,59 +111,93 @@ class DuelingStateActionValueNetwork(nn.Module):
             output_dim=output_dim,  # output_dim=1
         )
 
-    def forward(self, x):
+    def forward(self, state, action):
         """
-        The input x is the concatenation of features of [state , action] together
+        Args:
+            batch of state: (batch_size, state_dim), batch of action: (batch_size, action_dim)
+        Returns:
+            batch of Q(s,a): (batch_size)
+
         The archtecture is as follows:
-        state --> feature_arch -----> value_arch --> value(s)-----------------------\
+        state --> state_feature_arch -----> value_arch --> value(s)-----------------------\
                                  |                                                   ---> add --> Q(s,a)
         action --------------concat-> advantage_arch --> advantage(s, a)--- -mean --/
         """
-        assert x.shape[-1] == self.state_dim + self.action_dim
-        state_feature = x[..., 0 : self.state_dim]
-        action_feature = x[..., self.state_dim :]
+        assert state.shape[-1] == self.state_dim
+        assert action.shape[-1] == self.action_dim
 
-        # feature arch : state --> feature
-        processed_state_feature = F.relu(self.feature_arch(state_feature))
+        ## TODO: is a relu required here?
+        # state feature arch : state --> feature
+        state_features = F.relu(
+            self.state_feature_arch(state)
+        )  # shape: (?, state_dim); state_dim is the output dimension of state_feature_arch mlp
 
         # value arch : feature --> value
-        value = self.value_arch(processed_state_feature)
+        state_value = self.value_arch(state_features)  # shape: (batch_size)
 
-        # advantage arch : [feature, actions] --> advantage
-        feature_action = torch.cat((processed_state_feature, action_feature), dim=-1)
-        assert feature_action.shape == x.shape
-        advantage = self.advantage_arch(feature_action)
-        advantage_mean = torch.mean(advantage, dim=-2, keepdim=True)  # -2 is action dim
-        advantage = advantage - advantage_mean
-        return value + advantage
+        # advantage arch : [state feature, actions] --> advantage
+        state_action_features = torch.cat(
+            (state_features, action), dim=-1
+        )  # shape: (?, state_dim + action_dim)
+
+        # assert feature_action.shape == x.shape
+        advantage = self.advantage_arch(state_action_features)
+        advantage_mean = torch.mean(
+            advantage, dim=-2, keepdim=True
+        )  # -2 is dimension denoting number of actions
+        return state_value + advantage - advantage_mean
 
     def get_batch_action_value(
         self,
         state_batch: torch.Tensor,
         action_batch: torch.Tensor,
-        curr_available_actions_batch=torch.Tensor,
+        curr_available_actions_batch: Optional[torch.Tensor] = None,
     ):
         """
-        In DUELING_DQN, extend input tensor to include available actions before passing to Q network.
-        Then collect the q value of the specific action that we are interested in.
-        """
-        # calculate the q value of all available actions
-        state_multi_actions_batch = extend_state_feature_by_available_action_space(
-            state_batch=state_batch,
-            curr_available_actions_batch=curr_available_actions_batch,
-        )
-        # collect Q values of the given action
-        values_multi_actions = self.forward(
-            state_multi_actions_batch
-        )  # (batch_size x actions) , values of a single state with multi-actions
+        Args:
+            batch of states: (batch_size, state_dim)
+            batch of actions: (batch_size, action_dim)
+            (Optional) batch of available actions (one set of available actions per state):
+                    (batch_size, available_action_space_size, action_dim)
 
-        # gather only the q value of the action that we are interested in.
-        action_idx = (
-            torch.argmax(action_batch, dim=1).unsqueeze(-1).unsqueeze(-1)
-        )  # one_hot to decimal
-        state_action_values = torch.gather(values_multi_actions, 1, action_idx).view(
-            -1
-        )  # (batch_size), value of single state with single action of interest
+            In DUELING_DQN, logic for use with td learning (deep_td_learning)
+            a) when curr_available_actions_batch is None, we do a forward pass from Q network
+               in this case, the action batch will be the batch of all available actions
+               doing a forward pass with mean subtraction is correct
+
+            b) when curr_available_actions_batch is not None, extend the state_batch tensor to include available actions
+               so, state_batch: (batch_size, state_dim) --> (batch_size, available_action_space_size, state_dim)
+               then, do a forward pass from Q network to calculate q-values for (state, all available actions)
+               then, choose q values for given (state, action) pair in the batch
+
+        TODO: assumes a gym environment interface with fixed action space, change it with masking
+        """
+
+        if curr_available_actions_batch is None:
+            return self.forward(state_batch, action_batch).view(-1)
+        else:
+            # calculate the q value of all available actions
+            state_repeated_batch = extend_state_feature_by_available_action_space(
+                state_batch=state_batch,
+                curr_available_actions_batch=curr_available_actions_batch,
+            )  # shape: (batch_size, available_action_space_size, state_dim)
+
+            # collect Q values of a state and all available actions
+            values_state_available_actions = self.forward(
+                state_repeated_batch, curr_available_actions_batch
+            )  # shape: (batch_size, available_action_space_size, action_dim)
+
+            # gather only the q value of the action that we are interested in.
+            action_idx = (
+                torch.argmax(action_batch, dim=1).unsqueeze(-1).unsqueeze(-1)
+            )  # one_hot to decimal
+
+            # q value of (state, action) pair of interest
+            state_action_values = torch.gather(
+                values_state_available_actions, 1, action_idx
+            ).view(
+                -1
+            )  # shape: (batch_size)
         return state_action_values
 
 
@@ -217,7 +261,7 @@ class TwoTowerNetwork(nn.Module):
         self,
         state_batch: torch.Tensor,
         action_batch: torch.Tensor,
-        curr_available_actions_batch=torch.Tensor,
+        curr_available_actions_batch: Optional[torch.Tensor] = None,
     ):
         state_batch_features = self._state_features.forward(state_batch)
         """ this might need to be done in tensor_based_replay_buffer """

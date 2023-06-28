@@ -63,11 +63,9 @@ class DeepSARSA(DeepTDLearning):
         next_state_batch = batch.next_state  # (batch_size x state_dim)
         next_action_batch = batch.next_action  # (batch_size x action_dim)
 
-        next_state_action_batch = torch.cat(
-            [next_state_batch, next_action_batch], dim=1
-        )  # (batch_size x (state_dim + action_dim))
-        next_state_action_values = self._Q_target(next_state_action_batch).view(
-            (batch_size,)
-        )  # (batch_size)
+        # use get_batch method instead of doing forward pass
+        next_state_action_values = self._Q_target.get_batch_action_value(
+            next_state_batch, next_action_batch
+        )
 
         return next_state_action_values
