@@ -74,7 +74,9 @@ def online_learning(
         learn_after_episode (bool, optional): asks the agent to only learn after every episode. Defaults to False.
         process_return (Callable[[Value], None], optional): a callable for processing the returns of the episodes. Defaults to no-op.
     """
-    for _ in range(number_of_episodes):
+    for i in range(number_of_episodes):
+        if i % 100 == 0:
+            print(f"episode {i}")
         g = episode_return(
             agent,
             env,
