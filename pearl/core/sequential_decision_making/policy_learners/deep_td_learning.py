@@ -184,6 +184,7 @@ class DeepTDLearning(PolicyLearner):
             .item()
         }
 
+    # TODO: replace with a standard util for soft update
     def _update_target_network(self):
         # Q_target = tao * Q_target + (1-tao)*Q
         target_net_state_dict = self._Q_target.state_dict()

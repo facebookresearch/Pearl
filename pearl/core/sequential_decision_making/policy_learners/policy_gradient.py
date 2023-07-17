@@ -40,6 +40,7 @@ class PolicyGradient(PolicyLearner):
         training_rounds: int = 100,
         batch_size: int = 128,
         network_type: ActorNetworkType = VanillaActorNetwork,
+        on_policy: bool = True,
     ) -> None:
         super(PolicyGradient, self).__init__(
             # TODO: Replace to probability exploration module
@@ -48,7 +49,7 @@ class PolicyGradient(PolicyLearner):
             else PropensityExploration(),
             training_rounds=training_rounds,
             batch_size=batch_size,
-            on_policy=True,
+            on_policy=on_policy,
         )
         self._action_space = action_space
         self._learning_rate = learning_rate
@@ -63,9 +64,10 @@ class PolicyGradient(PolicyLearner):
 
         self._actor = make_specified_network()
         self._actor.apply(init_weights)
-        self._optimizer = optim.AdamW(
+        self._actor_optimizer = optim.AdamW(
             self._actor.parameters(), lr=learning_rate, amsgrad=True
         )
+        self._discount_factor = discount_factor
 
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space
@@ -109,9 +111,9 @@ class PolicyGradient(PolicyLearner):
         assert return_batch.shape[0] == batch_size
 
         loss = self._define_loss(batch)
-        self._optimizer.zero_grad()
+        self._actor_optimizer.zero_grad()
         loss.backward()
-        self._optimizer.step()
+        self._actor_optimizer.step()
 
         return {"loss": loss.mean().item()}
 

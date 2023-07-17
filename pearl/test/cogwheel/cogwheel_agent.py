@@ -37,6 +37,9 @@ from pearl.core.sequential_decision_making.policy_learners.policy_gradient impor
 from pearl.core.sequential_decision_making.policy_learners.ppo import (
     ProximalPolicyOptimization,
 )
+from pearl.core.sequential_decision_making.policy_learners.soft_actor_critic import (
+    SoftActorCritic,
+)
 
 from pearl.gym.gym_environment import GymEnvironment
 from pearl.online_learning.online_learning import episode_return
@@ -210,6 +213,38 @@ class TestAgent(CogwheelTest):
                 epsilon=0.1,
             ),
             replay_buffer=OnPolicyEpisodicReplayBuffer(10000),
+        )
+        counter = 0
+        while (
+            episode_return(
+                agent=agent,
+                env=env,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+            )
+            != 500
+        ):
+            counter += 1
+            self.assertGreater(10000, counter)
+
+    @cogwheel_test
+    def test_sac(self) -> None:
+        """
+        This test is checking if SAC will eventually get to 500 return for CartPole-v1
+        """
+        env = GymEnvironment("CartPole-v1")
+        agent = PearlAgent(
+            policy_learner=SoftActorCritic(
+                env.observation_space.shape[0],
+                env.action_space,
+                [64, 64],
+                training_rounds=100,
+                batch_size=100,
+                entropy_coef=0.1,
+                learning_rate=0.0003,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(50000),
         )
         counter = 0
         while (

@@ -28,7 +28,7 @@ class VanillaActorNetwork(nn.Module):
     def forward(self, x):
         value = F.relu(self.fc1(x))
         value = self.hiddens(value)
-        return F.softmax(self.fc2(value), dim=1)
+        return F.gumbel_softmax(self.fc2(value), dim=1)
 
 
 ActorNetworkType = Callable[[int, int, List[int], int], nn.Module]
