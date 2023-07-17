@@ -13,7 +13,7 @@ from pearl.core.common.replay_buffer.transition import Transition, TransitionBat
 
 
 class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
-    def __init__(self, capacity: int) -> None:
+    def __init__(self, capacity: int, discounted_factor: float = 1.0) -> None:
         self.capacity = capacity
         self.memory = deque([], maxlen=capacity)
         # this is used to delay push SARS
@@ -21,6 +21,7 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
         # this is designed for single transition for now
         self.reward_cache = []
         self.state_action_cache = []
+        self._discounted_factor = discounted_factor
 
     def push(
         self,
@@ -61,19 +62,15 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
         )
 
         if done:
-            reward_cache = torch.tensor(self.reward_cache)
-            # reverse cumsum (forward-looking). see https://github.com/pytorch/pytorch/issues/33520#issuecomment-812907290
-            cum_returns = (
-                reward_cache
-                + torch.sum(reward_cache, dim=0, keepdims=True)
-                - torch.cumsum(reward_cache, dim=0)
-            )
-            for i in range(len(self.state_action_cache)):
-                cum_return = TensorBasedReplayBuffer._process_single_reward(
-                    cum_returns[i].item()
-                )
-                self.state_action_cache[i].reward = cum_return
+            # discounted_return at time i = sum of (self._discounted_factor^(j-i) * Rj) j is [i, T]
+            discounted_return = 0
+            for i in range(len(self.state_action_cache) - 1, -1, -1):
+                cum_return = self.reward_cache[i] + discounted_return
+                self.state_action_cache[
+                    i
+                ].reward = TensorBasedReplayBuffer._process_single_reward(cum_return)
                 self.memory.append(self.state_action_cache[i])
+                discounted_return = self._discounted_factor * cum_return
 
             self.reward_cache = []
             self.state_action_cache = []

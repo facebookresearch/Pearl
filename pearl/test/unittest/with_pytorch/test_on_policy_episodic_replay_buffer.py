@@ -159,3 +159,30 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
                 torch.eye(self.action_size)[0:trajectory_len_2],
             )
         )
+
+    def test_discounted_factor(self) -> None:
+        replay_buffer = OnPolicyEpisodicReplayBuffer(self.capacity, 0.5)
+        for i in range(self.trajectory_len):
+            # cumulated return:
+            # 4 + 8.5 * 0.5 --> state 0
+            # 0.5*5+6=8.5 --> state 1
+            # 5 --> state 2
+            replay_buffer.push(
+                state=torch.tensor([i]).float(),
+                action=torch.tensor(i),
+                reward=self.rewards[i],
+                next_state=None,
+                curr_available_actions=self.action_space,
+                next_available_actions=self.action_space,
+                action_space=self.action_space,
+                done=(i == (self.trajectory_len - 1)),
+            )
+
+        batch = replay_buffer.sample(self.trajectory_len)
+        for i in range(len(batch.action)):
+            if batch.state[i] == 0:
+                self.assertEqual(4 + 8.5 * 0.5, batch.reward[i])
+            if batch.state[i] == 1:
+                self.assertEqual(8.5, batch.reward[i])
+            if batch.state[i] == 2:
+                self.assertEqual(5, batch.reward[i])
