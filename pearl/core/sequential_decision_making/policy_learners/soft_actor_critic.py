@@ -54,7 +54,6 @@ class SoftActorCritic(PolicyGradient):
             exploration_module=exploration_module,
             learning_rate=learning_rate,
             discount_factor=discount_factor,
-            training_rounds=training_rounds,
             batch_size=batch_size,
             network_type=actor_network_type,
             on_policy=False,
@@ -96,6 +95,7 @@ class SoftActorCritic(PolicyGradient):
         self._rounds = 0
 
         self._soft_update_tau = soft_update_tau
+        self._training_rounds = training_rounds
 
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space

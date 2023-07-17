@@ -37,7 +37,6 @@ class PolicyGradient(PolicyLearner):
         exploration_module: ExplorationModule = None,
         learning_rate: float = 0.0001,
         discount_factor: float = 0.99,
-        training_rounds: int = 100,
         batch_size: int = 128,
         network_type: ActorNetworkType = VanillaActorNetwork,
         on_policy: bool = True,
@@ -47,7 +46,7 @@ class PolicyGradient(PolicyLearner):
             exploration_module=exploration_module
             if exploration_module is not None
             else PropensityExploration(),
-            training_rounds=training_rounds,
+            training_rounds=1,  # PG must set this to 1
             batch_size=batch_size,
             on_policy=on_policy,
         )

@@ -41,7 +41,6 @@ class ProximalPolicyOptimization(PolicyGradient):
     ) -> None:
         super(ProximalPolicyOptimization, self).__init__(
             exploration_module=exploration_module,
-            training_rounds=training_rounds,
             batch_size=batch_size,
             action_space=action_space,
             learning_rate=learning_rate,
@@ -53,6 +52,7 @@ class ProximalPolicyOptimization(PolicyGradient):
         self._critic_loss_scaling = critic_loss_scaling
         self._entropy_bonus_scaling = entropy_bonus_scaling
         self._actor_old = copy.deepcopy(self._actor)
+        self._training_rounds = training_rounds
         # V(s)
         def make_critic_network():
             return VanillaValueNetwork(

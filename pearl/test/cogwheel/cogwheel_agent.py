@@ -147,7 +147,6 @@ class TestAgent(CogwheelTest):
                 env.observation_space.shape[0],
                 env.action_space,
                 [64, 64],
-                training_rounds=1,
                 batch_size=500,
             ),
             replay_buffer=OnPolicyEpisodicReplayBuffer(10000),
