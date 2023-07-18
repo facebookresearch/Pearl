@@ -29,3 +29,18 @@ class TestPPO(unittest.TestCase):
             [1 for _ in policy_learner._critic.parameters()]
         )
         self.assertEqual(optimizer_params_count, model_params_count)
+
+    def test_training_round_setup(self):
+        """
+        PPO inherit from PG and overwrite training_rounds
+        This test is to ensure it indeed overwrite
+        """
+        policy_learner = ProximalPolicyOptimization(
+            16,
+            DiscreteActionSpace(range(3)),
+            [64, 64],
+            training_rounds=10,
+            batch_size=500,
+            epsilon=0.1,
+        )
+        self.assertEqual(10, policy_learner._training_rounds)
