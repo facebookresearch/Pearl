@@ -7,6 +7,9 @@ from pearl.api.state import SubjectiveState
 from pearl.core.common.policy_learners.exploration_module.value_exploration_base import (
     ValueExplorationBase,
 )
+from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exploration import (
+    calculate_variance,
+)
 
 from pearl.utils.action_spaces import DiscreteActionSpace
 
@@ -18,8 +21,10 @@ class ThompsonSamplingExplorationLinear(ValueExplorationBase):
 
     def __init__(
         self,
+        enable_efficient_sampling: bool = False,
     ) -> None:
         super(ThompsonSamplingExplorationLinear, self).__init__()
+        self._enable_efficient_sampling = enable_efficient_sampling
 
     def sampling(
         self, subjective_state: SubjectiveState, linear_bandit_model: torch.nn.Module
@@ -27,13 +32,25 @@ class ThompsonSamplingExplorationLinear(ValueExplorationBase):
         """
         Given the linear bandit model, sample its parameters, and multiplies with feature to get predicted score.
         """
-        thompson_sampling_coefs = (
-            torch.distributions.multivariate_normal.MultivariateNormal(
-                loc=linear_bandit_model.coefs,
-                covariance_matrix=linear_bandit_model.inv_A,
-            ).sample()
-        )
-        score = torch.matmul(subjective_state, thompson_sampling_coefs.t())
+        if self._enable_efficient_sampling:
+            expected_reward = linear_bandit_model(
+                subjective_state
+            )  # batch_size, action_count, 1
+            assert expected_reward.shape == subjective_state.shape[:-1]
+            covariance = calculate_variance(
+                subjective_state=subjective_state,
+                representation=linear_bandit_model,
+            )  # batch_size, action_count, 1
+            assert covariance.shape == subjective_state.shape[:-1]
+            score = torch.normal(mean=expected_reward, std=covariance)
+        else:
+            thompson_sampling_coefs = (
+                torch.distributions.multivariate_normal.MultivariateNormal(
+                    loc=linear_bandit_model.coefs,
+                    covariance_matrix=linear_bandit_model.inv_A,
+                ).sample()
+            )
+            score = torch.matmul(subjective_state, thompson_sampling_coefs.t())
         return score
 
     def act(

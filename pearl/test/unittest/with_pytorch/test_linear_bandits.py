@@ -203,3 +203,26 @@ class TestLinearBandits(unittest.TestCase):
         self.assertTrue(
             all([a in range(0, action_space.n) for a in selected_actions.tolist()])
         )
+
+    def test_linear_efficient_thompson_sampling_act(self) -> None:
+        """
+        Given a list of action features, able to return action index with highest score
+        """
+        policy_learner = copy.deepcopy(
+            self.policy_learner
+        )  # deep copy as we are going to change exploration module
+
+        policy_learner.exploration_module = ThompsonSamplingExplorationLinear(
+            enable_efficient_sampling=True
+        )
+        batch = self.batch
+        action_space = DiscreteActionSpace(batch.action.tolist())
+
+        # test with batch state
+        selected_actions = policy_learner.act(batch.state, action_space)
+        # self.assertEqual(actions.shape, batch.reward.shape)
+        self.assertTrue(selected_actions.shape[0] == batch.state.shape[0])
+
+        self.assertTrue(
+            all([a in range(0, action_space.n) for a in selected_actions.tolist()])
+        )

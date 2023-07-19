@@ -11,23 +11,37 @@ from pearl.utils.action_spaces import DiscreteActionSpace
 from pearl.utils.linear_regression import AvgWeightLinearRegression
 
 
+def batch_quadratic_form(x: torch.Tensor, A: torch.Tensor) -> torch.Tensor:
+    """
+    Compute the quadratic form x^T * A * x for a batched input x.
+    The calcuation of pred_sigma (uncertainty) in LinUCB is done by quadratic form x^T * A^{-1} * x.
+    Inspired by https://stackoverflow.com/questions/18541851/calculate-vt-a-v-for-a-matrix-of-vectors-v
+    This is a vectorized implementation of out[i] = x[i].t() @ A @ x[i]
+    x shape: (Batch, Feature_dim)
+    A shape: (Feature_dim, Feature_dim)
+    output shape: (Batch)
+    """
+    return (torch.matmul(x, A) * x).sum(-1)
+
+
+def calculate_variance(
+    subjective_state: torch.Tensor, representation: torch.nn.Module
+) -> torch.Tensor:
+    A_inv = representation.inv_A
+    sum_weight = (
+        representation.sum_weight
+        if isinstance(representation, AvgWeightLinearRegression)
+        else 1
+    )
+    uncertainty = torch.sqrt(batch_quadratic_form(subjective_state, A_inv) / sum_weight)
+    return uncertainty
+
+
 class LinUCBExploration(UCBExplorationBase):
     """
     Exploration module for linear UCB with disjoint linear models
     paper: https://arxiv.org/pdf/1003.0146.pdf
     """
-
-    def batch_quadratic_form(self, x: torch.Tensor, A: torch.Tensor) -> torch.Tensor:
-        """
-        Compute the quadratic form x^T * A * x for a batched input x.
-        The calcuation of pred_sigma (uncertainty) in LinUCB is done by quadratic form x^T * A^{-1} * x.
-        Inspired by https://stackoverflow.com/questions/18541851/calculate-vt-a-v-for-a-matrix-of-vectors-v
-        This is a vectorized implementation of out[i] = x[i].t() @ A @ x[i]
-        x shape: (Batch, Feature_dim)
-        A shape: (Feature_dim, Feature_dim)
-        output shape: (Batch)
-        """
-        return (torch.matmul(x, A) * x).sum(-1)
 
     def uncertainty(
         self,
@@ -43,15 +57,7 @@ class LinUCBExploration(UCBExplorationBase):
         Returns:
             uncertainty with shape (batch_size, action_count) or (batch_size, 1)
         """
-        A_inv = representation.inv_A
-        sum_weight = (
-            representation.sum_weight
-            if isinstance(representation, AvgWeightLinearRegression)
-            else 1
-        )
-        uncertainty = torch.sqrt(
-            self.batch_quadratic_form(subjective_state, A_inv) / sum_weight
-        )
+        uncertainty = calculate_variance(subjective_state, representation)
         nan_check = torch.isnan(uncertainty)
         if torch.any(nan_check):
             # nan doesnt make sense, it's usually caused by bad training data
