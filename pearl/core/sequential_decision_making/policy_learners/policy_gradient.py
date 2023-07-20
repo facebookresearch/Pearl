@@ -109,7 +109,11 @@ class PolicyGradient(PolicyLearner):
         assert action_batch.shape[0] == batch_size
         assert return_batch.shape[0] == batch_size
 
-        loss = self._define_loss(batch)
+        policy_propensities = self._get_action_prob(batch.state, batch.action)
+        negative_log_probs = -torch.log(policy_propensities)
+        loss = torch.sum(
+            negative_log_probs * batch.reward
+        )  # reward in batch is cummulated return
         self._actor_optimizer.zero_grad()
         loss.backward()
         self._actor_optimizer.step()
@@ -123,11 +127,3 @@ class PolicyGradient(PolicyLearner):
             action_probs = actor(state_batch)
         # TODO action_batch is one-hot encoding vectors
         return torch.sum(action_probs * action_batch, dim=1, keepdim=True)
-
-    def _define_loss(self, batch: TransitionBatch) -> torch.Tensor:
-        policy_propensities = self._get_action_prob(batch.state, batch.action)
-
-        negative_log_probs = -torch.log(policy_propensities)
-        return torch.sum(
-            negative_log_probs * batch.reward
-        )  # reward in batch is cummulated return

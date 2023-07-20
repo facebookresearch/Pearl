@@ -228,7 +228,7 @@ class IntegrationTests(unittest.TestCase):
                 agent=agent,
                 env=env,
                 target_return=500,
-                max_episodes=10_000,
+                max_episodes=1000,
                 learn=True,
                 learn_after_episode=True,
                 exploit=False,

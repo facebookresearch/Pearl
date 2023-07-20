@@ -77,7 +77,7 @@ class ProximalPolicyOptimization(PolicyGradient):
             ]
         )
 
-    def _define_loss(self, batch: TransitionBatch) -> torch.Tensor:
+    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """
         Loss = actor loss + critic_loss_scaling * critic loss + entropy_bonus_scaling * entropy loss
         """
@@ -108,11 +108,17 @@ class ProximalPolicyOptimization(PolicyGradient):
         # Categorical is good for Cartpole Env where actions are discrete
         # TODO need to support continuous action
         entropy = torch.distributions.Categorical(action_probs.detach()).entropy()
-        return (
+        loss = (
             torch.sum(-torch.min(r_thelta * advantage, clip * advantage))
             + self._critic_loss_scaling * vs_loss
             - torch.sum(self._entropy_bonus_scaling * entropy)
         )
+
+        self._optimizer.zero_grad()
+        loss.backward()
+        self._optimizer.step()
+
+        return {"loss": loss.mean().item()}
 
     def learn(self, replay_buffer: ReplayBuffer) -> Dict[str, Any]:
         super().learn(replay_buffer)
