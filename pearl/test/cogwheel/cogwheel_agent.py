@@ -43,6 +43,7 @@ from pearl.core.sequential_decision_making.policy_learners.soft_actor_critic imp
 
 from pearl.gym.gym_environment import GymEnvironment
 from pearl.online_learning.online_learning import target_return_is_reached
+from pearl.utils.environments import OneHotObservationsFromDiscrete
 from windtunnel.cogwheel.test import cogwheel_test, CogwheelTest
 
 
@@ -68,6 +69,39 @@ class TestAgent(CogwheelTest):
                 max_episodes=1000,
                 agent=agent,
                 env=env,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+            )
+        )
+
+    @cogwheel_test
+    def test_dqn_on_frozen_lake(self) -> None:
+        """
+        This test is checking if DQN will eventually solve FrozenLake-v1
+        whose observations need to be wrapped in a one-hot representation.
+        """
+        environment = OneHotObservationsFromDiscrete(
+            GymEnvironment("FrozenLake-v1", is_slippery=False)
+        )
+        state_dim = environment.observation_space.shape[0]
+        agent = PearlAgent(
+            policy_learner=DeepQLearning(
+                state_dim=state_dim,
+                action_space=environment.action_space,
+                hidden_dims=[state_dim // 2, state_dim // 2],
+                training_rounds=40,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(1000),
+        )
+
+        self.assertTrue(
+            target_return_is_reached(
+                target_return=1.0,
+                required_target_returns_in_a_row=5,
+                max_episodes=1000,
+                agent=agent,
+                env=environment,
                 learn=True,
                 learn_after_episode=True,
                 exploit=False,
