@@ -27,7 +27,7 @@ class PolicyLearner(ABC):
         on_policy: bool,
         training_rounds: int = 100,
         batch_size: int = 1,
-        **options
+        **options,
     ) -> None:
         self._exploration_module = (
             options["exploration_module"]
@@ -76,7 +76,9 @@ class PolicyLearner(ABC):
         batch_size = self._batch_size if not self.on_policy else len(replay_buffer)
 
         if len(replay_buffer) < batch_size:
-            logging.warning("We don't have enough data to learn.")
+            logging.warning(
+                f"Batch size is {batch_size} and replay buffer size is {len(replay_buffer)}; we don't have enough data to learn."
+            )
             return {}
 
         report = {}
@@ -100,4 +102,7 @@ class PolicyLearner(ABC):
         Returns:
             A dictionary which includes useful metric to return to upperlevel for different purpose eg debugging
         """
-        pass
+        raise NotImplementedError("learn_batch is not implemented")
+
+    def __str__(self):
+        return self.__class__.__name__

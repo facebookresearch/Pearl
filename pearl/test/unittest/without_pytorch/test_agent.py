@@ -32,7 +32,7 @@ class TestAgentWithoutPyTorch(unittest.TestCase):
         env = GymEnvironment("FrozenLake-v1", is_slippery=False)
         agent = PearlAgent(policy_learner=TabularQLearning())
 
-        online_learning(agent, env, number_of_episodes=1000)
+        online_learning(agent, env, number_of_episodes=500)
 
         for _ in range(100):  # Should always reach the goal
             assert episode_return(agent, env, learn=False, exploit=True) == 1.0

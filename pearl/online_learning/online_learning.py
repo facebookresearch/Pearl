@@ -1,3 +1,4 @@
+import logging
 from typing import Callable, List
 
 import matplotlib.pyplot as plt
@@ -32,6 +33,10 @@ def online_learning_to_png_graph(
 
     if filename is not None:
         title = f"{str(agent)} on {str(env)}"
+        if len(title) > 125:
+            logging.warning(
+                f"Figure title is very long, with {len(title)} characters: {title}"
+            )
         plt.plot(returns)
         plt.title(title, fontsize=fontsize_for(title))
         plt.xlabel("Episode")
