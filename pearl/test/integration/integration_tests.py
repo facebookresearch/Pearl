@@ -1,15 +1,6 @@
 #!/usr/bin/env fbpython
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
-"""
-Cogwheel wiki
-https://www.internalfb.com/intern/wiki/Cogwheel/
-
-To RUN:
-    buck2 run //pearl:cogwheel_pearl_agent-launcher
-
-This takes a long time (usually 3 hours on a devserver), which is why it is on cogwheel where it will not time out.
-"""
-import logging
+import unittest
 
 from pearl.core.common.neural_networks.value_networks import (
     DuelingStateActionValueNetwork,
@@ -44,11 +35,13 @@ from pearl.core.sequential_decision_making.policy_learners.soft_actor_critic imp
 from pearl.gym.gym_environment import GymEnvironment
 from pearl.online_learning.online_learning import target_return_is_reached
 from pearl.utils.environments import OneHotObservationsFromDiscrete
-from windtunnel.cogwheel.test import cogwheel_test, CogwheelTest
 
 
-class TestAgent(CogwheelTest):
-    @cogwheel_test
+class IntegrationTests(unittest.TestCase):
+    """
+    These tests may take several hours to run
+    """
+
     def test_dqn(self) -> None:
         """
         This test is checking if DQN will eventually get to 500 return for CartPole-v1
@@ -75,7 +68,6 @@ class TestAgent(CogwheelTest):
             )
         )
 
-    @cogwheel_test
     def test_dqn_on_frozen_lake(self) -> None:
         """
         This test is checking if DQN will eventually solve FrozenLake-v1
@@ -108,7 +100,6 @@ class TestAgent(CogwheelTest):
             )
         )
 
-    @cogwheel_test
     def test_double_dqn(self) -> None:
         """
         This test is checking if double DQN will eventually get to 500 return for CartPole-v1
@@ -136,7 +127,6 @@ class TestAgent(CogwheelTest):
             )
         )
 
-    @cogwheel_test
     def test_sarsa(self) -> None:
         """
         This test is checking if SARSA will eventually get to 500 return for CartPole-v1
@@ -163,7 +153,6 @@ class TestAgent(CogwheelTest):
             )
         )
 
-    @cogwheel_test
     def test_pg(self) -> None:
         """
         This test is checking if Policy Gradient will eventually get to 500 return for CartPole-v1
@@ -190,7 +179,6 @@ class TestAgent(CogwheelTest):
             )
         )
 
-    @cogwheel_test
     def test_dueling_dqn(
         self,
         batch_size: int = 128,
@@ -219,7 +207,6 @@ class TestAgent(CogwheelTest):
             )
         )
 
-    @cogwheel_test
     def test_ppo(self) -> None:
         """
         This test is checking if PPO using cumulated returns will eventually get to 500 return for CartPole-v1
@@ -248,7 +235,6 @@ class TestAgent(CogwheelTest):
             )
         )
 
-    @cogwheel_test
     def test_sac(self) -> None:
         """
         This test is checking if SAC will eventually get to 500 return for CartPole-v1
@@ -277,8 +263,3 @@ class TestAgent(CogwheelTest):
                 exploit=False,
             )
         )
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    TestAgent().main()
