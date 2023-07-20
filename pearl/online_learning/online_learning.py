@@ -92,6 +92,50 @@ def online_learning(
         process_return(g)
 
 
+def target_return_is_reached(
+    target_return: Value,
+    max_episodes: int,
+    agent: Agent,
+    env: Environment,
+    learn: bool,
+    learn_after_episode: bool,
+    exploit: bool,
+    required_target_returns_in_a_row=1,
+) -> bool:
+    """
+    Learns until obtaining target return (a certain number of times in a row, default 1) or max_episodes are completed.
+    Args
+        target_return (Value): the targeted return.
+        max_episodes (int): the maximum number of episodes to run.
+        agent (Agent): the agent.
+        env (Environment): the environment.
+        learn (bool): whether to learn.
+        learn_after_episode (bool): whether to learn after every episode.
+        exploit (bool): whether to exploit.
+        required_target_returns_in_a_row (int, optional): how many times we must hit the target to succeed.
+    Returns
+        bool: whether target_return has been obtained required_target_returns_in_a_row times in a row.
+    """
+    target_returns_in_a_row = 0
+    for i in range(max_episodes):
+        if i % 100 == 0:
+            print(f"episode {i}")
+        g = episode_return(
+            agent=agent,
+            env=env,
+            learn=learn,
+            learn_after_episode=learn_after_episode,
+            exploit=exploit,
+        )
+        if g >= target_return:
+            target_returns_in_a_row += 1
+            if target_returns_in_a_row >= required_target_returns_in_a_row:
+                return True
+        else:
+            target_returns_in_a_row = 0
+    return False
+
+
 def episode_return(
     agent: Agent,
     env: Environment,

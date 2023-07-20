@@ -42,7 +42,7 @@ from pearl.core.sequential_decision_making.policy_learners.soft_actor_critic imp
 )
 
 from pearl.gym.gym_environment import GymEnvironment
-from pearl.online_learning.online_learning import episode_return
+from pearl.online_learning.online_learning import target_return_is_reached
 from windtunnel.cogwheel.test import cogwheel_test, CogwheelTest
 
 
@@ -60,21 +60,19 @@ class TestAgent(CogwheelTest):
                 [64, 64],
                 training_rounds=20,
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+            replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
         )
-        counter = 0
-        while (
-            episode_return(
+        self.assertTrue(
+            target_return_is_reached(
+                target_return=500,
+                max_episodes=1000,
                 agent=agent,
                 env=env,
                 learn=True,
                 learn_after_episode=True,
                 exploit=False,
             )
-            != 500
-        ):
-            counter += 1
-            self.assertGreater(1000, counter)
+        )
 
     @cogwheel_test
     def test_double_dqn(self) -> None:
@@ -90,21 +88,19 @@ class TestAgent(CogwheelTest):
                 training_rounds=20,
                 double=True,
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+            replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
         )
-        counter = 0
-        while (
-            episode_return(
+        self.assertTrue(
+            target_return_is_reached(
+                target_return=500,
+                max_episodes=1000,
                 agent=agent,
                 env=env,
                 learn=True,
                 learn_after_episode=True,
                 exploit=False,
             )
-            != 500
-        ):
-            counter += 1
-            self.assertGreater(1000, counter)
+        )
 
     @cogwheel_test
     def test_sarsa(self) -> None:
@@ -119,22 +115,19 @@ class TestAgent(CogwheelTest):
                 [64, 64],
                 training_rounds=20,
             ),
-            replay_buffer=FIFOOnPolicyReplayBuffer(10000),
+            replay_buffer=FIFOOnPolicyReplayBuffer(10_000),
         )
-        # Give SARSA more than DQN, as it is expected to have worse performance
-        counter = 0
-        while (
-            episode_return(
+        self.assertTrue(
+            target_return_is_reached(
+                target_return=500,
+                max_episodes=1000,
                 agent=agent,
                 env=env,
                 learn=True,
                 learn_after_episode=True,
                 exploit=False,
             )
-            != 500
-        ):
-            counter += 1
-            self.assertGreater(1000, counter)
+        )
 
     @cogwheel_test
     def test_pg(self) -> None:
@@ -149,21 +142,19 @@ class TestAgent(CogwheelTest):
                 [64, 64],
                 batch_size=500,
             ),
-            replay_buffer=OnPolicyEpisodicReplayBuffer(10000),
+            replay_buffer=OnPolicyEpisodicReplayBuffer(10_000),
         )
-        counter = 0
-        while (
-            episode_return(
+        self.assertTrue(
+            target_return_is_reached(
+                target_return=500,
+                max_episodes=10_000,
                 agent=agent,
                 env=env,
                 learn=True,
                 learn_after_episode=True,
                 exploit=False,
             )
-            != 500
-        ):
-            counter += 1
-            self.assertGreater(10000, counter)
+        )
 
     @cogwheel_test
     def test_dueling_dqn(
@@ -180,21 +171,19 @@ class TestAgent(CogwheelTest):
                 network_type=DuelingStateActionValueNetwork,
                 batch_size=batch_size,
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+            replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
         )
-        counter = 0
-        while (
-            episode_return(
+        self.assertTrue(
+            target_return_is_reached(
                 agent=agent,
                 env=env,
+                target_return=500,
+                max_episodes=10_000,
                 learn=True,
                 learn_after_episode=True,
                 exploit=False,
             )
-            != 500
-        ):
-            counter += 1
-            self.assertGreater(10000, counter)
+        )
 
     @cogwheel_test
     def test_ppo(self) -> None:
@@ -211,21 +200,19 @@ class TestAgent(CogwheelTest):
                 batch_size=64,
                 epsilon=0.1,
             ),
-            replay_buffer=OnPolicyEpisodicReplayBuffer(10000),
+            replay_buffer=OnPolicyEpisodicReplayBuffer(10_000),
         )
-        counter = 0
-        while (
-            episode_return(
+        self.assertTrue(
+            target_return_is_reached(
                 agent=agent,
                 env=env,
+                target_return=500,
+                max_episodes=10_000,
                 learn=True,
                 learn_after_episode=True,
                 exploit=False,
             )
-            != 500
-        ):
-            counter += 1
-            self.assertGreater(10000, counter)
+        )
 
     @cogwheel_test
     def test_sac(self) -> None:
@@ -245,19 +232,17 @@ class TestAgent(CogwheelTest):
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(50000),
         )
-        counter = 0
-        while (
-            episode_return(
+        self.assertTrue(
+            target_return_is_reached(
                 agent=agent,
                 env=env,
+                target_return=500,
+                max_episodes=10_000,
                 learn=True,
                 learn_after_episode=True,
                 exploit=False,
             )
-            != 500
-        ):
-            counter += 1
-            self.assertGreater(10000, counter)
+        )
 
 
 if __name__ == "__main__":
