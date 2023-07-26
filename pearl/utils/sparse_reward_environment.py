@@ -57,7 +57,7 @@ class SparseRewardEnvironment(Environment):
             SparseRewardEnvironmentObservation(
                 agent_position=self._agent_position, goal=self._goal
             ),
-            None,
+            self.action_space,
         )
 
     def _update_position(self, delta) -> None:
@@ -71,8 +71,45 @@ class SparseRewardEnvironment(Environment):
             max(min(y + delta_y, self._height), 0),
         )
 
+    def _check_win(self) -> bool:
+        """
+        Return:
+            True if reached goal
+            False if not reached goal
+        """
+        if math.dist(self._agent_position, self._goal) < self._reward_distance:
+            return True
+        return False
 
-class DiscreteSparseRewardEnvironment(SparseRewardEnvironment):
+
+class ContinuousSparseRewardEnvironment(SparseRewardEnvironment):
+    """
+    Given action vector (x, y)
+    agent position is updated accordingly
+    """
+
+    def step(self, action: Action) -> ActionResult:
+        self._update_position(action)
+
+        has_win = self._check_win()
+        self._step_count += 1
+        terminated = has_win or self._step_count >= self._max_episode_duration
+        return ActionResult(
+            observation=SparseRewardEnvironmentObservation(
+                agent_position=self._agent_position, goal=self._goal
+            ),
+            reward=0 if has_win else -1,
+            terminated=terminated,
+            truncated=False,
+            info=None,
+        )
+
+    @property
+    def action_space(self) -> ActionSpace:
+        return None
+
+
+class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
     """
     Given action count N, action index will be 0,...,N-1
     For action n, position will be changed by:
@@ -106,37 +143,9 @@ class DiscreteSparseRewardEnvironment(SparseRewardEnvironment):
             for i in range(action_count)
         ]
 
-    def _check_win(self) -> bool:
-        """
-        Return:
-            True if reached goal
-            False if not reached goal
-        """
-        if math.dist(self._agent_position, self._goal) < self._reward_distance:
-            return True
-        return False
-
     def step(self, action: Action) -> ActionResult:
         assert action < self._action_count and action >= 0
-        # update position
-        self._update_position(self._actions[action])
-
-        has_win = self._check_win()
-        self._step_count += 1
-        terminated = has_win or self._step_count >= self._max_episode_duration
-        return ActionResult(
-            observation=SparseRewardEnvironmentObservation(
-                agent_position=self._agent_position, goal=self._goal
-            ),
-            reward=0 if has_win else -1,
-            terminated=terminated,
-            truncated=False,
-            info=None,
-        )
-
-    def reset(self) -> (SparseRewardEnvironmentObservation, ActionSpace):
-        observation, _ = super(DiscreteSparseRewardEnvironment, self).reset()
-        return observation, self.action_space
+        return super(DiscreteSparseRewardEnvironment, self).step(self._actions[action])
 
     @property
     def action_space(self) -> DiscreteActionSpace:
