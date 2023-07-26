@@ -9,6 +9,8 @@ Constants:
 
 from typing import Callable, List
 
+import torch
+
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -29,6 +31,27 @@ class VanillaActorNetwork(nn.Module):
         value = F.relu(self.fc1(x))
         value = self.hiddens(value)
         return F.softmax(self.fc2(value), dim=1)
+
+
+class VanillaContinuousActorNetwork(VanillaActorNetwork):
+    """
+    This is vanilla version of deterministic actor network
+    Given input state, output an action vector
+    Args
+        max_action: specifies max value of action vector
+        output_dim: action dimension
+    """
+
+    def __init__(self, input_dim, hidden_dims, output_dim, max_action):
+        super(VanillaContinuousActorNetwork, self).__init__(
+            input_dim, hidden_dims, output_dim
+        )
+        self._max_action = max_action
+
+    def forward(self, x):
+        value = F.relu(self.fc1(x))
+        value = self.hiddens(value)
+        return self._max_action * torch.tanh(self.fc2(value))
 
 
 ActorNetworkType = Callable[[int, int, List[int], int], nn.Module]
