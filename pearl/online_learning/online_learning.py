@@ -80,8 +80,6 @@ def online_learning(
         process_return (Callable[[Value], None], optional): a callable for processing the returns of the episodes. Defaults to no-op.
     """
     for i in range(number_of_episodes):
-        if i % 100 == 0:
-            print(f"episode {i}")
         g = episode_return(
             agent,
             env,
@@ -89,6 +87,7 @@ def online_learning(
             exploit=False,
             learn_after_episode=learn_after_episode,
         )
+        print(f"\repisode {i}, return={g}", end="")
         process_return(g)
 
 
