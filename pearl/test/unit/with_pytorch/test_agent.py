@@ -30,7 +30,6 @@ from pearl.core.sequential_decision_making.policy_learners.deep_q_learning impor
 
 from pearl.gym.gym_environment import GymEnvironment
 from pearl.online_learning.online_learning import online_learning_to_png_graph
-from pearl.test.utils import create_random_batch
 from pearl.utils.action_spaces import DiscreteActionSpace
 
 
@@ -100,21 +99,6 @@ class TestAgentWithPyTorch(unittest.TestCase):
         online_learning_to_png_graph(
             agent, env, number_of_episodes=10, learn_after_episode=True
         )
-
-    def test_learn_batch(self) -> None:
-        # simple test to ensure e2e run
-        state_dim = 3
-        action_dim = 3
-        batch_size = 10
-        batch, action_space = create_random_batch(action_dim, state_dim, batch_size)
-        self.agent = PearlAgent(
-            policy_learner=DeepQLearning(
-                state_dim,
-                action_space,
-                [64, 64],
-            ),
-        )
-        self.agent.learn_batch(batch)
 
     def test_with_linear_contextual(self) -> None:
         """

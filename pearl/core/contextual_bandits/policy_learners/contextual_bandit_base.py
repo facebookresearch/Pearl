@@ -30,6 +30,7 @@ class ContextualBanditBase(PolicyLearner):
             batch_size=batch_size,
             exploration_module=exploration_module,
             on_policy=False,
+            is_action_continuous=False,  # TODO change this in children classes when we add CB for continuous
         )
         self._feature_dim = feature_dim
 

@@ -53,6 +53,7 @@ class DeepTDLearning(PolicyLearner):
             batch_size=batch_size,
             exploration_module=exploration_module,
             on_policy=on_policy,
+            is_action_continuous=False,
         )
         self._action_space = action_space
         self._learning_rate = learning_rate

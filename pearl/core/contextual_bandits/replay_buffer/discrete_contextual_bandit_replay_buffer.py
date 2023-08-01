@@ -22,8 +22,12 @@ class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
     """
 
     def __init__(self, capacity: int) -> None:
-        self.capacity = capacity
-        self.memory = deque([], maxlen=capacity)
+        super(DiscreteContextualBanditReplayBuffer, self).__init__(
+            capacity=capacity,
+            has_next_state=False,
+            has_next_action=False,
+            has_next_available_actions=False,
+        )
 
     def push(
         self,
@@ -40,9 +44,9 @@ class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
         # TODO add curr_available_actions and curr_available_actions_mask if needed in the future
         self.memory.append(
             Transition(
-                state=TensorBasedReplayBuffer._process_single_state(state),
+                state=self._process_single_state(state),
                 action=action,
-                reward=TensorBasedReplayBuffer._process_single_reward(reward),
+                reward=self._process_single_reward(reward),
             )
         )
 
@@ -53,6 +57,3 @@ class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
             action=torch.stack([x.action for x in samples]),
             reward=torch.cat([x.reward for x in samples]),
         )
-
-    def __len__(self) -> int:
-        return len(self.memory)

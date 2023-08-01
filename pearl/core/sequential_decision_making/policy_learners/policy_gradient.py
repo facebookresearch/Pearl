@@ -49,6 +49,7 @@ class PolicyGradient(PolicyLearner):
             training_rounds=1,  # PG must set this to 1
             batch_size=batch_size,
             on_policy=on_policy,
+            is_action_continuous=False,
         )
         self._action_space = action_space
         self._learning_rate = learning_rate

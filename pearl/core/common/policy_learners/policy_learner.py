@@ -25,6 +25,7 @@ class PolicyLearner(ABC):
     def __init__(
         self,
         on_policy: bool,
+        is_action_continuous: bool,
         training_rounds: int = 100,
         batch_size: int = 1,
         **options,
@@ -38,6 +39,7 @@ class PolicyLearner(ABC):
         self._batch_size = batch_size
         self._training_steps = 0
         self.on_policy = on_policy
+        self.is_action_continuous = is_action_continuous
 
     @property
     def batch_size(self) -> int:

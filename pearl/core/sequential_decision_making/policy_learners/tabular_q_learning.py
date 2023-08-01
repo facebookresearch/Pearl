@@ -41,6 +41,7 @@ class TabularQLearning(PolicyLearner):
         super(TabularQLearning, self).__init__(
             exploration_module=EGreedyExploration(exploration_rate),
             on_policy=False,
+            is_action_continuous=False,
         )
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor

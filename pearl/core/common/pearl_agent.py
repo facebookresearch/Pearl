@@ -60,6 +60,11 @@ class PearlAgent(Agent):
             else history_summarization_module
         )
 
+        # set here so replay_buffer and policy_learner are in sync
+        self.replay_buffer.is_action_continuous = (
+            self.policy_learner.is_action_continuous
+        )
+
         self._subjective_state = None
         self._latest_action = None
 

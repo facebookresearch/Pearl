@@ -7,11 +7,14 @@ import torch
 from pearl.core.common.policy_learners.exploration_module.epsilon_greedy_exploration import (
     EGreedyExploration,
 )
+from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
+    FIFOOffPolicyReplayBuffer,
+)
 from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
     DeepQLearning,
 )
 from pearl.core.sequential_decision_making.policy_learners.deep_sarsa import DeepSARSA
-from pearl.test.utils import create_random_batch
+from pearl.utils.action_spaces import DiscreteActionSpace
 
 
 class TestDeepTDLearning(unittest.TestCase):
@@ -19,9 +22,21 @@ class TestDeepTDLearning(unittest.TestCase):
         self.batch_size = 24
         self.state_dim = 10
         self.action_dim = 3
-        self.batch, self.action_space = create_random_batch(
-            self.action_dim, self.state_dim, self.batch_size
-        )
+        self.action_space = DiscreteActionSpace(range(self.action_dim))
+        buffer = FIFOOffPolicyReplayBuffer(self.batch_size)
+        for _ in range(self.batch_size):
+            buffer.push(
+                torch.randn(self.state_dim),
+                torch.randint(self.action_dim, (1,)),
+                torch.randint(1, (1,)),
+                torch.randn(self.state_dim),
+                self.action_space,
+                self.action_space,
+                self.action_space,
+                False,
+            )
+        self.batch = buffer.sample(self.batch_size)
+        self.batch.next_action = self.batch.action
 
     def test_double_dqn(self) -> None:
         """

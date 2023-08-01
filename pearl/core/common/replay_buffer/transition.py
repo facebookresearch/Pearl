@@ -28,7 +28,7 @@ TransitionBatch is designed for data batch
 """
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class TransitionBatch:
     state: torch.tensor
     action: torch.tensor
