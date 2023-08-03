@@ -56,6 +56,23 @@ class TestAgentWithPyTorch(unittest.TestCase):
             agent, env, number_of_episodes=10, learn_after_episode=True
         )
 
+    def test_conservative_deep_td_learning_online_rl_sanity_check(self) -> None:
+        # make sure E2E is fine for cql loss
+        env = GymEnvironment("CartPole-v1")
+        agent = PearlAgent(
+            policy_learner=DeepQLearning(
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                hidden_dims=[64, 64],
+                training_rounds=20,
+                is_conservative=True,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+        )
+        online_learning_to_png_graph(
+            agent, env, number_of_episodes=10, learn_after_episode=True
+        )
+
     def test_deep_td_learning_online_rl_sanity_check_dueling(
         self,
         number_of_episodes: int = 10,

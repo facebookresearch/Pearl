@@ -37,6 +37,8 @@ class DeepQLearning(DeepTDLearning):
         soft_update_tau: float = 1.0,  # no soft update
         network_type: StateActionValueNetworkType = VanillaStateActionValueNetwork,
         double: bool = False,
+        is_conservative: bool = False,
+        conservative_alpha: float = 2.0,
         state_output_dim=None,
         action_output_dim=None,
         state_hidden_dims=None,
@@ -56,6 +58,8 @@ class DeepQLearning(DeepTDLearning):
             batch_size=batch_size,
             target_update_freq=target_update_freq,
             soft_update_tau=soft_update_tau,
+            is_conservative=is_conservative,
+            conservative_alpha=conservative_alpha,
             network_type=network_type,
             state_output_dim=state_output_dim,
             action_output_dim=action_output_dim,

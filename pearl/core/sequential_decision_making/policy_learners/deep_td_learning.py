@@ -17,6 +17,7 @@ from pearl.core.common.policy_learners.exploration_module.exploration_module imp
 )
 from pearl.core.common.policy_learners.policy_learner import PolicyLearner
 from pearl.core.common.replay_buffer.transition import TransitionBatch
+from pearl.utils.compute_cql_loss import compute_cql_loss
 from torch import optim
 
 
@@ -42,6 +43,8 @@ class DeepTDLearning(PolicyLearner):
         batch_size: int = 128,
         target_update_freq: int = 10,
         soft_update_tau: float = 0.1,
+        is_conservative: bool = False,
+        conservative_alpha: float = 2.0,
         network_type: StateActionValueNetworkType = VanillaStateActionValueNetwork,
         state_output_dim=None,
         action_output_dim=None,
@@ -60,6 +63,8 @@ class DeepTDLearning(PolicyLearner):
         self._discount_factor = discount_factor
         self._target_update_freq = target_update_freq
         self._soft_update_tau = soft_update_tau
+        self._is_conservative = is_conservative
+        self._conservative_alpha = conservative_alpha
 
         # TODO: Assumes Gym interface, fix it.
         def make_specified_network():
@@ -168,7 +173,12 @@ class DeepTDLearning(PolicyLearner):
         ) + reward_batch  # (batch_size), r + gamma * V(s)
 
         criterion = torch.nn.MSELoss()
-        loss = criterion(state_action_values, expected_state_action_values)
+        bellman_loss = criterion(state_action_values, expected_state_action_values)
+        if self._is_conservative:
+            cql_loss = compute_cql_loss(self._Q, batch, batch_size)
+            loss = self._conservative_alpha * cql_loss + bellman_loss
+        else:
+            loss = bellman_loss
 
         # Optimize the model
         self._optimizer.zero_grad()

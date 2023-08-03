@@ -263,3 +263,33 @@ class IntegrationTests(unittest.TestCase):
                 exploit=False,
             )
         )
+
+    def test_cql(self) -> None:
+        """
+        This test is checking if DQN with conservative loss will eventually get to 500 return for CartPole-v1
+        when training online. This is a dummy test for now as we don't expect to use conservative losses
+        with online training. Will change this to an offline test when integrated with offline testing pipeline.
+        """
+
+        env = GymEnvironment("CartPole-v1")
+        agent = PearlAgent(
+            policy_learner=DeepQLearning(
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                hidden_dims=[64, 64],
+                training_rounds=20,
+                is_conservative=True,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
+        )
+        self.assertTrue(
+            target_return_is_reached(
+                target_return=500,
+                max_episodes=1000,
+                agent=agent,
+                env=env,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+            )
+        )
