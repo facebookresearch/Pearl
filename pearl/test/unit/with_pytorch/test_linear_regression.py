@@ -21,7 +21,7 @@ class TestLinearRegression(unittest.TestCase):
             for _ in range(10):
                 loss = (linear_regression(feature) - reward) ** 2
                 losses.append(loss.mean().item())
-                linear_regression.train(x=feature, y=reward, weight=weight)
+                linear_regression.learn_batch(x=feature, y=reward, weight=weight)
             losses.append(loss.mean().item())
 
             self.assertGreater(sum(losses[:5]), sum(losses[-5:]))

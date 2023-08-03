@@ -43,7 +43,9 @@ class LinearRegression(torch.nn.Module):
         weight = torch.unsqueeze(weight, dim=1)
         return x, y, weight
 
-    def train(self, x: torch.Tensor, y: torch.Tensor, weight: torch.Tensor) -> None:
+    def learn_batch(
+        self, x: torch.Tensor, y: torch.Tensor, weight: torch.Tensor
+    ) -> None:
         """
         A <- A + x*x.t
         b <- b + r*x
@@ -114,7 +116,9 @@ class AvgWeightLinearRegression(LinearRegression):
     def sum_weight(self) -> torch.Tensor:
         return self._sum_weight
 
-    def train(self, x: torch.Tensor, y: torch.Tensor, weight: torch.Tensor) -> None:
+    def learn_batch(
+        self, x: torch.Tensor, y: torch.Tensor, weight: torch.Tensor
+    ) -> None:
         x, y, weight = self._validate_train_inputs(x, y, weight)
 
         batch_sum_weight = weight.sum()

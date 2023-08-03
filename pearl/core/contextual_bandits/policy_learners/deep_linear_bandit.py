@@ -40,8 +40,7 @@ class DeepLinearBandit(DeepBandit):
         assert (
             len(hidden_dims) >= 1
         ), "hidden_dims should have at least one value to specify feature dim for linear regression"
-        DeepBandit.__init__(
-            self,
+        super(DeepLinearBandit, self).__init__(
             feature_dim=feature_dim,
             hidden_dims=hidden_dims[:-1],
             output_dim=hidden_dims[-1],
@@ -70,10 +69,10 @@ class DeepLinearBandit(DeepBandit):
         loss.backward()
         self._optimizer.step()
         # Optimize linear regression
-        self._linear_regression.train(
+        self._linear_regression.learn_batch(
             mlp_output.detach(), expected_values, batch.weight
         )
-        return {"mlp_loss": loss.item()}
+        return {"mlp_loss": loss.item(), "current_values": current_values.mean().item()}
 
     def act(
         self,

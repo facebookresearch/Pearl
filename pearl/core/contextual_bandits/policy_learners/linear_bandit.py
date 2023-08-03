@@ -46,7 +46,7 @@ class LinearBandit(ContextualBanditBase):
         A <- A + x*x.t
         b <- b + r*x
         """
-        self._linear_regression.train(
+        self._linear_regression.learn_batch(
             x=torch.cat([batch.state, batch.action], dim=1),
             y=batch.reward,
             weight=batch.weight,
