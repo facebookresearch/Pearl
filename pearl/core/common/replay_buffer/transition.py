@@ -10,17 +10,17 @@ Transition is designed for one single set of data
 
 @dataclass(frozen=False)
 class Transition:
-    state: torch.tensor
-    action: torch.tensor
-    reward: torch.tensor
-    next_state: torch.tensor = None
-    next_action: Optional[torch.tensor] = None
-    curr_available_actions: torch.tensor = None
-    curr_available_actions_mask: torch.tensor = None
-    next_available_actions: Optional[torch.tensor] = None
-    next_available_actions_mask: Optional[torch.tensor] = None
-    done: torch.tensor = None
-    weight: torch.tensor = None
+    state: torch.Tensor
+    action: torch.Tensor
+    reward: torch.Tensor
+    next_state: Optional[torch.Tensor] = None
+    next_action: Optional[torch.Tensor] = None
+    curr_available_actions: Optional[torch.Tensor] = None
+    curr_available_actions_mask: Optional[torch.Tensor] = None
+    next_available_actions: Optional[torch.Tensor] = None
+    next_available_actions_mask: Optional[torch.Tensor] = None
+    done: Optional[torch.Tensor] = None
+    weight: Optional[torch.Tensor] = None
 
 
 """
@@ -30,14 +30,14 @@ TransitionBatch is designed for data batch
 
 @dataclass(frozen=False)
 class TransitionBatch:
-    state: torch.tensor
-    action: torch.tensor
-    reward: torch.tensor
-    next_state: Optional[torch.tensor] = None
-    next_action: Optional[torch.tensor] = None
-    curr_available_actions: torch.tensor = None
-    curr_available_actions_mask: torch.tensor = None
-    next_available_actions: Optional[torch.tensor] = None
-    next_available_actions_mask: Optional[torch.tensor] = None
-    done: torch.tensor = None
-    weight: torch.tensor = None
+    state: torch.Tensor
+    action: torch.Tensor
+    reward: torch.Tensor
+    next_state: Optional[torch.Tensor] = None
+    next_action: Optional[torch.Tensor] = None
+    curr_available_actions: Optional[torch.Tensor] = None
+    curr_available_actions_mask: Optional[torch.Tensor] = None
+    next_available_actions: Optional[torch.Tensor] = None
+    next_available_actions_mask: Optional[torch.Tensor] = None
+    done: Optional[torch.Tensor] = None
+    weight: Optional[torch.Tensor] = None
