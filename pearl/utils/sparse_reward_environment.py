@@ -1,5 +1,7 @@
 """
 This file contains environment to simulate sparse rewards
+Also contains history summarization module that needs to be used together
+when defining PearlAgent
 
 Set up is following:
 2d box environment, where the agent gets initialized in a center of a square arena,
@@ -15,11 +17,20 @@ import random
 from abc import abstractmethod
 from collections import namedtuple
 
+import torch
+
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
 
 from pearl.api.environment import Environment
+
+from pearl.core.common.history_summarization_modules.history_summarization_module import (
+    HistorySummarizationModule,
+    SubjectiveState,
+)
+from pearl.core.common.replay_buffer.replay_buffer import ReplayBuffer
+from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.utils.action_spaces import DiscreteActionSpace
 
 SparseRewardEnvironmentObservation = namedtuple(
@@ -150,3 +161,26 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
     @property
     def action_space(self) -> DiscreteActionSpace:
         return DiscreteActionSpace(range(self._action_count))
+
+
+class SparseRewardEnvSummarizationModule(HistorySummarizationModule):
+    """
+    A history summarization module that is used for sparse reward game environment
+    """
+
+    def __init__(self, **options) -> None:
+        pass
+
+    def summarize_history(
+        self,
+        subjective_state: SubjectiveState,
+        observation: SparseRewardEnvironmentObservation,
+    ) -> SubjectiveState:
+        # for this game, state is a cat between agent position and goal position
+        return torch.Tensor(list(observation.agent_position) + list(observation.goal))
+
+    def learn(self, replay_buffer: ReplayBuffer) -> None:
+        pass
+
+    def learn_batch(self, batch: TransitionBatch) -> None:
+        pass

@@ -8,6 +8,16 @@ from pearl.api.environment import Environment
 from pearl.api.reward import Value
 from pearl.utils.plots import fontsize_for
 
+MA_WINDOW_SIZE = 10
+
+
+def latest_moving_average(data):
+    return (
+        sum(data[-MA_WINDOW_SIZE:]) * 1.0 / MA_WINDOW_SIZE
+        if len(data) >= MA_WINDOW_SIZE
+        else sum(data) * 1.0 / len(data)
+    )
+
 
 def online_learning_to_png_graph(
     agent: Agent,
@@ -100,6 +110,7 @@ def target_return_is_reached(
     learn_after_episode: bool,
     exploit: bool,
     required_target_returns_in_a_row=1,
+    check_moving_average: bool = False,
 ) -> bool:
     """
     Learns until obtaining target return (a certain number of times in a row, default 1) or max_episodes are completed.
@@ -112,10 +123,12 @@ def target_return_is_reached(
         learn_after_episode (bool): whether to learn after every episode.
         exploit (bool): whether to exploit.
         required_target_returns_in_a_row (int, optional): how many times we must hit the target to succeed.
+        check_moving_average: if this is enabled, we check the if latest moving average value reaches goal
     Returns
         bool: whether target_return has been obtained required_target_returns_in_a_row times in a row.
     """
     target_returns_in_a_row = 0
+    returns = []
     for i in range(max_episodes):
         if i % 100 == 0:
             print(f"episode {i}")
@@ -126,7 +139,9 @@ def target_return_is_reached(
             learn_after_episode=learn_after_episode,
             exploit=exploit,
         )
-        if g >= target_return:
+        returns.append(g)
+        value = g if not check_moving_average else latest_moving_average(returns)
+        if value >= target_return:
             target_returns_in_a_row += 1
             if target_returns_in_a_row >= required_target_returns_in_a_row:
                 return True
