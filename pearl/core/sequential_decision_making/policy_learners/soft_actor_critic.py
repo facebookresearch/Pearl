@@ -3,6 +3,7 @@ from typing import Any, Dict, Iterable
 import torch
 import torch.nn.functional as F
 from pearl.api.action_space import ActionSpace
+from pearl.core.common.neural_networks.nplets_critic import TwinCritic
 from pearl.core.common.neural_networks.utils import init_weights, update_target_network
 from pearl.core.common.neural_networks.value_networks import (
     StateActionValueNetworkType,
@@ -68,21 +69,13 @@ class SoftActorCritic(PolicyGradient):
                 output_dim=1,
             )
 
-        self._critic_1 = make_specified_critic_network()
-        self._critic_1_target = make_specified_critic_network()
-        self._critic_1.apply(init_weights)
-        self._critic_1_target.load_state_dict(self._critic_1.state_dict())
-
-        self._critic_2 = make_specified_critic_network()
-        self._critic_2_target = make_specified_critic_network()
-        self._critic_2.apply(init_weights)
-        self._critic_2_target.load_state_dict(self._critic_2.state_dict())
-
-        self._critic_1_optimizer = optim.AdamW(
-            self._critic_1.parameters(), lr=learning_rate, amsgrad=True
-        )
-        self._critic_2_optimizer = optim.AdamW(
-            self._critic_2.parameters(), lr=learning_rate, amsgrad=True
+        self._critics = TwinCritic(
+            state_dim=state_dim,
+            action_dim=action_space.n,
+            hidden_dims=hidden_dims,
+            learning_rate=learning_rate,
+            network_type=critic_network_type,
+            init_fn=init_weights,
         )
         # This is needed to avoid actor softmax overflow issue.
         # Should not be left for users to choose.
@@ -109,13 +102,7 @@ class SoftActorCritic(PolicyGradient):
 
         self._rounds += 1
 
-        update_target_network(
-            self._critic_1_target, self._critic_1, self._soft_update_tau
-        )
-        update_target_network(
-            self._critic_2_target, self._critic_2, self._soft_update_tau
-        )
-
+        self._critics.update_target_network(self._soft_update_tau)
         return {}
 
     def _critic_learn_batch(self, batch: TransitionBatch) -> None:
@@ -131,17 +118,12 @@ class SoftActorCritic(PolicyGradient):
         assert reward_batch.shape[0] == batch_size
         assert done_batch.shape[0] == batch_size
 
-        state_action_values_1 = self._critic_1.get_batch_action_value(
-            state_batch=state_batch,
-            action_batch=action_batch,
-            curr_available_actions_batch=batch.curr_available_actions,
-        )  # (batch_size)
-
-        state_action_values_2 = self._critic_2.get_batch_action_value(
-            state_batch=state_batch,
-            action_batch=action_batch,
-            curr_available_actions_batch=batch.curr_available_actions,
-        )  # (batch_size)
+        def target_fn(critic):
+            return critic.get_batch_action_value(
+                state_batch=state_batch,
+                action_batch=action_batch,
+                curr_available_actions_batch=batch.curr_available_actions,
+            )  # (batch_size)
 
         expected_state_action_values = (
             self._get_next_state_expected_values(batch)
@@ -149,17 +131,7 @@ class SoftActorCritic(PolicyGradient):
             * (1 - done_batch)
         ) + reward_batch  # (batch_size), r + gamma * V(s)
 
-        criterion = torch.nn.MSELoss()
-
-        critic_1_loss = criterion(state_action_values_1, expected_state_action_values)
-        self._critic_1_optimizer.zero_grad()
-        critic_1_loss.backward()
-        self._critic_1_optimizer.step()
-
-        critic_2_loss = criterion(state_action_values_2, expected_state_action_values)
-        self._critic_2_optimizer.zero_grad()
-        critic_2_loss.backward()
-        self._critic_2_optimizer.step()
+        self._critics.optimize(target_fn, expected_state_action_values)
 
     @torch.no_grad()
     def _get_next_state_expected_values(self, batch: TransitionBatch) -> torch.tensor:
@@ -175,20 +147,12 @@ class SoftActorCritic(PolicyGradient):
             next_state_batch.unsqueeze(1), self._action_space.n, dim=1
         )  # (batch_size x action_space_size x state_dim)
 
-        next_state_action_values_1 = self._critic_1_target.get_batch_action_value(
-            next_state_batch_repeated,
-            next_available_actions_batch,
+        next_state_action_values = self._critics.get_q_values(
+            state_batch=next_state_batch_repeated,
+            action_batch=next_available_actions_batch,
+            target=True,
         ).view(
             (self.batch_size, -1)
-        )  # (batch_size x action_space_size)
-        next_state_action_values_2 = self._critic_2_target.get_batch_action_value(
-            next_state_batch_repeated,
-            next_available_actions_batch,
-        ).view(
-            (self.batch_size, -1)
-        )  # (batch_size x action_space_size)
-        next_state_action_values = torch.min(
-            next_state_action_values_1, next_state_action_values_2
         )  # (batch_size x action_space_size)
 
         # Make sure that unavailable actions' Q values are assigned to 0.0
@@ -228,18 +192,10 @@ class SoftActorCritic(PolicyGradient):
             state_batch.unsqueeze(1), self._action_space.n, dim=1
         )  # (batch_size x action_space_size x state_dim)
 
-        state_action_values_1 = self._critic_1.get_batch_action_value(
-            state_batch_repeated, action_space
+        state_action_values = self._critics.get_q_values(
+            state_batch=state_batch_repeated, action_batch=action_space
         ).view(
             (self.batch_size, self._action_space.n)
-        )  # (batch_size x action_space_size)
-        state_action_values_2 = self._critic_2.get_batch_action_value(
-            state_batch_repeated, action_space
-        ).view(
-            (self.batch_size, self._action_space.n)
-        )  # (batch_size x action_space_size)
-        state_action_values = torch.min(
-            state_action_values_1, state_action_values_2
         )  # (batch_size x action_space_size)
 
         policy_loss = (
