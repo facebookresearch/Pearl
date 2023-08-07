@@ -38,20 +38,18 @@ class VanillaContinuousActorNetwork(VanillaActorNetwork):
     This is vanilla version of deterministic actor network
     Given input state, output an action vector
     Args
-        max_action: specifies max value of action vector
         output_dim: action dimension
     """
 
-    def __init__(self, input_dim, hidden_dims, output_dim, max_action):
+    def __init__(self, input_dim, hidden_dims, output_dim):
         super(VanillaContinuousActorNetwork, self).__init__(
             input_dim, hidden_dims, output_dim
         )
-        self._max_action = max_action
 
     def forward(self, x):
         value = F.relu(self.fc1(x))
         value = self.hiddens(value)
-        return self._max_action * torch.tanh(self.fc2(value))
+        return torch.tanh(self.fc2(value))
 
 
 ActorNetworkType = Callable[[int, int, List[int], int], nn.Module]
