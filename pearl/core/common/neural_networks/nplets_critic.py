@@ -65,12 +65,15 @@ class NpletsCritic(torch.nn.Module):
         expected_target:
             For N Q(s, a), expected target is the same for all critics
         """
+        loss_value = []
         for i, critic in enumerate(self._critics):
             criterion = torch.nn.MSELoss()
             loss = criterion(target_fn(critic), expected_target)
             self._optimizers[i].zero_grad()
             loss.backward()
             self._optimizers[i].step()
+            loss_value.append(loss.mean().item())
+        return loss_value
 
     def get_q_values(
         self,

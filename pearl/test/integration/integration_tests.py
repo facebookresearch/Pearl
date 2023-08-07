@@ -9,6 +9,10 @@ from pearl.core.common.neural_networks.value_networks import (
 )
 
 from pearl.core.common.pearl_agent import PearlAgent
+
+from pearl.core.common.policy_learners.exploration_module.normal_distribution_exploration import (
+    NormalDistributionExploration,
+)
 from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
 )
@@ -20,6 +24,9 @@ from pearl.core.common.replay_buffer.hindsight_experience_replay_buffer import (
 )
 from pearl.core.common.replay_buffer.on_policy_episodic_replay_buffer import (
     OnPolicyEpisodicReplayBuffer,
+)
+from pearl.core.sequential_decision_making.policy_learners.ddpg import (
+    DeepDeterministicPolicyGradient,
 )
 
 from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
@@ -357,6 +364,37 @@ class IntegrationTests(unittest.TestCase):
                 # -600 and 1000 are good enough to differ perf from DQN
                 # set it looser for HER to make test faster
                 target_return=-600,
+                max_episodes=1000,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+                check_moving_average=True,
+            )
+        )
+
+    def test_ddpg(self) -> None:
+        """
+        This test is checking if DDPG will eventually learn on Pendulum-v1
+        If learns well, return will converge above -250
+        Due to randomness in games, we check on moving avarage of episode returns
+        """
+        env = GymEnvironment("Pendulum-v1")
+        agent = PearlAgent(
+            policy_learner=DeepDeterministicPolicyGradient(
+                state_dim=env.observation_space.shape[0],
+                action_dim=env.action_space.shape[0],
+                hidden_dims=[400, 300],
+                exploration_module=NormalDistributionExploration(
+                    mean=0, std_dev=0.2, max_action_value=2, min_action_value=-2
+                ),
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(50000),
+        )
+        self.assertTrue(
+            target_return_is_reached(
+                agent=agent,
+                env=env,
+                target_return=-250,
                 max_episodes=1000,
                 learn=True,
                 learn_after_episode=True,
