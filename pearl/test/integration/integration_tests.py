@@ -43,6 +43,7 @@ from pearl.core.sequential_decision_making.policy_learners.ppo import (
 from pearl.core.sequential_decision_making.policy_learners.soft_actor_critic import (
     SoftActorCritic,
 )
+from pearl.core.sequential_decision_making.policy_learners.td3 import TD3
 
 from pearl.gym.gym_environment import GymEnvironment
 from pearl.online_learning.online_learning import (
@@ -381,6 +382,37 @@ class IntegrationTests(unittest.TestCase):
         env = GymEnvironment("Pendulum-v1")
         agent = PearlAgent(
             policy_learner=DeepDeterministicPolicyGradient(
+                state_dim=env.observation_space.shape[0],
+                action_dim=env.action_space.shape[0],
+                hidden_dims=[400, 300],
+                exploration_module=NormalDistributionExploration(
+                    mean=0, std_dev=0.2, max_action_value=2, min_action_value=-2
+                ),
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(50000),
+        )
+        self.assertTrue(
+            target_return_is_reached(
+                agent=agent,
+                env=env,
+                target_return=-250,
+                max_episodes=1000,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+                check_moving_average=True,
+            )
+        )
+
+    def test_td3(self) -> None:
+        """
+        This test is checking if TD3 will eventually learn on Pendulum-v1
+        If learns well, return will converge above -250
+        Due to randomness in games, we check on moving avarage of episode returns
+        """
+        env = GymEnvironment("Pendulum-v1")
+        agent = PearlAgent(
+            policy_learner=TD3(
                 state_dim=env.observation_space.shape[0],
                 action_dim=env.action_space.shape[0],
                 hidden_dims=[400, 300],
