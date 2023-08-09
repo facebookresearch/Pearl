@@ -3,13 +3,13 @@ from typing import Optional
 
 import torch
 
-"""
-Transition is designed for one single set of data
-"""
-
 
 @dataclass(frozen=False)
 class Transition:
+    """
+    Transition is designed for one single set of data
+    """
+
     state: torch.Tensor
     action: torch.Tensor
     reward: torch.Tensor
@@ -23,13 +23,12 @@ class Transition:
     weight: Optional[torch.Tensor] = None
 
 
-"""
-TransitionBatch is designed for data batch
-"""
-
-
 @dataclass(frozen=False)
 class TransitionBatch:
+    """
+    TransitionBatch is designed for data batch
+    """
+
     state: torch.Tensor
     action: torch.Tensor
     reward: torch.Tensor

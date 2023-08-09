@@ -11,7 +11,6 @@ from typing import Callable, List, Optional
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from pearl.utils.extend_state_feature import (
     extend_state_feature_by_available_action_space,
 )
