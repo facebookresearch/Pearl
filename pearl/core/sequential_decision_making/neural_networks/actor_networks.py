@@ -13,9 +13,10 @@ import torch
 
 import torch.nn as nn
 import torch.nn.functional as F
+from pearl.core.common.neural_networks.auto_device_nn_module import AutoDeviceNNModule
 
 
-class VanillaActorNetwork(nn.Module):
+class VanillaActorNetwork(AutoDeviceNNModule):
     def __init__(self, input_dim, hidden_dims, output_dim):
         super(VanillaActorNetwork, self).__init__()
 

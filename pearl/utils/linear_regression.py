@@ -16,11 +16,12 @@ import logging
 from typing import Tuple
 
 import torch
+from pearl.core.common.neural_networks.auto_device_nn_module import AutoDeviceNNModule
 
 logger = logging.getLogger(__name__)
 
 
-class LinearRegression(torch.nn.Module):
+class LinearRegression(AutoDeviceNNModule):
     def __init__(
         self,
         feature_dim: int,

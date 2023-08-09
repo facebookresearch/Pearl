@@ -11,13 +11,14 @@ from typing import Callable, List, Optional
 
 import torch
 import torch.nn as nn
+from pearl.core.common.neural_networks.auto_device_nn_module import AutoDeviceNNModule
 from pearl.utils.extend_state_feature import (
     extend_state_feature_by_available_action_space,
 )
 from torch import Tensor
 
 
-class VanillaValueNetwork(nn.Module):
+class VanillaValueNetwork(AutoDeviceNNModule):
     def __init__(
         self, input_dim: int, hidden_dims: Optional[List[int]], output_dim: int = 1
     ) -> None:
@@ -71,7 +72,7 @@ class VanillaStateActionValueNetwork(VanillaValueNetwork):
         return self.forward(x).view(-1)
 
 
-class DuelingStateActionValueNetwork(nn.Module):
+class DuelingStateActionValueNetwork(AutoDeviceNNModule):
     """
     Dueling architecture contains state arch, value arch, and advantage arch.
     """
@@ -207,7 +208,7 @@ linear layers to be an identity map and stopping gradients. This however would b
 """
 
 
-class TwoTowerNetwork(nn.Module):
+class TwoTowerNetwork(AutoDeviceNNModule):
     def __init__(
         self,
         state_input_dim: int,
