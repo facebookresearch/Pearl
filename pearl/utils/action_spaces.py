@@ -44,10 +44,12 @@ class DiscreteActionSpace(ActionSpace):
     def cat_state_tensor(self, subjective_state: torch.Tensor) -> torch.Tensor:
         """
         Args:
-            subjective_state in shape (batch_size, state_dim) or (state_dim)
+            subjective_state: a tensor representing subjective state of shape (batch_size, state_dim) or (state_dim)
         Returns:
             cat subjective_state to every action and return a feature tensor with shape (batch_size, action_count, feature_dim)
         """
+        # TODO: this method should not be here because a discrete action space shouldn't know about states,
+        # it should simply know about the discrete set of actions.
         action_dim = self.action_dim
         state_dim = subjective_state.shape[-1]
         action_count = self.n

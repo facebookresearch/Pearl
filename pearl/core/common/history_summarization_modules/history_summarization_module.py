@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 from pearl.api.observation import Observation
 
@@ -12,16 +12,16 @@ class HistorySummarizationModule(ABC):
     An abstract interface for exploration module.
     """
 
-    def __init__(self, **options) -> None:
-        pass
-
+    @abstractmethod
     def summarize_history(
         self, subjective_state: SubjectiveState, observation: Observation
     ) -> SubjectiveState:
         pass
 
+    @abstractmethod
     def learn(self, replay_buffer: ReplayBuffer) -> None:
         pass
 
+    @abstractmethod
     def learn_batch(self, batch: TransitionBatch) -> None:
         raise NotImplementedError("learn_batch is not implemented")

@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from enum import Enum
 
 import torch
@@ -24,12 +24,11 @@ class ExplorationModule(ABC):
     An abstract interface for exploration module.
     """
 
-    def __init__(self, **options) -> None:
+    def reset(self) -> None:  # noqa: B027
+        """Resets the internal state of the exploration module. Default implementation does nothing."""
         pass
 
-    def reset(self) -> None:
-        pass
-
+    @abstractmethod
     def act(
         self,
         subjective_state: SubjectiveState,
@@ -40,5 +39,6 @@ class ExplorationModule(ABC):
     ) -> Action:
         pass
 
-    def learn(self, replay_buffer: ReplayBuffer) -> None:
+    def learn(self, replay_buffer: ReplayBuffer) -> None:  # noqa: B027
+        """Learns from the replay buffer. Default implementation does nothing."""
         pass

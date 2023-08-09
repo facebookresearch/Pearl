@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
@@ -11,14 +11,18 @@ class Agent(ABC):
     An abstract interface for agents.
     """
 
+    @abstractmethod
     def act(self) -> Action:
         pass
 
+    @abstractmethod
     def observe(self, action_result: ActionResult) -> None:
         pass
 
+    @abstractmethod
     def learn(self) -> None:
         pass
 
+    @abstractmethod
     def reset(self, observation: Observation, action_space: ActionSpace) -> None:
         pass

@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 from pearl.api.action import Action
 
@@ -9,8 +9,6 @@ class ActionSpace(ABC):
     TODO: leverage Gymnasium ones.
     """
 
-    def __init__(self):
-        pass
-
+    @abstractmethod
     def sample(self) -> Action:
         pass

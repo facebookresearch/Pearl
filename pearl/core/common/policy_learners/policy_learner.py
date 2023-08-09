@@ -53,9 +53,11 @@ class PolicyLearner(ABC):
     def exploration_module(self, new_exploration_module) -> None:
         self._exploration_module = new_exploration_module
 
-    def reset(self, action_space: ActionSpace) -> None:
+    def reset(self, action_space: ActionSpace) -> None:  # noqa: B027
+        """Resets policy maker for a new episode. Default implementation does nothing."""
         pass
 
+    @abstractmethod
     def act(
         self,
         subjective_state: SubjectiveState,

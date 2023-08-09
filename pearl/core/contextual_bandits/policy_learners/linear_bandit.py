@@ -56,27 +56,27 @@ class LinearBandit(ContextualBanditBase):
     def act(
         self,
         subjective_state: SubjectiveState,
-        action_space: DiscreteActionSpace,
+        available_action_space: DiscreteActionSpace,
         exploit: bool = False,
     ) -> Action:
         """
         Args:
-            subjective_state - state will be applied to different action vectors in action_space
-            action_space contains a list of action vector, currenly only support static space
+            subjective_state: state will be applied to different action vectors in action_space
+            available_action_space: contains a list of action vectors, currenly only supports static space
         Return:
             action index chosen given state and action vectors
         """
         # It doesnt make sense to call act if we are not working with action vector
-        assert action_space.action_dim > 0
-        action_count = action_space.n
-        new_feature = action_space.cat_state_tensor(subjective_state)
+        assert available_action_space.action_dim > 0
+        action_count = available_action_space.n
+        new_feature = available_action_space.cat_state_tensor(subjective_state)
         values = self._linear_regression(new_feature)  # (batch_size, action_count)
         assert values.shape == (new_feature.shape[0], action_count)
         return self._exploration_module.act(
             # TODO we might want to name this new_feature
             # so exploration module doesnt need to worry about broadcast state to different action vector
             subjective_state=new_feature,
-            action_space=action_space,
+            action_space=available_action_space,
             values=values,
             representation=self._linear_regression,
         )

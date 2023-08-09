@@ -1,23 +1,24 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Any, Iterable
 
 
 class ReplayBuffer(ABC):
-    def __init__(self, **options) -> None:
-        pass
-
+    @abstractmethod
     def push(self, *args) -> None:
         """Saves a transition."""
         pass
 
     # TODO: we need to redefine transitions as on-policy algorithms cannot use
     # transitions to learn
+    @abstractmethod
     def sample(self, batch_size) -> Iterable[Any]:
         pass
 
     def empty(self) -> None:
-        pass
+        """Indicates whether replay buffer is empty. Default implementations is len(self) == 0."""
+        return len(self) == 0
 
+    @abstractmethod
     def __len__(self) -> int:
         pass
 
