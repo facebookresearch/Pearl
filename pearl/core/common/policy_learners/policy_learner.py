@@ -15,6 +15,7 @@ from pearl.core.common.policy_learners.exploration_module.no_exploration import 
 )
 from pearl.core.common.replay_buffer.replay_buffer import ReplayBuffer
 from pearl.core.common.replay_buffer.transition import TransitionBatch
+from pearl.utils.device import get_pearl_device
 
 
 class PolicyLearner(ABC):
@@ -40,6 +41,7 @@ class PolicyLearner(ABC):
         self._training_steps = 0
         self.on_policy = on_policy
         self.is_action_continuous = is_action_continuous
+        self.device = get_pearl_device()
 
     @property
     def batch_size(self) -> int:

@@ -107,12 +107,16 @@ class DeepTDLearning(PolicyLearner):
         # TODO: Assumes subjective state is a torch tensor and gym action space.
         # Fix the available action space.
         with torch.no_grad():
-            subjective_state_tensor = torch.tensor(subjective_state)  # (state_dim)
+            subjective_state_tensor = torch.tensor(
+                subjective_state, device=self.device
+            )  # (state_dim)
             states_repeated = torch.repeat_interleave(
                 subjective_state_tensor.unsqueeze(0), available_action_space.n, dim=0
+            ).to(
+                self.device
             )  # (action_space_size x state_dim)
-            actions = F.one_hot(
-                torch.arange(0, available_action_space.n)
+            actions = F.one_hot(torch.arange(0, available_action_space.n)).to(
+                self.device
             )  # (action_space_size, action_dim)
 
             q_values = self._Q.get_batch_action_value(

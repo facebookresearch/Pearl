@@ -81,7 +81,9 @@ class PolicyGradient(PolicyLearner):
         # TODO: Assumes subjective state is a torch tensor and gym action space.
         # Fix the available action space.
         with torch.no_grad():
-            subjective_state_tensor = torch.tensor(subjective_state).view(
+            subjective_state_tensor = torch.tensor(
+                subjective_state, device=self.device
+            ).view(
                 (1, -1)
             )  # (1 x state_dim)
             action_probabilities = self._actor(
