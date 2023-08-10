@@ -17,6 +17,7 @@ from typing import Tuple
 
 import torch
 from pearl.core.common.neural_networks.auto_device_nn_module import AutoDeviceNNModule
+from pearl.utils.device import get_pearl_device
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +28,9 @@ class LinearRegression(AutoDeviceNNModule):
         feature_dim: int,
     ) -> None:
         super(LinearRegression, self).__init__()
-        self._A = 1e-2 * torch.eye(feature_dim)
-        self._b = torch.zeros(feature_dim)
+        self.device = get_pearl_device()
+        self._A = 1e-2 * torch.eye(feature_dim, device=self.device)
+        self._b = torch.zeros(feature_dim, device=self.device)
         self._feature_dim = feature_dim
 
     def _validate_train_inputs(
@@ -36,7 +38,7 @@ class LinearRegression(AutoDeviceNNModule):
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         batch_size = x.shape[0]
         if weight is None:
-            weight = torch.ones(y.shape)
+            weight = torch.ones(y.shape, device=self.device)
         assert x.shape == (batch_size, self._feature_dim)
         assert y.shape == (batch_size,)
         assert weight.shape == (batch_size,)
@@ -111,7 +113,7 @@ class AvgWeightLinearRegression(LinearRegression):
     ) -> None:
         super(AvgWeightLinearRegression, self).__init__(feature_dim=feature_dim)
         # initialize sum of weights below at small values to avoid dividing by 0
-        self._sum_weight = 1e-5 * torch.ones(1, dtype=torch.float)
+        self._sum_weight = 1e-5 * torch.ones(1, dtype=torch.float, device=self.device)
 
     @property
     def sum_weight(self) -> torch.Tensor:
