@@ -9,6 +9,7 @@ from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
 from pearl.core.common.replay_buffer.replay_buffer import ReplayBuffer
 from pearl.core.common.replay_buffer.transition import TransitionBatch
+from pearl.utils.device import get_pearl_device
 
 
 class TensorBasedReplayBuffer(ReplayBuffer):
@@ -26,24 +27,27 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         self._has_next_available_actions = has_next_available_actions
         # TODO we could add to init input if needed in the future
         self.is_action_continuous = False
+        self.device = get_pearl_device()
 
     def _process_single_state(self, state: SubjectiveState) -> torch.tensor:
-        return torch.tensor(state).unsqueeze(0)  # (1 x state_dim)
+        return torch.tensor(state, device=self.device).unsqueeze(0)  # (1 x state_dim)
 
     def _process_single_action(
         self, action: Action, action_space: ActionSpace
     ) -> torch.tensor:
         if self.is_action_continuous:
-            return torch.tensor(action).reshape(1, -1)  # (1 x action_dim)
+            return torch.tensor(action, device=self.device).reshape(
+                1, -1
+            )  # (1 x action_dim)
         return F.one_hot(
-            torch.tensor([action]), num_classes=action_space.n
+            torch.tensor([action], device=self.device), num_classes=action_space.n
         )  # (1 x action_dim)
 
     def _process_single_reward(self, reward: float) -> torch.tensor:
-        return torch.tensor([reward])
+        return torch.tensor([reward], device=self.device)
 
     def _process_single_done(self, done: bool) -> torch.tensor:
-        return torch.tensor([done]).float()  # (1)
+        return torch.tensor([done], device=self.device).float()  # (1)
 
     def _create_action_tensor_and_mask(
         self, action_space: ActionSpace, available_actions: ActionSpace
@@ -51,16 +55,17 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         if self.is_action_continuous:
             return (None, None)  # continuous action does not have limited space
         available_actions_tensor_with_padding = torch.zeros(
-            (1, action_space.n, action_space.n)
+            (1, action_space.n, action_space.n), device=self.device
         )  # (1 x action_space_size x action_dim)
         available_actions_tensor = F.one_hot(
-            torch.arange(0, available_actions.n), num_classes=action_space.n
+            torch.arange(0, available_actions.n, device=self.device),
+            num_classes=action_space.n,
         )  # (1 x available_action_space_size x action_dim)
         available_actions_tensor_with_padding[
             0, : available_actions.n, :
         ] = available_actions_tensor
         available_actions_mask = torch.zeros(
-            (1, action_space.n)
+            (1, action_space.n), device=self.device
         )  # (1 x action_space_size)
         available_actions_mask[0, available_actions.n :] = 1
         available_actions_mask = available_actions_mask.bool()

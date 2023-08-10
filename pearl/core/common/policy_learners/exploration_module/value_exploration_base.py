@@ -9,6 +9,7 @@ from pearl.core.common.policy_learners.exploration_module.exploration_module imp
     ExplorationModule,
     ExplorationType,
 )
+from pearl.utils.device import get_pearl_device
 
 
 class ValueExplorationBase(ExplorationModule):
@@ -18,6 +19,7 @@ class ValueExplorationBase(ExplorationModule):
 
     def __init__(self) -> None:
         self.exploration_type = ExplorationType.VALUE
+        self.device = get_pearl_device()
 
     @abstractmethod
     def act(

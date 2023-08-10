@@ -90,6 +90,7 @@ class TD3(DeepDeterministicPolicyGradient):
                 mean=0,
                 std=self._learning_action_noise_std,
                 size=next_action.size(),
+                device=self.device,
             )
             noise = torch.clamp(
                 noise,

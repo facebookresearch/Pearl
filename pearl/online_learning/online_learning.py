@@ -2,6 +2,7 @@ import logging
 from typing import Callable, List
 
 import matplotlib.pyplot as plt
+import torch
 
 from pearl.api.agent import Agent
 from pearl.api.environment import Environment
@@ -177,6 +178,9 @@ def episode_return(
     step = 1
     while not done:
         action = agent.act(exploit=exploit)
+        action = (
+            action.cpu() if isinstance(action, torch.Tensor) else action
+        )  # action can be int sometimes
         action_result = env.step(action)
         g += action_result.reward
         agent.observe(action_result)

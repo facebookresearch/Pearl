@@ -65,7 +65,10 @@ class NormalDistributionExploration(ValueExplorationBase):
         assert torch.all(exploit_action >= -1) and torch.all(exploit_action <= 1)
         # generate noise
         noise = torch.normal(
-            mean=self._mean, std=self._std_dev, size=exploit_action.size()
+            mean=self._mean,
+            std=self._std_dev,
+            size=exploit_action.size(),
+            device=self.device,
         )
         # clip noise
         noise = torch.clamp(noise, -self._noise_clip, self._noise_clip)

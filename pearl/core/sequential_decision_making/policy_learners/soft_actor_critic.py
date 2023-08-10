@@ -185,6 +185,8 @@ class SoftActorCritic(PolicyGradient):
             F.one_hot(torch.arange(0, self._action_space.n))
             .unsqueeze(0)
             .repeat(self.batch_size, 1, 1)
+        ).to(
+            self.device
         )  # (batch_size x action_space_size x action_dim)
 
         new_policy_dist = self._actor(state_batch)  # (batch_size x action_space_size)
