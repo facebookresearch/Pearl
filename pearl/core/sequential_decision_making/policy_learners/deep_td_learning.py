@@ -146,22 +146,12 @@ class DeepTDLearning(PolicyLearner):
         action_batch = batch.action  # (batch_size x action_dim)
         reward_batch = batch.reward  # (batch_size)
         done_batch = batch.done  # (batch_size)
-        next_state_batch = batch.next_state  # (batch_size x state_dim)
-        next_available_actions_batch = (
-            batch.next_available_actions
-        )  # (batch_size x action_space_size x action_dim)
-        next_available_actions_mask_batch = (
-            batch.next_available_actions_mask
-        )  # (batch_size x action_space_size)
 
         batch_size = state_batch.shape[0]
         # sanity check they have same batch_size
         assert action_batch.shape[0] == batch_size
         assert reward_batch.shape[0] == batch_size
         assert done_batch.shape[0] == batch_size
-        assert next_state_batch.shape[0] == batch_size
-        assert next_available_actions_batch.shape[0] == batch_size
-        assert next_available_actions_mask_batch.shape[0] == batch_size
 
         state_action_values = self._Q.get_batch_action_value(
             state_batch=state_batch,

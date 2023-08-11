@@ -62,6 +62,8 @@ class DeepSARSA(DeepTDLearning):
         """
         next_state_batch = batch.next_state  # (batch_size x state_dim)
         next_action_batch = batch.next_action  # (batch_size x action_dim)
+        assert next_state_batch is not None, "SARSA needs to have next state"
+        assert next_action_batch is not None, "SARSA needs to have next action"
 
         # use get_batch method instead of doing forward pass
         next_state_action_values = self._Q_target.get_batch_action_value(
