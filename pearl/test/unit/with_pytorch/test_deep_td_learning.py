@@ -14,6 +14,7 @@ from pearl.core.sequential_decision_making.policy_learners.deep_q_learning impor
     DeepQLearning,
 )
 from pearl.core.sequential_decision_making.policy_learners.deep_sarsa import DeepSARSA
+from pearl.core.sequential_decision_making.policy_learners.double_dqn import DoubleDQN
 from pearl.utils.action_spaces import DiscreteActionSpace
 
 
@@ -43,19 +44,17 @@ class TestDeepTDLearning(unittest.TestCase):
         For easier test, just compare double has different output as vanilla version
         both DQN start with same weights
         """
-        double_dqn = DeepQLearning(
+        double_dqn = DoubleDQN(
             state_dim=self.state_dim,
             action_space=self.action_space,
             hidden_dims=[3],
             training_rounds=1,
-            double=True,
         )
         dqn = DeepQLearning(
             state_dim=self.state_dim,
             action_space=self.action_space,
             hidden_dims=[3],
             training_rounds=1,
-            double=False,
         )
         differ = False
         for _ in range(10):

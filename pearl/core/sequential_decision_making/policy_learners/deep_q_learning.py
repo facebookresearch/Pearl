@@ -20,7 +20,7 @@ from pearl.core.sequential_decision_making.policy_learners.deep_td_learning impo
 
 class DeepQLearning(DeepTDLearning):
     """
-    A Deep Temporal Difference learning policy learner.
+    Deep Q Learning Policy Learner
     """
 
     def __init__(
@@ -36,7 +36,6 @@ class DeepQLearning(DeepTDLearning):
         target_update_freq: int = 10,
         soft_update_tau: float = 1.0,  # no soft update
         network_type: StateActionValueNetworkType = VanillaStateActionValueNetwork,
-        double: bool = False,
         is_conservative: bool = False,
         conservative_alpha: float = 2.0,
         state_output_dim=None,
@@ -66,7 +65,6 @@ class DeepQLearning(DeepTDLearning):
             state_hidden_dims=state_hidden_dims,
             action_hidden_dims=action_hidden_dims,
         )
-        self._double = double
 
     @torch.no_grad()
     def _get_next_state_values(
@@ -94,27 +92,5 @@ class DeepQLearning(DeepTDLearning):
         # Make sure that unavailable actions' Q values are assigned to -inf
         next_state_action_values[next_available_actions_mask_batch] = -float("inf")
 
-        # if double DQN, choose action from _Q with argmax, but use value from _Q_target
-        # if non-double DQN, choose action from _Q_target with argmax, as well as value
-        if self._double:
-            next_state_action_values_Q = self._Q.get_batch_action_value(
-                next_state_batch_repeated, next_available_actions_batch
-            ).view(
-                (batch_size, -1)
-            )  # (batch_size x action_space_size)
-
-            # Make sure that unavailable actions' Q values are assigned to -inf
-            next_state_action_values_Q[next_available_actions_mask_batch] = -float(
-                "inf"
-            )
-            # Torch.max(1) returns value, indices
-            next_state_values_indices = next_state_action_values_Q.max(1)[
-                1
-            ]  # (batch_size)
-            next_state_values = next_state_action_values[
-                range(len(next_state_action_values)), next_state_values_indices
-            ]
-        else:
-            # Torch.max(1) returns value, indices
-            next_state_values = next_state_action_values.max(1)[0]  # (batch_size)
-        return next_state_values
+        # Torch.max(1) returns value, indices
+        return next_state_action_values.max(1)[0]  # (batch_size)

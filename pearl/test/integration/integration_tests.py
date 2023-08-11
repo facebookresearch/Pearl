@@ -34,6 +34,7 @@ from pearl.core.sequential_decision_making.policy_learners.deep_q_learning impor
 )
 
 from pearl.core.sequential_decision_making.policy_learners.deep_sarsa import DeepSARSA
+from pearl.core.sequential_decision_making.policy_learners.double_dqn import DoubleDQN
 from pearl.core.sequential_decision_making.policy_learners.policy_gradient import (
     PolicyGradient,
 )
@@ -129,12 +130,11 @@ class IntegrationTests(unittest.TestCase):
         """
         env = GymEnvironment("CartPole-v1")
         agent = PearlAgent(
-            policy_learner=DeepQLearning(
+            policy_learner=DoubleDQN(
                 env.observation_space.shape[0],
                 env.action_space,
                 [64, 64],
                 training_rounds=20,
-                double=True,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
         )
