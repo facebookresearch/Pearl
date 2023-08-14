@@ -2,8 +2,6 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
 
-import torch
-
 from pearl.core.common.neural_networks.value_networks import (
     DuelingStateActionValueNetwork,
 )
@@ -44,11 +42,12 @@ from pearl.core.sequential_decision_making.policy_learners.soft_actor_critic imp
 from pearl.core.sequential_decision_making.policy_learners.td3 import TD3
 
 from pearl.gym.gym_environment import GymEnvironment
-from pearl.online_learning.online_learning import (
-    episode_return,
-    target_return_is_reached,
+from pearl.online_learning.offline_learning_and_evaluation import (
+    offline_evaluation,
+    offline_learning,
 )
-from pearl.utils.environments import OneHotObservationsFromDiscrete
+from pearl.online_learning.online_learning import target_return_is_reached
+from pearl.utils.set_seed import set_seed
 
 
 class IntegrationTests(unittest.TestCase):
@@ -371,3 +370,36 @@ class IntegrationTests(unittest.TestCase):
                 check_moving_average=True,
             )
         )
+
+    def test_cql_offline_training(self) -> None:
+        """
+        This test is checking if DQN with conservative loss will eventually get to > 100 return for CartPole-v1
+        when trained with offline data.
+        """
+        set_seed(100)
+        env = GymEnvironment("CartPole-v1")
+        conservativeDQN_agent = PearlAgent(
+            policy_learner=DeepQLearning(
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                hidden_dims=[64, 64],
+                training_rounds=100,
+                is_conservative=True,
+                conservative_alpha=4.0,
+                batch_size=128,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+        )
+
+        # specify path for offline data set
+        url = "https://raw.githubusercontent.com/jb3618columbia/offline_data/ee11452e5c6116d12cd3c1cab25aff39ad7d6ebf/offline_raw_transitions_dict_50k.pt"
+
+        # train conservative agent with offline data
+        offline_learning(url, offline_agent=conservativeDQN_agent, training_epochs=2000)
+
+        # offline evaluation
+        conservativeDQN_agent_returns = offline_evaluation(
+            offline_agent=conservativeDQN_agent, env=env
+        )
+
+        self.assertTrue(max(conservativeDQN_agent_returns) > 50)
