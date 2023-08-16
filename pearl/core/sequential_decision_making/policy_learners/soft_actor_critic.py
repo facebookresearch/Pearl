@@ -102,7 +102,7 @@ class SoftActorCritic(PolicyGradient):
 
         self._rounds += 1
 
-        self._critics.update_target_network(self._soft_update_tau)
+        self._critics.update_target_networks(self._soft_update_tau)
         return {}
 
     def _critic_learn_batch(self, batch: TransitionBatch) -> None:

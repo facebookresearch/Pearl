@@ -70,7 +70,7 @@ class TD3(DeepDeterministicPolicyGradient):
             report.update(self._actor_learn_batch(batch))
             self._critic_update_count = 0  # reset counter
 
-        self._critics.update_target_network(self._critic_soft_update_tau)
+        self._critics.update_target_networks(self._critic_soft_update_tau)
         update_target_network(
             self._actor_target, self._actor, self._actor_soft_update_tau
         )

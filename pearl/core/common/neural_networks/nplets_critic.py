@@ -1,8 +1,9 @@
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 import torch
 from pearl.core.common.neural_networks.utils import update_target_network
 from pearl.core.common.neural_networks.value_networks import (
+    StateActionValueNetworkType,
     VanillaStateActionValueNetwork,
 )
 from torch import optim
@@ -17,27 +18,28 @@ class NpletsCritic(torch.nn.Module):
 
     Each critic network has a corresponding _target_ critical network
     with identical structure and initial parameters.
-    The target critical network is updated less often than the main critical network
-    as a way to improve stability.
+    The target critical networks are updated less often
+    (by the client calling `update_target_networks`)
+    than the main critical networks as a way to improve stability.
 
     When requesting an estimate, the client can specify it to come from either
     the critic networks, or the target critic networks.
     The default is the critic networks.
 
     The estimate of Q(s, a) is defined as the minimum of the estimates
-    from each of the critic network being used.
+    from each of the critic networks being used.
     """
 
     def __init__(
         self,
-        state_dim,
-        action_dim,
-        hidden_dims,
-        learning_rate,
-        num_critics=2,
-        network_type=VanillaStateActionValueNetwork,
-        init_fn=None,
-        output_dim=1,
+        state_dim: int,
+        action_dim: int,
+        hidden_dims: int,
+        learning_rate: float,
+        num_critics: int = 2,
+        network_type: StateActionValueNetworkType = VanillaStateActionValueNetwork,
+        init_fn: Callable[[torch.nn.Module], None] = None,
+        output_dim: int = 1,
     ):
         self._critics: List[VanillaStateActionValueNetwork] = []
         self._critics_target: List[VanillaStateActionValueNetwork] = []
@@ -68,16 +70,22 @@ class NpletsCritic(torch.nn.Module):
                 )
             )
 
-    def optimize(self, get_q_value_estimate_fn, expected_target):
+    def optimize(
+        self,
+        get_q_value_estimate_fn: Callable[
+            [VanillaStateActionValueNetwork], torch.Tensor
+        ],
+        expected_target: torch.Tensor,
+    ) -> List[torch.Tensor]:
         """
         Performs an optimization step on the N critic networks towards a given target.
         Args:
             get_q_value_estimate_fn: A function evaluating a critic network to obtain a batch of Q-value estimates.
             expected_target: the batch of target Q-value estimates (used for all N critic networks).
         Returns:
-            The list of mean (over the batch) losses for each of the N critic networks.
+            List[torch.Tensor]: The list of mean (over the batch) losses for each of the N critic networks.
         """
-        loss_value = []
+        loss_value: List[torch.Tensor] = []
         for i, critic in enumerate(self._critics):
             criterion = torch.nn.MSELoss()
             loss = criterion(get_q_value_estimate_fn(critic), expected_target)
@@ -93,15 +101,15 @@ class NpletsCritic(torch.nn.Module):
         action_batch: torch.Tensor,
         curr_available_actions_batch: Optional[torch.Tensor] = None,
         target: bool = False,
-    ):
+    ) -> torch.Tensor:
         """
         Args
-            state_batch: a batch of state tensors (batch_size, state_dim)
-            action_batch: a batch of action tensors (batch_size, action_dim)
-            curr_available_actions_batch: an optional batch of currently available actions (batch_size, available_action_space_size, action_dim)
-            target: whether use the target networks or the main networks.
+            state_batch (torch.Tensor): a batch of state tensors (batch_size, state_dim)
+            action_batch (torch.Tensor): a batch of action tensors (batch_size, action_dim)
+            curr_available_actions_batch (torch.Tensor, optional): a batch of currently available actions (batch_size, available_action_space_size, action_dim)
+            target (bool): whether use the target networks or the main networks.
         Return
-            Q-values of (state, action) pairs: (batch_size)
+            torch.Tensor: Q-values of (state, action) pairs: (batch_size)
         """
         critics = self._critics_target if target else self._critics
         list_of_batch_of_q_values_from_each_critic = [
@@ -112,7 +120,7 @@ class NpletsCritic(torch.nn.Module):
         ]
         return torch.stack(list_of_batch_of_q_values_from_each_critic).min(dim=0).values
 
-    def update_target_network(self, tau):
+    def update_target_networks(self, tau: float) -> None:
         for i, critic in enumerate(self._critics):
             update_target_network(self._critics_target[i], critic, tau)
 
@@ -124,19 +132,19 @@ class NpletsCritic(torch.nn.Module):
 
 class TwinCritic(NpletsCritic):
     """
-    This is a wrapper for 2 critic networks to be used at same time.
+    An instantiation of NpletsCritic for two critic networks.
     This is a common trick to apply in algorithms like SAC, TD3 etc.
     """
 
     def __init__(
         self,
-        state_dim,
-        action_dim,
-        hidden_dims,
-        learning_rate,
-        network_type=VanillaStateActionValueNetwork,
-        init_fn=None,
-        output_dim=1,
+        state_dim: int,
+        action_dim: int,
+        hidden_dims: int,
+        learning_rate: float,
+        network_type: StateActionValueNetworkType = VanillaStateActionValueNetwork,
+        init_fn: Callable[[torch.nn.Module], None] = None,
+        output_dim: int = 1,
     ):
         super(TwinCritic, self).__init__(
             state_dim=state_dim,
