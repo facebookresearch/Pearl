@@ -3,6 +3,7 @@ from typing import Callable, List, Optional
 import torch
 from pearl.core.common.neural_networks.utils import update_target_network
 from pearl.core.common.neural_networks.value_networks import (
+    StateActionValueNetwork,
     StateActionValueNetworkType,
     VanillaStateActionValueNetwork,
 )
@@ -41,8 +42,8 @@ class NpletsCritic(torch.nn.Module):
         init_fn: Callable[[torch.nn.Module], None] = None,
         output_dim: int = 1,
     ):
-        self._critics: List[VanillaStateActionValueNetwork] = []
-        self._critics_target: List[VanillaStateActionValueNetwork] = []
+        self._critics: List[StateActionValueNetwork] = []
+        self._critics_target: List[StateActionValueNetwork] = []
         self._optimizers = []
         for i in range(num_critics):
             self._critics.append(
@@ -72,9 +73,7 @@ class NpletsCritic(torch.nn.Module):
 
     def optimize(
         self,
-        get_q_value_estimate_fn: Callable[
-            [VanillaStateActionValueNetwork], torch.Tensor
-        ],
+        get_q_value_estimate_fn: Callable[[StateActionValueNetwork], torch.Tensor],
         expected_target: torch.Tensor,
     ) -> List[torch.Tensor]:
         """
@@ -103,12 +102,12 @@ class NpletsCritic(torch.nn.Module):
         target: bool = False,
     ) -> torch.Tensor:
         """
-        Args
+        Args:
             state_batch (torch.Tensor): a batch of state tensors (batch_size, state_dim)
             action_batch (torch.Tensor): a batch of action tensors (batch_size, action_dim)
             curr_available_actions_batch (torch.Tensor, optional): a batch of currently available actions (batch_size, available_action_space_size, action_dim)
             target (bool): whether use the target networks or the main networks.
-        Return
+        Returns:
             torch.Tensor: Q-values of (state, action) pairs: (batch_size)
         """
         critics = self._critics_target if target else self._critics

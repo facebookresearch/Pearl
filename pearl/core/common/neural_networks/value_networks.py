@@ -7,7 +7,8 @@ Constants:
 """
 
 
-from typing import Callable, List, Optional
+from abc import ABC
+from typing import abstractmethod, Callable, List, Optional
 
 import torch
 import torch.nn as nn
@@ -90,7 +91,16 @@ def conv_block(
     return nn.Sequential(*layers)
 
 
-class VanillaValueNetwork(AutoDeviceNNModule):
+class ValueNetwork(AutoDeviceNNModule, ABC):
+    """
+    An interface for value neural networks.
+    It does not add any required methods to those already present in
+    its super classes.
+    Its purpose instead is just to serve as an umbrella type for all value networks.
+    """
+
+
+class VanillaValueNetwork(ValueNetwork):
     def __init__(
         self,
         input_dim: int,
@@ -111,7 +121,7 @@ class VanillaValueNetwork(AutoDeviceNNModule):
                 nn.init.xavier_normal_(layer.weight)
 
 
-class VanillaCNN(AutoDeviceNNModule):
+class VanillaCNN(ValueNetwork):
     """
     Vanilla CNN with a convolutional block followed by an mlp block.
     Args:
@@ -204,9 +214,45 @@ class VanillaCNN(AutoDeviceNNModule):
         return out_fc
 
 
-class VanillaStateActionValueNetwork(VanillaValueNetwork):
+class StateActionValueNetwork(ValueNetwork, ABC):
+    """
+    An interface for state-action value (Q-value) neural networks.
+    These are value neural networks with a special method
+    for computing the Q-value for a state-action pair.
+    """
+
+    @abstractmethod
+    def get_batch_action_value(
+        self,
+        state_batch: torch.Tensor,
+        action_batch: torch.Tensor,
+        curr_available_actions_batch: Optional[torch.Tensor] = None,
+    ):
+        """
+        Args:
+            state_batch (torch.Tensor): a batch of state tensors (batch_size, state_dim)
+            action_batch (torch.Tensor): a batch of action tensors (batch_size, action_dim)
+            curr_available_actions_batch (torch.Tensor, optional): a batch of currently available actions (batch_size, available_action_space_size, action_dim)
+        Returns:
+            Q-values of (state, action) pairs: (batch_size)
+        """
+        pass
+
+
+# The type of variables contanining a StateActionValueNetwork type.
+# This is documented in the module docstring at the top of the file.
+StateActionValueNetworkType = Callable[[int, int, List[int], int], nn.Module]
+
+
+class VanillaStateActionValueNetwork(VanillaValueNetwork, StateActionValueNetwork):
+    """
+    A vanilla version of state-action value (Q-value) network.
+    It leverages the vanilla implementation of value networks by
+    using the state-action pair as the input for the value network.
+    """
+
     def __init__(self, state_dim, action_dim, hidden_dims, output_dim):
-        super().__init__(
+        super(VanillaStateActionValueNetwork, self).__init__(
             input_dim=state_dim + action_dim,
             hidden_dims=hidden_dims,
             output_dim=output_dim,
@@ -218,23 +264,18 @@ class VanillaStateActionValueNetwork(VanillaValueNetwork):
         action_batch: torch.Tensor,
         curr_available_actions_batch: Optional[torch.Tensor] = None,
     ):
-        """
-        Args
-            batch of state: (batch_size, state_dim)
-            batch of action: (batch_size, action_dim)
-            curr_available_actions_batch is set to None for vanilla state action value network; and is only used
-            in the Duelling architecture (see there for more details)
-        Return
-            q values of (state, action) pairs: (batch_size)
-        """
-
         x = torch.cat([state_batch, action_batch], dim=-1)
         return self.forward(x).view(-1)
 
 
-class DuelingStateActionValueNetwork(AutoDeviceNNModule):
+class DuelingStateActionValueNetwork(StateActionValueNetwork):
     """
-    Dueling architecture contains state arch, value arch, and advantage arch.
+    Dueling architecture consists of state architecture, value architecture, and advantage architecture.
+
+    The archtecture is as follows:
+    state --> state_arch -----> value_arch --> value(s)-----------------------\
+                                |                                                   ---> add --> Q(s,a)
+    action --------------concat-> advantage_arch --> advantage(s, a)--- -mean --/
     """
 
     def __init__(
@@ -251,21 +292,21 @@ class DuelingStateActionValueNetwork(AutoDeviceNNModule):
         self.state_dim = state_dim
         self.action_dim = action_dim
 
-        # state arch
+        # state architecture
         self.state_arch = VanillaValueNetwork(
             input_dim=state_dim,
             hidden_dims=hidden_dims if state_hidden_dims is None else state_hidden_dims,
             output_dim=hidden_dims[-1],
         )
 
-        # value arch
+        # value architecture
         self.value_arch = VanillaValueNetwork(
             input_dim=hidden_dims[-1],  # same as state_arch output dim
             hidden_dims=hidden_dims if value_hidden_dims is None else value_hidden_dims,
             output_dim=output_dim,  # output_dim=1
         )
 
-        # advantage arch
+        # advantage architecture
         self.advantage_arch = VanillaValueNetwork(
             input_dim=hidden_dims[-1] + action_dim,  # state_arch out dim + action_dim
             hidden_dims=hidden_dims
@@ -275,29 +316,18 @@ class DuelingStateActionValueNetwork(AutoDeviceNNModule):
         )
 
     def forward(self, state, action):
-        """
-        Args:
-            batch of state: (batch_size, state_dim), batch of action: (batch_size, action_dim)
-        Returns:
-            batch of Q(s,a): (batch_size)
-
-        The archtecture is as follows:
-        state --> state_arch -----> value_arch --> value(s)-----------------------\
-                                 |                                                   ---> add --> Q(s,a)
-        action --------------concat-> advantage_arch --> advantage(s, a)--- -mean --/
-        """
         assert state.shape[-1] == self.state_dim
         assert action.shape[-1] == self.action_dim
 
-        # state feature arch : state --> feature
+        # state feature architecture : state --> feature
         state_features = self.state_arch(
             state
         )  # shape: (?, state_dim); state_dim is the output dimension of state_arch mlp
 
-        # value arch : feature --> value
+        # value architecture : feature --> value
         state_value = self.value_arch(state_features)  # shape: (batch_size)
 
-        # advantage arch : [state feature, actions] --> advantage
+        # advantage architecture : [state feature, actions] --> advantage
         state_action_features = torch.cat(
             (state_features, action), dim=-1
         )  # shape: (?, state_dim + action_dim)
@@ -410,7 +440,7 @@ class TwoTowerNetwork(AutoDeviceNNModule):
         )
         self._interaction_features.xavier_init()
 
-    """ This is a horibble way to write this but I will leave it for refactoring which I plan to do next """
+    """ This is a horrible way to write this but I will leave it for refactoring which I plan to do next """
 
     def forward(self, state_action: torch.Tensor):
         state = state_action[..., : self._state_input_dim]
@@ -467,6 +497,3 @@ class TwoTowerStateActionValueNetwork(TwoTowerNetwork):
             hidden_dims=hidden_dims,
             output_dim=output_dim,
         )
-
-
-StateActionValueNetworkType = Callable[[int, int, List[int], int], nn.Module]
