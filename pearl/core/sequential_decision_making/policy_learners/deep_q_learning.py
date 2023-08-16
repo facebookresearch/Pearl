@@ -3,8 +3,8 @@ from typing import Iterable, Optional
 import torch
 from pearl.api.action_space import ActionSpace
 from pearl.core.common.neural_networks.value_networks import (
-    StateActionValueNetworkType,
-    VanillaStateActionValueNetwork,
+    QValueNetworkType,
+    VanillaQValueNetwork,
 )
 from pearl.core.common.policy_learners.exploration_module.epsilon_greedy_exploration import (
     EGreedyExploration,
@@ -35,7 +35,7 @@ class DeepQLearning(DeepTDLearning):
         batch_size: int = 128,
         target_update_freq: int = 10,
         soft_update_tau: float = 1.0,  # no soft update
-        network_type: StateActionValueNetworkType = VanillaStateActionValueNetwork,
+        network_type: QValueNetworkType = VanillaQValueNetwork,
         is_conservative: bool = False,
         conservative_alpha: float = 2.0,
         state_output_dim=None,
@@ -83,7 +83,7 @@ class DeepQLearning(DeepTDLearning):
         )  # (batch_size x action_space_size x state_dim)
 
         # for duelling, this does a forward pass; since the batch of next available actions is already input
-        next_state_action_values = self._Q_target.get_batch_action_value(
+        next_state_action_values = self._Q_target.get_q_values(
             next_state_batch_repeated, next_available_actions_batch
         ).view(
             batch_size, -1

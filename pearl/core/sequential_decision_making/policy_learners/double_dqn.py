@@ -30,7 +30,7 @@ class DoubleDQN(DeepQLearning):
             next_state_batch.unsqueeze(1), self._action_space.n, dim=1
         )  # (batch_size x action_space_size x state_dim)
 
-        next_state_action_values = self._Q.get_batch_action_value(
+        next_state_action_values = self._Q.get_q_values(
             next_state_batch_repeated, next_available_actions_batch
         ).view(
             (batch_size, -1)
@@ -44,6 +44,4 @@ class DoubleDQN(DeepQLearning):
             torch.arange(next_available_actions_batch.size(0)),
             next_action_indices.squeeze(),
         ]
-        return self._Q_target.get_batch_action_value(
-            next_state_batch, next_action_batch
-        )
+        return self._Q_target.get_q_values(next_state_batch, next_action_batch)

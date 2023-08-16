@@ -3,9 +3,9 @@ from typing import Callable, List, Optional
 import torch
 from pearl.core.common.neural_networks.utils import update_target_network
 from pearl.core.common.neural_networks.value_networks import (
-    StateActionValueNetwork,
-    StateActionValueNetworkType,
-    VanillaStateActionValueNetwork,
+    QValueNetwork,
+    QValueNetworkType,
+    VanillaQValueNetwork,
 )
 from torch import optim
 
@@ -38,12 +38,12 @@ class NpletsCritic(torch.nn.Module):
         hidden_dims: int,
         learning_rate: float,
         num_critics: int = 2,
-        network_type: StateActionValueNetworkType = VanillaStateActionValueNetwork,
+        network_type: QValueNetworkType = VanillaQValueNetwork,
         init_fn: Callable[[torch.nn.Module], None] = None,
         output_dim: int = 1,
     ):
-        self._critics: List[StateActionValueNetwork] = []
-        self._critics_target: List[StateActionValueNetwork] = []
+        self._critics: List[QValueNetwork] = []
+        self._critics_target: List[QValueNetwork] = []
         self._optimizers = []
         for i in range(num_critics):
             self._critics.append(
@@ -73,7 +73,7 @@ class NpletsCritic(torch.nn.Module):
 
     def optimize(
         self,
-        get_q_value_estimate_fn: Callable[[StateActionValueNetwork], torch.Tensor],
+        get_q_value_estimate_fn: Callable[[QValueNetwork], torch.Tensor],
         expected_target: torch.Tensor,
     ) -> List[torch.Tensor]:
         """
@@ -112,9 +112,7 @@ class NpletsCritic(torch.nn.Module):
         """
         critics = self._critics_target if target else self._critics
         list_of_batch_of_q_values_from_each_critic = [
-            critic.get_batch_action_value(
-                state_batch, action_batch, curr_available_actions_batch
-            )
+            critic.get_q_values(state_batch, action_batch, curr_available_actions_batch)
             for critic in critics
         ]
         return torch.stack(list_of_batch_of_q_values_from_each_critic).min(dim=0).values
@@ -141,7 +139,7 @@ class TwinCritic(NpletsCritic):
         action_dim: int,
         hidden_dims: int,
         learning_rate: float,
-        network_type: StateActionValueNetworkType = VanillaStateActionValueNetwork,
+        network_type: QValueNetworkType = VanillaQValueNetwork,
         init_fn: Callable[[torch.nn.Module], None] = None,
         output_dim: int = 1,
     ):

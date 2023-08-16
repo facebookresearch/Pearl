@@ -15,7 +15,7 @@ class TestNpletsCritic(unittest.TestCase):
     def target_fn(self, critic):
         state_batch = torch.randn(self.batch_size, self.state_dim)
         action_batch = torch.randn(self.batch_size, self.action_dim)
-        return critic.get_batch_action_value(state_batch, action_batch)
+        return critic.get_q_values(state_batch, action_batch)
 
     def test_one_critic(self):
         critic = NpletsCritic(

@@ -2,7 +2,7 @@
 This module defines several types of value neural networks.
 
 Constants:
-    StateActionValueNetworkType: a type (and therefore a callable) getting state_dim, action_dim, hidden_dims, output_dim and producing a neural network with
+    QValueNetworkType: a type (and therefore a callable) getting state_dim, action_dim, hidden_dims, output_dim and producing a neural network with
     able to evaluate a state-action pair, consisting of the concatenation of feature tensors for each one with the indicated dimensions.
 """
 
@@ -214,15 +214,15 @@ class VanillaCNN(ValueNetwork):
         return out_fc
 
 
-class StateActionValueNetwork(ValueNetwork, ABC):
+class QValueNetwork(ValueNetwork, ABC):
     """
-    An interface for state-action value (Q-value) neural networks.
+    An interface for state-action value (Q-value) estimators (typically, neural networks).
     These are value neural networks with a special method
     for computing the Q-value for a state-action pair.
     """
 
     @abstractmethod
-    def get_batch_action_value(
+    def get_q_values(
         self,
         state_batch: torch.Tensor,
         action_batch: torch.Tensor,
@@ -239,12 +239,12 @@ class StateActionValueNetwork(ValueNetwork, ABC):
         pass
 
 
-# The type of variables contanining a StateActionValueNetwork type.
+# The type of variables contanining a QValueNetwork type.
 # This is documented in the module docstring at the top of the file.
-StateActionValueNetworkType = Callable[[int, int, List[int], int], nn.Module]
+QValueNetworkType = Callable[[int, int, List[int], int], nn.Module]
 
 
-class VanillaStateActionValueNetwork(VanillaValueNetwork, StateActionValueNetwork):
+class VanillaQValueNetwork(VanillaValueNetwork, QValueNetwork):
     """
     A vanilla version of state-action value (Q-value) network.
     It leverages the vanilla implementation of value networks by
@@ -252,13 +252,13 @@ class VanillaStateActionValueNetwork(VanillaValueNetwork, StateActionValueNetwor
     """
 
     def __init__(self, state_dim, action_dim, hidden_dims, output_dim):
-        super(VanillaStateActionValueNetwork, self).__init__(
+        super(VanillaQValueNetwork, self).__init__(
             input_dim=state_dim + action_dim,
             hidden_dims=hidden_dims,
             output_dim=output_dim,
         )
 
-    def get_batch_action_value(
+    def get_q_values(
         self,
         state_batch: torch.Tensor,
         action_batch: torch.Tensor,
@@ -268,7 +268,7 @@ class VanillaStateActionValueNetwork(VanillaValueNetwork, StateActionValueNetwor
         return self.forward(x).view(-1)
 
 
-class DuelingStateActionValueNetwork(StateActionValueNetwork):
+class DuelingQValueNetwork(QValueNetwork):
     """
     Dueling architecture consists of state architecture, value architecture, and advantage architecture.
 
@@ -288,7 +288,7 @@ class DuelingStateActionValueNetwork(StateActionValueNetwork):
         advantage_hidden_dims: Optional[List[int]] = None,
         state_hidden_dims: Optional[List[int]] = None,
     ):
-        super(DuelingStateActionValueNetwork, self).__init__()
+        super(DuelingQValueNetwork, self).__init__()
         self.state_dim = state_dim
         self.action_dim = action_dim
 
@@ -338,7 +338,7 @@ class DuelingStateActionValueNetwork(StateActionValueNetwork):
         )  # -2 is dimension denoting number of actions
         return state_value + advantage - advantage_mean
 
-    def get_batch_action_value(
+    def get_q_values(
         self,
         state_batch: torch.Tensor,
         action_batch: torch.Tensor,
@@ -393,7 +393,7 @@ class DuelingStateActionValueNetwork(StateActionValueNetwork):
 
 
 """
-One can make VanillaValueNetwork to be a special case of TwoTowerStateActionValueNetwork by initializing
+One can make VanillaValueNetwork to be a special case of TwoTowerQValueNetwork by initializing
 linear layers to be an identity map and stopping gradients. This however would be too complex.
 """
 
@@ -445,10 +445,10 @@ class TwoTowerNetwork(AutoDeviceNNModule):
     def forward(self, state_action: torch.Tensor):
         state = state_action[..., : self._state_input_dim]
         action = state_action[..., self._state_input_dim :]
-        output = self.get_batch_action_value(state_batch=state, action_batch=action)
+        output = self.get_q_values(state_batch=state, action_batch=action)
         return output
 
-    def get_batch_action_value(
+    def get_q_values(
         self,
         state_batch: torch.Tensor,
         action_batch: torch.Tensor,
@@ -464,13 +464,13 @@ class TwoTowerNetwork(AutoDeviceNNModule):
 
 
 """
-With the same initialization parameters as the VanillaStateActionValue Network, i.e. without
+With the same initialization parameters as the VanillaQValue Network, i.e. without
 specifying the state_output_dims and/or action_outout_dims, we still add a linear layer to
 extract state and/or action features.
 """
 
 
-class TwoTowerStateActionValueNetwork(TwoTowerNetwork):
+class TwoTowerQValueNetwork(TwoTowerNetwork):
     def __init__(
         self,
         state_dim,

@@ -4,8 +4,8 @@ import torch
 
 from pearl.api.action_space import ActionSpace
 from pearl.core.common.neural_networks.value_networks import (
-    StateActionValueNetworkType,
-    VanillaStateActionValueNetwork,
+    QValueNetworkType,
+    VanillaQValueNetwork,
 )
 from pearl.core.common.policy_learners.exploration_module.epsilon_greedy_exploration import (
     EGreedyExploration,
@@ -35,7 +35,7 @@ class DeepSARSA(DeepTDLearning):
         training_rounds: int = 100,
         batch_size: int = 128,
         target_update_freq: int = 10,
-        network_type: StateActionValueNetworkType = VanillaStateActionValueNetwork,
+        network_type: QValueNetworkType = VanillaQValueNetwork,
     ) -> None:
         super(DeepSARSA, self).__init__(
             state_dim=state_dim,
@@ -66,7 +66,7 @@ class DeepSARSA(DeepTDLearning):
         assert next_action_batch is not None, "SARSA needs to have next action"
 
         # use get_batch method instead of doing forward pass
-        next_state_action_values = self._Q_target.get_batch_action_value(
+        next_state_action_values = self._Q_target.get_q_values(
             next_state_batch, next_action_batch
         )
 

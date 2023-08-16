@@ -2,9 +2,7 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
 
-from pearl.core.common.neural_networks.value_networks import (
-    DuelingStateActionValueNetwork,
-)
+from pearl.core.common.neural_networks.value_networks import DuelingQValueNetwork
 
 from pearl.core.common.pearl_agent import PearlAgent
 
@@ -205,7 +203,7 @@ class IntegrationTests(unittest.TestCase):
                 env.action_space,
                 hidden_dims=[64],
                 training_rounds=20,
-                network_type=DuelingStateActionValueNetwork,
+                network_type=DuelingQValueNetwork,
                 batch_size=batch_size,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),

@@ -40,9 +40,9 @@ def compute_cql_loss(q_network, batch, batch_size) -> torch.Tensor:
         curr_available_actions_batch=batch.curr_available_actions,
     )  # output shape: [batch_size, available_action_space_size, state_dim(dim of state features)]
 
-    ## To Do: change the output shape of get_batch_action_value method - .view(-1) should not be done in value_networks.py
+    ## To Do: change the output shape of get_q_values method - .view(-1) should not be done in value_networks.py
     # Step 2
-    q_values_state_all_available_actions = q_network.get_batch_action_value(
+    q_values_state_all_available_actions = q_network.get_q_values(
         state_repeated_batch, batch.curr_available_actions
     ).view(
         batch_size, -1

@@ -3,8 +3,8 @@
 import unittest
 
 from pearl.core.common.neural_networks.value_networks import (
-    DuelingStateActionValueNetwork,
-    TwoTowerStateActionValueNetwork,
+    DuelingQValueNetwork,
+    TwoTowerQValueNetwork,
 )
 from pearl.core.common.pearl_agent import PearlAgent
 from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
@@ -86,7 +86,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
-                network_type=DuelingStateActionValueNetwork,
+                network_type=DuelingQValueNetwork,
                 batch_size=batch_size,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
@@ -104,7 +104,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
-                network_type=TwoTowerStateActionValueNetwork,
+                network_type=TwoTowerQValueNetwork,
                 state_output_dim=64,
                 action_output_dim=64,
                 state_hidden_dims=[64],

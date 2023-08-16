@@ -6,8 +6,8 @@ from pearl.api.action_space import ActionSpace
 from pearl.core.common.neural_networks.nplets_critic import TwinCritic
 from pearl.core.common.neural_networks.utils import init_weights
 from pearl.core.common.neural_networks.value_networks import (
-    StateActionValueNetworkType,
-    VanillaStateActionValueNetwork,
+    QValueNetworkType,
+    VanillaQValueNetwork,
 )
 from pearl.core.common.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
@@ -46,7 +46,7 @@ class SoftActorCritic(PolicyGradient):
         entropy_coef: float = 0.2,
         soft_update_tau: float = 0.005,
         actor_network_type: ActorNetworkType = VanillaActorNetwork,
-        critic_network_type: StateActionValueNetworkType = VanillaStateActionValueNetwork,
+        critic_network_type: QValueNetworkType = VanillaQValueNetwork,
     ) -> None:
         super(SoftActorCritic, self).__init__(
             state_dim=state_dim,
@@ -119,7 +119,7 @@ class SoftActorCritic(PolicyGradient):
         assert done_batch.shape[0] == batch_size
 
         def target_fn(critic):
-            return critic.get_batch_action_value(
+            return critic.get_q_values(
                 state_batch=state_batch,
                 action_batch=action_batch,
                 curr_available_actions_batch=batch.curr_available_actions,
@@ -195,7 +195,7 @@ class SoftActorCritic(PolicyGradient):
         )  # (batch_size x action_space_size x state_dim)
 
         state_action_values = self._critics.get_q_values(
-            state_batch=state_batch_repeated, action_batch=action_space
+            state_batch=state_batch_repeated, action_batch=action_space, target=False
         ).view(
             (self.batch_size, self._action_space.n)
         )  # (batch_size x action_space_size)

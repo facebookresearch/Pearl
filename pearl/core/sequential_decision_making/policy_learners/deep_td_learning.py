@@ -8,9 +8,9 @@ from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
 from pearl.core.common.neural_networks.value_networks import (
-    StateActionValueNetworkType,
-    TwoTowerStateActionValueNetwork,
-    VanillaStateActionValueNetwork,
+    QValueNetworkType,
+    TwoTowerQValueNetwork,
+    VanillaQValueNetwork,
 )
 from pearl.core.common.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
@@ -45,7 +45,7 @@ class DeepTDLearning(PolicyLearner):
         soft_update_tau: float = 0.1,
         is_conservative: bool = False,
         conservative_alpha: float = 2.0,
-        network_type: StateActionValueNetworkType = VanillaStateActionValueNetwork,
+        network_type: QValueNetworkType = VanillaQValueNetwork,
         state_output_dim=None,
         action_output_dim=None,
         state_hidden_dims=None,
@@ -68,7 +68,7 @@ class DeepTDLearning(PolicyLearner):
 
         # TODO: Assumes Gym interface, fix it.
         def make_specified_network():
-            if network_type == TwoTowerStateActionValueNetwork:
+            if network_type == TwoTowerQValueNetwork:
                 return network_type(
                     state_dim=state_dim,
                     action_dim=action_space.n,
@@ -119,7 +119,7 @@ class DeepTDLearning(PolicyLearner):
                 self.device
             )  # (action_space_size, action_dim)
 
-            q_values = self._Q.get_batch_action_value(
+            q_values = self._Q.get_q_values(
                 states_repeated, actions
             )  # this does a forward pass since all avaialble actions are already stacked together
 
@@ -153,7 +153,7 @@ class DeepTDLearning(PolicyLearner):
         assert reward_batch.shape[0] == batch_size
         assert done_batch.shape[0] == batch_size
 
-        state_action_values = self._Q.get_batch_action_value(
+        state_action_values = self._Q.get_q_values(
             state_batch=state_batch,
             action_batch=action_batch,
             curr_available_actions_batch=batch.curr_available_actions,
