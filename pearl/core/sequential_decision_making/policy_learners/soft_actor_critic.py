@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 from pearl.api.action_space import ActionSpace
 from pearl.core.common.neural_networks.nplets_critic import TwinCritic
-from pearl.core.common.neural_networks.utils import init_weights, update_target_network
+from pearl.core.common.neural_networks.utils import init_weights
 from pearl.core.common.neural_networks.value_networks import (
     StateActionValueNetworkType,
     VanillaStateActionValueNetwork,
