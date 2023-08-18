@@ -42,9 +42,9 @@ class DisjointLinearBandit(ContextualBanditBase):
             exploration_module=exploration_module,
         )
         # Currently our disjoint LinUCB usecase only use LinearRegression
-        self._linear_regressions = [
-            LinearRegression(feature_dim=feature_dim) for _ in range(action_space.n)
-        ]
+        self._linear_regressions = torch.nn.ModuleList(
+            [LinearRegression(feature_dim=feature_dim) for _ in range(action_space.n)]
+        )
         self._discrete_action_space = action_space
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:

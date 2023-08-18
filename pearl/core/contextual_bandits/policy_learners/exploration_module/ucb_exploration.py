@@ -17,7 +17,7 @@ class UCBExplorationBase(ValueExplorationBase):
     UCB exploration module.
     """
 
-    def __init__(self, alpha: int) -> None:
+    def __init__(self, alpha: float) -> None:
         super(UCBExplorationBase, self).__init__()
         self._alpha = alpha
 
