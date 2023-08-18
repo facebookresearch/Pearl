@@ -1,17 +1,15 @@
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, Type
 
 import torch
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
 from pearl.core.common.neural_networks.nplets_critic import NpletsCritic
+from pearl.core.common.neural_networks.q_value_network import QValueNetwork
 
 from pearl.core.common.neural_networks.utils import init_weights, update_target_network
 
-from pearl.core.common.neural_networks.value_networks import (
-    QValueNetworkType,
-    VanillaQValueNetwork,
-)
+from pearl.core.common.neural_networks.value_networks import VanillaQValueNetwork
 from pearl.core.common.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
@@ -43,7 +41,7 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
         actor_learning_rate: float = 1e-3,
         batch_size: int = 500,
         actor_network_type: ActorNetworkType = VanillaContinuousActorNetwork,
-        critic_network_type: QValueNetworkType = VanillaQValueNetwork,
+        critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
         training_rounds: int = 5,
         actor_soft_update_tau: float = 0.05,
         critic_soft_update_tau: float = 0.05,

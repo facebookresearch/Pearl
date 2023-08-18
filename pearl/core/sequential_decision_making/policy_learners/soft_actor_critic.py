@@ -1,14 +1,12 @@
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, Type
 
 import torch
 import torch.nn.functional as F
 from pearl.api.action_space import ActionSpace
 from pearl.core.common.neural_networks.nplets_critic import TwinCritic
+from pearl.core.common.neural_networks.q_value_network import QValueNetwork
 from pearl.core.common.neural_networks.utils import init_weights
-from pearl.core.common.neural_networks.value_networks import (
-    QValueNetworkType,
-    VanillaQValueNetwork,
-)
+from pearl.core.common.neural_networks.value_networks import VanillaQValueNetwork
 from pearl.core.common.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
@@ -46,7 +44,7 @@ class SoftActorCritic(PolicyGradient):
         entropy_coef: float = 0.2,
         soft_update_tau: float = 0.005,
         actor_network_type: ActorNetworkType = VanillaActorNetwork,
-        critic_network_type: QValueNetworkType = VanillaQValueNetwork,
+        critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
     ) -> None:
         super(SoftActorCritic, self).__init__(
             state_dim=state_dim,

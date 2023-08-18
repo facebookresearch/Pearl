@@ -1,14 +1,10 @@
 """
 This module defines several types of value neural networks.
-
-Constants:
-    QValueNetworkType: a type (and therefore a callable) getting state_dim, action_dim, hidden_dims, output_dim and producing a neural network with
-    able to evaluate a state-action pair, consisting of the concatenation of feature tensors for each one with the indicated dimensions.
 """
 
 
 from abc import ABC
-from typing import abstractmethod, Callable, List, Optional
+from typing import List, Optional
 
 import torch
 import torch.nn as nn
@@ -17,6 +13,8 @@ from pearl.utils.extend_state_feature import (
     extend_state_feature_by_available_action_space,
 )
 from torch import Tensor
+
+from .q_value_network import QValueNetwork
 
 
 def mlp_block(
@@ -107,7 +105,6 @@ class VanillaValueNetwork(ValueNetwork):
         hidden_dims: Optional[List[int]],
         output_dim: int = 1,
     ) -> None:
-
         super(VanillaValueNetwork, self).__init__()
         self._model = mlp_block(input_dim, hidden_dims, output_dim)
 
@@ -214,37 +211,7 @@ class VanillaCNN(ValueNetwork):
         return out_fc
 
 
-class QValueNetwork(ValueNetwork, ABC):
-    """
-    An interface for state-action value (Q-value) estimators (typically, neural networks).
-    These are value neural networks with a special method
-    for computing the Q-value for a state-action pair.
-    """
-
-    @abstractmethod
-    def get_q_values(
-        self,
-        state_batch: torch.Tensor,
-        action_batch: torch.Tensor,
-        curr_available_actions_batch: Optional[torch.Tensor] = None,
-    ):
-        """
-        Args:
-            state_batch (torch.Tensor): a batch of state tensors (batch_size, state_dim)
-            action_batch (torch.Tensor): a batch of action tensors (batch_size, action_dim)
-            curr_available_actions_batch (torch.Tensor, optional): a batch of currently available actions (batch_size, available_action_space_size, action_dim)
-        Returns:
-            Q-values of (state, action) pairs: (batch_size)
-        """
-        pass
-
-
-# The type of variables contanining a QValueNetwork type.
-# This is documented in the module docstring at the top of the file.
-QValueNetworkType = Callable[[int, int, List[int], int], nn.Module]
-
-
-class VanillaQValueNetwork(VanillaValueNetwork, QValueNetwork):
+class VanillaQValueNetwork(QValueNetwork):
     """
     A vanilla version of state-action value (Q-value) network.
     It leverages the vanilla implementation of value networks by
@@ -252,11 +219,17 @@ class VanillaQValueNetwork(VanillaValueNetwork, QValueNetwork):
     """
 
     def __init__(self, state_dim, action_dim, hidden_dims, output_dim):
-        super(VanillaQValueNetwork, self).__init__(
+        super(VanillaQValueNetwork, self).__init__()
+        self._state_dim = state_dim
+        self._action_dim = action_dim
+        self._model = mlp_block(
             input_dim=state_dim + action_dim,
             hidden_dims=hidden_dims,
             output_dim=output_dim,
         )
+
+    def forward(self, x: Tensor) -> Tensor:
+        return self._model(x)
 
     def get_q_values(
         self,
@@ -266,6 +239,14 @@ class VanillaQValueNetwork(VanillaValueNetwork, QValueNetwork):
     ):
         x = torch.cat([state_batch, action_batch], dim=-1)
         return self.forward(x).view(-1)
+
+    @property
+    def state_dim(self) -> int:
+        return self._state_dim
+
+    @property
+    def action_dim(self) -> int:
+        return self._action_dim
 
 
 class DuelingQValueNetwork(QValueNetwork):
@@ -289,8 +270,8 @@ class DuelingQValueNetwork(QValueNetwork):
         state_hidden_dims: Optional[List[int]] = None,
     ):
         super(DuelingQValueNetwork, self).__init__()
-        self.state_dim = state_dim
-        self.action_dim = action_dim
+        self._state_dim = state_dim
+        self._action_dim = action_dim
 
         # state architecture
         self.state_arch = VanillaValueNetwork(
@@ -314,6 +295,14 @@ class DuelingQValueNetwork(QValueNetwork):
             else advantage_hidden_dims,
             output_dim=output_dim,  # output_dim=1
         )
+
+    @property
+    def state_dim(self) -> int:
+        return self._state_dim
+
+    @property
+    def action_dim(self) -> int:
+        return self._action_dim
 
     def forward(self, state, action):
         assert state.shape[-1] == self.state_dim
@@ -398,7 +387,7 @@ linear layers to be an identity map and stopping gradients. This however would b
 """
 
 
-class TwoTowerNetwork(AutoDeviceNNModule):
+class TwoTowerNetwork(QValueNetwork):
     def __init__(
         self,
         state_input_dim: int,
@@ -421,6 +410,7 @@ class TwoTowerNetwork(AutoDeviceNNModule):
         action ----> action_feature
         """
         self._state_input_dim = state_input_dim
+        self._action_input_dim = action_input_dim
         self._state_features = VanillaValueNetwork(
             input_dim=state_input_dim,
             hidden_dims=state_hidden_dims,
@@ -461,6 +451,14 @@ class TwoTowerNetwork(AutoDeviceNNModule):
         )
         x = torch.cat([state_batch_features, action_batch_features], dim=-1)
         return self._interaction_features.forward(x).view(-1)  # (batch_size)
+
+    @property
+    def state_dim(self) -> int:
+        return self._state_input_dim
+
+    @property
+    def action_dim(self) -> int:
+        return self._action_input_dim
 
 
 """

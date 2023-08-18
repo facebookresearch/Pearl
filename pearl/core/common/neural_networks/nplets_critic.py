@@ -1,13 +1,11 @@
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Type
 
 import torch
 from pearl.core.common.neural_networks.utils import update_target_network
-from pearl.core.common.neural_networks.value_networks import (
-    QValueNetwork,
-    QValueNetworkType,
-    VanillaQValueNetwork,
-)
+from pearl.core.common.neural_networks.value_networks import VanillaQValueNetwork
 from torch import optim
+
+from .q_value_network import QValueNetwork
 
 
 class NpletsCritic(torch.nn.Module):
@@ -38,7 +36,7 @@ class NpletsCritic(torch.nn.Module):
         hidden_dims: int,
         learning_rate: float,
         num_critics: int = 2,
-        network_type: QValueNetworkType = VanillaQValueNetwork,
+        network_type: Type[QValueNetwork] = VanillaQValueNetwork,
         init_fn: Callable[[torch.nn.Module], None] = None,
         output_dim: int = 1,
     ):
@@ -139,7 +137,7 @@ class TwinCritic(NpletsCritic):
         action_dim: int,
         hidden_dims: int,
         learning_rate: float,
-        network_type: QValueNetworkType = VanillaQValueNetwork,
+        network_type: Type[QValueNetwork] = VanillaQValueNetwork,
         init_fn: Callable[[torch.nn.Module], None] = None,
         output_dim: int = 1,
     ):

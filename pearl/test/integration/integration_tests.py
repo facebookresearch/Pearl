@@ -143,6 +143,7 @@ class IntegrationTests(unittest.TestCase):
     def test_sarsa(self) -> None:
         """
         This test is checking if SARSA will eventually get to 500 return for CartPole-v1
+        Also use network instance to specify Q network
         """
         env = GymEnvironment("CartPole-v1")
         agent = PearlAgent(
@@ -197,13 +198,18 @@ class IntegrationTests(unittest.TestCase):
         batch_size: int = 128,
     ) -> None:
         env = GymEnvironment("CartPole-v1")
+        q_network = DuelingQValueNetwork(
+            state_dim=env.observation_space.shape[0],
+            action_dim=env.action_space.n,
+            hidden_dims=[64],
+            output_dim=1,
+        )
         agent = PearlAgent(
             policy_learner=DeepQLearning(
                 env.observation_space.shape[0],
                 env.action_space,
-                hidden_dims=[64],
                 training_rounds=20,
-                network_type=DuelingQValueNetwork,
+                network_instance=q_network,
                 batch_size=batch_size,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),

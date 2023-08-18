@@ -4,6 +4,7 @@ import copy
 import unittest
 
 import torch
+from pearl.core.common.neural_networks.utils import init_weights
 from pearl.core.common.policy_learners.exploration_module.epsilon_greedy_exploration import (
     EGreedyExploration,
 )
@@ -62,8 +63,8 @@ class TestDeepTDLearning(unittest.TestCase):
             batch1 = copy.deepcopy(self.batch)
             batch2 = copy.deepcopy(self.batch)
 
-            double_dqn._Q.xavier_init()
-            double_dqn._Q_target.xavier_init()
+            double_dqn._Q.apply(init_weights)
+            double_dqn._Q_target.apply(init_weights)
             double_value = double_dqn._get_next_state_values(batch1, self.batch_size)
 
             dqn._Q.load_state_dict(double_dqn._Q.state_dict())

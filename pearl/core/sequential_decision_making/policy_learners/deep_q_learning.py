@@ -1,11 +1,9 @@
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Type
 
 import torch
 from pearl.api.action_space import ActionSpace
-from pearl.core.common.neural_networks.value_networks import (
-    QValueNetworkType,
-    VanillaQValueNetwork,
-)
+from pearl.core.common.neural_networks.q_value_network import QValueNetwork
+from pearl.core.common.neural_networks.value_networks import VanillaQValueNetwork
 from pearl.core.common.policy_learners.exploration_module.epsilon_greedy_exploration import (
     EGreedyExploration,
 )
@@ -27,7 +25,7 @@ class DeepQLearning(DeepTDLearning):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        hidden_dims: Iterable[int],
+        hidden_dims: Optional[Iterable[int]] = None,
         learning_rate: float = 0.001,
         discount_factor: float = 0.99,
         exploration_module: Optional[ExplorationModule] = None,
@@ -35,13 +33,14 @@ class DeepQLearning(DeepTDLearning):
         batch_size: int = 128,
         target_update_freq: int = 10,
         soft_update_tau: float = 1.0,  # no soft update
-        network_type: QValueNetworkType = VanillaQValueNetwork,
+        network_type: Type[QValueNetwork] = VanillaQValueNetwork,
         is_conservative: bool = False,
         conservative_alpha: float = 2.0,
         state_output_dim=None,
         action_output_dim=None,
         state_hidden_dims=None,
         action_hidden_dims=None,
+        network_instance: Optional[QValueNetwork] = None,
     ) -> None:
         super(DeepQLearning, self).__init__(
             exploration_module=exploration_module
@@ -64,6 +63,7 @@ class DeepQLearning(DeepTDLearning):
             action_output_dim=action_output_dim,
             state_hidden_dims=state_hidden_dims,
             action_hidden_dims=action_hidden_dims,
+            network_instance=network_instance,
         )
 
     @torch.no_grad()

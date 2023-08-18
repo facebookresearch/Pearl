@@ -1,5 +1,6 @@
+import copy
 from abc import abstractmethod
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, Optional, Type
 
 import torch
 import torch.nn.functional as F
@@ -7,8 +8,8 @@ import torch.nn.functional as F
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
+from pearl.core.common.neural_networks.q_value_network import QValueNetwork
 from pearl.core.common.neural_networks.value_networks import (
-    QValueNetworkType,
     TwoTowerQValueNetwork,
     VanillaQValueNetwork,
 )
@@ -33,9 +34,9 @@ class DeepTDLearning(PolicyLearner):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        hidden_dims: Iterable[int],
         exploration_module: ExplorationModule,
         on_policy: bool,
+        hidden_dims: Optional[Iterable[int]] = None,
         learning_rate: float = 0.001,
         discount_factor: float = 0.99,
         capacity: int = 10000,
@@ -45,11 +46,12 @@ class DeepTDLearning(PolicyLearner):
         soft_update_tau: float = 0.1,
         is_conservative: bool = False,
         conservative_alpha: float = 2.0,
-        network_type: QValueNetworkType = VanillaQValueNetwork,
+        network_type: Type[QValueNetwork] = VanillaQValueNetwork,
         state_output_dim=None,
         action_output_dim=None,
         state_hidden_dims=None,
         action_hidden_dims=None,
+        network_instance: Optional[QValueNetwork] = None,
     ) -> None:
         super(DeepTDLearning, self).__init__(
             training_rounds=training_rounds,
@@ -87,10 +89,19 @@ class DeepTDLearning(PolicyLearner):
                     output_dim=1,
                 )
 
-        self._Q = make_specified_network()
-        self._Q_target = make_specified_network()
+        if network_instance is not None:
+            self._Q = network_instance
+            assert (
+                network_instance.state_dim == state_dim
+            ), "state dimension doesn't match for policy learner and network"
+            assert (
+                network_instance.action_dim == action_space.n
+            ), "action dimension doesn't match for policy learner and network"
+        else:
+            assert hidden_dims is not None
+            self._Q = make_specified_network()
 
-        self._Q_target.load_state_dict(self._Q.state_dict())
+        self._Q_target = copy.deepcopy(self._Q)
         self._optimizer = optim.AdamW(
             self._Q.parameters(), lr=learning_rate, amsgrad=True
         )

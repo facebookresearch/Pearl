@@ -1,12 +1,10 @@
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Type
 
 import torch
 
 from pearl.api.action_space import ActionSpace
-from pearl.core.common.neural_networks.value_networks import (
-    QValueNetworkType,
-    VanillaQValueNetwork,
-)
+from pearl.core.common.neural_networks.q_value_network import QValueNetwork
+from pearl.core.common.neural_networks.value_networks import VanillaQValueNetwork
 from pearl.core.common.policy_learners.exploration_module.epsilon_greedy_exploration import (
     EGreedyExploration,
 )
@@ -28,14 +26,15 @@ class DeepSARSA(DeepTDLearning):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        hidden_dims: Iterable[int],
+        hidden_dims: Optional[Iterable[int]] = None,
         learning_rate: float = 0.001,
         discount_factor: float = 0.99,
         exploration_module: Optional[ExplorationModule] = None,
         training_rounds: int = 100,
         batch_size: int = 128,
         target_update_freq: int = 10,
-        network_type: QValueNetworkType = VanillaQValueNetwork,
+        network_type: Type[QValueNetwork] = VanillaQValueNetwork,
+        network_instance: Optional[QValueNetwork] = None,
     ) -> None:
         super(DeepSARSA, self).__init__(
             state_dim=state_dim,
@@ -51,6 +50,7 @@ class DeepSARSA(DeepTDLearning):
             if exploration_module is not None
             else EGreedyExploration(0.05),
             on_policy=True,
+            network_instance=network_instance,
         )
 
     @torch.no_grad()
