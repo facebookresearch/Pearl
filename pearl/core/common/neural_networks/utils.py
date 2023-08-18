@@ -1,4 +1,95 @@
+from typing import List, Optional
+
 import torch.nn as nn
+
+ACTIVATION_MAP = {
+    "tanh": nn.Tanh,
+    "relu": nn.ReLU,
+    "leaky_relu": nn.LeakyReLU,
+    "linear": nn.Identity,
+    "sigmoid": nn.Sigmoid,
+    "softplus": nn.Softplus,
+    "softmax": nn.Softmax,
+}
+
+
+def mlp_block(
+    input_dim: int,
+    hidden_dims: Optional[List[int]],
+    output_dim: int = 1,
+    use_batch_norm: bool = False,
+    hidden_activation: str = "relu",
+    last_activation: Optional[str] = None,
+) -> nn.Module:
+    """
+    A simple MLP which can be reused to create more complex networks
+    Args:
+        input_dim: dimension of the input layer
+        hidden_dims: a list of dimensions of the hidden layers
+        output_dim: dimension of the output layer
+        use_batch_norm: whether to use batch_norm or not in the hidden layers
+        hidden_activation: activation function used for hidden layers
+        last_activation: this is optional, if need activation for layer, set this input
+                        otherwise, no activation is applied on last layer
+    Returns:
+        an nn.Sequential module consisting of mlp layers
+    """
+    dims = [input_dim] + hidden_dims + [output_dim]
+    layers = []
+    for i in range(len(dims) - 2):
+        layers.append(nn.Linear(dims[i], dims[i + 1]))
+        if use_batch_norm:
+            layers.append(nn.BatchNorm1d(dims[i + 1]))
+        layers.append(ACTIVATION_MAP[hidden_activation]())
+
+    layers.append(nn.Linear(dims[-2], dims[-1]))
+    if last_activation is not None:
+        layers.append(ACTIVATION_MAP[last_activation]())
+    return nn.Sequential(*layers)
+
+
+def conv_block(
+    input_channels_count: int,
+    output_channels_list: List[int],
+    kernel_sizes: List[int],
+    strides: List[int],
+    paddings: List[int],
+    use_batch_norm=False,
+) -> nn.Module:
+    """
+    Reminder: torch.Conv2d layers expect inputs as (batch_size, in_channels, height, width)
+    Notes: layer norm is typically not used with CNNs
+
+    Args:
+        input_channels_count: number of input channels
+        output_channels_list: a list of number of output channels for each convolutional layer
+        kernel_sizes: a list of kernel sizes for each layer
+        strides: a list of strides for each layer
+        paddings: a list of paddings for each layer
+        use_batch_norm: whether to use batch_norm or not in the convolutional layers
+    Returns:
+        an nn.Sequential module consisting of convolutional layers
+    """
+    layers = []
+    for out_channels, kernel_size, stride, padding in zip(
+        output_channels_list, kernel_sizes, strides, paddings
+    ):
+        conv_layer = nn.Conv2d(
+            input_channels_count,
+            out_channels,
+            kernel_size,
+            stride=stride,
+            padding=padding,
+        )
+        layers.append(conv_layer)
+        if use_batch_norm and input_channels_count > 1:
+            layers.append(
+                nn.BatchNorm2d(input_channels_count)
+            )  # input to Batchnorm 2d is the number of input channels
+        layers.append(nn.ReLU())
+        input_channels_count = out_channels  # number of input channels to next layer is number of output channels of previous layer
+
+    return nn.Sequential(*layers)
 
 
 def init_weights(m):

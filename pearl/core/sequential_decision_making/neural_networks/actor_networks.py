@@ -14,27 +14,24 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from pearl.core.common.neural_networks.auto_device_nn_module import AutoDeviceNNModule
+from pearl.core.common.neural_networks.utils import mlp_block
 
 
 class VanillaActorNetwork(AutoDeviceNNModule):
     def __init__(self, input_dim, hidden_dims, output_dim):
         super(VanillaActorNetwork, self).__init__()
+        self._model = mlp_block(
+            input_dim=input_dim,
+            hidden_dims=hidden_dims,
+            output_dim=output_dim,
+            last_activation="softmax",
+        )
 
-        self.fc1 = nn.Linear(input_dim, hidden_dims[0])
-        hiddens = []
-        for i in range(len(hidden_dims) - 1):
-            hiddens.append(nn.Linear(hidden_dims[i], hidden_dims[i + 1]))
-            hiddens.append(nn.ReLU())
-        self.hiddens = nn.Sequential(*hiddens)
-        self.fc2 = nn.Linear(hidden_dims[-1], output_dim)
-
-    def forward(self, x):
-        value = F.relu(self.fc1(x))
-        value = self.hiddens(value)
-        return F.softmax(self.fc2(value), dim=1)
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self._model(x)
 
 
-class VanillaContinuousActorNetwork(VanillaActorNetwork):
+class VanillaContinuousActorNetwork(AutoDeviceNNModule):
     """
     This is vanilla version of deterministic actor network
     Given input state, output an action vector
@@ -43,14 +40,16 @@ class VanillaContinuousActorNetwork(VanillaActorNetwork):
     """
 
     def __init__(self, input_dim, hidden_dims, output_dim):
-        super(VanillaContinuousActorNetwork, self).__init__(
-            input_dim, hidden_dims, output_dim
+        super(VanillaContinuousActorNetwork, self).__init__()
+        self._model = mlp_block(
+            input_dim=input_dim,
+            hidden_dims=hidden_dims,
+            output_dim=output_dim,
+            last_activation="tanh",
         )
 
-    def forward(self, x):
-        value = F.relu(self.fc1(x))
-        value = self.hiddens(value)
-        return torch.tanh(self.fc2(value))
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self._model(x)
 
 
 ActorNetworkType = Callable[[int, int, List[int], int], nn.Module]
