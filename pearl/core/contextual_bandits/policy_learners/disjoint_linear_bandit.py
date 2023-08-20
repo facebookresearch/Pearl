@@ -54,7 +54,7 @@ class DisjointLinearBandit(ContextualBanditBase):
         """
 
         for action_idx, linear_regression in enumerate(self._linear_regressions):
-            index = torch.nonzero(batch.action == action_idx).squeeze()
+            index = torch.nonzero(batch.action == action_idx, as_tuple=True)[0]
             if index.numel() == 0:
                 continue
             state = torch.index_select(
