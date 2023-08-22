@@ -29,3 +29,13 @@ class TestLinearRegression(unittest.TestCase):
 
         single_test(AvgWeightLinearRegression)
         single_test(LinearRegression)
+
+    def test_state_dict(self) -> None:
+        model = LinearRegression(feature_dim=15)
+        states = model.state_dict()
+        self.assertEqual(len(states), 1)
+        self.assertEqual(states["_extra_state"]["A"].shape, (15, 15))
+        self.assertEqual(states["_extra_state"]["b"].shape, (15,))
+        states["_extra_state"]["b"] = torch.ones((15,))
+        model.load_state_dict(states)
+        self.assertEqual(model._b[3], 1)

@@ -13,7 +13,7 @@ fbcode/reagent/models/linear_regression.py
 """
 
 import logging
-from typing import Tuple
+from typing import Any, Dict, Tuple
 
 import torch
 from pearl.core.common.neural_networks.auto_device_nn_module import AutoDeviceNNModule
@@ -39,9 +39,14 @@ class LinearRegression(AutoDeviceNNModule):
         batch_size = x.shape[0]
         if weight is None:
             weight = torch.ones(y.shape, device=self.device)
-        assert x.shape == (batch_size, self._feature_dim)
-        assert y.shape == (batch_size,)
-        assert weight.shape == (batch_size,)
+        assert x.shape == (
+            batch_size,
+            self._feature_dim,
+        ), f"x has shape {x.shape} != {(batch_size, self._feature_dim)}"
+        assert y.shape == (batch_size,), f"y has shape {y.shape} != {(batch_size,)}"
+        assert weight.shape == (
+            batch_size,
+        ), f"weight has shape {weight.shape} != {(batch_size,)}"
         y = torch.unsqueeze(y, dim=1)
         weight = torch.unsqueeze(weight, dim=1)
         return x, y, weight
@@ -53,6 +58,7 @@ class LinearRegression(AutoDeviceNNModule):
         A <- A + x*x.t
         b <- b + r*x
         """
+        print(f"{x.device} {y.device} {weight.device}")
         x, y, weight = self._validate_train_inputs(x, y, weight)
         self._A += torch.matmul(x.t(), x * weight)
         self._b += torch.matmul(x.t(), y * weight).squeeze()
@@ -104,6 +110,13 @@ class LinearRegression(AutoDeviceNNModule):
     def named_parameters(self, prefix="", recurse=True, remove_duplicate=True):
         yield ("_A", self._A)
         yield ("_b", self._b)
+
+    def get_extra_state(self) -> Dict[str, Any]:
+        return {"A": self._A, "b": self._b}
+
+    def set_extra_state(self, state: Dict[str, Any], strict=True):
+        self._A = state["A"]
+        self._b = state["b"]
 
 
 class AvgWeightLinearRegression(LinearRegression):

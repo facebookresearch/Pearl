@@ -16,8 +16,8 @@ from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.core.contextual_bandits.policy_learners.contextual_bandit_base import (
     ContextualBanditBase,
 )
-
 from pearl.utils.action_spaces import DiscreteActionSpace
+from pearl.utils.device import get_pearl_device
 from pearl.utils.linear_regression import LinearRegression
 from torch.func import stack_module_state
 
@@ -41,10 +41,11 @@ class DisjointLinearBandit(ContextualBanditBase):
             batch_size=batch_size,
             exploration_module=exploration_module,
         )
+        self.device = get_pearl_device()
         # Currently our disjoint LinUCB usecase only use LinearRegression
         self._linear_regressions = torch.nn.ModuleList(
             [LinearRegression(feature_dim=feature_dim) for _ in range(action_space.n)]
-        )
+        ).to(self.device)
         self._discrete_action_space = action_space
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
@@ -67,6 +68,7 @@ class DisjointLinearBandit(ContextualBanditBase):
                 torch.Tensor(self._discrete_action_space[action_idx])
                 .unsqueeze(0)
                 .expand(state.shape[0], -1)
+                .to(self.device)
             )
             context = torch.cat([state, expanded_action], dim=1)
             reward = torch.index_select(
@@ -81,7 +83,7 @@ class DisjointLinearBandit(ContextualBanditBase):
                     index=index,
                 )
             else:
-                weight = torch.ones(reward.shape)
+                weight = torch.ones(reward.shape, device=self.device)
             linear_regression.learn_batch(
                 x=context,
                 y=reward,
