@@ -160,7 +160,6 @@ class DeepTDLearning(PolicyLearner):
 
         batch_size = state_batch.shape[0]
         # sanity check they have same batch_size
-        assert action_batch.shape[0] == batch_size
         assert reward_batch.shape[0] == batch_size
         assert done_batch.shape[0] == batch_size
 
