@@ -9,6 +9,7 @@ from pearl.api.action import Action
 from pearl.core.common.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
+from pearl.core.common.neural_networks.utils import ensemble_forward
 from pearl.core.common.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
@@ -19,7 +20,6 @@ from pearl.core.contextual_bandits.policy_learners.contextual_bandit_base import
 from pearl.utils.action_spaces import DiscreteActionSpace
 from pearl.utils.device import get_pearl_device
 from pearl.utils.linear_regression import LinearRegression
-from torch.func import stack_module_state
 
 
 class DisjointLinearBandit(ContextualBanditBase):
@@ -102,18 +102,9 @@ class DisjointLinearBandit(ContextualBanditBase):
         feature = self._discrete_action_space.cat_state_tensor(
             subjective_state=subjective_state
         )  # batch_size, action_count, feature_size
-        # followed example in https://pytorch.org/docs for ensembling
-        def wrapper(params, buffers, data):
-            return torch.func.functional_call(
-                self._linear_regressions[0], (params, buffers), data
-            )
 
-        params, buffers = stack_module_state(self._linear_regressions)
-        values = torch.vmap(wrapper, (0, 0, 1))(
-            params, buffers, feature
-        )  # (action_count, batch_size)
-        # change shape to (batch_size, action_count)
-        values = values.permute(1, 0)
+        values = ensemble_forward(self._linear_regressions, feature)
+
         return self._exploration_module.act(
             subjective_state=feature,
             action_space=action_space,

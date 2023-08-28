@@ -1,6 +1,9 @@
 from typing import List, Optional
 
+import torch
 import torch.nn as nn
+
+from torch.func import stack_module_state
 
 ACTIVATION_MAP = {
     "tanh": nn.Tanh,
@@ -108,3 +111,20 @@ def update_target_network(target_network, source_network, tau):
         )
 
     target_network.load_state_dict(target_net_state_dict)
+
+
+def ensemble_forward(models: List[nn.Module], features: torch.Tensor) -> torch.Tensor:
+    # followed example in https://pytorch.org/docs for ensembling
+    batch_size = features.shape[0]
+    features = features.permute((1, 0, 2))
+
+    def wrapper(params, buffers, data):
+        return torch.func.functional_call(models[0], (params, buffers), data)
+
+    params, buffers = stack_module_state(models)
+    values = torch.vmap(wrapper)(params, buffers, features).view(
+        (-1, batch_size)
+    )  # (ensemble_size, batch_size)
+
+    # change shape to (batch_size, ensemble_size)
+    return values.permute(1, 0)
