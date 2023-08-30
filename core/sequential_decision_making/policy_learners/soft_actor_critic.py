@@ -61,7 +61,6 @@ class SoftActorCritic(PolicyGradient):
             on_policy=False,
         )
 
-        print("clipped double q learning jalaj")
         # TODO: Assumes Gym interface, fix it.
         def make_specified_critic_network():
             return critic_network_type(
@@ -92,11 +91,11 @@ class SoftActorCritic(PolicyGradient):
             init_fn=init_weights,
         )
 
-        # target networks are initialized to parameters of the source network
+        # target networks are initialized to parameters of the source network (tau is set to 1)
         update_target_networks(
             self._targets_of_twin_critics._critic_networks_combined,
             self._twin_critics._critic_networks_combined,
-            1,
+            tau=1,
         )
 
         # This is needed to avoid actor softmax overflow issue.
@@ -118,8 +117,8 @@ class SoftActorCritic(PolicyGradient):
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
-        self._critic_update(batch)  # update critic
-        self._actor_update(batch)  # update actor
+        self._critic_learn_batch(batch)  # update critic
+        self._actor_learn_batch(batch)  # update actor
 
         self._rounds += 1
 
@@ -131,7 +130,7 @@ class SoftActorCritic(PolicyGradient):
         )
         return {}
 
-    def _critic_update(self, batch: TransitionBatch) -> None:
+    def _critic_learn_batch(self, batch: TransitionBatch) -> None:
 
         reward_batch = batch.reward  # (batch_size)
         done_batch = batch.done  # (batch_size)
@@ -143,7 +142,7 @@ class SoftActorCritic(PolicyGradient):
         ) + reward_batch  # (batch_size), r + gamma * V(s)
 
         # self._critics.optimize(target_fn, expected_state_action_values)
-        loss_critic_update = self._twin_critics.update_twin_critics_towards_target(
+        loss_critic_update = self._twin_critics.optimize_twin_critics_towards_target(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target=expected_state_action_values,
@@ -200,7 +199,7 @@ class SoftActorCritic(PolicyGradient):
 
         return next_state_action_values.sum(dim=1)
 
-    def _actor_update(self, batch: TransitionBatch) -> None:
+    def _actor_learn_batch(self, batch: TransitionBatch) -> None:
         state_batch = batch.state  # (batch_size x state_dim)
 
         # TODO: assumes all current actions are available. Needs to fix.

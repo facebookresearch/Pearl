@@ -65,11 +65,11 @@ class TD3(DeepDeterministicPolicyGradient):
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
         self._critic_update_count += 1
-        report = self._critic_update(batch)  # critic update
+        report = self._critic_learn_batch(batch)  # critic update
 
         # see ddpg base class for actor update details
         if self._critic_update_count == self._actor_update_freq:
-            report.update(self._actor_update(batch))  # actor update
+            report.update(self._actor_learn_batch(batch))  # actor update
             self._critic_update_count = 0  # reset counter
 
         # update targets of twin critics using soft updates
@@ -84,7 +84,7 @@ class TD3(DeepDeterministicPolicyGradient):
         )
         return report
 
-    def _critic_update(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
         with torch.no_grad():
 
@@ -119,7 +119,7 @@ class TD3(DeepDeterministicPolicyGradient):
             ) + batch.reward  # (batch_size), r + gamma * (min{Q_1(s', a from actor network), Q_2(s', a from actor network)})
 
         # update twin critics towards bellman target
-        loss_critic_update = self._twin_critics.update_twin_critics_towards_target(
+        loss_critic_update = self._twin_critics.optimize_twin_critics_towards_target(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target=expected_state_action_values,

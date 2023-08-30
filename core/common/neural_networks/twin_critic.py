@@ -1,4 +1,4 @@
-from typing import Callable, List, Type
+from typing import Callable, List, Tuple, Type
 
 import torch
 import torch.nn as nn
@@ -53,7 +53,7 @@ class TwinCritic(torch.nn.Module):
             amsgrad=True,
         )
 
-    def update_twin_critics_towards_target(
+    def optimize_twin_critics_towards_target(
         self,
         state_batch: torch.Tensor,
         action_batch: torch.Tensor,
@@ -77,15 +77,15 @@ class TwinCritic(torch.nn.Module):
 
         return {
             "mean_loss": loss.item(),
-            "critic 1 loss": q_1.mean().item(),
-            "critic 2 loss": q_2.mean().item(),
+            "critic_1_loss": q_1.mean().item(),
+            "critic_2_loss": q_2.mean().item(),
         }
 
     def get_twin_critic_values(
         self,
         state_batch: torch.Tensor,
         action_batch: torch.Tensor,
-    ) -> torch.Tensor:
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Args:
             state_batch (torch.Tensor): a batch of states with shape (batch_size, state_dim)

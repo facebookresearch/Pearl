@@ -146,12 +146,3 @@ def update_target_networks(list_of_target_networks, list_of_source_networks, tau
         list_of_target_networks, list_of_source_networks
     ):
         update_target_network(target_network, source_network, tau)
-        # target_net_state_dict = target_network.state_dict()
-        # source_net_state_dict = source_network.state_dict()
-        # for key in source_net_state_dict:
-        #     target_net_state_dict[key] = (
-        #         tau * source_net_state_dict[key]
-        #         + (1 - tau) * target_net_state_dict[key]
-        #     )
-
-        # target_network.load_state_dict(target_net_state_dict)

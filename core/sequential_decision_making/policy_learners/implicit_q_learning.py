@@ -100,7 +100,7 @@ class ImplicitQLearning(PolicyGradient):
             self._actor.parameters(), lr=actor_learning_rate, amsgrad=True
         )  # actor network's optimizer
 
-        # twin critic model: using two separate critic networks to reduce overestimation bias
+        # twin critic: using two separate critic networks to reduce overestimation bias
         # optimizers of two critics are alredy initialized in TwinCritic
         self._twin_critics = TwinCritic(
             state_dim=state_dim,
@@ -122,11 +122,11 @@ class ImplicitQLearning(PolicyGradient):
         )
         # for twin critic and corresponding target, there is a temptation to use deepcopy or clone instead.
         # this can however create problems in distibuted computing or because of shared buffers (when using batch norm for example)
-        # params of targets of twin critics initialized to params of twin critics using the update_target_networks function
+        # params of targets of twin critics initialized to params of twin critics (tau is set to 1)
         update_target_networks(
             self._twin_critics._critic_networks_combined,
             self._targets_of_twin_critics._critic_networks_combined,
-            1,
+            tau=1,
         )
 
         # value network
@@ -141,9 +141,9 @@ class ImplicitQLearning(PolicyGradient):
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
-        value_loss = self._value_update(batch)  # update value network
-        actor_loss = self._actor_update(batch)  # update actor network
-        critic_loss = self._critic_update(batch)  # update critic networks
+        value_loss = self._value_learn_batch(batch)  # update value network
+        actor_loss = self._actor_learn_batch(batch)  # update actor network
+        critic_loss = self._critic_learn_batch(batch)  # update critic networks
 
         # update critic and target Twin networks;
         update_target_networks(
@@ -158,7 +158,7 @@ class ImplicitQLearning(PolicyGradient):
             "critic_loss": critic_loss,
         }
 
-    def _actor_update(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """
         performs policy extraction using advantage weighted regression
         """
@@ -195,7 +195,7 @@ class ImplicitQLearning(PolicyGradient):
         self._actor_optimizer.step()
         return actor_loss.mean().item()
 
-    def _critic_update(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         with torch.no_grad():
             # sample values of next states
             values_next_states = self._value_network(
@@ -208,12 +208,12 @@ class ImplicitQLearning(PolicyGradient):
             ) + batch.reward  # shape: (batch_size);  target y = r + gamma * V(s')
 
         # update twin critics towards target
-        loss_critic_update = self._twin_critics.update_twin_critics_towards_target(
+        loss_critic_update = self._twin_critics.optimize_twin_critics_towards_target(
             state_batch=batch.state, action_batch=batch.action, expected_target=target
         )
         return loss_critic_update
 
-    def _value_update(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _value_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
         with torch.no_grad():
             q1, q2 = self._targets_of_twin_critics.get_twin_critic_values(

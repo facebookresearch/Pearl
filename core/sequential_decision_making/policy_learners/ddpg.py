@@ -99,11 +99,11 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
             init_fn=init_weights,
         )
 
-        # target networks are initialized to parametes of the source network
+        # target networks are initialized to parameters of the source network (tau is set to 1)
         update_target_networks(
             self._targets_of_twin_critics._critic_networks_combined,
             self._twin_critics._critic_networks_combined,
-            1,
+            tau=1,
         )
 
         self._actor_soft_update_tau = actor_soft_update_tau
@@ -135,8 +135,8 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
-        report = self._critic_update(batch)  # critic update
-        report.update(self._actor_update(batch))  # actor update
+        report = self._critic_learn_batch(batch)  # critic update
+        report.update(self._actor_learn_batch(batch))  # actor update
 
         # update targets of twin critics using soft updates
         update_target_networks(
@@ -150,7 +150,7 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
         )
         return report
 
-    def _actor_update(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
         action_batch = self._actor(batch.state)
         # samples q values for (batch.state, action_batch) from twin critics
@@ -167,7 +167,7 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
 
         return {"actor_loss": loss.mean().item()}
 
-    def _critic_update(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
         with torch.no_grad():
 
@@ -189,7 +189,7 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
             ) + batch.reward  # (batch_size), r + gamma * (min{Q_1(s', a from actor network), Q_2(s', a from actor network)})
 
         # update twin critics towards bellman target
-        loss_critic_update = self._twin_critics.update_twin_critics_towards_target(
+        loss_critic_update = self._twin_critics.optimize_twin_critics_towards_target(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target=expected_state_action_values,
