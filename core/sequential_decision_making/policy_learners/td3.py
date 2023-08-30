@@ -2,7 +2,10 @@ from typing import Any, Dict, Iterable, Type
 
 import torch
 from pearl.core.common.neural_networks.q_value_network import QValueNetwork
-from pearl.core.common.neural_networks.utils import update_target_network
+from pearl.core.common.neural_networks.utils import (
+    update_target_network,
+    update_target_networks,
+)
 
 from pearl.core.common.neural_networks.value_networks import VanillaQValueNetwork
 from pearl.core.common.policy_learners.exploration_module.exploration_module import (
@@ -60,30 +63,35 @@ class TD3(DeepDeterministicPolicyGradient):
         self._critic_update_count = 0
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
-        # critic learning
+
         self._critic_update_count += 1
-        report = self._critic_learn_batch(batch)
+        report = self._critic_update(batch)  # critic update
+
+        # see ddpg base class for actor update details
         if self._critic_update_count == self._actor_update_freq:
-            # actor learning
-            report.update(self._actor_learn_batch(batch))
+            report.update(self._actor_update(batch))  # actor update
             self._critic_update_count = 0  # reset counter
 
-        self._critics.update_target_networks(self._critic_soft_update_tau)
+        # update targets of twin critics using soft updates
+        update_target_networks(
+            self._targets_of_twin_critics._critic_networks_combined,
+            self._twin_critics._critic_networks_combined,
+            self._critic_soft_update_tau,
+        )
+        # update target of actor network using soft updates
         update_target_network(
             self._actor_target, self._actor, self._actor_soft_update_tau
         )
         return report
 
-    def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
-        def target_fn(critic):
-            return critic.get_q_values(
-                state_batch=batch.state,
-                action_batch=batch.action,
-            )
+    def _critic_update(self, batch: TransitionBatch) -> Dict[str, Any]:
 
         with torch.no_grad():
-            # add noise to next_action from actor network
+
+            # sample next_action from actor's target network
             next_action = self._actor_target(batch.next_state)
+
+            # sample clipped gaussian noise
             noise = torch.normal(
                 mean=0,
                 std=self._learning_action_noise_std,
@@ -95,13 +103,25 @@ class TD3(DeepDeterministicPolicyGradient):
                 -self._learning_action_noise_clip,
                 self._learning_action_noise_clip,
             )
-            next_action = next_action + noise
-            next_q = self._critics.get_q_values(
-                state_batch=batch.next_state, action_batch=next_action, target=True
+            next_action = next_action + noise  # add noise to next_action
+
+            # sample q values of (next_state, next_action) from targets of twin critics
+            next_q1, next_q2 = self._targets_of_twin_critics.get_twin_critic_values(
+                state_batch=batch.next_state, action_batch=next_action
             )
+            next_q = torch.minimum(
+                next_q1, next_q2
+            )  # clipped double q learning (reduce overestimation bias)
+
+            # compute bellman target
             expected_state_action_values = (
                 next_q * self._discount_factor * (1 - batch.done)
-            ) + batch.reward  # (batch_size), r + gamma * Q(s', a from actor network)
+            ) + batch.reward  # (batch_size), r + gamma * (min{Q_1(s', a from actor network), Q_2(s', a from actor network)})
 
-        losses = self._critics.optimize(target_fn, expected_state_action_values)
-        return {"critic_loss": sum(losses) / len(losses)}
+        # update twin critics towards bellman target
+        loss_critic_update = self._twin_critics.update_twin_critics_towards_target(
+            state_batch=batch.state,
+            action_batch=batch.action,
+            expected_target=expected_state_action_values,
+        )
+        return loss_critic_update
