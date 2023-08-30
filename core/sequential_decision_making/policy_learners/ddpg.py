@@ -4,8 +4,11 @@ import torch
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
+
 from pearl.core.common.neural_networks.nplets_critic import NpletsCritic
 from pearl.core.common.neural_networks.q_value_network import QValueNetwork
+
+# from pearl.core.common.neural_networks.twin_critic import TwinCritic
 
 from pearl.core.common.neural_networks.utils import init_weights, update_target_network
 
@@ -119,6 +122,11 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
         report.update(self._actor_learn_batch(batch))
 
         self._critics.update_target_networks(self._critic_soft_update_tau)
+        # update_target_networks(
+        #     self._twin_critics._critic_networks_combined,
+        #     self._targets_of_twin_critics._critic_networks_combined,
+        #     self._critic_soft_update_tau,
+        # )
         update_target_network(
             self._actor_target, self._actor, self._actor_soft_update_tau
         )
@@ -131,6 +139,10 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
             state_batch=batch.state, action_batch=action_batch, target=False
         )
         loss = -q_values.mean()
+        # q1, q2 = self._twin_critics.get_twin_critic_values(
+        #     state_batch=batch.state, action_batch=action_batch
+        # )
+        # loss = -torch.stack([q1, q2]).min(dim=0).values.mean()
         self._actor_optimizer.zero_grad()
         loss.backward()
         self._actor_optimizer.step()
@@ -150,9 +162,26 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
             next_q = self._critics.get_q_values(
                 state_batch=batch.next_state, action_batch=next_action, target=True
             )
+
             expected_state_action_values = (
                 next_q * self._discount_factor * (1 - batch.done)
             ) + batch.reward  # (batch_size), r + gamma * Q(s', a from actor network)
 
         losses = self._critics.optimize(target_fn, expected_state_action_values)
         return {"critic_loss": sum(losses) / len(losses)}
+
+        # next_q1, next_q2 = self._targets_of_twin_critics.get_twin_critic_values(
+        #     state_batch=batch.next_state, action_batch=next_action
+        # )
+        # next_q = torch.stack([next_q1, next_q2]).min(dim=0).values
+        # expected_state_action_values = (
+        #     next_q * self._discount_factor * (1 - batch.done)
+        # ) + batch.reward  # (batch_size), r + gamma * Q(s', a from actor network)
+
+        # loss_critic_update = self._twin_critics.update_twin_critics_towards_target(
+        #     state_batch=batch.state,
+        #     action_batch=batch.action,
+        #     expected_target=expected_state_action_values,
+        # )
+
+        # return loss_critic_update

@@ -149,7 +149,9 @@ class VanillaQValueNetwork(QValueNetwork):
     using the state-action pair as the input for the value network.
     """
 
-    def __init__(self, state_dim, action_dim, hidden_dims, output_dim):
+    def __init__(
+        self, state_dim, action_dim, hidden_dims, output_dim, use_layer_norm=False
+    ):
         super(VanillaQValueNetwork, self).__init__()
         self._state_dim = state_dim
         self._action_dim = action_dim
@@ -157,6 +159,7 @@ class VanillaQValueNetwork(QValueNetwork):
             input_dim=state_dim + action_dim,
             hidden_dims=hidden_dims,
             output_dim=output_dim,
+            use_layer_norm=use_layer_norm,
         )
 
     def forward(self, x: Tensor) -> Tensor:

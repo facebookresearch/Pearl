@@ -21,6 +21,7 @@ def mlp_block(
     hidden_dims: Optional[List[int]],
     output_dim: int = 1,
     use_batch_norm: bool = False,
+    use_layer_norm: bool = False,
     hidden_activation: str = "relu",
     last_activation: Optional[str] = None,
 ) -> nn.Module:
@@ -43,6 +44,8 @@ def mlp_block(
         layers.append(nn.Linear(dims[i], dims[i + 1]))
         if use_batch_norm:
             layers.append(nn.BatchNorm1d(dims[i + 1]))
+        if use_layer_norm:
+            layers.append(nn.LayerNorm(dims[i + 1]))
         layers.append(ACTIVATION_MAP[hidden_activation]())
 
     layers.append(nn.Linear(dims[-2], dims[-1]))
@@ -95,6 +98,7 @@ def conv_block(
     return nn.Sequential(*layers)
 
 
+## To do: the name of this function needs to be revised to xavier_init_weights
 def init_weights(m):
     if isinstance(m, nn.Linear):
         nn.init.xavier_uniform(m.weight)
@@ -128,3 +132,26 @@ def ensemble_forward(models: List[nn.Module], features: torch.Tensor) -> torch.T
 
     # change shape to (batch_size, ensemble_size)
     return values.permute(1, 0)
+
+
+def update_target_networks(list_of_target_networks, list_of_source_networks, tau):
+    """
+    Args:
+        list_of_target_networks: nn.ModuleList() of nn.Module()
+        list_of_source_networks: nn.ModuleList() of nn.Module()
+        tau: parameter for soft update
+    """
+    # Q_target = (1 - tao) * Q_target + tao*Q
+    for target_network, source_network in zip(
+        list_of_target_networks, list_of_source_networks
+    ):
+        update_target_network(target_network, source_network, tau)
+        # target_net_state_dict = target_network.state_dict()
+        # source_net_state_dict = source_network.state_dict()
+        # for key in source_net_state_dict:
+        #     target_net_state_dict[key] = (
+        #         tau * source_net_state_dict[key]
+        #         + (1 - tau) * target_net_state_dict[key]
+        #     )
+
+        # target_network.load_state_dict(target_net_state_dict)

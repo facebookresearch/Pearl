@@ -25,9 +25,11 @@ from pearl.core.sequential_decision_making.policy_learners.ddpg import (
 from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
     DeepQLearning,
 )
-
 from pearl.core.sequential_decision_making.policy_learners.deep_sarsa import DeepSARSA
 from pearl.core.sequential_decision_making.policy_learners.double_dqn import DoubleDQN
+from pearl.core.sequential_decision_making.policy_learners.implicit_q_learning import (
+    ImplicitQLearning,
+)
 from pearl.core.sequential_decision_making.policy_learners.policy_gradient import (
     PolicyGradient,
 )
@@ -283,11 +285,11 @@ class IntegrationTests(unittest.TestCase):
             )
         )
 
-    def test_cql(self) -> None:
+    def test_cql_online(self) -> None:
         """
         This test is checking if DQN with conservative loss will eventually get to 500 return for CartPole-v1
-        when training online. This is a dummy test for now as we don't expect to use conservative losses
-        with online training. Will change this to an offline test when integrated with offline testing pipeline.
+        when training online. This is a dummy test for basic sanity check as we don't expect to use conservative losses
+        with online training.
         """
 
         env = GymEnvironment("CartPole-v1")
@@ -377,7 +379,7 @@ class IntegrationTests(unittest.TestCase):
 
     def test_cql_offline_training(self) -> None:
         """
-        This test is checking if DQN with conservative loss will eventually get to > 100 return for CartPole-v1
+        This test is checking if DQN with conservative loss will eventually get to > 50 return for CartPole-v1
         when trained with offline data.
         """
         set_seed(100)
@@ -407,3 +409,35 @@ class IntegrationTests(unittest.TestCase):
         )
 
         self.assertTrue(max(conservativeDQN_agent_returns) > 50)
+
+    def test_iql_offline_training(self) -> None:
+        """
+        This test is checking if Implicit Q Learning will eventually get to > 100 return for CartPole-v1
+        when trained with offline data.
+        """
+        set_seed(100)
+        env = GymEnvironment("CartPole-v1")
+        IQLAgent = PearlAgent(
+            policy_learner=ImplicitQLearning(
+                state_dim=env.observation_space.shape[0],
+                action_dim=env.action_space.n,
+                action_space=env.action_space,
+                hidden_dims=[64, 64, 64],
+                training_rounds=5,
+                batch_size=128,
+                expectile=0.50,
+                temperature_adv_weighted_regression=0.75,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(200000),
+        )
+
+        # specify path for offline data set
+        url = "https://raw.githubusercontent.com/jb3618columbia/offline_data/fbaccdd8d994479298c930d684ac49285f3cc901/offline_raw_transitions_dict_200k.pt"
+
+        # train conservative agent with offline data
+        offline_learning(url, offline_agent=IQLAgent, training_epochs=2000)
+
+        # offline evaluation
+        IQL_agent_returns = offline_evaluation(offline_agent=IQLAgent, env=env)
+
+        self.assertTrue(max(IQL_agent_returns) > 100)
