@@ -3,9 +3,12 @@ from typing import Any, Dict, Iterable, Type
 import torch
 import torch.nn.functional as F
 from pearl.api.action_space import ActionSpace
-from pearl.core.common.neural_networks.nplets_critic import TwinCritic
+
 from pearl.core.common.neural_networks.q_value_network import QValueNetwork
-from pearl.core.common.neural_networks.utils import init_weights
+
+# from pearl.core.common.neural_networks.nplets_critic import TwinCritic
+from pearl.core.common.neural_networks.twin_critic import TwinCritic
+from pearl.core.common.neural_networks.utils import init_weights, update_target_networks
 from pearl.core.common.neural_networks.value_networks import VanillaQValueNetwork
 from pearl.core.common.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
@@ -58,6 +61,7 @@ class SoftActorCritic(PolicyGradient):
             on_policy=False,
         )
 
+        print("clipped double q learning jalaj")
         # TODO: Assumes Gym interface, fix it.
         def make_specified_critic_network():
             return critic_network_type(
@@ -67,7 +71,9 @@ class SoftActorCritic(PolicyGradient):
                 output_dim=1,
             )
 
-        self._critics = TwinCritic(
+        # twin critic: using two separate critic networks to reduce overestimation bias
+        # optimizers of two critics are alredy initialized in TwinCritic
+        self._twin_critics = TwinCritic(
             state_dim=state_dim,
             action_dim=action_space.n,
             hidden_dims=hidden_dims,
@@ -75,6 +81,24 @@ class SoftActorCritic(PolicyGradient):
             network_type=critic_network_type,
             init_fn=init_weights,
         )
+
+        # target networks of twin critics
+        self._targets_of_twin_critics = TwinCritic(
+            state_dim=state_dim,
+            action_dim=action_space.n,
+            hidden_dims=hidden_dims,
+            learning_rate=learning_rate,
+            network_type=critic_network_type,
+            init_fn=init_weights,
+        )
+
+        # target networks are initialized to parameters of the source network
+        update_target_networks(
+            self._targets_of_twin_critics._critic_networks_combined,
+            self._twin_critics._critic_networks_combined,
+            1,
+        )
+
         # This is needed to avoid actor softmax overflow issue.
         # Should not be left for users to choose.
         self.scheduler = optim.lr_scheduler.ExponentialLR(
@@ -93,35 +117,24 @@ class SoftActorCritic(PolicyGradient):
         self.scheduler.step()
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
-        # critic learning
-        self._critic_learn_batch(batch)
-        # actor learning
-        self._actor_learn_batch(batch)
+
+        self._critic_update(batch)  # update critic
+        self._actor_update(batch)  # update actor
 
         self._rounds += 1
 
-        self._critics.update_target_networks(self._soft_update_tau)
+        # update targets of twin critics using soft updates
+        update_target_networks(
+            self._targets_of_twin_critics._critic_networks_combined,
+            self._twin_critics._critic_networks_combined,
+            self._soft_update_tau,
+        )
         return {}
 
-    def _critic_learn_batch(self, batch: TransitionBatch) -> None:
-        state_batch = batch.state  # (batch_size x state_dim)
-        action_batch = batch.action  # (batch_size x action_dim)
+    def _critic_update(self, batch: TransitionBatch) -> None:
+
         reward_batch = batch.reward  # (batch_size)
         done_batch = batch.done  # (batch_size)
-
-        batch_size = state_batch.shape[0]
-        # sanity check they have same batch_size
-        assert state_batch.shape[0] == batch_size
-        assert action_batch.shape[0] == batch_size
-        assert reward_batch.shape[0] == batch_size
-        assert done_batch.shape[0] == batch_size
-
-        def target_fn(critic):
-            return critic.get_q_values(
-                state_batch=state_batch,
-                action_batch=action_batch,
-                curr_available_actions_batch=batch.curr_available_actions,
-            )  # (batch_size)
 
         expected_state_action_values = (
             self._get_next_state_expected_values(batch)
@@ -129,7 +142,14 @@ class SoftActorCritic(PolicyGradient):
             * (1 - done_batch)
         ) + reward_batch  # (batch_size), r + gamma * V(s)
 
-        self._critics.optimize(target_fn, expected_state_action_values)
+        # self._critics.optimize(target_fn, expected_state_action_values)
+        loss_critic_update = self._twin_critics.update_twin_critics_towards_target(
+            state_batch=batch.state,
+            action_batch=batch.action,
+            expected_target=expected_state_action_values,
+        )
+
+        return loss_critic_update
 
     @torch.no_grad()
     def _get_next_state_expected_values(self, batch: TransitionBatch) -> torch.tensor:
@@ -145,12 +165,21 @@ class SoftActorCritic(PolicyGradient):
             next_state_batch.unsqueeze(1), self._action_space.n, dim=1
         )  # (batch_size x action_space_size x state_dim)
 
-        next_state_action_values = self._critics.get_q_values(
+        # get q values of (states, all actions) from twin critics
+        next_q1, next_q2 = self._targets_of_twin_critics.get_twin_critic_values(
             state_batch=next_state_batch_repeated,
             action_batch=next_available_actions_batch,
-            target=True,
-        ).view(
-            (self.batch_size, -1)
+        )
+
+        # clipped double q-learning (reduce overestimation bias)
+        next_q = torch.minimum(next_q1, next_q2)
+
+        # random ensemble distillation (reduce overestimation bias)
+        # random_index = torch.randint(0, 2, (1,)).item()
+        # next_q = next_q1 if random_index == 0 else next_q2
+
+        next_state_action_values = next_q.view(
+            self.batch_size, -1
         )  # (batch_size x action_space_size)
 
         # Make sure that unavailable actions' Q values are assigned to 0.0
@@ -171,12 +200,8 @@ class SoftActorCritic(PolicyGradient):
 
         return next_state_action_values.sum(dim=1)
 
-    def _actor_learn_batch(self, batch: TransitionBatch) -> None:
+    def _actor_update(self, batch: TransitionBatch) -> None:
         state_batch = batch.state  # (batch_size x state_dim)
-
-        batch_size = state_batch.shape[0]
-        # sanity check they have same batch_size
-        assert state_batch.shape[0] == batch_size
 
         # TODO: assumes all current actions are available. Needs to fix.
         action_space = (
@@ -192,9 +217,18 @@ class SoftActorCritic(PolicyGradient):
             state_batch.unsqueeze(1), self._action_space.n, dim=1
         )  # (batch_size x action_space_size x state_dim)
 
-        state_action_values = self._critics.get_q_values(
-            state_batch=state_batch_repeated, action_batch=action_space, target=False
-        ).view(
+        # get q values of (states, all actions) from twin critics
+        q1, q2 = self._twin_critics.get_twin_critic_values(
+            state_batch=state_batch_repeated, action_batch=action_space
+        )
+        # clipped double q learning (reduce overestimation bias)
+        q = torch.minimum(q1, q2)
+
+        # random ensemble distillation (reduce overestimation bias)
+        # random_index = torch.randint(0, 2, (1,)).item()
+        # q = q1 if random_index == 0 else q2
+
+        state_action_values = q.view(
             (self.batch_size, self._action_space.n)
         )  # (batch_size x action_space_size)
 

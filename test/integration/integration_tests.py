@@ -265,7 +265,7 @@ class IntegrationTests(unittest.TestCase):
             policy_learner=SoftActorCritic(
                 env.observation_space.shape[0],
                 env.action_space,
-                [64, 64],
+                [64, 64, 64],
                 training_rounds=100,
                 batch_size=100,
                 entropy_coef=0.1,
@@ -278,7 +278,7 @@ class IntegrationTests(unittest.TestCase):
                 agent=agent,
                 env=env,
                 target_return=500,
-                max_episodes=10_000,
+                max_episodes=1_000,
                 learn=True,
                 learn_after_episode=True,
                 exploit=False,
