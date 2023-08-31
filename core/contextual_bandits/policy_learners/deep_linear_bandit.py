@@ -19,7 +19,7 @@ from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exp
     LinUCBExploration,
 )
 from pearl.utils.action_spaces import DiscreteActionSpace
-from pearl.utils.linear_regression import AvgWeightLinearRegression
+from pearl.utils.linear_regression import LinearRegression
 
 
 class DeepLinearBandit(DeepBandit):
@@ -49,7 +49,9 @@ class DeepLinearBandit(DeepBandit):
             exploration_module=exploration_module,
         )
         # TODO specify linear regression type when needed
-        self._linear_regression = AvgWeightLinearRegression(feature_dim=hidden_dims[-1])
+        self._linear_regression = LinearRegression(
+            feature_dim=hidden_dims[-1],
+        )
         self._linear_regression_dim = hidden_dims[-1]
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:

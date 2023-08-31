@@ -1,6 +1,6 @@
 from types import MethodType as MethodBoundTo  # alias for greater readability
 
-from pearl.utils.device import get_pearl_device
+from pearl.utils.device import get_pearl_device, is_distribution_enabled
 
 from torch import nn
 
@@ -27,6 +27,7 @@ class AutoDeviceNNModule(nn.Module):
     def __init__(self, *args, **kwargs):
         super(AutoDeviceNNModule, self).__init__(*args, **kwargs)
         self.forward = self.forward_first_run
+        self.distribution_enabled = is_distribution_enabled()
 
     def forward_first_run(self, *args, **kwargs):
         self.to(get_pearl_device())

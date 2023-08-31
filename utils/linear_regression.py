@@ -23,14 +23,11 @@ logger = logging.getLogger(__name__)
 
 
 class LinearRegression(AutoDeviceNNModule):
-    def __init__(
-        self,
-        feature_dim: int,
-    ) -> None:
+    def __init__(self, feature_dim: int) -> None:
         super(LinearRegression, self).__init__()
         self.device = get_pearl_device()
-        self._A = 1e-2 * torch.eye(feature_dim, device=self.device)
-        self._b = torch.zeros(feature_dim, device=self.device)
+        self.register_buffer("_A", 1e-2 * torch.eye(feature_dim, device=self.device))
+        self.register_buffer("_b", torch.zeros(feature_dim, device=self.device))
         self._feature_dim = feature_dim
 
     def _validate_train_inputs(
@@ -38,7 +35,7 @@ class LinearRegression(AutoDeviceNNModule):
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         batch_size = x.shape[0]
         if weight is None:
-            weight = torch.ones(y.shape, device=self.device)
+            weight = torch.ones_like(y)
         assert x.shape == (
             batch_size,
             self._feature_dim,
@@ -58,10 +55,14 @@ class LinearRegression(AutoDeviceNNModule):
         A <- A + x*x.t
         b <- b + r*x
         """
-        print(f"{x.device} {y.device} {weight.device}")
         x, y, weight = self._validate_train_inputs(x, y, weight)
-        self._A += torch.matmul(x.t(), x * weight)
-        self._b += torch.matmul(x.t(), y * weight).squeeze()
+        delta_A = torch.matmul(x.t(), x * weight)
+        delta_b = torch.matmul(x.t(), y * weight).squeeze()
+        if self.distribution_enabled:
+            torch.distributed.all_reduce(delta_A)
+            torch.distributed.all_reduce(delta_b)
+        self._A += delta_A.to(self._A.device)
+        self._b += delta_b.to(self._b.device)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -106,17 +107,6 @@ class LinearRegression(AutoDeviceNNModule):
 
     def __str__(self) -> str:
         return f"A:\n{self._A}\nb:\n{self._b}"
-
-    def named_parameters(self, prefix="", recurse=True, remove_duplicate=True):
-        yield ("_A", self._A)
-        yield ("_b", self._b)
-
-    def get_extra_state(self) -> Dict[str, Any]:
-        return {"A": self._A, "b": self._b}
-
-    def set_extra_state(self, state: Dict[str, Any], strict=True):
-        self._A = state["A"]
-        self._b = state["b"]
 
 
 class AvgWeightLinearRegression(LinearRegression):
