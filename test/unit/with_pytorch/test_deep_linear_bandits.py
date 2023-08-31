@@ -57,3 +57,54 @@ class TestDeepLinearBandits(unittest.TestCase):
         # act on a batch of states
         action = policy_learner.act(subjective_state=state, action_space=action_space)
         self.assertEqual(action.shape, batch.reward.shape)
+
+    def test_state_dict(self):
+        # init a policy learn and learn once to get some random value
+        feature_dim = 15
+        batch_size = feature_dim * 4
+        policy_learner = DeepLinearBandit(
+            feature_dim=feature_dim,
+            hidden_dims=[16, 16],
+            learning_rate=0.01,
+            exploration_module=LinUCBExploration(alpha=0.1),
+        )
+        state = torch.randn(batch_size, 3)
+        action = torch.randn(batch_size, feature_dim - 3)
+        batch = TransitionBatch(
+            state=state,
+            action=action,
+            # y = sum of state + sum of action
+            reward=state.sum(-1) + action.sum(-1),
+            weight=torch.ones(batch_size),
+        )
+        policy_learner.learn_batch(batch)
+
+        # init another policy learner and use set_extra_state to set
+        copy_policy_learner = DeepLinearBandit(
+            feature_dim=feature_dim,
+            hidden_dims=[16, 16],
+            learning_rate=0.01,
+            exploration_module=LinUCBExploration(alpha=0.1),
+        )
+        copy_policy_learner.set_extra_state(policy_learner.get_extra_state())
+
+        # assert and check if they are the same
+        self.assertTrue(
+            torch.equal(
+                copy_policy_learner._linear_regression._A,
+                policy_learner._linear_regression._A,
+            )
+        )
+
+        self.assertTrue(
+            torch.equal(
+                copy_policy_learner._linear_regression._b,
+                policy_learner._linear_regression._b,
+            )
+        )
+
+        for p1, p2 in zip(
+            copy_policy_learner._deep_represent_layers.parameters(),
+            policy_learner._deep_represent_layers.parameters(),
+        ):
+            self.assertTrue(torch.equal(p1, p2))
