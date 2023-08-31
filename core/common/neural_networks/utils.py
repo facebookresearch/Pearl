@@ -101,7 +101,7 @@ def conv_block(
 ## To do: the name of this function needs to be revised to xavier_init_weights
 def init_weights(m):
     if isinstance(m, nn.Linear):
-        nn.init.xavier_uniform(m.weight)
+        nn.init.xavier_uniform_(m.weight)
         m.bias.data.fill_(0.01)
 
 

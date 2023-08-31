@@ -48,8 +48,8 @@ class ImplicitQLearning(PolicyGradient):
 
     Args: two noteworthy arguments:
         - expectile: a value between 0 and 1, for expectile regression
-        - temperature_adv_weighted_regression: temperature parameter for advantage
-        weighted regression; used to extracte policy from trained value and critics.
+        - temperature_advantage_weighted_regression: temperature parameter for advantage
+        weighted regression; used to extract policy from trained value and critic networks.
     """
 
     def __init__(
@@ -68,7 +68,7 @@ class ImplicitQLearning(PolicyGradient):
         expectile: float = 0.8,
         critic_soft_update_tau: float = 0.05,
         discount_factor: float = 0.99,
-        temperature_adv_weighted_regression: float = 0.5,
+        temperature_advantage_weighted_regression: float = 0.5,
     ) -> None:
 
         super(ImplicitQLearning, self).__init__(
@@ -87,7 +87,9 @@ class ImplicitQLearning(PolicyGradient):
         self._discount_factor = discount_factor
         self._critic_soft_update_tau = critic_soft_update_tau
         self._training_rounds = training_rounds
-        self._temperature_adv_weighted_regression = temperature_adv_weighted_regression
+        self._temperature_advantage_weighted_regression = (
+            temperature_advantage_weighted_regression
+        )
 
         # a single actor network
         self._actor = actor_network_type(
@@ -174,7 +176,8 @@ class ImplicitQLearning(PolicyGradient):
 
             value_batch = self._value_network(batch.state)
             advantage = torch.exp(
-                (target_q - value_batch) * self._temperature_adv_weighted_regression
+                (target_q - value_batch)
+                * self._temperature_advantage_weighted_regression
             )
 
         action_probabilities = self._actor(

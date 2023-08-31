@@ -6,7 +6,6 @@ from pearl.api.action_space import ActionSpace
 
 from pearl.core.common.neural_networks.q_value_network import QValueNetwork
 
-# from pearl.core.common.neural_networks.nplets_critic import TwinCritic
 from pearl.core.common.neural_networks.twin_critic import TwinCritic
 from pearl.core.common.neural_networks.utils import init_weights, update_target_networks
 from pearl.core.common.neural_networks.value_networks import VanillaQValueNetwork

@@ -426,7 +426,7 @@ class IntegrationTests(unittest.TestCase):
                 training_rounds=5,
                 batch_size=128,
                 expectile=0.50,
-                temperature_adv_weighted_regression=0.75,
+                temperature_advantage_weighted_regression=0.75,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(200000),
         )
