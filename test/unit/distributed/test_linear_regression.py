@@ -2,10 +2,11 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
 
+import __manifest__
+
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
-
 from pearl.utils.linear_regression import LinearRegression
 
 
@@ -14,15 +15,15 @@ def train(rank, world_size):
     batch_size = 3
 
     dist.init_process_group(
-        backend="nccl",
+        backend="nccl" if torch.cuda.is_available() else "gloo",
         init_method=f"tcp://localhost:29501?world_size={world_size}&rank={rank}",
     )
 
     linear_regression = LinearRegression(feature_dim=feature_dim)
 
-    feature = torch.ones(batch_size, feature_dim, device=rank)
-    reward = feature.sum(-1).to(rank)
-    weight = torch.ones(batch_size).to(rank)
+    feature = torch.ones(batch_size, feature_dim, device=linear_regression.device)
+    reward = feature.sum(-1)
+    weight = torch.ones(batch_size, device=linear_regression.device)
     linear_regression.learn_batch(x=feature, y=reward, weight=weight)
 
     dist.barrier()
@@ -32,11 +33,13 @@ def train(rank, world_size):
 
 class TestLinearRegression(unittest.TestCase):
     @unittest.skipIf(
-        bool(not torch.cuda.is_available()),
-        "test_reduce_all needs GPU",
+        __manifest__.fbmake.get("build_mode", "") != "opt",
+        "This test only works with opt mode",
     )
     def test_reduce_all(self) -> None:
-        world_size = torch.cuda.device_count()
+        world_size = (
+            torch.cuda.device_count() if torch.cuda.is_available() else mp.cpu_count()
+        )
         feature_dim = 3
         batch_size = 3
 
