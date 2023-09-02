@@ -40,6 +40,7 @@ class PolicyGradient(PolicyLearner):
         batch_size: int = 128,
         network_type: ActorNetworkType = VanillaActorNetwork,
         on_policy: bool = True,
+        is_action_continuous: bool = False,
     ) -> None:
         super(PolicyGradient, self).__init__(
             # TODO: Replace to probability exploration module
@@ -49,25 +50,31 @@ class PolicyGradient(PolicyLearner):
             training_rounds=1,  # PG must set this to 1
             batch_size=batch_size,
             on_policy=on_policy,
-            is_action_continuous=False,
+            is_action_continuous=is_action_continuous,
         )
         self._action_space = action_space
         self._learning_rate = learning_rate
+        self.network_type = network_type
+        self.state_dim = state_dim
+        self.hidden_dims = hidden_dims
+        self.action_space = action_space
 
-        # TODO: Assumes Gym interface, fix it.
-        def make_specified_network():
-            return network_type(
-                input_dim=state_dim,
-                hidden_dims=hidden_dims,
-                output_dim=action_space.n,
-            )
-
-        self._actor = make_specified_network()
+        self._actor = self.make_specified_network()
         self._actor.apply(init_weights)
         self._actor_optimizer = optim.AdamW(
             self._actor.parameters(), lr=learning_rate, amsgrad=True
         )
         self._discount_factor = discount_factor
+
+    # TODO: Assumes Gym interface, fix it.
+    def make_specified_network(
+        self,
+    ):
+        return self.network_type(
+            input_dim=self.state_dim,
+            hidden_dims=self.hidden_dims,
+            output_dim=self.action_space.n,
+        )
 
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space
@@ -113,7 +120,7 @@ class PolicyGradient(PolicyLearner):
         assert return_batch.shape[0] == batch_size
 
         policy_propensities = self._get_action_prob(batch.state, batch.action)
-        negative_log_probs = -torch.log(policy_propensities)
+        negative_log_probs = -torch.log(policy_propensities + 1e-8)
         loss = torch.sum(
             negative_log_probs * batch.reward
         )  # reward in batch is cummulated return

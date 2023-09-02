@@ -27,6 +27,9 @@ from pearl.core.contextual_bandits.replay_buffer.discrete_contextual_bandit_repl
 from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
     DeepQLearning,
 )
+from pearl.core.sequential_decision_making.policy_learners.soft_actor_critic_continuous import (
+    ContinuousSoftActorCritic,
+)
 
 from pearl.gym.gym_environment import GymEnvironment
 from pearl.online_learning.online_learning import online_learning_to_png_graph
@@ -38,6 +41,27 @@ class TestAgentWithPyTorch(unittest.TestCase):
     A collection of Agent tests using PyTorch (this saves around 100 secs in test loading).
     For tests not involving PyTorch, use see test/without_pytorch.
     """
+
+    def test_continuous_sac_sanity_check(self) -> None:
+        """
+        This quick test of SAC.
+        """
+        env = GymEnvironment("Pendulum-v1")
+        agent = PearlAgent(
+            policy_learner=ContinuousSoftActorCritic(
+                state_dim=env.observation_space.shape[0],  # state dim
+                action_space=env.action_space,  # env.action_space.shape[0] is action dim
+                hidden_dims=[64, 64],
+                training_rounds=2,
+                batch_size=1,
+                entropy_coef=0.1,
+                learning_rate=0.001,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(50000),
+        )
+        return online_learning_to_png_graph(
+            agent, env, number_of_episodes=1, learn_after_episode=True
+        )
 
     def test_deep_td_learning_online_rl_sanity_check(self) -> None:
         # make sure E2E is fine
