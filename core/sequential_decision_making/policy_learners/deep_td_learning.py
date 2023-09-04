@@ -90,6 +90,7 @@ class DeepTDLearning(PolicyLearner):
                 )
 
         if network_instance is not None:
+            network_instance.to(self.device)
             self._Q = network_instance
             assert (
                 network_instance.state_dim == state_dim
