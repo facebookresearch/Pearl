@@ -126,11 +126,11 @@ class DeepLinearBandit(DeepBandit):
             representation=self._linear_regression,
         ).squeeze()
 
-    def get_extra_state(self) -> Dict[str, Any]:
-        result = super(DeepLinearBandit, self).get_extra_state()
+    def get_model_state(self) -> Dict[str, Any]:
+        result = super(DeepLinearBandit, self).get_model_state()
         result["linear_regression"] = self._linear_regression.state_dict()
         return result
 
-    def set_extra_state(self, state: Dict[str, Any], strict=True):
-        super(DeepLinearBandit, self).set_extra_state(state)
+    def set_model_state(self, state: Dict[str, Any], strict=True):
+        super(DeepLinearBandit, self).set_model_state(state)
         self._linear_regression.load_state_dict(state["linear_regression"])

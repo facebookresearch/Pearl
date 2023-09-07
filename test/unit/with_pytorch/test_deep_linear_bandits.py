@@ -79,14 +79,14 @@ class TestDeepLinearBandits(unittest.TestCase):
         )
         policy_learner.learn_batch(batch)
 
-        # init another policy learner and use set_extra_state to set
+        # init another policy learner and use set_model_state to set
         copy_policy_learner = DeepLinearBandit(
             feature_dim=feature_dim,
             hidden_dims=[16, 16],
             learning_rate=0.01,
             exploration_module=LinUCBExploration(alpha=0.1),
         )
-        copy_policy_learner.set_extra_state(policy_learner.get_extra_state())
+        copy_policy_learner.set_model_state(policy_learner.get_model_state())
 
         # assert and check if they are the same
         self.assertTrue(

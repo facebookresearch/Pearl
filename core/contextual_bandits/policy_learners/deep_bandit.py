@@ -121,12 +121,10 @@ class DeepBandit(ContextualBanditBase):
         )
         return self._deep_represent_layers(feature).squeeze()
 
-    def get_extra_state(self) -> Dict[str, Any]:
+    def get_model_state(self) -> Dict[str, Any]:
         return {
             "deep_represent_layers": self._deep_represent_layers.state_dict(),
-            "optimizer": self._optimizer.state_dict(),
         }
 
-    def set_extra_state(self, state: Dict[str, Any], strict=True):
+    def set_model_state(self, state: Dict[str, Any], strict=True):
         self._deep_represent_layers.load_state_dict(state["deep_represent_layers"])
-        self._optimizer.load_state_dict(state["optimizer"])
