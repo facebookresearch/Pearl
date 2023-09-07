@@ -54,8 +54,8 @@ class DiscreteActionSpace(ActionSpace):
         state_dim = subjective_state.shape[-1]
         action_count = self.n
 
-        subjective_state = subjective_state.view(
-            -1, state_dim
+        subjective_state = subjective_state.view(-1, state_dim).to(
+            subjective_state.device
         )  # reshape to (batch_size, state_dim)
         batch_size = subjective_state.shape[0]
 
@@ -63,7 +63,9 @@ class DiscreteActionSpace(ActionSpace):
             1, action_count, 1
         )  # expand to (batch_size, action_count, state_dim)
 
-        actions = self.to_tensor()  # (action_count, action_dim)
+        actions = self.to_tensor().to(
+            subjective_state.device
+        )  # (action_count, action_dim)
         expanded_action = actions.unsqueeze(0).repeat(
             batch_size, 1, 1
         )  # batch_size, action_count, action_dim
@@ -72,4 +74,4 @@ class DiscreteActionSpace(ActionSpace):
         )  # batch_size, action_count, feature_dim
 
         assert new_feature.shape == (batch_size, action_count, state_dim + action_dim)
-        return new_feature
+        return new_feature.to(subjective_state.device)

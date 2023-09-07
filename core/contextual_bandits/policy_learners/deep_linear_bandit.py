@@ -84,6 +84,7 @@ class DeepLinearBandit(DeepBandit):
     ) -> Action:
         # It doesnt make sense to call act if we are not working with action vector
         assert action_space.action_dim > 0
+        subjective_state = subjective_state.to(self.device)
 
         new_feature = action_space.cat_state_tensor(subjective_state)
         mlp_values = self._deep_represent_layers(new_feature)
@@ -110,11 +111,13 @@ class DeepLinearBandit(DeepBandit):
     ) -> torch.Tensor:
         # TODO generalize for all kinds of exploration module
         assert isinstance(self._exploration_module, LinUCBExploration)
+        subjective_state = subjective_state.to(self.device)
         feature = (
             action_space.cat_state_tensor(subjective_state)
             if action_space is not None
             else subjective_state
         )
+        feature.to(self.device)
         processed_feature = self._deep_represent_layers(feature)
         return self._exploration_module.get_ucb_scores(
             subjective_state=processed_feature,

@@ -107,4 +107,4 @@ class TestDeepLinearBandits(unittest.TestCase):
             copy_policy_learner._deep_represent_layers.parameters(),
             policy_learner._deep_represent_layers.parameters(),
         ):
-            self.assertTrue(torch.equal(p1, p2))
+            self.assertTrue(torch.equal(p1.to(p2.device), p2))
