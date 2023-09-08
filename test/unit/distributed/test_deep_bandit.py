@@ -8,7 +8,7 @@ import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
 from pearl.core.common.replay_buffer.transition import TransitionBatch
-from pearl.core.contextual_bandits.policy_learners.deep_bandit import DeepBandit
+from pearl.core.contextual_bandits.policy_learners.neural_bandit import NeuralBandit
 
 
 def train(rank, world_size):
@@ -19,7 +19,7 @@ def train(rank, world_size):
         init_method=f"tcp://localhost:29502?world_size={world_size}&rank={rank}",
     )
 
-    policy_learner = DeepBandit(
+    policy_learner = NeuralBandit(
         feature_dim=feature_dim, hidden_dims=[16, 16], exploration_module=None
     )
 
@@ -35,7 +35,7 @@ def train(rank, world_size):
     torch.save(policy_learner.get_extra_state(), f"/tmp/final_model_{rank}.pth")
 
 
-class TestDeepBandit(unittest.TestCase):
+class TestNeuralBandit(unittest.TestCase):
     @unittest.skipIf(
         __manifest__.fbmake.get("build_mode", "") != "opt",
         "This test only works with opt mode",

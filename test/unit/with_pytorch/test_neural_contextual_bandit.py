@@ -7,16 +7,16 @@ from pearl.core.common.policy_learners.exploration_module.no_exploration import 
     NoExploration,
 )
 from pearl.core.common.replay_buffer.transition import TransitionBatch
-from pearl.core.contextual_bandits.policy_learners.deep_bandit import DeepBandit
+from pearl.core.contextual_bandits.policy_learners.neural_bandit import NeuralBandit
 
 from pearl.utils.action_spaces import DiscreteActionSpace
 
 
-class TestDeepContextualBandit(unittest.TestCase):
-    def test_deep_basic(self) -> None:
+class TestNeuralContextualBandit(unittest.TestCase):
+    def test_basic(self) -> None:
         feature_dim = 15
         batch_size = feature_dim * 4  # it is important to have enough data for training
-        policy_learner = DeepBandit(
+        policy_learner = NeuralBandit(
             feature_dim=feature_dim,
             hidden_dims=[16, 16],
             learning_rate=0.01,

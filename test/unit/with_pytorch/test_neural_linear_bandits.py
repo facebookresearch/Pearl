@@ -4,20 +4,20 @@ import unittest
 
 import torch
 from pearl.core.common.replay_buffer.transition import TransitionBatch
-from pearl.core.contextual_bandits.policy_learners.deep_linear_bandit import (
-    DeepLinearBandit,
-)
 from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exploration import (
     LinUCBExploration,
+)
+from pearl.core.contextual_bandits.policy_learners.neural_linear_bandit import (
+    NeuralLinearBandit,
 )
 from pearl.utils.action_spaces import DiscreteActionSpace
 
 
-class TestDeepLinearBandits(unittest.TestCase):
-    def test_deep_linucb(self) -> None:
+class TestNeuralLinearBandits(unittest.TestCase):
+    def test_neural_linucb(self) -> None:
         feature_dim = 15  # It is important to keep this different from hidden_dims
         batch_size = feature_dim * 4  # It is important to have enough data for training
-        policy_learner = DeepLinearBandit(
+        policy_learner = NeuralLinearBandit(
             feature_dim=feature_dim,
             hidden_dims=[16, 16],
             learning_rate=0.01,
@@ -62,7 +62,7 @@ class TestDeepLinearBandits(unittest.TestCase):
         # init a policy learn and learn once to get some random value
         feature_dim = 15
         batch_size = feature_dim * 4
-        policy_learner = DeepLinearBandit(
+        policy_learner = NeuralLinearBandit(
             feature_dim=feature_dim,
             hidden_dims=[16, 16],
             learning_rate=0.01,
@@ -80,7 +80,7 @@ class TestDeepLinearBandits(unittest.TestCase):
         policy_learner.learn_batch(batch)
 
         # init another policy learner and use set_model_state to set
-        copy_policy_learner = DeepLinearBandit(
+        copy_policy_learner = NeuralLinearBandit(
             feature_dim=feature_dim,
             hidden_dims=[16, 16],
             learning_rate=0.01,

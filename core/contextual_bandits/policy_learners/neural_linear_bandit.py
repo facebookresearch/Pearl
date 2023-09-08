@@ -14,15 +14,15 @@ from pearl.core.common.policy_learners.exploration_module.exploration_module imp
     ExplorationModule,
 )
 from pearl.core.common.replay_buffer.transition import TransitionBatch
-from pearl.core.contextual_bandits.policy_learners.deep_bandit import DeepBandit
 from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exploration import (
     LinUCBExploration,
 )
+from pearl.core.contextual_bandits.policy_learners.neural_bandit import NeuralBandit
 from pearl.utils.action_spaces import DiscreteActionSpace
 from pearl.utils.linear_regression import LinearRegression
 
 
-class DeepLinearBandit(DeepBandit):
+class NeuralLinearBandit(NeuralBandit):
     """
     Policy Learner for Contextual Bandit with:
     features --> neural networks --> linear regression --> predicted rewards
@@ -40,7 +40,7 @@ class DeepLinearBandit(DeepBandit):
         assert (
             len(hidden_dims) >= 1
         ), "hidden_dims should have at least one value to specify feature dim for linear regression"
-        super(DeepLinearBandit, self).__init__(
+        super(NeuralLinearBandit, self).__init__(
             feature_dim=feature_dim,
             hidden_dims=hidden_dims[:-1],
             output_dim=hidden_dims[-1],
@@ -130,10 +130,10 @@ class DeepLinearBandit(DeepBandit):
         ).squeeze()
 
     def get_model_state(self) -> Dict[str, Any]:
-        result = super(DeepLinearBandit, self).get_model_state()
+        result = super(NeuralLinearBandit, self).get_model_state()
         result["linear_regression"] = self._linear_regression.state_dict()
         return result
 
     def set_model_state(self, state: Dict[str, Any], strict=True):
-        super(DeepLinearBandit, self).set_model_state(state)
+        super(NeuralLinearBandit, self).set_model_state(state)
         self._linear_regression.load_state_dict(state["linear_regression"])

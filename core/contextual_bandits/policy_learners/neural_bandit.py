@@ -23,7 +23,7 @@ from torch import optim
 from torch.nn.parallel import DistributedDataParallel
 
 
-class DeepBandit(ContextualBanditBase):
+class NeuralBandit(ContextualBanditBase):
     """
     Policy Learner for Contextual Bandit with Deep Policy
     """
@@ -38,7 +38,7 @@ class DeepBandit(ContextualBanditBase):
         batch_size: int = 128,
         learning_rate: float = 0.001,
     ) -> None:
-        super(DeepBandit, self).__init__(
+        super(NeuralBandit, self).__init__(
             feature_dim=feature_dim,
             training_rounds=training_rounds,
             batch_size=batch_size,
