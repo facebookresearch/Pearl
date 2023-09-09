@@ -130,3 +130,7 @@ class NeuralBandit(ContextualBanditBase):
 
     def set_model_state(self, state: Dict[str, Any], strict=True):
         self._deep_represent_layers.load_state_dict(state["deep_represent_layers"])
+
+    @property
+    def optimizers(self) -> List[torch.optim.Optimizer]:
+        return [self._optimizer]
