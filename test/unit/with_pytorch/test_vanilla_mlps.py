@@ -32,7 +32,7 @@ class TestVanillaMlps(unittest.TestCase):
         """
 
         network = VanillaValueNetwork(
-            input_dim=self.x_dim, hidden_dims=[64, 64], output_dim=1
+            input_dim=self.x_dim, hidden_dims=[64, 64], output_dim=1, dropout_ratio=0.1
         )
         optimizer = optim.AdamW(
             network.parameters(), lr=self.learning_rate, amsgrad=True

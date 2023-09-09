@@ -24,6 +24,8 @@ def mlp_block(
     use_layer_norm: bool = False,
     hidden_activation: str = "relu",
     last_activation: Optional[str] = None,
+    dropout_ratio: float = 0.0,
+    **kwargs,
 ) -> nn.Module:
     """
     A simple MLP which can be reused to create more complex networks
@@ -35,6 +37,7 @@ def mlp_block(
         hidden_activation: activation function used for hidden layers
         last_activation: this is optional, if need activation for layer, set this input
                         otherwise, no activation is applied on last layer
+        dropout_ratio: user needs to call nn.Module.eval to ensure dropout is ignored during act
     Returns:
         an nn.Sequential module consisting of mlp layers
     """
@@ -46,6 +49,8 @@ def mlp_block(
             layers.append(nn.BatchNorm1d(dims[i + 1]))
         if use_layer_norm:
             layers.append(nn.LayerNorm(dims[i + 1]))
+        if dropout_ratio > 0:
+            layers.append(nn.Dropout(p=dropout_ratio))
         layers.append(ACTIVATION_MAP[hidden_activation]())
 
     layers.append(nn.Linear(dims[-2], dims[-1]))

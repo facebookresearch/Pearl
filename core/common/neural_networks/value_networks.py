@@ -33,10 +33,14 @@ class VanillaValueNetwork(ValueNetwork):
         input_dim: int,
         hidden_dims: Optional[List[int]],
         output_dim: int = 1,
+        **kwargs,
     ) -> None:
         super(VanillaValueNetwork, self).__init__()
         self._model = mlp_block(
-            input_dim=input_dim, hidden_dims=hidden_dims, output_dim=output_dim
+            input_dim=input_dim,
+            hidden_dims=hidden_dims,
+            output_dim=output_dim,
+            **kwargs,
         )
 
     def forward(self, x: Tensor) -> Tensor:

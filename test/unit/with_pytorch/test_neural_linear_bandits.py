@@ -22,6 +22,7 @@ class TestNeuralLinearBandits(unittest.TestCase):
             hidden_dims=[16, 16],
             learning_rate=0.01,
             exploration_module=LinUCBExploration(alpha=0.1),
+            dropout_ratio=0.0001,
         )
         self.assertEqual(feature_dim, policy_learner.feature_dim)
         state = torch.randn(batch_size, 3)

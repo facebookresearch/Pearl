@@ -37,6 +37,7 @@ class NeuralBandit(ContextualBanditBase):
         training_rounds: int = 100,
         batch_size: int = 128,
         learning_rate: float = 0.001,
+        **kwargs,
     ) -> None:
         super(NeuralBandit, self).__init__(
             feature_dim=feature_dim,
@@ -48,6 +49,7 @@ class NeuralBandit(ContextualBanditBase):
             input_dim=feature_dim,
             hidden_dims=hidden_dims,
             output_dim=output_dim,
+            **kwargs,
         )
         if self.distribution_enabled:
             self._deep_represent_layers.to(self.device)

@@ -36,6 +36,7 @@ class NeuralLinearBandit(NeuralBandit):
         training_rounds: int = 100,
         batch_size: int = 128,
         learning_rate: float = 0.001,
+        **kwargs,
     ) -> None:
         assert (
             len(hidden_dims) >= 1
@@ -47,6 +48,7 @@ class NeuralLinearBandit(NeuralBandit):
             training_rounds=training_rounds,
             batch_size=batch_size,
             exploration_module=exploration_module,
+            **kwargs,
         )
         # TODO specify linear regression type when needed
         self._linear_regression = LinearRegression(
