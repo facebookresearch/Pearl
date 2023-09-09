@@ -3,6 +3,7 @@
 import unittest
 
 import torch
+from pearl.core.common.neural_networks.residual_wrapper import ResidualWrapper
 from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exploration import (
     LinUCBExploration,
@@ -14,6 +15,20 @@ from pearl.utils.action_spaces import DiscreteActionSpace
 
 
 class TestNeuralLinearBandits(unittest.TestCase):
+    def test_set_use_skip_connections(self) -> None:
+        feature_dim = 16
+        policy_learner = NeuralLinearBandit(
+            feature_dim=feature_dim,
+            hidden_dims=[16, 16],
+            learning_rate=0.01,
+            exploration_module=LinUCBExploration(alpha=0.1),
+            use_skip_connections=True,
+        )
+        # assert ResidualWrapper is used in NeuralLinearBandit
+        self.assertTrue(
+            isinstance(policy_learner._deep_represent_layers._model, ResidualWrapper)
+        )
+
     def test_neural_linucb(self) -> None:
         feature_dim = 15  # It is important to keep this different from hidden_dims
         batch_size = feature_dim * 4  # It is important to have enough data for training

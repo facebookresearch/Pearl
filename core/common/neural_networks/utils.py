@@ -5,6 +5,8 @@ import torch.nn as nn
 
 from torch.func import stack_module_state
 
+from .residual_wrapper import ResidualWrapper
+
 ACTIVATION_MAP = {
     "tanh": nn.Tanh,
     "relu": nn.ReLU,
@@ -25,6 +27,7 @@ def mlp_block(
     hidden_activation: str = "relu",
     last_activation: Optional[str] = None,
     dropout_ratio: float = 0.0,
+    use_skip_connections: bool = False,
     **kwargs,
 ) -> nn.Module:
     """
@@ -56,7 +59,15 @@ def mlp_block(
     layers.append(nn.Linear(dims[-2], dims[-1]))
     if last_activation is not None:
         layers.append(ACTIVATION_MAP[last_activation]())
-    return nn.Sequential(*layers)
+    model = nn.Sequential(*layers)
+    if use_skip_connections:
+        if input_dim == output_dim:
+            model = ResidualWrapper(model)
+        else:
+            raise Exception(
+                f"use_skip_connections shouldn't be set to True, due to mismatch dimension {input_dim} != {output_dim}"
+            )
+    return model
 
 
 def conv_block(
