@@ -3,11 +3,11 @@
 import unittest
 
 import gym
-from pearl.core.common.pearl_agent import PearlAgent
 
 from pearl.core.sequential_decision_making.policy_learners.tabular_q_learning import (
     TabularQLearning,
 )
+from pearl.pearl_agent import PearlAgent
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
     episode_return,
     online_learning,

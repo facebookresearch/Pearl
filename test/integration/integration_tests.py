@@ -4,8 +4,6 @@ import unittest
 
 from pearl.core.common.neural_networks.value_networks import DuelingQValueNetwork
 
-from pearl.core.common.pearl_agent import PearlAgent
-
 from pearl.core.common.policy_learners.exploration_module.normal_distribution_exploration import (
     NormalDistributionExploration,
 )
@@ -40,6 +38,8 @@ from pearl.core.sequential_decision_making.policy_learners.soft_actor_critic imp
     SoftActorCritic,
 )
 from pearl.core.sequential_decision_making.policy_learners.td3 import TD3
+
+from pearl.pearl_agent import PearlAgent
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.offline_learning_and_evaluation import (
     offline_evaluation,

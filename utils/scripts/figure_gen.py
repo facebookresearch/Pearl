@@ -11,7 +11,6 @@ import logging
 import sys
 
 import matplotlib.pyplot as plt
-from pearl.core.common.pearl_agent import PearlAgent
 from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
 )
@@ -23,6 +22,7 @@ from pearl.core.sequential_decision_making.policy_learners.deep_q_learning impor
     DeepQLearning,
 )
 from pearl.core.sequential_decision_making.policy_learners.deep_sarsa import DeepSARSA
+from pearl.pearl_agent import PearlAgent
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
     online_learning_returns,
 )
