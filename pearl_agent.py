@@ -10,10 +10,10 @@ from pearl.core.common.replay_buffer.single_transition_replay_buffer import (
     SingleTransitionReplayBuffer,
 )
 from pearl.core.common.replay_buffer.transition import TransitionBatch
-from pearl.core.common.safety_modules.identity_safety_module import IdentitySafetyModule
 from pearl.history_summarization_modules.identity_history_summarization_module import (
     IdentityHistorySummarizationModule,
 )
+from pearl.safety_modules.identity_safety_module import IdentitySafetyModule
 
 
 class PearlAgent(Agent):
