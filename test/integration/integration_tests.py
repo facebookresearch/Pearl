@@ -40,14 +40,16 @@ from pearl.core.sequential_decision_making.policy_learners.soft_actor_critic imp
     SoftActorCritic,
 )
 from pearl.core.sequential_decision_making.policy_learners.td3 import TD3
-
-from pearl.gym.gym_environment import GymEnvironment
-from pearl.online_learning.offline_learning_and_evaluation import (
+from pearl.utils.functional_utils.experimentation.set_seed import set_seed
+from pearl.utils.functional_utils.train_and_eval.offline_learning_and_evaluation import (
     offline_evaluation,
     offline_learning,
 )
-from pearl.online_learning.online_learning import target_return_is_reached
-from pearl.utils.set_seed import set_seed
+from pearl.utils.functional_utils.train_and_eval.online_learning import (
+    target_return_is_reached,
+)
+
+from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 
 
 class IntegrationTests(unittest.TestCase):

@@ -17,9 +17,9 @@ from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.core.contextual_bandits.policy_learners.contextual_bandit_base import (
     ContextualBanditBase,
 )
-from pearl.utils.action_spaces import DiscreteActionSpace
 from pearl.utils.device import get_pearl_device
-from pearl.utils.linear_regression import LinearRegression
+from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
 class DisjointLinearBandit(ContextualBanditBase):

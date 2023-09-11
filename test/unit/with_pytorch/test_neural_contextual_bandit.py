@@ -9,7 +9,7 @@ from pearl.core.common.policy_learners.exploration_module.no_exploration import 
 from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.core.contextual_bandits.policy_learners.neural_bandit import NeuralBandit
 
-from pearl.utils.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
 class TestNeuralContextualBandit(unittest.TestCase):

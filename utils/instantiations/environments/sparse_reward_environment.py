@@ -31,7 +31,7 @@ from pearl.core.common.history_summarization_modules.history_summarization_modul
 )
 from pearl.core.common.replay_buffer.replay_buffer import ReplayBuffer
 from pearl.core.common.replay_buffer.transition import TransitionBatch
-from pearl.utils.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 SparseRewardEnvironmentObservation = namedtuple(
     "SparseRewardEnvironmentObservation", ["agent_position", "goal"]

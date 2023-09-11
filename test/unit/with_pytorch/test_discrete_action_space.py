@@ -4,7 +4,7 @@ import unittest
 
 import torch
 
-from pearl.utils.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
 class TestDiscreteActionSpace(unittest.TestCase):

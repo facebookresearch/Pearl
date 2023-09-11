@@ -30,10 +30,11 @@ from pearl.core.sequential_decision_making.policy_learners.deep_q_learning impor
 from pearl.core.sequential_decision_making.policy_learners.soft_actor_critic_continuous import (
     ContinuousSoftActorCritic,
 )
-
-from pearl.gym.gym_environment import GymEnvironment
-from pearl.online_learning.online_learning import online_learning_to_png_graph
-from pearl.utils.action_spaces import DiscreteActionSpace
+from pearl.utils.functional_utils.train_and_eval.online_learning import (
+    online_learning_to_png_graph,
+)
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 
 
 class TestAgentWithPyTorch(unittest.TestCase):

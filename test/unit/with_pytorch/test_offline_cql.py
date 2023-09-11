@@ -16,12 +16,14 @@ from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
 from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
     DeepQLearning,
 )
-from pearl.gym.gym_environment import GymEnvironment
-from pearl.online_learning.offline_learning_and_evaluation import (
+from pearl.utils.functional_utils.experimentation.create_offline_data import (
+    create_offline_data,
+)
+from pearl.utils.functional_utils.train_and_eval.offline_learning_and_evaluation import (
     offline_evaluation,
     offline_learning,
 )
-from pearl.utils.create_offline_data import create_offline_data
+from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 
 
 class TestOfflineCQL(unittest.TestCase):

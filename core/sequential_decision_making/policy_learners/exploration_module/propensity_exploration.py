@@ -7,7 +7,7 @@ from pearl.api.state import SubjectiveState
 from pearl.core.common.policy_learners.exploration_module.value_exploration_base import (
     ValueExplorationBase,
 )
-from pearl.utils.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
 class PropensityExploration(ValueExplorationBase):

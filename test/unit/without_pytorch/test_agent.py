@@ -12,9 +12,14 @@ from pearl.core.contextual_bandits.environment.reward_is_equal_to_ten_times_acti
 from pearl.core.sequential_decision_making.policy_learners.tabular_q_learning import (
     TabularQLearning,
 )
-from pearl.gym.gym_environment import GymEnvironment
-from pearl.online_learning.online_learning import episode_return, online_learning
-from pearl.utils.environments import FixedNumberOfStepsEnvironment
+from pearl.utils.functional_utils.train_and_eval.online_learning import (
+    episode_return,
+    online_learning,
+)
+from pearl.utils.instantiations.environments.environments import (
+    FixedNumberOfStepsEnvironment,
+)
+from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 
 
 class TestAgentWithoutPyTorch(unittest.TestCase):

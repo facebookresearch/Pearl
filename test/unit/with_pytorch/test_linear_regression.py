@@ -4,7 +4,10 @@ import unittest
 
 import torch
 
-from pearl.utils.linear_regression import AvgWeightLinearRegression, LinearRegression
+from pearl.utils.functional_utils.learning.linear_regression import (
+    AvgWeightLinearRegression,
+    LinearRegression,
+)
 
 
 class TestLinearRegression(unittest.TestCase):

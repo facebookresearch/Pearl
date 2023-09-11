@@ -7,7 +7,7 @@ import __manifest__
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
-from pearl.utils.linear_regression import LinearRegression
+from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
 
 
 def train(rank, world_size):

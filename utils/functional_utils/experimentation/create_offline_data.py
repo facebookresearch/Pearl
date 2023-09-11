@@ -6,7 +6,7 @@ from collections import deque
 import torch
 from pearl.api.agent import Agent
 from pearl.api.environment import Environment
-from pearl.utils.set_seed import set_seed
+from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 
 
 def create_offline_data(

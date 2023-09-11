@@ -1,3 +1,6 @@
+# TODO: @hongbo, this file needs to be removed and we should add at most 20 lines of code to the
+# soft_actor_critic.py file to support continuous action space.
+
 from typing import Any, Dict, Iterable, Type
 
 import torch

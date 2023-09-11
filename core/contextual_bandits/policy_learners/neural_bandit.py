@@ -18,7 +18,7 @@ from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.core.contextual_bandits.policy_learners.contextual_bandit_base import (
     ContextualBanditBase,
 )
-from pearl.utils.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 from torch import optim
 from torch.nn.parallel import DistributedDataParallel
 

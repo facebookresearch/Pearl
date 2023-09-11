@@ -23,8 +23,10 @@ from pearl.core.sequential_decision_making.policy_learners.deep_q_learning impor
     DeepQLearning,
 )
 from pearl.core.sequential_decision_making.policy_learners.deep_sarsa import DeepSARSA
-from pearl.gym.gym_environment import GymEnvironment
-from pearl.online_learning.online_learning import online_learning_returns
+from pearl.utils.functional_utils.train_and_eval.online_learning import (
+    online_learning_returns,
+)
+from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 
 MA_WINDOW_SIZE = 100.0
 

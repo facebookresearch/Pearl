@@ -7,7 +7,7 @@ import torch
 from pearl.api.agent import Agent
 from pearl.api.environment import Environment
 from pearl.api.reward import Value
-from pearl.utils.plots import fontsize_for
+from pearl.utils.functional_utils.experimentation.plots import fontsize_for
 
 MA_WINDOW_SIZE = 10
 

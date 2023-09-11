@@ -1,20 +1,15 @@
 #!/usr/bin/env fbpython
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
-from dataclasses import fields
 
 import torch
 
 import torch.nn.functional as F
-from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
-    FIFOOffPolicyReplayBuffer,
-)
 from pearl.core.common.replay_buffer.fifo_on_policy_replay_buffer import (
     FIFOOnPolicyReplayBuffer,
 )
-from pearl.core.common.replay_buffer.transition import TransitionBatch
 
-from pearl.utils.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
 class TestFifoBuffer(unittest.TestCase):

@@ -2,7 +2,9 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
 
-from pearl.utils.sparse_reward_environment import DiscreteSparseRewardEnvironment
+from pearl.utils.instantiations.environments.sparse_reward_environment import (
+    DiscreteSparseRewardEnvironment,
+)
 
 
 class TestSparseRewardEnvironment(unittest.TestCase):

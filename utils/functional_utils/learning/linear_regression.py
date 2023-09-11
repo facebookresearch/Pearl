@@ -13,7 +13,7 @@ fbcode/reagent/models/linear_regression.py
 """
 
 import logging
-from typing import Any, Dict, Tuple
+from typing import Tuple
 
 import torch
 from pearl.core.common.neural_networks.auto_device_nn_module import AutoDeviceNNModule

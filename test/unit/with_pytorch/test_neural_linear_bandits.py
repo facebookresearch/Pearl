@@ -11,7 +11,7 @@ from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exp
 from pearl.core.contextual_bandits.policy_learners.neural_linear_bandit import (
     NeuralLinearBandit,
 )
-from pearl.utils.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
 class TestNeuralLinearBandits(unittest.TestCase):

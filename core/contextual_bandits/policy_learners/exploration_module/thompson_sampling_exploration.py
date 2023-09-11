@@ -11,7 +11,7 @@ from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exp
     calculate_variance,
 )
 
-from pearl.utils.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
 class ThompsonSamplingExplorationLinear(ValueExplorationBase):

@@ -9,7 +9,7 @@ from typing import List, Optional
 import torch
 import torch.nn as nn
 from pearl.core.common.neural_networks.auto_device_nn_module import AutoDeviceNNModule
-from pearl.utils.extend_state_feature import (
+from pearl.utils.functional_utils.learning.extend_state_feature import (
     extend_state_feature_by_available_action_space,
 )
 from torch import Tensor

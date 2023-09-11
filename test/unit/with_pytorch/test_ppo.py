@@ -5,7 +5,7 @@ import unittest
 from pearl.core.sequential_decision_making.policy_learners.ppo import (
     ProximalPolicyOptimization,
 )
-from pearl.utils.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
 class TestPPO(unittest.TestCase):

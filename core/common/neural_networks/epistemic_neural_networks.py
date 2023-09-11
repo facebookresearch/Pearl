@@ -8,10 +8,9 @@ from typing import List, Optional
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from pearl.core.common.neural_networks.auto_device_nn_module import AutoDeviceNNModule
 from pearl.core.common.neural_networks.value_networks import mlp_block
-from torch import optim, Tensor
+from torch import Tensor
 
 
 class EpistemicNeuralNetwork(ABC, AutoDeviceNNModule):

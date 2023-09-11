@@ -12,8 +12,8 @@ from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
 )
 from pearl.core.common.replay_buffer.replay_buffer import ReplayBuffer
-from pearl.online_learning.online_learning import episode_return
-from pearl.utils.set_seed import set_seed
+from pearl.utils.functional_utils.experimentation.set_seed import set_seed
+from pearl.utils.functional_utils.train_and_eval.online_learning import episode_return
 
 FWDPROXY_PORT = 8082
 FWDPROXY_HOSTNAME = "https://fwdproxy"

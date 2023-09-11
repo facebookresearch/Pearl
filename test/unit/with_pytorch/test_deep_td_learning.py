@@ -16,7 +16,7 @@ from pearl.core.sequential_decision_making.policy_learners.deep_q_learning impor
 )
 from pearl.core.sequential_decision_making.policy_learners.deep_sarsa import DeepSARSA
 from pearl.core.sequential_decision_making.policy_learners.double_dqn import DoubleDQN
-from pearl.utils.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
 class TestDeepTDLearning(unittest.TestCase):

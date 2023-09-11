@@ -17,8 +17,10 @@ from pearl.core.contextual_bandits.policy_learners.contextual_bandit_base import
 from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exploration import (
     LinUCBExploration,
 )
-from pearl.utils.action_spaces import DiscreteActionSpace
-from pearl.utils.linear_regression import AvgWeightLinearRegression
+from pearl.utils.functional_utils.learning.linear_regression import (
+    AvgWeightLinearRegression,
+)
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
 class LinearBandit(ContextualBanditBase):

@@ -13,11 +13,11 @@ from pearl.core.sequential_decision_making.policy_learners.deep_q_learning impor
     DeepQLearning,
 )
 
-from pearl.online_learning.online_learning import (
+from pearl.utils.functional_utils.train_and_eval.online_learning import (
     episode_return,
     target_return_is_reached,
 )
-from pearl.utils.sparse_reward_environment import (
+from pearl.utils.instantiations.environments.sparse_reward_environment import (
     DiscreteSparseRewardEnvironment,
     SparseRewardEnvSummarizationModule,
 )
