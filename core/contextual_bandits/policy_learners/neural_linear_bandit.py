@@ -7,9 +7,6 @@ import torch
 from pearl.api.action import Action
 
 from pearl.api.action_space import ActionSpace
-from pearl.core.common.history_summarization_modules.history_summarization_module import (
-    SubjectiveState,
-)
 from pearl.core.common.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
@@ -18,6 +15,9 @@ from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exp
     LinUCBExploration,
 )
 from pearl.core.contextual_bandits.policy_learners.neural_bandit import NeuralBandit
+from pearl.history_summarization_modules.history_summarization_module import (
+    SubjectiveState,
+)
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 

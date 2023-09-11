@@ -4,9 +4,6 @@ from typing import Any, Dict
 
 import torch
 from pearl.api.action import Action
-from pearl.core.common.history_summarization_modules.history_summarization_module import (
-    SubjectiveState,
-)
 from pearl.core.common.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
@@ -16,6 +13,9 @@ from pearl.core.contextual_bandits.policy_learners.contextual_bandit_base import
 )
 from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exploration import (
     LinUCBExploration,
+)
+from pearl.history_summarization_modules.history_summarization_module import (
+    SubjectiveState,
 )
 from pearl.utils.functional_utils.learning.linear_regression import (
     AvgWeightLinearRegression,

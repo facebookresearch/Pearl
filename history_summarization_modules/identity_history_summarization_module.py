@@ -1,10 +1,10 @@
 from pearl.api.observation import Observation
-from pearl.core.common.history_summarization_modules.history_summarization_module import (
+from pearl.core.common.replay_buffer.replay_buffer import ReplayBuffer
+from pearl.core.common.replay_buffer.transition import TransitionBatch
+from pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
     SubjectiveState,
 )
-from pearl.core.common.replay_buffer.replay_buffer import ReplayBuffer
-from pearl.core.common.replay_buffer.transition import TransitionBatch
 
 
 class IdentityHistorySummarizationModule(HistorySummarizationModule):

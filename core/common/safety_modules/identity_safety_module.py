@@ -1,10 +1,10 @@
 from pearl.api.action_space import ActionSpace
-from pearl.core.common.history_summarization_modules.history_summarization_module import (
-    SubjectiveState,
-)
 from pearl.core.common.replay_buffer.replay_buffer import ReplayBuffer
 from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.core.common.safety_modules.safety_module import SafetyModule
+from pearl.history_summarization_modules.history_summarization_module import (
+    SubjectiveState,
+)
 
 
 class IdentitySafetyModule(SafetyModule):

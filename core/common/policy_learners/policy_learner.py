@@ -4,9 +4,6 @@ from typing import Any, Dict
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
-from pearl.core.common.history_summarization_modules.history_summarization_module import (
-    SubjectiveState,
-)
 from pearl.core.common.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
@@ -15,6 +12,9 @@ from pearl.core.common.policy_learners.exploration_module.no_exploration import 
 )
 from pearl.core.common.replay_buffer.replay_buffer import ReplayBuffer
 from pearl.core.common.replay_buffer.transition import TransitionBatch
+from pearl.history_summarization_modules.history_summarization_module import (
+    SubjectiveState,
+)
 from pearl.utils.device import get_pearl_device, is_distribution_enabled
 
 

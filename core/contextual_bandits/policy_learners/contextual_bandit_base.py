@@ -3,14 +3,14 @@ from abc import abstractmethod
 from pearl.api.action import Action
 
 from pearl.api.action_space import ActionSpace
-from pearl.core.common.history_summarization_modules.history_summarization_module import (
-    SubjectiveState,
-)
 from pearl.core.common.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
 from pearl.core.common.policy_learners.policy_learner import PolicyLearner
 from pearl.core.common.replay_buffer.transition import TransitionBatch
+from pearl.history_summarization_modules.history_summarization_module import (
+    SubjectiveState,
+)
 
 
 class ContextualBanditBase(PolicyLearner):
