@@ -8,10 +8,10 @@ import torch
 from libfb.py.certpathpicker.cert_path_picker import get_client_credential_paths
 from pearl.api.agent import Agent
 from pearl.api.environment import Environment
-from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
+from pearl.replay_buffers.replay_buffer import ReplayBuffer
+from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
 )
-from pearl.core.common.replay_buffer.replay_buffer import ReplayBuffer
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.online_learning import episode_return
 

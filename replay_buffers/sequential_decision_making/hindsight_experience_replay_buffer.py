@@ -4,7 +4,7 @@ from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
 
-from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
+from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
 )
 

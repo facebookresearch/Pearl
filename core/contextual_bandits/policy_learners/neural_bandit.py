@@ -11,13 +11,13 @@ from pearl.core.common.neural_networks.value_networks import VanillaValueNetwork
 from pearl.core.common.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
-from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.core.contextual_bandits.policy_learners.contextual_bandit_base import (
     ContextualBanditBase,
 )
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
+from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 from torch import optim
 from torch.nn.parallel import DistributedDataParallel

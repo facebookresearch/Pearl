@@ -10,11 +10,11 @@ from pearl.core.common.policy_learners.exploration_module.exploration_module imp
 from pearl.core.common.policy_learners.exploration_module.no_exploration import (
     NoExploration,
 )
-from pearl.core.common.replay_buffer.replay_buffer import ReplayBuffer
-from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
+from pearl.replay_buffers.replay_buffer import ReplayBuffer
+from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.device import get_pearl_device, is_distribution_enabled
 
 

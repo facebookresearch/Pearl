@@ -17,7 +17,7 @@ from pearl.core.common.policy_learners.exploration_module.exploration_module imp
     ExplorationModule,
 )
 from pearl.core.common.policy_learners.policy_learner import PolicyLearner
-from pearl.core.common.replay_buffer.transition import TransitionBatch
+from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.compute_cql_loss import compute_cql_loss
 from torch import optim
 

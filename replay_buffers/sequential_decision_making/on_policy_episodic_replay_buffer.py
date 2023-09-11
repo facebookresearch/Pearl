@@ -1,10 +1,8 @@
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
-from pearl.core.common.replay_buffer.tensor_based_replay_buffer import (
-    TensorBasedReplayBuffer,
-)
-from pearl.core.common.replay_buffer.transition import Transition
+from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
+from pearl.replay_buffers.transition import Transition
 
 
 class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):

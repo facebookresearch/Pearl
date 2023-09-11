@@ -1,6 +1,6 @@
 from typing import Any, Iterable
 
-from pearl.core.common.replay_buffer.replay_buffer import ReplayBuffer
+from pearl.replay_buffers.replay_buffer import ReplayBuffer
 
 
 class SingleTransitionReplayBuffer(ReplayBuffer):

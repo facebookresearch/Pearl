@@ -7,8 +7,8 @@ import torch.nn.functional as F
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
-from pearl.core.common.replay_buffer.replay_buffer import ReplayBuffer
-from pearl.core.common.replay_buffer.transition import TransitionBatch
+from pearl.replay_buffers.replay_buffer import ReplayBuffer
+from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.device import get_pearl_device
 
 

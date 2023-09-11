@@ -7,10 +7,10 @@ from pearl.core.common.policy_learners.exploration_module.exploration_module imp
     ExplorationModule,
 )
 from pearl.core.common.policy_learners.policy_learner import PolicyLearner
-from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
+from pearl.replay_buffers.transition import TransitionBatch
 
 
 class ContextualBanditBase(PolicyLearner):

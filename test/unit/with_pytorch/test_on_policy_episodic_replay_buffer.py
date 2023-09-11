@@ -4,10 +4,10 @@ import unittest
 
 import torch
 
-from pearl.core.common.replay_buffer.on_policy_episodic_replay_buffer import (
+from pearl.replay_buffers.sequential_decision_making.on_policy_episodic_replay_buffer import (
     OnPolicyEpisodicReplayBuffer,
 )
-from pearl.core.common.replay_buffer.transition import TransitionBatch
+from pearl.replay_buffers.transition import TransitionBatch
 
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 

@@ -8,11 +8,11 @@ from pearl.core.common.policy_learners.exploration_module.epsilon_greedy_explora
     EGreedyExploration,
 )
 from pearl.core.common.policy_learners.policy_learner import PolicyLearner
-from pearl.core.common.replay_buffer.replay_buffer import ReplayBuffer
-from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
+from pearl.replay_buffers.replay_buffer import ReplayBuffer
+from pearl.replay_buffers.transition import TransitionBatch
 
 #  TODO make package names and organization more consistent
 

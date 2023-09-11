@@ -1,8 +1,8 @@
 import torch
-from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
     DeepQLearning,
 )
+from pearl.replay_buffers.transition import TransitionBatch
 
 
 class DoubleDQN(DeepQLearning):

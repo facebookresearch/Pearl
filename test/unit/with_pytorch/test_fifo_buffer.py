@@ -5,7 +5,7 @@ import unittest
 import torch
 
 import torch.nn.functional as F
-from pearl.core.common.replay_buffer.fifo_on_policy_replay_buffer import (
+from pearl.replay_buffers.sequential_decision_making.fifo_on_policy_replay_buffer import (
     FIFOOnPolicyReplayBuffer,
 )
 

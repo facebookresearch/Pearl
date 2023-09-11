@@ -10,7 +10,6 @@ from pearl.core.common.policy_learners.exploration_module.exploration_module imp
     ExplorationModule,
 )
 from pearl.core.common.policy_learners.policy_learner import PolicyLearner
-from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.core.sequential_decision_making.neural_networks.actor_networks import (
     ActorNetworkType,
     VanillaActorNetwork,
@@ -18,6 +17,7 @@ from pearl.core.sequential_decision_making.neural_networks.actor_networks import
 from pearl.core.sequential_decision_making.policy_learners.exploration_module.propensity_exploration import (
     PropensityExploration,
 )
+from pearl.replay_buffers.transition import TransitionBatch
 from torch import optim
 
 

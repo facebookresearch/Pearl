@@ -6,17 +6,11 @@ from pearl.core.common.neural_networks.value_networks import (
     DuelingQValueNetwork,
     TwoTowerQValueNetwork,
 )
-from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
-    FIFOOffPolicyReplayBuffer,
-)
 from pearl.core.contextual_bandits.policy_learners.disjoint_linear_bandit import (
     DisjointLinearBandit,
 )
 from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exploration import (
     DisjointLinUCBExploration,
-)
-from pearl.core.contextual_bandits.replay_buffer.discrete_contextual_bandit_replay_buffer import (
-    DiscreteContextualBanditReplayBuffer,
 )
 
 from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
@@ -26,6 +20,12 @@ from pearl.core.sequential_decision_making.policy_learners.soft_actor_critic_con
     ContinuousSoftActorCritic,
 )
 from pearl.pearl_agent import PearlAgent
+from pearl.replay_buffers.contextual_bandits.discrete_contextual_bandit_replay_buffer import (
+    DiscreteContextualBanditReplayBuffer,
+)
+from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
+    FIFOOffPolicyReplayBuffer,
+)
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
     online_learning_to_png_graph,
 )

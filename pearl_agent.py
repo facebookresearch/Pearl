@@ -6,13 +6,13 @@ from pearl.api.action_space import ActionSpace
 from pearl.api.agent import Agent
 from pearl.api.observation import Observation
 from pearl.api.state import SubjectiveState
-from pearl.core.common.replay_buffer.single_transition_replay_buffer import (
-    SingleTransitionReplayBuffer,
-)
-from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.history_summarization_modules.identity_history_summarization_module import (
     IdentityHistorySummarizationModule,
 )
+from pearl.replay_buffers.examples.single_transition_replay_buffer import (
+    SingleTransitionReplayBuffer,
+)
+from pearl.replay_buffers.transition import TransitionBatch
 from pearl.safety_modules.identity_safety_module import IdentitySafetyModule
 
 

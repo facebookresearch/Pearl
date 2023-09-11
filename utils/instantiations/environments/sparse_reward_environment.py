@@ -24,13 +24,13 @@ from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
 
 from pearl.api.environment import Environment
-from pearl.core.common.replay_buffer.replay_buffer import ReplayBuffer
-from pearl.core.common.replay_buffer.transition import TransitionBatch
 
 from pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
     SubjectiveState,
 )
+from pearl.replay_buffers.replay_buffer import ReplayBuffer
+from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 SparseRewardEnvironmentObservation = namedtuple(

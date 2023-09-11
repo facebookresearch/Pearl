@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 from pearl.api.observation import Observation
 
 from pearl.api.state import SubjectiveState
-from pearl.core.common.replay_buffer.replay_buffer import ReplayBuffer
-from pearl.core.common.replay_buffer.transition import TransitionBatch
+from pearl.replay_buffers.replay_buffer import ReplayBuffer
+from pearl.replay_buffers.transition import TransitionBatch
 
 
 class HistorySummarizationModule(ABC):

@@ -10,10 +10,10 @@ from pearl.core.common.policy_learners.exploration_module.epsilon_greedy_explora
 from pearl.core.common.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
-from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.core.sequential_decision_making.policy_learners.deep_td_learning import (
     DeepTDLearning,
 )
+from pearl.replay_buffers.transition import TransitionBatch
 
 
 class DeepQLearning(DeepTDLearning):

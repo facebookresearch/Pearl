@@ -7,8 +7,8 @@ import __manifest__
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
-from pearl.core.common.replay_buffer.transition import TransitionBatch
 from pearl.core.contextual_bandits.policy_learners.neural_bandit import NeuralBandit
+from pearl.replay_buffers.transition import TransitionBatch
 
 
 def train(rank, world_size):
