@@ -5,13 +5,13 @@
 import unittest
 
 import torch
-from pearl.core.common.policy_learners.exploration_module.epsilon_greedy_exploration import (
-    EGreedyExploration,
-)
 from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
     DeepQLearning,
 )
 from pearl.pearl_agent import PearlAgent
+from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
+    EGreedyExploration,
+)
 
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,

@@ -3,12 +3,12 @@ from abc import abstractmethod
 from pearl.api.action import Action
 
 from pearl.api.action_space import ActionSpace
-from pearl.core.common.policy_learners.exploration_module.exploration_module import (
-    ExplorationModule,
-)
 from pearl.core.common.policy_learners.policy_learner import PolicyLearner
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
+)
+from pearl.policy_learners.exploration_modules.exploration_module import (
+    ExplorationModule,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 

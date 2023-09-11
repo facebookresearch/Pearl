@@ -4,13 +4,13 @@ import copy
 import unittest
 
 import torch
-from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exploration import (
+from pearl.core.contextual_bandits.policy_learners.linear_bandit import LinearBandit
+from pearl.policy_learners.exploration_modules.contextual_bandits.linucb_exploration import (
     LinUCBExploration,
 )
-from pearl.core.contextual_bandits.policy_learners.exploration_module.thompson_sampling_exploration import (
+from pearl.policy_learners.exploration_modules.contextual_bandits.thompson_sampling_exploration import (
     ThompsonSamplingExplorationLinear,
 )
-from pearl.core.contextual_bandits.policy_learners.linear_bandit import LinearBandit
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 

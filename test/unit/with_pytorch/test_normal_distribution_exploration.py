@@ -4,7 +4,7 @@ import unittest
 
 import torch
 
-from pearl.core.common.policy_learners.exploration_module.normal_distribution_exploration import (
+from pearl.policy_learners.exploration_modules.common.normal_distribution_exploration import (
     NormalDistributionExploration,
 )
 

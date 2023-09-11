@@ -7,15 +7,15 @@ import torch
 from pearl.api.action import Action
 
 from pearl.api.action_space import ActionSpace
-from pearl.core.common.policy_learners.exploration_module.exploration_module import (
-    ExplorationModule,
-)
-from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exploration import (
-    LinUCBExploration,
-)
 from pearl.core.contextual_bandits.policy_learners.neural_bandit import NeuralBandit
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
+)
+from pearl.policy_learners.exploration_modules.contextual_bandits.linucb_exploration import (
+    LinUCBExploration,
+)
+from pearl.policy_learners.exploration_modules.exploration_module import (
+    ExplorationModule,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression

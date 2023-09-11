@@ -4,7 +4,7 @@ from typing import Any
 import torch
 
 from pearl.api.state import SubjectiveState
-from pearl.core.contextual_bandits.policy_learners.exploration_module.ucb_exploration import (
+from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
     UCBExplorationBase,
 )
 from pearl.utils.functional_utils.learning.linear_regression import (

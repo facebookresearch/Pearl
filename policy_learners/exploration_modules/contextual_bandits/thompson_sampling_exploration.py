@@ -4,10 +4,10 @@ import torch
 
 from pearl.api.action import Action
 from pearl.api.state import SubjectiveState
-from pearl.core.common.policy_learners.exploration_module.value_exploration_base import (
+from pearl.policy_learners.exploration_modules.common.value_exploration_base import (
     ValueExplorationBase,
 )
-from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exploration import (
+from pearl.policy_learners.exploration_modules.contextual_bandits.linucb_exploration import (
     calculate_variance,
 )
 

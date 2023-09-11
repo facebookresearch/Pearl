@@ -4,9 +4,6 @@ import torch
 
 # from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
-from pearl.core.common.policy_learners.exploration_module.no_exploration import (
-    NoExploration,
-)
 from pearl.core.sequential_decision_making.policy_learners.policy_gradient import (
     PolicyGradient,
 )
@@ -25,6 +22,9 @@ from pearl.neural_networks.sequential_decision_making.actor_networks import (
 
 # from pearl.api.state import SubjectiveState
 from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
+from pearl.policy_learners.exploration_modules.common.no_exploration import (
+    NoExploration,
+)
 from pearl.replay_buffers.transition import TransitionBatch
 from torch import optim
 

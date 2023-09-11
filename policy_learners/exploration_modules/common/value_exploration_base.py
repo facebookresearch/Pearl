@@ -5,7 +5,7 @@ import torch
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
-from pearl.core.common.policy_learners.exploration_module.exploration_module import (
+from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
     ExplorationType,
 )

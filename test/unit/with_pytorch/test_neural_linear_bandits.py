@@ -3,13 +3,13 @@
 import unittest
 
 import torch
-from pearl.core.contextual_bandits.policy_learners.exploration_module.linucb_exploration import (
-    LinUCBExploration,
-)
 from pearl.core.contextual_bandits.policy_learners.neural_linear_bandit import (
     NeuralLinearBandit,
 )
 from pearl.neural_networks.common.residual_wrapper import ResidualWrapper
+from pearl.policy_learners.exploration_modules.contextual_bandits.linucb_exploration import (
+    LinUCBExploration,
+)
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
