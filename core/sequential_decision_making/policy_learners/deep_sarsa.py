@@ -3,8 +3,6 @@ from typing import Iterable, Optional, Type
 import torch
 
 from pearl.api.action_space import ActionSpace
-from pearl.core.common.neural_networks.q_value_network import QValueNetwork
-from pearl.core.common.neural_networks.value_networks import VanillaQValueNetwork
 from pearl.core.common.policy_learners.exploration_module.epsilon_greedy_exploration import (
     EGreedyExploration,
 )
@@ -13,6 +11,10 @@ from pearl.core.common.policy_learners.exploration_module.exploration_module imp
 )
 from pearl.core.sequential_decision_making.policy_learners.deep_td_learning import (
     DeepTDLearning,
+)
+from pearl.neural_networks.common.value_networks import VanillaQValueNetwork
+from pearl.neural_networks.sequential_decision_making.q_value_network import (
+    QValueNetwork,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 

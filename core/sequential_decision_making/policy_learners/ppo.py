@@ -4,16 +4,16 @@ from typing import Any, Dict, Iterable
 import torch
 
 from pearl.api.action_space import ActionSpace
-from pearl.core.common.neural_networks.value_networks import VanillaValueNetwork
 from pearl.core.common.policy_learners.exploration_module.exploration_module import (
     ExplorationModule,
 )
-from pearl.core.sequential_decision_making.neural_networks.actor_networks import (
-    ActorNetworkType,
-    VanillaActorNetwork,
-)
 from pearl.core.sequential_decision_making.policy_learners.policy_gradient import (
     PolicyGradient,
+)
+from pearl.neural_networks.common.value_networks import VanillaValueNetwork
+from pearl.neural_networks.sequential_decision_making.actor_networks import (
+    ActorNetworkType,
+    VanillaActorNetwork,
 )
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch

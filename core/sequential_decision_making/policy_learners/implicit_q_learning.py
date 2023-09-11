@@ -4,27 +4,27 @@ import torch
 
 # from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
-
-# from pearl.api.state import SubjectiveState
-from pearl.core.common.neural_networks.twin_critic import TwinCritic
-
-from pearl.core.common.neural_networks.utils import init_weights, update_target_networks
-
-from pearl.core.common.neural_networks.value_networks import (
-    QValueNetwork,
-    VanillaQValueNetwork,
-    VanillaValueNetwork,
-)
 from pearl.core.common.policy_learners.exploration_module.no_exploration import (
     NoExploration,
-)
-from pearl.core.sequential_decision_making.neural_networks.actor_networks import (
-    ActorNetworkType,
-    VanillaActorNetwork,
 )
 from pearl.core.sequential_decision_making.policy_learners.policy_gradient import (
     PolicyGradient,
 )
+
+from pearl.neural_networks.common.utils import init_weights, update_target_networks
+
+from pearl.neural_networks.common.value_networks import (
+    QValueNetwork,
+    VanillaQValueNetwork,
+    VanillaValueNetwork,
+)
+from pearl.neural_networks.sequential_decision_making.actor_networks import (
+    ActorNetworkType,
+    VanillaActorNetwork,
+)
+
+# from pearl.api.state import SubjectiveState
+from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.replay_buffers.transition import TransitionBatch
 from torch import optim
 

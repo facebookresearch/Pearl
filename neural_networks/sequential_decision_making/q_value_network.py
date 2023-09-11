@@ -11,7 +11,7 @@ import abc
 from typing import Optional
 
 import torch
-from pearl.core.common.neural_networks.auto_device_nn_module import AutoDeviceNNModule
+from pearl.neural_networks.common.auto_device_nn_module import AutoDeviceNNModule
 
 
 class QValueNetwork(abc.ABC, AutoDeviceNNModule):

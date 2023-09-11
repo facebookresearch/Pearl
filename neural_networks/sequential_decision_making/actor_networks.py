@@ -13,8 +13,8 @@ import torch
 
 import torch.nn as nn
 import torch.nn.functional as F
-from pearl.core.common.neural_networks.auto_device_nn_module import AutoDeviceNNModule
-from pearl.core.common.neural_networks.utils import mlp_block
+from pearl.neural_networks.common.auto_device_nn_module import AutoDeviceNNModule
+from pearl.neural_networks.common.utils import mlp_block
 from torch.distributions import Normal
 
 

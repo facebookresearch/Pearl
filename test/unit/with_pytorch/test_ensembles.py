@@ -3,8 +3,8 @@
 import unittest
 
 import torch
-from pearl.core.common.neural_networks.epistemic_neural_networks import Ensemble
-from pearl.core.common.neural_networks.utils import ensemble_forward
+from pearl.neural_networks.common.epistemic_neural_networks import Ensemble
+from pearl.neural_networks.common.utils import ensemble_forward
 
 from pearl.test.utils import create_normal_pdf_training_data
 from torch import optim

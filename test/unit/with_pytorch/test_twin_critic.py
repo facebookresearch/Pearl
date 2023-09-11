@@ -3,8 +3,8 @@
 import unittest
 
 import torch
-from pearl.core.common.neural_networks.twin_critic import TwinCritic
-from pearl.core.common.neural_networks.utils import init_weights
+from pearl.neural_networks.common.utils import init_weights
+from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 
 
 class TestTwinCritic(unittest.TestCase):

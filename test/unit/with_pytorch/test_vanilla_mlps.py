@@ -3,7 +3,7 @@
 import unittest
 
 import torch
-from pearl.core.common.neural_networks.value_networks import VanillaValueNetwork
+from pearl.neural_networks.common.value_networks import VanillaValueNetwork
 
 from pearl.test.utils import create_normal_pdf_training_data
 from torch import optim

@@ -4,7 +4,6 @@ import copy
 import unittest
 
 import torch
-from pearl.core.common.neural_networks.utils import init_weights
 from pearl.core.common.policy_learners.exploration_module.epsilon_greedy_exploration import (
     EGreedyExploration,
 )
@@ -13,6 +12,7 @@ from pearl.core.sequential_decision_making.policy_learners.deep_q_learning impor
 )
 from pearl.core.sequential_decision_making.policy_learners.deep_sarsa import DeepSARSA
 from pearl.core.sequential_decision_making.policy_learners.double_dqn import DoubleDQN
+from pearl.neural_networks.common.utils import init_weights
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
 )

@@ -8,8 +8,8 @@ from typing import List, Optional
 
 import torch
 import torch.nn as nn
-from pearl.core.common.neural_networks.auto_device_nn_module import AutoDeviceNNModule
-from pearl.core.common.neural_networks.value_networks import mlp_block
+from pearl.neural_networks.common.auto_device_nn_module import AutoDeviceNNModule
+from pearl.neural_networks.common.value_networks import mlp_block
 from torch import Tensor
 
 

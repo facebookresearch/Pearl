@@ -4,7 +4,7 @@ import unittest
 
 import torch
 import torchvision
-from pearl.core.common.neural_networks.value_networks import VanillaCNN
+from pearl.neural_networks.common.value_networks import VanillaCNN
 
 from torch import optim
 from torch.utils.data import DataLoader, Subset

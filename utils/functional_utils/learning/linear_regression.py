@@ -16,7 +16,7 @@ import logging
 from typing import Tuple
 
 import torch
-from pearl.core.common.neural_networks.auto_device_nn_module import AutoDeviceNNModule
+from pearl.neural_networks.common.auto_device_nn_module import AutoDeviceNNModule
 from pearl.utils.device import get_pearl_device
 
 logger = logging.getLogger(__name__)

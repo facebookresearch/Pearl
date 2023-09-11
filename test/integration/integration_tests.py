@@ -2,8 +2,6 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
 
-from pearl.core.common.neural_networks.value_networks import DuelingQValueNetwork
-
 from pearl.core.common.policy_learners.exploration_module.normal_distribution_exploration import (
     NormalDistributionExploration,
 )
@@ -29,6 +27,8 @@ from pearl.core.sequential_decision_making.policy_learners.soft_actor_critic imp
     SoftActorCritic,
 )
 from pearl.core.sequential_decision_making.policy_learners.td3 import TD3
+
+from pearl.neural_networks.common.value_networks import DuelingQValueNetwork
 
 from pearl.pearl_agent import PearlAgent
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (

@@ -1,22 +1,24 @@
 from typing import Any, Dict, Iterable, Type
 
 import torch
-from pearl.core.common.neural_networks.q_value_network import QValueNetwork
-from pearl.core.common.neural_networks.utils import (
+from pearl.core.common.policy_learners.exploration_module.exploration_module import (
+    ExplorationModule,
+)
+from pearl.core.sequential_decision_making.policy_learners.ddpg import (
+    DeepDeterministicPolicyGradient,
+)
+from pearl.neural_networks.common.utils import (
     update_target_network,
     update_target_networks,
 )
 
-from pearl.core.common.neural_networks.value_networks import VanillaQValueNetwork
-from pearl.core.common.policy_learners.exploration_module.exploration_module import (
-    ExplorationModule,
-)
-from pearl.core.sequential_decision_making.neural_networks.actor_networks import (
+from pearl.neural_networks.common.value_networks import VanillaQValueNetwork
+from pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetworkType,
     VanillaContinuousActorNetwork,
 )
-from pearl.core.sequential_decision_making.policy_learners.ddpg import (
-    DeepDeterministicPolicyGradient,
+from pearl.neural_networks.sequential_decision_making.q_value_network import (
+    QValueNetwork,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 

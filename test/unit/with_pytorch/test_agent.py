@@ -2,10 +2,6 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
 
-from pearl.core.common.neural_networks.value_networks import (
-    DuelingQValueNetwork,
-    TwoTowerQValueNetwork,
-)
 from pearl.core.contextual_bandits.policy_learners.disjoint_linear_bandit import (
     DisjointLinearBandit,
 )
@@ -18,6 +14,11 @@ from pearl.core.sequential_decision_making.policy_learners.deep_q_learning impor
 )
 from pearl.core.sequential_decision_making.policy_learners.soft_actor_critic_continuous import (
     ContinuousSoftActorCritic,
+)
+
+from pearl.neural_networks.common.value_networks import (
+    DuelingQValueNetwork,
+    TwoTowerQValueNetwork,
 )
 from pearl.pearl_agent import PearlAgent
 from pearl.replay_buffers.contextual_bandits.discrete_contextual_bandit_replay_buffer import (
