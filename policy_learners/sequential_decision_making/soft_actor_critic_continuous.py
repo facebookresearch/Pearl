@@ -7,9 +7,6 @@ import torch
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
-from pearl.core.sequential_decision_making.policy_learners.policy_gradient import (
-    PolicyGradient,
-)
 from pearl.neural_networks.common.utils import init_weights, update_target_network
 from pearl.neural_networks.common.value_networks import VanillaQValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
@@ -21,6 +18,9 @@ from pearl.neural_networks.sequential_decision_making.q_value_network import (
 )
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
+)
+from pearl.policy_learners.sequential_decision_making.policy_gradient import (
+    PolicyGradient,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from torch import optim

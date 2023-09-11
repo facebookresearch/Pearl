@@ -2,29 +2,6 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
 
-from pearl.core.sequential_decision_making.policy_learners.ddpg import (
-    DeepDeterministicPolicyGradient,
-)
-
-from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
-    DeepQLearning,
-)
-from pearl.core.sequential_decision_making.policy_learners.deep_sarsa import DeepSARSA
-from pearl.core.sequential_decision_making.policy_learners.double_dqn import DoubleDQN
-from pearl.core.sequential_decision_making.policy_learners.implicit_q_learning import (
-    ImplicitQLearning,
-)
-from pearl.core.sequential_decision_making.policy_learners.policy_gradient import (
-    PolicyGradient,
-)
-from pearl.core.sequential_decision_making.policy_learners.ppo import (
-    ProximalPolicyOptimization,
-)
-from pearl.core.sequential_decision_making.policy_learners.soft_actor_critic import (
-    SoftActorCritic,
-)
-from pearl.core.sequential_decision_making.policy_learners.td3 import TD3
-
 from pearl.neural_networks.common.value_networks import DuelingQValueNetwork
 
 from pearl.pearl_agent import PearlAgent
@@ -32,6 +9,29 @@ from pearl.pearl_agent import PearlAgent
 from pearl.policy_learners.exploration_modules.common.normal_distribution_exploration import (
     NormalDistributionExploration,
 )
+
+from pearl.policy_learners.sequential_decision_making.ddpg import (
+    DeepDeterministicPolicyGradient,
+)
+
+from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
+    DeepQLearning,
+)
+from pearl.policy_learners.sequential_decision_making.deep_sarsa import DeepSARSA
+from pearl.policy_learners.sequential_decision_making.double_dqn import DoubleDQN
+from pearl.policy_learners.sequential_decision_making.implicit_q_learning import (
+    ImplicitQLearning,
+)
+from pearl.policy_learners.sequential_decision_making.policy_gradient import (
+    PolicyGradient,
+)
+from pearl.policy_learners.sequential_decision_making.ppo import (
+    ProximalPolicyOptimization,
+)
+from pearl.policy_learners.sequential_decision_making.soft_actor_critic import (
+    SoftActorCritic,
+)
+from pearl.policy_learners.sequential_decision_making.td3 import TD3
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
 )

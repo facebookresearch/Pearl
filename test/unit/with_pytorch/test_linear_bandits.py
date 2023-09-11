@@ -4,7 +4,7 @@ import copy
 import unittest
 
 import torch
-from pearl.core.contextual_bandits.policy_learners.linear_bandit import LinearBandit
+from pearl.policy_learners.contextual_bandits.linear_bandit import LinearBandit
 from pearl.policy_learners.exploration_modules.contextual_bandits.linucb_exploration import (
     LinUCBExploration,
 )

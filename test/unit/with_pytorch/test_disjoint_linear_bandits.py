@@ -4,7 +4,7 @@ import copy
 import unittest
 
 import torch
-from pearl.core.contextual_bandits.policy_learners.disjoint_linear_bandit import (
+from pearl.policy_learners.contextual_bandits.disjoint_linear_bandit import (
     DisjointLinearBandit,
 )
 from pearl.policy_learners.exploration_modules.contextual_bandits.linucb_exploration import (

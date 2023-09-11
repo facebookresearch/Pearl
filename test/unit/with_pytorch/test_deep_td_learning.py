@@ -4,15 +4,15 @@ import copy
 import unittest
 
 import torch
-from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
-    DeepQLearning,
-)
-from pearl.core.sequential_decision_making.policy_learners.deep_sarsa import DeepSARSA
-from pearl.core.sequential_decision_making.policy_learners.double_dqn import DoubleDQN
 from pearl.neural_networks.common.utils import init_weights
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
     EGreedyExploration,
 )
+from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
+    DeepQLearning,
+)
+from pearl.policy_learners.sequential_decision_making.deep_sarsa import DeepSARSA
+from pearl.policy_learners.sequential_decision_making.double_dqn import DoubleDQN
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
 )

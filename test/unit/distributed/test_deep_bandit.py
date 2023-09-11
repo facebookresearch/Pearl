@@ -7,7 +7,7 @@ import __manifest__
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
-from pearl.core.contextual_bandits.policy_learners.neural_bandit import NeuralBandit
+from pearl.policy_learners.contextual_bandits.neural_bandit import NeuralBandit
 from pearl.replay_buffers.transition import TransitionBatch
 
 

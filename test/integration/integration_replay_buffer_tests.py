@@ -3,11 +3,11 @@
 import unittest
 
 import torch
-from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
-    DeepQLearning,
-)
 
 from pearl.pearl_agent import PearlAgent
+from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
+    DeepQLearning,
+)
 
 from pearl.replay_buffers.sequential_decision_making.hindsight_experience_replay_buffer import (
     HindsightExperienceReplayBuffer,

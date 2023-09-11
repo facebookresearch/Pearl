@@ -1,9 +1,6 @@
 from typing import Any, Dict, Iterable, Type
 
 import torch
-from pearl.core.sequential_decision_making.policy_learners.ddpg import (
-    DeepDeterministicPolicyGradient,
-)
 from pearl.neural_networks.common.utils import (
     update_target_network,
     update_target_networks,
@@ -19,6 +16,9 @@ from pearl.neural_networks.sequential_decision_making.q_value_network import (
 )
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
+)
+from pearl.policy_learners.sequential_decision_making.ddpg import (
+    DeepDeterministicPolicyGradient,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 

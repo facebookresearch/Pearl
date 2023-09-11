@@ -2,7 +2,7 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
 
-from pearl.core.sequential_decision_making.policy_learners.ppo import (
+from pearl.policy_learners.sequential_decision_making.ppo import (
     ProximalPolicyOptimization,
 )
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace

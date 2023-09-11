@@ -5,7 +5,6 @@ import torch
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
-from pearl.core.common.policy_learners.policy_learner import PolicyLearner
 from pearl.neural_networks.common.utils import init_weights
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetworkType,
@@ -17,6 +16,7 @@ from pearl.policy_learners.exploration_modules.common.propensity_exploration imp
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
 from torch import optim
 

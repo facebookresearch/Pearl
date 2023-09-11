@@ -3,7 +3,7 @@
 import unittest
 
 import torch
-from pearl.core.contextual_bandits.policy_learners.neural_bandit import NeuralBandit
+from pearl.policy_learners.contextual_bandits.neural_bandit import NeuralBandit
 from pearl.policy_learners.exploration_modules.common.no_exploration import (
     NoExploration,
 )

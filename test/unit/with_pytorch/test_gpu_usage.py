@@ -3,14 +3,14 @@
 import unittest
 
 import torch
+from pearl.pearl_agent import PearlAgent
 
-from pearl.core.sequential_decision_making.policy_learners.deep_q_learning import (
+from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,
 )
-from pearl.core.sequential_decision_making.policy_learners.ppo import (
+from pearl.policy_learners.sequential_decision_making.ppo import (
     ProximalPolicyOptimization,
 )
-from pearl.pearl_agent import PearlAgent
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
 )

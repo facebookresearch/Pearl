@@ -4,11 +4,11 @@ from typing import Any, Dict
 
 import torch
 from pearl.api.action import Action
-from pearl.core.contextual_bandits.policy_learners.contextual_bandit_base import (
-    ContextualBanditBase,
-)
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
+)
+from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
+    ContextualBanditBase,
 )
 from pearl.policy_learners.exploration_modules.contextual_bandits.linucb_exploration import (
     LinUCBExploration,
