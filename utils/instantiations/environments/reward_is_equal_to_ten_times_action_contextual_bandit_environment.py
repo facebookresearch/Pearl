@@ -2,7 +2,7 @@ from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.observation import Observation
 from pearl.api.reward import Value
-from pearl.core.contextual_bandits.environment.contextual_bandit_environment import (
+from pearl.utils.instantiations.environments.contextual_bandit_environment import (
     ContextualBanditEnvironment,
 )
 

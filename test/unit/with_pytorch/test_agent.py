@@ -10,10 +10,6 @@ from pearl.core.common.pearl_agent import PearlAgent
 from pearl.core.common.replay_buffer.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
 )
-
-from pearl.core.contextual_bandits.environment.contextual_bandit_linear_synthetic_environment import (
-    ContextualBanditLinearSyntheticEnvironment,
-)
 from pearl.core.contextual_bandits.policy_learners.disjoint_linear_bandit import (
     DisjointLinearBandit,
 )
@@ -34,6 +30,10 @@ from pearl.utils.functional_utils.train_and_eval.online_learning import (
     online_learning_to_png_graph,
 )
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+
+from pearl.utils.instantiations.environments.contextual_bandit_linear_synthetic_environment import (
+    ContextualBanditLinearSyntheticEnvironment,
+)
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 
 

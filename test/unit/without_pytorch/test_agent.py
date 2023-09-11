@@ -5,10 +5,6 @@ import unittest
 import gym
 from pearl.core.common.pearl_agent import PearlAgent
 
-from pearl.core.contextual_bandits.environment.reward_is_equal_to_ten_times_action_contextual_bandit_environment import (
-    RewardIsEqualToTenTimesActionContextualBanditEnvironment,
-)
-
 from pearl.core.sequential_decision_making.policy_learners.tabular_q_learning import (
     TabularQLearning,
 )
@@ -20,6 +16,10 @@ from pearl.utils.instantiations.environments.environments import (
     FixedNumberOfStepsEnvironment,
 )
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
+
+from pearl.utils.instantiations.environments.reward_is_equal_to_ten_times_action_contextual_bandit_environment import (
+    RewardIsEqualToTenTimesActionContextualBanditEnvironment,
+)
 
 
 class TestAgentWithoutPyTorch(unittest.TestCase):
