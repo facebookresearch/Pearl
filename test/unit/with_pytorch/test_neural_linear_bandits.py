@@ -25,9 +25,8 @@ class TestNeuralLinearBandits(unittest.TestCase):
             use_skip_connections=True,
         )
         # assert ResidualWrapper is used in NeuralLinearBandit
-        self.assertTrue(
-            isinstance(policy_learner._deep_represent_layers._model, ResidualWrapper)
-        )
+        for child in policy_learner._deep_represent_layers._model.children():
+            self.assertTrue(isinstance(child, ResidualWrapper))
 
     def test_neural_linucb(self) -> None:
         feature_dim = 15  # It is important to keep this different from hidden_dims

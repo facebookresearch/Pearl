@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional
 
 import torch
@@ -47,27 +48,43 @@ def mlp_block(
     dims = [input_dim] + hidden_dims + [output_dim]
     layers = []
     for i in range(len(dims) - 2):
-        layers.append(nn.Linear(dims[i], dims[i + 1]))
+        single_layers = []
+        input_dim_current_layer = dims[i]
+        output_dim_current_layer = dims[i + 1]
+        single_layers.append(
+            nn.Linear(input_dim_current_layer, output_dim_current_layer)
+        )
         if use_batch_norm:
-            layers.append(nn.BatchNorm1d(dims[i + 1]))
+            single_layers.append(nn.BatchNorm1d(output_dim_current_layer))
         if use_layer_norm:
-            layers.append(nn.LayerNorm(dims[i + 1]))
+            single_layers.append(nn.LayerNorm(output_dim_current_layer))
         if dropout_ratio > 0:
-            layers.append(nn.Dropout(p=dropout_ratio))
-        layers.append(ACTIVATION_MAP[hidden_activation]())
+            single_layers.append(nn.Dropout(p=dropout_ratio))
+        single_layers.append(ACTIVATION_MAP[hidden_activation]())
+        single_layer_model = nn.Sequential(*single_layers)
+        if use_skip_connections:
+            if input_dim_current_layer == output_dim_current_layer:
+                single_layer_model = ResidualWrapper(single_layer_model)
+            else:
+                logging.info(
+                    f"use_skip_connections shouldn't be set to True, due to mismatch dimension {input_dim_current_layer} != {output_dim_current_layer}"
+                )
+        layers.append(single_layer_model)
 
-    layers.append(nn.Linear(dims[-2], dims[-1]))
+    last_layer = []
+    last_layer.append(nn.Linear(dims[-2], dims[-1]))
     if last_activation is not None:
-        layers.append(ACTIVATION_MAP[last_activation]())
-    model = nn.Sequential(*layers)
+        last_layer.append(ACTIVATION_MAP[last_activation]())
+    last_layer_model = nn.Sequential(*last_layer)
     if use_skip_connections:
         if input_dim == output_dim:
-            model = ResidualWrapper(model)
+            last_layer_model = ResidualWrapper(last_layer_model)
         else:
             raise Exception(
                 f"use_skip_connections shouldn't be set to True, due to mismatch dimension {input_dim} != {output_dim}"
             )
-    return model
+    layers.append(last_layer_model)
+    return nn.Sequential(*layers)
 
 
 def conv_block(
