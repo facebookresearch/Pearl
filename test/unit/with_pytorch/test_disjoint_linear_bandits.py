@@ -91,9 +91,9 @@ class TestDisjointLinearBandits(unittest.TestCase):
                 == 2
             )
         )
-        # set a different alpha value to increase uncertainty value
-        policy_learner.exploration_module = DisjointLinUCBExploration(alpha=1000)
-        # observe state [1,1] for action 1 and 2 many times, this will increase uncertainty of action0
+        # set a different alpha value to increase weight of sigma
+        policy_learner.exploration_module = DisjointLinUCBExploration(alpha=10000)
+        # observe state [1,1] for action 1 and 2 many times, this will increase sigma of action0
         # on this state, and give us act(1,1) -> 0
         batch = TransitionBatch(
             state=torch.tensor(

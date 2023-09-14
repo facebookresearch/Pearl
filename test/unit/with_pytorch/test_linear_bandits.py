@@ -12,6 +12,10 @@ from pearl.policy_learners.exploration_modules.contextual_bandits.thompson_sampl
     ThompsonSamplingExplorationLinear,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.functional_utils.learning.linear_regression import (
+    batch_quadratic_form,
+    LinearRegression,
+)
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
@@ -20,6 +24,7 @@ class TestLinearBandits(unittest.TestCase):
         self.policy_learner = LinearBandit(
             feature_dim=4,
             exploration_module=LinUCBExploration(alpha=0),
+            l2_reg_lambda=1e-8,
         )
         # y = sum of state + sum of action
         self.batch = TransitionBatch(
@@ -29,18 +34,14 @@ class TestLinearBandits(unittest.TestCase):
                     [1.0, 3.0],
                     [2.0, 2.0],
                     [2.0, 3.0],
+                    [3.0, 2.0],
                 ]
             ),
             action=torch.tensor(
-                [
-                    [2.0, 2.0],
-                    [1.0, 2.0],
-                    [3.0, 2.0],
-                    [1.0, 3.0],
-                ]
+                [[2.0, 2.0], [1.0, 2.0], [3.0, 2.0], [1.0, 3.0], [2.0, 2.0]]
             ),
-            reward=torch.tensor([7.0, 7.0, 9.0, 9.0]),
-            weight=torch.tensor([1, 1, 1, 1]),
+            reward=torch.tensor([7.0, 7.0, 9.0, 9.0, 9.0]),
+            weight=torch.tensor([1, 1, 1, 1, 1]),
         )
         self.policy_learner.learn_batch(self.batch)
 
@@ -111,13 +112,14 @@ class TestLinearBandits(unittest.TestCase):
 
         policy_learner.exploration_module = LinUCBExploration(alpha=1)
 
-    def test_linear_ucb_uncertainty(self) -> None:
+    def test_linear_ucb_sigma(self) -> None:
         """
-        Since A is init with zeros, the uncertainty should be proportional to number of obs
+        Since A is init with zeros, the sigma should be proportional to 1/sqrt(number of obs)
         """
         policy_learner = LinearBandit(
             feature_dim=2,
             exploration_module=LinUCBExploration(alpha=1),
+            l2_reg_lambda=1e-2,
         )
 
         # 1st arm = [1, 0]
@@ -163,7 +165,7 @@ class TestLinearBandits(unittest.TestCase):
 
         policy_learner.learn_batch(batch)
 
-        # test uncertainty of policy_learner (LinUCB)
+        # test sigma of policy_learner (LinUCB)
         features = torch.cat([batch.state, batch.action], dim=1)
         # input is (batch_size, 2)
         # expect output is (batch_size,)
@@ -171,14 +173,15 @@ class TestLinearBandits(unittest.TestCase):
         self.assertEqual(ucb_scores.shape, batch.reward.shape)
         A = policy_learner._linear_regression._A
         A_inv = torch.linalg.inv(A)
-        uncertainty = torch.diagonal(features @ A_inv @ features.t())
+        features_with_ones = LinearRegression.append_ones(features)
+        sigma = torch.sqrt(batch_quadratic_form(features_with_ones, A_inv))
 
-        # the 2nd arm's uncertainty is 10 times 1st arm's uncertainty
-        uncertainty_ratio = torch.tensor(uncertainty[-1] / uncertainty[0])
+        # the 2nd arm's sigma is sqrt(10) times 1st arm's sigma
+        sigma_ratio = torch.tensor(sigma[-1] / sigma[0])
         self.assertTrue(
             torch.allclose(
-                uncertainty_ratio,
-                torch.tensor(10.0),  # the 1st arm occured 10 times than 2nd arm
+                sigma_ratio,
+                torch.tensor(10.0**0.5),  # the 1st arm occured 10 times than 2nd arm
                 rtol=0.01,
             )
         )

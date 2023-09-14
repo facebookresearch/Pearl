@@ -7,10 +7,7 @@ from pearl.api.state import SubjectiveState
 from pearl.policy_learners.exploration_modules.common.value_exploration_base import (
     ValueExplorationBase,
 )
-from pearl.policy_learners.exploration_modules.contextual_bandits.linucb_exploration import (
-    calculate_variance,
-)
-
+from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
@@ -37,20 +34,22 @@ class ThompsonSamplingExplorationLinear(ValueExplorationBase):
                 subjective_state
             )  # batch_size, action_count, 1
             assert expected_reward.shape == subjective_state.shape[:-1]
-            covariance = calculate_variance(
-                subjective_state=subjective_state,
-                representation=linear_bandit_model,
+            sigma = linear_bandit_model.calculate_sigma(
+                subjective_state
             )  # batch_size, action_count, 1
-            assert covariance.shape == subjective_state.shape[:-1]
-            score = torch.normal(mean=expected_reward, std=covariance)
+            assert sigma.shape == subjective_state.shape[:-1]
+            score = torch.normal(mean=expected_reward, std=sigma)
         else:
             thompson_sampling_coefs = (
                 torch.distributions.multivariate_normal.MultivariateNormal(
                     loc=linear_bandit_model.coefs,
-                    covariance_matrix=linear_bandit_model.inv_A,
+                    precision_matrix=linear_bandit_model.A,
                 ).sample()
             )
-            score = torch.matmul(subjective_state, thompson_sampling_coefs.t())
+            score = torch.matmul(
+                LinearRegression.append_ones(subjective_state),
+                thompson_sampling_coefs.t(),
+            )
         return score
 
     def act(

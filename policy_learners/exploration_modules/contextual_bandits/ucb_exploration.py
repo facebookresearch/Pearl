@@ -22,7 +22,7 @@ class UCBExplorationBase(ValueExplorationBase):
         self._alpha = alpha
 
     @abstractmethod
-    def uncertainty(
+    def sigma(
         self,
         subjective_state: SubjectiveState,
         available_action_space: DiscreteActionSpace,
@@ -59,15 +59,15 @@ class UCBExplorationBase(ValueExplorationBase):
         """
         action_count = available_action_space.n
         values = values.view(-1, action_count)  # (batch_size, action_count)
-        uncertainty = self.uncertainty(
+        sigma = self.sigma(
             subjective_state=subjective_state,
             available_action_space=available_action_space,
             representation=representation,
         )
-        # a safe check before reshape uncertainty into values
-        assert uncertainty.numel() == values.numel()
-        uncertainty = uncertainty.view(values.shape)
-        ucb_scores = values + self._alpha * uncertainty
+        # a safe check before reshape sigma into values
+        assert sigma.numel() == values.numel()
+        sigma = sigma.view(values.shape)
+        ucb_scores = values + self._alpha * sigma
         return ucb_scores.squeeze()
 
     # TODO: We should make discrete action space itself iterable
@@ -108,7 +108,7 @@ class VanillaUCBExploration(UCBExplorationBase):
         self.action_execution_count = {}
         self.action_executed = torch.tensor(1)
 
-    def uncertainty(
+    def sigma(
         self,
         subjective_state: SubjectiveState,
         available_action_space: DiscreteActionSpace,

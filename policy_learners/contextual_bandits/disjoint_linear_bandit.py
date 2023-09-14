@@ -32,6 +32,7 @@ class DisjointLinearBandit(ContextualBanditBase):
         feature_dim: int,
         action_space: DiscreteActionSpace,
         exploration_module: ExplorationModule,
+        l2_reg_lambda: float = 1.0,
         training_rounds: int = 100,
         batch_size: int = 128,
     ) -> None:
@@ -44,7 +45,10 @@ class DisjointLinearBandit(ContextualBanditBase):
         self.device = get_pearl_device()
         # Currently our disjoint LinUCB usecase only use LinearRegression
         self._linear_regressions = torch.nn.ModuleList(
-            [LinearRegression(feature_dim=feature_dim) for _ in range(action_space.n)]
+            [
+                LinearRegression(feature_dim=feature_dim, l2_reg_lambda=l2_reg_lambda)
+                for _ in range(action_space.n)
+            ]
         ).to(self.device)
         self._discrete_action_space = action_space
 

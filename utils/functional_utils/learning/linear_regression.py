@@ -22,13 +22,71 @@ from pearl.utils.device import get_pearl_device
 logger = logging.getLogger(__name__)
 
 
+def batch_quadratic_form(x: torch.Tensor, A: torch.Tensor) -> torch.Tensor:
+    """
+    Compute the quadratic form x^T * A * x for a batched input x.
+    The calcuation of pred_sigma (uncertainty) in LinUCB is done by quadratic form x^T * A^{-1} * x.
+    Inspired by https://stackoverflow.com/questions/18541851/calculate-vt-a-v-for-a-matrix-of-vectors-v
+    This is a vectorized implementation of out[i] = x[i].t() @ A @ x[i]
+    x shape: (Batch, Feature_dim)
+    A shape: (Feature_dim, Feature_dim)
+    output shape: (Batch)
+    """
+    return (torch.matmul(x, A) * x).sum(-1)
+
+
 class LinearRegression(AutoDeviceNNModule):
-    def __init__(self, feature_dim: int) -> None:
+    def __init__(self, feature_dim: int, l2_reg_lambda: float = 1.0) -> None:
+        """
+        feature_dim: number of features
+        l2_reg_lambda: L2 regularization parameter
+        """
         super(LinearRegression, self).__init__()
         self.device = get_pearl_device()
-        self.register_buffer("_A", 1e-2 * torch.eye(feature_dim, device=self.device))
-        self.register_buffer("_b", torch.zeros(feature_dim, device=self.device))
+        self.register_buffer(
+            "_A",
+            l2_reg_lambda
+            * torch.eye(feature_dim + 1, device=self.device),  # +1 for intercept
+        )
+        self.register_buffer("_b", torch.zeros(feature_dim + 1, device=self.device))
+        self.register_buffer("_sum_weight", torch.zeros(1, device=self.device))
         self._feature_dim = feature_dim
+
+    @property
+    def A(self) -> torch.Tensor:
+        return self._A
+
+    @property
+    def b(self) -> torch.Tensor:
+        return self._b
+
+    @property
+    def sum_weight(self) -> torch.Tensor:
+        return self._sum_weight
+
+    @staticmethod
+    def append_ones(x: torch.Tensor) -> torch.Tensor:
+        """
+        Append a column of ones to x (for intercept of linear regression)
+        """
+        if x.ndim == 1:
+            return torch.cat((torch.ones(1, device=x.device, dtype=x.dtype), x), dim=-1)
+        elif x.ndim == 2:
+            return torch.cat(
+                (torch.ones(x.shape[0], 1, device=x.device, dtype=x.dtype), x), dim=-1
+            )
+        elif x.ndim == 3:
+            return torch.cat(
+                (
+                    torch.ones(
+                        x.shape[0], x.shape[1], 1, device=x.device, dtype=x.dtype
+                    ),
+                    x,
+                ),
+                dim=-1,
+            )
+        else:
+            raise ValueError(f"Unsupported input dimension {x.ndim}")
 
     def _validate_train_inputs(
         self, x: torch.Tensor, y: torch.Tensor, weight: torch.Tensor
@@ -46,6 +104,7 @@ class LinearRegression(AutoDeviceNNModule):
         ), f"weight has shape {weight.shape} != {(batch_size,)}"
         y = torch.unsqueeze(y, dim=1)
         weight = torch.unsqueeze(weight, dim=1)
+        x = self.append_ones(x)
         return x, y, weight
 
     def learn_batch(
@@ -58,11 +117,14 @@ class LinearRegression(AutoDeviceNNModule):
         x, y, weight = self._validate_train_inputs(x, y, weight)
         delta_A = torch.matmul(x.t(), x * weight)
         delta_b = torch.matmul(x.t(), y * weight).squeeze()
+        delta_sum_weight = weight.sum()
         if self.distribution_enabled:
             torch.distributed.all_reduce(delta_A)
             torch.distributed.all_reduce(delta_b)
+            torch.distributed.all_reduce(delta_sum_weight)
         self._A += delta_A.to(self._A.device)
         self._b += delta_b.to(self._b.device)
+        self._sum_weight += delta_sum_weight
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -70,12 +132,12 @@ class LinearRegression(AutoDeviceNNModule):
         If x is a batch, it will be shape(batch_size, ...)
         return will be shape(batch_size)
         """
+        x = self.append_ones(x)
         return torch.matmul(x, self.coefs.t())
 
     @property
     def coefs(self) -> torch.Tensor:
         inv_A = self.inv_A
-        assert inv_A.size()[0] == self._b.size()[0]
         return torch.matmul(inv_A, self._b)
 
     @property
@@ -105,36 +167,10 @@ class LinearRegression(AutoDeviceNNModule):
             ).contiguous()
         return inv_A
 
+    def calculate_sigma(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.append_ones(x)  # append a column of ones for intercept
+        sigma = torch.sqrt(batch_quadratic_form(x, self.inv_A) / self.sum_weight)
+        return sigma
+
     def __str__(self) -> str:
-        return f"A:\n{self._A}\nb:\n{self._b}"
-
-
-class AvgWeightLinearRegression(LinearRegression):
-    def __init__(
-        self,
-        feature_dim: int,
-    ) -> None:
-        super(AvgWeightLinearRegression, self).__init__(feature_dim=feature_dim)
-        # initialize sum of weights below at small values to avoid dividing by 0
-        self._sum_weight = 1e-5 * torch.ones(1, dtype=torch.float, device=self.device)
-
-    @property
-    def sum_weight(self) -> torch.Tensor:
-        return self._sum_weight
-
-    def learn_batch(
-        self, x: torch.Tensor, y: torch.Tensor, weight: torch.Tensor
-    ) -> None:
-        x, y, weight = self._validate_train_inputs(x, y, weight)
-
-        batch_sum_weight = weight.sum()
-        self._sum_weight += batch_sum_weight
-        # update average values of A and b using observations from the batch
-        self._A = (
-            self._A * (1 - batch_sum_weight / self._sum_weight)
-            + torch.matmul(x.t(), x * weight) / self._sum_weight
-        )  # dim (DA*DC, DA*DC)
-        self._b = (
-            self._b * (1 - batch_sum_weight / self._sum_weight)
-            + torch.matmul(x.t(), y * weight).squeeze() / self._sum_weight
-        )  # dim (DA*DC,)
+        return f"LinearRegression(A:\n{self._A}\nb:\n{self._b})"

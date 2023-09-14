@@ -17,9 +17,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.functional_utils.learning.linear_regression import (
-    AvgWeightLinearRegression,
-)
+from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
@@ -32,6 +30,7 @@ class LinearBandit(ContextualBanditBase):
         self,
         feature_dim: int,
         exploration_module: ExplorationModule,
+        l2_reg_lambda: float = 1.0,
         training_rounds: int = 100,
         batch_size: int = 128,
     ) -> None:
@@ -41,7 +40,9 @@ class LinearBandit(ContextualBanditBase):
             batch_size=batch_size,
             exploration_module=exploration_module,
         )
-        self._linear_regression = AvgWeightLinearRegression(feature_dim=feature_dim)
+        self._linear_regression = LinearRegression(
+            feature_dim=feature_dim, l2_reg_lambda=l2_reg_lambda
+        )
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """

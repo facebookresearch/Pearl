@@ -4,10 +4,7 @@ import unittest
 
 import torch
 
-from pearl.utils.functional_utils.learning.linear_regression import (
-    AvgWeightLinearRegression,
-    LinearRegression,
-)
+from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
 
 
 class TestLinearRegression(unittest.TestCase):
@@ -30,15 +27,16 @@ class TestLinearRegression(unittest.TestCase):
             self.assertGreater(sum(losses[:5]), sum(losses[-5:]))
             self.assertGreater(1e-2, losses[-1])
 
-        single_test(AvgWeightLinearRegression)
         single_test(LinearRegression)
 
     def test_state_dict(self) -> None:
-        model = LinearRegression(feature_dim=15)
+        feature_dim = 15
+        model = LinearRegression(feature_dim=feature_dim)
         states = model.state_dict()
-        self.assertEqual(len(states), 2)
-        self.assertEqual(states["_A"].shape, (15, 15))
-        self.assertEqual(states["_b"].shape, (15,))
-        states["_b"] = torch.ones((15,))
+        self.assertEqual(len(states), 3)
+        self.assertEqual(states["_A"].shape, (feature_dim + 1, feature_dim + 1))
+        self.assertEqual(states["_b"].shape, (feature_dim + 1,))
+        self.assertEqual(states["_sum_weight"].shape, (1,))
+        states["_b"] = torch.ones((feature_dim + 1,))
         model.load_state_dict(states)
         self.assertEqual(model._b[3], 1)

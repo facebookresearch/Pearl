@@ -36,6 +36,7 @@ class NeuralLinearBandit(NeuralBandit):
         training_rounds: int = 100,
         batch_size: int = 128,
         learning_rate: float = 0.001,
+        l2_reg_lambda_linear: float = 1.0,
         **kwargs,
     ) -> None:
         assert (
@@ -53,6 +54,7 @@ class NeuralLinearBandit(NeuralBandit):
         # TODO specify linear regression type when needed
         self._linear_regression = LinearRegression(
             feature_dim=hidden_dims[-1],
+            l2_reg_lambda=l2_reg_lambda_linear,
         )
         self._linear_regression_dim = hidden_dims[-1]
 
