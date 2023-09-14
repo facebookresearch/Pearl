@@ -2,6 +2,8 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict
 
+import torch.nn as nn
+
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
@@ -18,7 +20,7 @@ from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.device import get_pearl_device, is_distribution_enabled
 
 
-class PolicyLearner(ABC):
+class PolicyLearner(ABC, nn.Module):
     """
     An abstract interface for policy learners.
     """
@@ -31,6 +33,7 @@ class PolicyLearner(ABC):
         batch_size: int = 1,
         **options,
     ) -> None:
+        super(PolicyLearner, self).__init__()
         self._exploration_module = (
             options["exploration_module"]
             if "exploration_module" in options

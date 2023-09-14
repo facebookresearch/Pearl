@@ -74,6 +74,8 @@ class TestNeuralLinearBandits(unittest.TestCase):
         self.assertEqual(action.shape, batch.reward.shape)
 
     def test_state_dict(self):
+        # There has been discussions and debating on how to support state dict of policy learner
+        # This unittest is to ensure regardless of solution, this functionality needs to be there
         # init a policy learn and learn once to get some random value
         feature_dim = 15
         batch_size = feature_dim * 4
@@ -94,14 +96,14 @@ class TestNeuralLinearBandits(unittest.TestCase):
         )
         policy_learner.learn_batch(batch)
 
-        # init another policy learner and use set_model_state to set
+        # init another policy learner and use load_state_dict to set
         copy_policy_learner = NeuralLinearBandit(
             feature_dim=feature_dim,
             hidden_dims=[16, 16],
             learning_rate=0.01,
             exploration_module=LinUCBExploration(alpha=0.1),
         )
-        copy_policy_learner.set_model_state(policy_learner.get_model_state())
+        copy_policy_learner.load_state_dict(policy_learner.state_dict())
 
         # assert and check if they are the same
         self.assertTrue(

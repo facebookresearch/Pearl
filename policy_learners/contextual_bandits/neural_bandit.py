@@ -123,14 +123,6 @@ class NeuralBandit(ContextualBanditBase):
         )
         return self._deep_represent_layers(feature).squeeze()
 
-    def get_model_state(self) -> Dict[str, Any]:
-        return {
-            "deep_represent_layers": self._deep_represent_layers.state_dict(),
-        }
-
-    def set_model_state(self, state: Dict[str, Any], strict=True):
-        self._deep_represent_layers.load_state_dict(state["deep_represent_layers"])
-
     @property
     def optimizers(self) -> List[torch.optim.Optimizer]:
         return [self._optimizer]
