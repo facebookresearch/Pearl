@@ -23,7 +23,6 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 from torch import optim
-from torch.nn.parallel import DistributedDataParallel
 
 
 class NeuralBandit(ContextualBanditBase):
@@ -56,12 +55,6 @@ class NeuralBandit(ContextualBanditBase):
             output_dim=output_dim,
             **kwargs,
         )
-        if self.distribution_enabled:
-            self._deep_represent_layers.to(self.device)
-            self._deep_represent_layers = DistributedDataParallel(
-                self._deep_represent_layers,
-                device_ids=None if self.device.type == "cpu" else [self.device],
-            )
         self._optimizer = optim.AdamW(
             self._deep_represent_layers.parameters(), lr=learning_rate, amsgrad=True
         )
