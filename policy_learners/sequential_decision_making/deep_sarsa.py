@@ -28,31 +28,17 @@ class DeepSARSA(DeepTDLearning):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        hidden_dims: Optional[Iterable[int]] = None,
-        learning_rate: float = 0.001,
-        discount_factor: float = 0.99,
         exploration_module: Optional[ExplorationModule] = None,
-        training_rounds: int = 100,
-        batch_size: int = 128,
-        target_update_freq: int = 10,
-        network_type: Type[QValueNetwork] = VanillaQValueNetwork,
-        network_instance: Optional[QValueNetwork] = None,
+        **kwargs,
     ) -> None:
         super(DeepSARSA, self).__init__(
             state_dim=state_dim,
             action_space=action_space,
-            hidden_dims=hidden_dims,
-            learning_rate=learning_rate,
-            discount_factor=discount_factor,
-            training_rounds=training_rounds,
-            batch_size=batch_size,
-            target_update_freq=target_update_freq,
-            network_type=network_type,
             exploration_module=exploration_module
             if exploration_module is not None
             else EGreedyExploration(0.05),
             on_policy=True,
-            network_instance=network_instance,
+            **kwargs,
         )
 
     @torch.no_grad()

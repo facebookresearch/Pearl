@@ -57,9 +57,9 @@ class IntegrationReplayBufferTests(unittest.TestCase):
 
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                4,
-                env.action_space,
-                [64, 64],
+                state_dim=4,
+                action_space=env.action_space,
+                hidden_dims=[64, 64],
                 training_rounds=10,
                 batch_size=500,
             ),

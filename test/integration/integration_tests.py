@@ -67,7 +67,7 @@ class IntegrationTests(unittest.TestCase):
             policy_learner=DeepQLearning(
                 env.observation_space.shape[0],
                 env.action_space,
-                [64, 64],
+                hidden_dims=[64, 64],
                 training_rounds=20,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
@@ -128,7 +128,7 @@ class IntegrationTests(unittest.TestCase):
             policy_learner=DoubleDQN(
                 env.observation_space.shape[0],
                 env.action_space,
-                [64, 64],
+                hidden_dims=[64, 64],
                 training_rounds=20,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
@@ -155,7 +155,7 @@ class IntegrationTests(unittest.TestCase):
             policy_learner=DeepSARSA(
                 env.observation_space.shape[0],
                 env.action_space,
-                [64, 64],
+                hidden_dims=[64, 64],
                 training_rounds=20,
             ),
             replay_buffer=FIFOOnPolicyReplayBuffer(10_000),

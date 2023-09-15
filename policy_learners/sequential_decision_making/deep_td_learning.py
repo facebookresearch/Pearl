@@ -54,6 +54,7 @@ class DeepTDLearning(PolicyLearner):
         state_hidden_dims=None,
         action_hidden_dims=None,
         network_instance: Optional[QValueNetwork] = None,
+        **kwargs,
     ) -> None:
         super(DeepTDLearning, self).__init__(
             training_rounds=training_rounds,
