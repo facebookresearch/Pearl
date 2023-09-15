@@ -1,6 +1,6 @@
 import copy
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, Optional, Type
+from typing import Any, Dict, Iterable, List, Optional, Type
 
 import torch
 import torch.nn.functional as F
@@ -214,3 +214,7 @@ class DeepTDLearning(PolicyLearner):
             )
 
         self._Q_target.load_state_dict(target_net_state_dict)
+
+    @property
+    def optimizers(self) -> List[torch.optim.Optimizer]:
+        return [self._optimizer]
