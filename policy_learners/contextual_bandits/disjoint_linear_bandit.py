@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import torch
 
@@ -121,3 +121,7 @@ class DisjointLinearBandit(ContextualBanditBase):
         subjective_state: SubjectiveState,
     ) -> torch.Tensor:
         raise NotImplementedError("Implement when necessary")
+
+    @property
+    def optimizers(self) -> List[torch.optim.Optimizer]:
+        return []
