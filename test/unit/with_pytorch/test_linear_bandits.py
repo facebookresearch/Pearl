@@ -12,10 +12,7 @@ from pearl.policy_learners.exploration_modules.contextual_bandits.thompson_sampl
     ThompsonSamplingExplorationLinear,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.functional_utils.learning.linear_regression import (
-    batch_quadratic_form,
-    LinearRegression,
-)
+from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
@@ -174,7 +171,9 @@ class TestLinearBandits(unittest.TestCase):
         A = policy_learner._linear_regression._A
         A_inv = torch.linalg.inv(A)
         features_with_ones = LinearRegression.append_ones(features)
-        sigma = torch.sqrt(batch_quadratic_form(features_with_ones, A_inv))
+        sigma = torch.sqrt(
+            LinearRegression.batch_quadratic_form(features_with_ones, A_inv)
+        )
 
         # the 2nd arm's sigma is sqrt(10) times 1st arm's sigma
         sigma_ratio = torch.tensor(sigma[-1] / sigma[0])

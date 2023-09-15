@@ -22,19 +22,6 @@ from pearl.utils.device import get_pearl_device
 logger = logging.getLogger(__name__)
 
 
-def batch_quadratic_form(x: torch.Tensor, A: torch.Tensor) -> torch.Tensor:
-    """
-    Compute the quadratic form x^T * A * x for a batched input x.
-    The calcuation of pred_sigma (uncertainty) in LinUCB is done by quadratic form x^T * A^{-1} * x.
-    Inspired by https://stackoverflow.com/questions/18541851/calculate-vt-a-v-for-a-matrix-of-vectors-v
-    This is a vectorized implementation of out[i] = x[i].t() @ A @ x[i]
-    x shape: (Batch, Feature_dim)
-    A shape: (Feature_dim, Feature_dim)
-    output shape: (Batch)
-    """
-    return (torch.matmul(x, A) * x).sum(-1)
-
-
 class LinearRegression(AutoDeviceNNModule):
     def __init__(self, feature_dim: int, l2_reg_lambda: float = 1.0) -> None:
         """
@@ -63,6 +50,19 @@ class LinearRegression(AutoDeviceNNModule):
     @property
     def sum_weight(self) -> torch.Tensor:
         return self._sum_weight
+
+    @staticmethod
+    def batch_quadratic_form(x: torch.Tensor, A: torch.Tensor) -> torch.Tensor:
+        """
+        Compute the quadratic form x^T * A * x for a batched input x.
+        The calcuation of pred_sigma (uncertainty) in LinUCB is done by quadratic form x^T * A^{-1} * x.
+        Inspired by https://stackoverflow.com/questions/18541851/calculate-vt-a-v-for-a-matrix-of-vectors-v
+        This is a vectorized implementation of out[i] = x[i].t() @ A @ x[i]
+        x shape: (Batch, Feature_dim)
+        A shape: (Feature_dim, Feature_dim)
+        output shape: (Batch)
+        """
+        return (torch.matmul(x, A) * x).sum(-1)
 
     @staticmethod
     def append_ones(x: torch.Tensor) -> torch.Tensor:
@@ -169,7 +169,7 @@ class LinearRegression(AutoDeviceNNModule):
 
     def calculate_sigma(self, x: torch.Tensor) -> torch.Tensor:
         x = self.append_ones(x)  # append a column of ones for intercept
-        sigma = torch.sqrt(batch_quadratic_form(x, self.inv_A) / self.sum_weight)
+        sigma = torch.sqrt(self.batch_quadratic_form(x, self.inv_A) / self.sum_weight)
         return sigma
 
     def __str__(self) -> str:
