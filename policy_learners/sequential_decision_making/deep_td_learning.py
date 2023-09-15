@@ -12,6 +12,9 @@ from pearl.neural_networks.common.value_networks import (
     TwoTowerQValueNetwork,
     VanillaQValueNetwork,
 )
+from pearl.neural_networks.optimizers.keyed_optimizer_wrapper import (
+    KeyedOptimizerWrapper,
+)
 from pearl.neural_networks.sequential_decision_making.q_value_network import (
     QValueNetwork,
 )
@@ -54,6 +57,8 @@ class DeepTDLearning(PolicyLearner):
         state_hidden_dims=None,
         action_hidden_dims=None,
         network_instance: Optional[QValueNetwork] = None,
+        # TODO define optimizer config to use by all deep algorithms
+        use_keyed_optimizer: bool = False,
         **kwargs,
     ) -> None:
         super(DeepTDLearning, self).__init__(
@@ -109,6 +114,11 @@ class DeepTDLearning(PolicyLearner):
         self._optimizer = optim.AdamW(
             self._Q.parameters(), lr=learning_rate, amsgrad=True
         )
+        if use_keyed_optimizer:
+            self._optimizer = KeyedOptimizerWrapper(
+                models={"_Q": self._Q},
+                optimizer=self._optimizer,
+            )
 
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space

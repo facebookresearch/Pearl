@@ -21,6 +21,7 @@ class TestNeuralContextualBandit(unittest.TestCase):
             hidden_dims=[16, 16],
             learning_rate=0.01,
             exploration_module=NoExploration(),
+            use_keyed_optimizer=True,
         )
         state = torch.randn(batch_size, 3)
         action = torch.randn(batch_size, feature_dim - 3)

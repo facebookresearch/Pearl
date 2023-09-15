@@ -11,6 +11,9 @@ from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
 from pearl.neural_networks.common.value_networks import VanillaValueNetwork
+from pearl.neural_networks.optimizers.keyed_optimizer_wrapper import (
+    KeyedOptimizerWrapper,
+)
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
 )
@@ -37,6 +40,8 @@ class NeuralBandit(ContextualBanditBase):
         training_rounds: int = 100,
         batch_size: int = 128,
         learning_rate: float = 0.001,
+        # TODO define optimizer config to use by all deep algorithms
+        use_keyed_optimizer: bool = False,
         **kwargs,
     ) -> None:
         super(NeuralBandit, self).__init__(
@@ -60,6 +65,11 @@ class NeuralBandit(ContextualBanditBase):
         self._optimizer = optim.AdamW(
             self._deep_represent_layers.parameters(), lr=learning_rate, amsgrad=True
         )
+        if use_keyed_optimizer:
+            self._optimizer = KeyedOptimizerWrapper(
+                models={"_deep_represent_layers": self._deep_represent_layers},
+                optimizer=self._optimizer,
+            )
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         input_features = torch.cat([batch.state, batch.action], dim=1)
