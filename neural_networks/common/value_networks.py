@@ -190,6 +190,61 @@ class VanillaQValueNetwork(QValueNetwork):
         return self._action_dim
 
 
+class QuantileQValueNetwork(VanillaQValueNetwork):
+    """
+    A quantile version of state-action value (Q-value) network. For each (state, action) input pairs,
+    it returns theta(s,a), the locations of quantiles which parameterize the Q value distribution.
+
+    See the parameterization in QR DQN paper: https://arxiv.org/pdf/1710.10044.pdf for more details.
+
+    Assume N is the number of quantiles.
+    1) For this parameterization, the quantiles are fixed (1/N), while the quantile locations, theta(s,a), are learned.
+    2) The return distribution is represented as: Z(s, a) = (1/N) * sum_{i=1}^N theta_i (s,a), where (theta_1(s,a), .. , theta_N(s,a)),
+    which represent the quantile locations, are outouts of the QuantileQValueNetwork.
+
+    Args:
+        Note, the output_dim represents the number of quantiles N.
+    """
+
+    def __init__(
+        self, state_dim, action_dim, hidden_dims, output_dim, use_layer_norm=False
+    ):
+        super(QuantileQValueNetwork, self).__init__(
+            state_dim=state_dim,
+            action_dim=action_dim,
+            hidden_dims=hidden_dims,
+            output_dim=output_dim,
+        )
+        self._num_quantiles = (
+            output_dim  # output_dim represents the number of quantiles
+        )
+
+    def get_quantile_distribution(
+        self,
+        state_batch: Tensor,
+        action_batch: Tensor,
+        curr_available_actions_batch: Optional[Tensor] = None,
+    ) -> Tensor:
+
+        x = torch.cat([state_batch, action_batch], dim=-1)
+        return self.forward(x)
+
+    def get_q_values(
+        self,
+        state_batch: Tensor,
+        action_batch: Tensor,
+        curr_available_actions_batch: Optional[Tensor] = None,
+    ):
+        return_distribution = self.get_quantile_distribution(
+            state_batch, action_batch, curr_available_actions_batch
+        )
+        return return_distribution.mean(dim=-1)
+
+    @property
+    def num_quantiles(self) -> int:
+        return self._num_quantiles
+
+
 class DuelingQValueNetwork(QValueNetwork):
     """
     Dueling architecture consists of state architecture, value architecture, and advantage architecture.

@@ -8,6 +8,8 @@ import torch.nn.functional as F
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
+from pearl.neural_networks.common.utils import update_target_network
+
 from pearl.neural_networks.common.value_networks import (
     TwoTowerQValueNetwork,
     VanillaQValueNetwork,
@@ -23,7 +25,8 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 )
 from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.functional_utils.learning.compute_cql_loss import compute_cql_loss
+
+from pearl.utils.functional_utils.learning.loss_fn_utils import compute_cql_loss
 from torch import optim
 
 
@@ -44,7 +47,7 @@ class DeepTDLearning(PolicyLearner):
         hidden_dims: Optional[Iterable[int]] = None,
         learning_rate: float = 0.001,
         discount_factor: float = 0.99,
-        capacity: int = 10000,
+        capacity: int = 10000,  # what is this? remove it?
         training_rounds: int = 100,
         batch_size: int = 128,
         target_update_freq: int = 10,
@@ -205,26 +208,13 @@ class DeepTDLearning(PolicyLearner):
 
         # Target Network Update
         if (self._training_steps + 1) % self._target_update_freq == 0:
-            self._update_target_network()
+            update_target_network(self._Q_target, self._Q, self._soft_update_tau)
 
         return {
             "loss": torch.abs(state_action_values - expected_state_action_values)
             .mean()
             .item()
         }
-
-    # TODO: replace with a standard util for soft update
-    def _update_target_network(self):
-        # Q_target = tao * Q_target + (1-tao)*Q
-        target_net_state_dict = self._Q_target.state_dict()
-        source_net_state_dict = self._Q.state_dict()
-        for key in source_net_state_dict:
-            target_net_state_dict[key] = (
-                self._soft_update_tau * source_net_state_dict[key]
-                + (1 - self._soft_update_tau) * target_net_state_dict[key]
-            )
-
-        self._Q_target.load_state_dict(target_net_state_dict)
 
     @property
     def optimizers(self) -> List[torch.optim.Optimizer]:

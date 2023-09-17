@@ -3,9 +3,10 @@
 import unittest
 
 from pearl.neural_networks.common.value_networks import DuelingQValueNetwork
-
 from pearl.pearl_agent import PearlAgent
-
+from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
+    EGreedyExploration,
+)
 from pearl.policy_learners.exploration_modules.common.normal_distribution_exploration import (
     NormalDistributionExploration,
 )
@@ -27,6 +28,9 @@ from pearl.policy_learners.sequential_decision_making.policy_gradient import (
 )
 from pearl.policy_learners.sequential_decision_making.ppo import (
     ProximalPolicyOptimization,
+)
+from pearl.policy_learners.sequential_decision_making.quantile_regression_deep_q_learning import (
+    QuantileRegressionDeepQLearning,
 )
 from pearl.policy_learners.sequential_decision_making.soft_actor_critic import (
     SoftActorCritic,
@@ -225,6 +229,34 @@ class IntegrationTests(unittest.TestCase):
                 env=env,
                 target_return=500,
                 max_episodes=10_000,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+            )
+        )
+
+    def test_qr_dqn(self) -> None:
+        """
+        This test is checking if quantile regression based DQN will eventually get to 500 return for CartPole-v1
+        """
+        env = GymEnvironment("CartPole-v1")
+        agent = PearlAgent(
+            policy_learner=QuantileRegressionDeepQLearning(
+                env.observation_space.shape[0],
+                env.action_space,
+                [64, 64, 64],
+                exploration_module=EGreedyExploration(0.10),
+                learning_rate=5e-4,
+                training_rounds=20,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
+        )
+        self.assertTrue(
+            target_return_is_reached(
+                target_return=500,
+                max_episodes=1000,
+                agent=agent,
+                env=env,
                 learn=True,
                 learn_after_episode=True,
                 exploit=False,
