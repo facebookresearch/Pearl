@@ -69,9 +69,9 @@ class PearlDQN(Evaluation):
         env = GymEnvironment(self.gym_environment_name)
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                env.observation_space.shape[0],
-                env.action_space,
-                [64, 64],
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                hidden_dims=[64, 64],
                 training_rounds=20,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
@@ -90,9 +90,9 @@ class PearlPPO(Evaluation):
         env = GymEnvironment(self.gym_environment_name)
         agent = PearlAgent(
             policy_learner=ProximalPolicyOptimization(
-                env.observation_space.shape[0],
-                env.action_space,
-                [64, 64],
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                hidden_dims=[64, 64],
                 training_rounds=50,
                 batch_size=64,
                 epsilon=0.1,
