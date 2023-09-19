@@ -2,13 +2,14 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict
 
-import torch.nn as nn
+import torch
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
+from pearl.neural_networks.optimizers.keyed_optimizer_wrapper import NoOpOptimizer
 from pearl.policy_learners.exploration_modules.common.no_exploration import (
     NoExploration,
 )
@@ -20,7 +21,7 @@ from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.device import get_pearl_device, is_distribution_enabled
 
 
-class PolicyLearner(ABC, nn.Module):
+class PolicyLearner(ABC, torch.nn.Module):
     """
     An abstract interface for policy learners.
     """
@@ -46,6 +47,10 @@ class PolicyLearner(ABC, nn.Module):
         self.is_action_continuous = is_action_continuous
         self.device = get_pearl_device()
         self.distribution_enabled = is_distribution_enabled()
+
+    @property
+    def optimizer(self) -> torch.optim.Optimizer:
+        return NoOpOptimizer()
 
     @property
     def batch_size(self) -> int:

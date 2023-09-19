@@ -28,6 +28,7 @@ from pearl.replay_buffers.transition import TransitionBatch
 
 from pearl.utils.functional_utils.learning.loss_fn_utils import compute_cql_loss
 from torch import optim
+from torchrec.optim.keyed import CombinedOptimizer
 
 
 # TODO: Only support discrete action space problems for now and assumes Gym action space.
@@ -118,10 +119,18 @@ class DeepTDLearning(PolicyLearner):
             self._Q.parameters(), lr=learning_rate, amsgrad=True
         )
         if use_keyed_optimizer:
-            self._optimizer = KeyedOptimizerWrapper(
-                models={"_Q": self._Q},
-                optimizer=self._optimizer,
-            )
+            optims = [
+                (
+                    "",
+                    KeyedOptimizerWrapper(
+                        models={"_Q.": self._Q},
+                        optimizer_cls=optim.AdamW,
+                        lr=learning_rate,
+                        amsgrad=True,
+                    ),
+                )
+            ]
+            self._optimizer = CombinedOptimizer(optims)
 
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space
@@ -217,5 +226,5 @@ class DeepTDLearning(PolicyLearner):
         }
 
     @property
-    def optimizers(self) -> List[torch.optim.Optimizer]:
-        return [self._optimizer]
+    def optimizer(self) -> torch.optim.Optimizer:
+        return self._optimizer

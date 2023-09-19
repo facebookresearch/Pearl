@@ -23,6 +23,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 from torch import optim
+from torchrec.optim.keyed import CombinedOptimizer
 
 
 class NeuralBandit(ContextualBanditBase):
@@ -59,10 +60,18 @@ class NeuralBandit(ContextualBanditBase):
             self._deep_represent_layers.parameters(), lr=learning_rate, amsgrad=True
         )
         if use_keyed_optimizer:
-            self._optimizer = KeyedOptimizerWrapper(
-                models={"_deep_represent_layers": self._deep_represent_layers},
-                optimizer=self._optimizer,
-            )
+            optims = [
+                (
+                    "",
+                    KeyedOptimizerWrapper(
+                        models={"_deep_represent_layers.": self._deep_represent_layers},
+                        optimizer_cls=optim.AdamW,
+                        lr=learning_rate,
+                        amsgrad=True,
+                    ),
+                )
+            ]
+            self._optimizer = CombinedOptimizer(optims)
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         input_features = torch.cat([batch.state, batch.action], dim=1)
@@ -127,5 +136,5 @@ class NeuralBandit(ContextualBanditBase):
         return self._deep_represent_layers(feature).squeeze()
 
     @property
-    def optimizers(self) -> List[torch.optim.Optimizer]:
-        return [self._optimizer]
+    def optimizer(self) -> torch.optim.Optimizer:
+        return self._optimizer

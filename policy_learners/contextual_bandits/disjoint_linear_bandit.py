@@ -121,7 +121,3 @@ class DisjointLinearBandit(ContextualBanditBase):
         subjective_state: SubjectiveState,
     ) -> torch.Tensor:
         raise NotImplementedError("Implement when necessary")
-
-    @property
-    def optimizers(self) -> List[torch.optim.Optimizer]:
-        return []

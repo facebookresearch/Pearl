@@ -22,19 +22,33 @@ class KeyedOptimizerWrapper(KeyedOptimizer):
     def __init__(
         self,
         models: Mapping[str, torch.nn.Module],
-        optimizer: torch.optim.Optimizer,
+        optimizer_cls: type(torch.optim.Optimizer),
+        **kwargs: Any,
     ) -> None:
-        self._optimizer: torch.optim.Optimizer = optimizer
         params = {
             model_name + k: v
             for model_name, model in models.items()
             for k, v in model.named_parameters()
             if v.requires_grad
         }
+        self._optimizer: torch.optim.Optimizer = optimizer_cls(
+            list(params.values()), **kwargs
+        )
         super().__init__(params, self._optimizer.state, self._optimizer.param_groups)
 
-    def zero_grad(self) -> None:
+    def zero_grad(self, set_to_none: bool = False) -> None:
         self._optimizer.zero_grad()
 
     def step(self, closure: Any = None) -> None:
         self._optimizer.step(closure=closure)
+
+
+class NoOpOptimizer(KeyedOptimizer):
+    def __init__(self):
+        super().__init__({}, {}, {})
+
+    def zero_grad(self, set_to_none: bool = False) -> None:
+        pass
+
+    def step(self, closure: Any = None) -> None:
+        pass
