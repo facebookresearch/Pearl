@@ -11,6 +11,7 @@ import torch.nn as nn
 from pearl.neural_networks.common.auto_device_nn_module import AutoDeviceNNModule
 
 from pearl.neural_networks.sequential_decision_making.q_value_network import (
+    DistributionalQValueNetwork,
     QValueNetwork,
 )
 from pearl.utils.functional_utils.learning.extend_state_feature import (
@@ -190,7 +191,7 @@ class VanillaQValueNetwork(QValueNetwork):
         return self._action_dim
 
 
-class QuantileQValueNetwork(VanillaQValueNetwork):
+class QuantileQValueNetwork(DistributionalQValueNetwork):
     """
     A quantile version of state-action value (Q-value) network. For each (state, action) input pairs,
     it returns theta(s,a), the locations of quantiles which parameterize the Q value distribution.
@@ -203,46 +204,54 @@ class QuantileQValueNetwork(VanillaQValueNetwork):
     which represent the quantile locations, are outouts of the QuantileQValueNetwork.
 
     Args:
-        Note, the output_dim represents the number of quantiles N.
+        num_quantiles: the number of quantiles N, used to approximate the value distribution.
     """
 
     def __init__(
-        self, state_dim, action_dim, hidden_dims, output_dim, use_layer_norm=False
+        self, state_dim, action_dim, hidden_dims, num_quantiles, use_layer_norm=False
     ):
-        super(QuantileQValueNetwork, self).__init__(
-            state_dim=state_dim,
-            action_dim=action_dim,
+        super(QuantileQValueNetwork, self).__init__()
+
+        self._model = mlp_block(
+            input_dim=state_dim + action_dim,
             hidden_dims=hidden_dims,
-            output_dim=output_dim,
-        )
-        self._num_quantiles = (
-            output_dim  # output_dim represents the number of quantiles
+            output_dim=num_quantiles,
+            use_layer_norm=use_layer_norm,
         )
 
-    def get_quantile_distribution(
+        self._state_dim = state_dim
+        self._action_dim = action_dim
+        self._num_quantiles = num_quantiles
+        self._quantiles = torch.arange(0, self._num_quantiles + 1)
+        self._quantile_midpoints = (self._quantiles[1:] + self._quantiles[:-1]) / 2
+
+    def forward(self, x: Tensor) -> Tensor:
+        return self._model(x)
+
+    def get_q_value_distribution(
         self,
         state_batch: Tensor,
         action_batch: Tensor,
-        curr_available_actions_batch: Optional[Tensor] = None,
     ) -> Tensor:
 
         x = torch.cat([state_batch, action_batch], dim=-1)
         return self.forward(x)
 
-    def get_q_values(
-        self,
-        state_batch: Tensor,
-        action_batch: Tensor,
-        curr_available_actions_batch: Optional[Tensor] = None,
-    ):
-        return_distribution = self.get_quantile_distribution(
-            state_batch, action_batch, curr_available_actions_batch
-        )
-        return return_distribution.mean(dim=-1)
+    @property
+    def quantiles(self) -> Tensor:
+        return self._quantiles
 
     @property
     def num_quantiles(self) -> int:
         return self._num_quantiles
+
+    @property
+    def state_dim(self) -> int:
+        return self._state_dim
+
+    @property
+    def action_dim(self) -> int:
+        return self._action_dim
 
 
 class DuelingQValueNetwork(QValueNetwork):

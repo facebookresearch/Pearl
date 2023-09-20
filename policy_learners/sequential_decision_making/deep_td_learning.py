@@ -48,7 +48,6 @@ class DeepTDLearning(PolicyLearner):
         hidden_dims: Optional[Iterable[int]] = None,
         learning_rate: float = 0.001,
         discount_factor: float = 0.99,
-        capacity: int = 10000,  # what is this? remove it?
         training_rounds: int = 100,
         batch_size: int = 128,
         target_update_freq: int = 10,

@@ -49,3 +49,48 @@ class QValueNetwork(abc.ABC, AutoDeviceNNModule):
             Q-values of (state, action) pairs: (batch_size)
         """
         ...
+
+
+class DistributionalQValueNetwork(abc.ABC, AutoDeviceNNModule):
+    """
+    An interface for estimators of state-action value distribution (Q-value distribution).
+    These are value neural networks with special method for computing the Q-value distribution and the expected Q-values for a state-action pair.
+    Examples include Categorical DQN, Quantile DQN, IQN etc.
+    """
+
+    @property
+    @abc.abstractmethod
+    def state_dim(self) -> int:
+        """Returns state dimention"""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def action_dim(self) -> int:
+        """Returns action dimention"""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def num_quantiles(self) -> int:
+        """Returns number of particles for approximating the quantile distribution"""
+
+    @property
+    @abc.abstractmethod
+    def quantiles(self) -> int:
+        """Returns quantiles of the approximate value distribution"""
+
+    @abc.abstractmethod
+    def get_q_value_distribution(
+        self,
+        state_batch: torch.Tensor,
+        action_batch: torch.Tensor,
+    ) -> torch.Tensor:
+        """Returns Z(s, a), a probability distribution over q values, given s and a. Note that under a risk neutral measure, Q(s,a) = E[Z(s, a)].
+        Args:
+            state_batch (torch.Tensor): a batch of state tensors (batch_size, state_dim)
+            action_batch (torch.Tensor): a batch of action tensors (batch_size, action_dim)
+        Returns:
+            approximation of distribution of Q-values of (state, action) pairs
+        """
+        ...

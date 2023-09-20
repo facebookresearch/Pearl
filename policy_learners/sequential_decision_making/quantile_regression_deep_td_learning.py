@@ -11,23 +11,24 @@ from pearl.api.state import SubjectiveState
 from pearl.neural_networks.common.utils import update_target_network
 from pearl.neural_networks.common.value_networks import QuantileQValueNetwork
 from pearl.neural_networks.sequential_decision_making.q_value_network import (
-    QValueNetwork,
+    DistributionalQValueNetwork,
 )
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
-from pearl.policy_learners.policy_learner import PolicyLearner
+from pearl.policy_learners.policy_learner import DistributionalPolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.safety_modules.risk_sensitive_safety_modules import (  # noqa
+    RiskNeutralSafetyModule,  # noqa
+    RiskSensitiveSafetyModule,
+)
 from pearl.utils.functional_utils.learning.loss_fn_utils import (
     compute_elementwise_huber_loss,
 )
 from torch import optim
 
-
 # TODO: Only support discrete action space problems for now and assumes Gym action space.
-
-
-class QuantileRegressionDeepTDLearning(PolicyLearner):
+class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
     """
     An Abstract Class for Quantile Regression based Deep Temporal Difference learning.
     """
@@ -47,7 +48,7 @@ class QuantileRegressionDeepTDLearning(PolicyLearner):
         target_update_freq: int = 10,
         soft_update_tau: float = 0.05,  # typical value for soft update
         network_type: Type[
-            QValueNetwork
+            DistributionalQValueNetwork
         ] = QuantileQValueNetwork,  # C51 might use a different network type; add that later
         network_instance: Optional[QuantileQValueNetwork] = None,
     ) -> None:
@@ -58,23 +59,19 @@ class QuantileRegressionDeepTDLearning(PolicyLearner):
             on_policy=on_policy,
             is_action_continuous=False,
         )
+
         self._action_space = action_space
         self._discount_factor = discount_factor
         self._target_update_freq = target_update_freq
         self._soft_update_tau = soft_update_tau
-
         self._num_quantiles = num_quantiles
-        self._quantiles = torch.arange(0, self._num_quantiles + 1)
-        self._quantile_midpoints = (
-            (self._quantiles[1:] + self._quantiles[:-1]) / 2
-        ).to(self.device)
 
         def make_specified_network():
             return network_type(
                 state_dim=state_dim,
                 action_dim=action_space.n,
                 hidden_dims=hidden_dims,
-                output_dim=num_quantiles,
+                num_quantiles=num_quantiles,
             )
 
         if network_instance is not None:
@@ -94,6 +91,8 @@ class QuantileRegressionDeepTDLearning(PolicyLearner):
         self._optimizer = optim.AdamW(
             self._Q.parameters(), lr=learning_rate, amsgrad=True
         )
+
+        self._quantile_midpoints = (self._Q._quantile_midpoints).to(self.device)
 
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space
@@ -119,10 +118,10 @@ class QuantileRegressionDeepTDLearning(PolicyLearner):
                 self.device
             )  # (action_space_size, action_dim)
 
-            q_values = self._Q.get_q_values(
-                states_repeated, actions
-            )  # this does a forward pass since all avaialble actions are already stacked together
-
+            # instead of using the 'get_q_values' method of the QuantileQValueNetwork, we invoke a method from the risk sensitive safety module
+            q_values = self.safety_module.get_q_values_under_risk_metric(
+                states_repeated, actions, self._Q
+            )
             exploit_action = torch.argmax(q_values).view((-1)).item()
 
         if exploit:
@@ -168,7 +167,8 @@ class QuantileRegressionDeepTDLearning(PolicyLearner):
         """
         Step 1: a forward pass through the quantile network which gives quantile locations, theta(s,a), for each (state, action) pair
         """
-        quantile_state_action_values = self._Q.get_quantile_distribution(
+        # a forward pass through the quantile network which gives quantile locations for each (state, action) pair
+        quantile_state_action_values = self._Q.get_q_value_distribution(
             state_batch=batch.state, action_batch=batch.action
         )  # shape: (batch_size, num_quantiles)
 

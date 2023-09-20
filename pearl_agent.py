@@ -9,11 +9,14 @@ from pearl.api.state import SubjectiveState
 from pearl.history_summarization_modules.identity_history_summarization_module import (
     IdentityHistorySummarizationModule,
 )
+from pearl.policy_learners.policy_learner import DistributionalPolicyLearner
 from pearl.replay_buffers.examples.single_transition_replay_buffer import (
     SingleTransitionReplayBuffer,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.safety_modules.identity_safety_module import IdentitySafetyModule
+from pearl.safety_modules.risk_sensitive_safety_modules import RiskNeutralSafetyModule
+from pearl.utils.compatibility_checks import pearl_agent_compatibility_check
 
 
 class PearlAgent(Agent):
@@ -24,6 +27,7 @@ class PearlAgent(Agent):
     """
 
     default_safety_module_type = IdentitySafetyModule
+    default_risk_sensitive_safety_module_type = RiskNeutralSafetyModule
     default_history_summarization_module_type = IdentityHistorySummarizationModule
     default_replay_buffer_type = SingleTransitionReplayBuffer
 
@@ -39,16 +43,26 @@ class PearlAgent(Agent):
         Initializes the PearlAgent.
         Args:
             policy_learner: a PolicyLearner instance
-            safety_module: (optional) a SafetyModule instance (default is IdentitySafetyModule)
+            safety_module: (optional) a SafetyModule instance (default is RiskNeutralSafetyModule for distributional policy learner
+                            types and IdentitySafetyModule for all other types)
+            risk_sensitive_safety_module: (optional) a RiskSensitiveSafetyModule instance (default is RiskNeutralSafetyModule)
             history_summarization_module: (optional) a HistorySummarizationModule instance (default is IdentityHistorySummarizationModule)
             replay_buffer: (optional) a replay buffer (default is single-transition replay buffer for now -- will very likely to change)
         """
         self.policy_learner = policy_learner
+
         self.safety_module = (
-            PearlAgent.default_safety_module_type()
-            if safety_module is None
-            else safety_module
+            safety_module
+            if safety_module is not None
+            else (
+                PearlAgent.default_risk_sensitive_safety_module_type()
+                if isinstance(self.policy_learner, (DistributionalPolicyLearner))
+                else PearlAgent.default_safety_module_type()
+            )
         )
+        # adds the safety module to the policy learner as well
+        self.policy_learner.safety_module = self.safety_module
+
         self.replay_buffer = (
             PearlAgent.default_replay_buffer_type()
             if replay_buffer is None
@@ -65,6 +79,10 @@ class PearlAgent(Agent):
             self.policy_learner.is_action_continuous
         )
 
+        # check that all components of the agent are compatible with each other
+        pearl_agent_compatibility_check(
+            self.policy_learner, self.safety_module, self.replay_buffer
+        )
         self._subjective_state = None
         self._latest_action = None
 

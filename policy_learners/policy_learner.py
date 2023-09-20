@@ -121,3 +121,26 @@ class PolicyLearner(ABC, torch.nn.Module):
 
     def __str__(self):
         return self.__class__.__name__
+
+
+class DistributionalPolicyLearner(PolicyLearner):
+    """
+    An abstract interface for distributional policy learners. Enforces the property of a risk sensitive safety module.
+    """
+
+    def __init__(
+        self,
+        on_policy: bool,
+        is_action_continuous: bool,
+        training_rounds: int = 100,
+        batch_size: int = 1,
+        **options,
+    ) -> None:
+
+        super(DistributionalPolicyLearner, self).__init__(
+            on_policy=on_policy,
+            is_action_continuous=is_action_continuous,
+            training_rounds=training_rounds,
+            batch_size=batch_size,
+            **options,
+        )

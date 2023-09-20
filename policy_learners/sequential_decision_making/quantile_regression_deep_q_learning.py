@@ -60,7 +60,6 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
             soft_update_tau=soft_update_tau,
             network_type=QuantileQValueNetwork,  # enforced to be of the type QuantileQValueNetwork
         )
-        print("latest test")
 
     # QR-DQN is based on QuantileRegressionDeepTDLearning class.
     @torch.no_grad()
@@ -84,13 +83,14 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
         Step 1: get quantiles for all possible actions in the batch
             - output shape: (batch_size x action_space_size x num_quantiles)
         """
-        next_state_action_quantiles = self._Q_target.get_quantile_distribution(
+        next_state_action_quantiles = self._Q_target.get_q_value_distribution(
             next_state_batch_repeated, next_available_actions_batch
         )
 
-        # get q values from a q value distribution
-        next_state_action_values = self._Q_target.get_q_values(
-            next_state_batch_repeated, next_available_actions_batch
+        # get q values from a q value distribution under a risk metric
+        # instead of using the 'get_q_values' method of the QuantileQValueNetwork, we invoke a method from the risk sensitive safety module
+        next_state_action_values = self.safety_module.get_q_values_under_risk_metric(
+            next_state_batch_repeated, next_available_actions_batch, self._Q_target
         ).view(
             batch_size, -1
         )  # shape: (batch_size, action_space_size)
