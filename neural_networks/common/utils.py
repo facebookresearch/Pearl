@@ -66,8 +66,8 @@ def mlp_block(
             if input_dim_current_layer == output_dim_current_layer:
                 single_layer_model = ResidualWrapper(single_layer_model)
             else:
-                logging.info(
-                    f"use_skip_connections shouldn't be set to True, due to mismatch dimension {input_dim_current_layer} != {output_dim_current_layer}"
+                logging.warn(
+                    f"Skip connections are enabled, but layer in_dim ({input_dim_current_layer}) != out_dim ({output_dim_current_layer}). Skip connection will not be added for this layer"
                 )
         layers.append(single_layer_model)
 
@@ -77,11 +77,11 @@ def mlp_block(
         last_layer.append(ACTIVATION_MAP[last_activation]())
     last_layer_model = nn.Sequential(*last_layer)
     if use_skip_connections:
-        if input_dim == output_dim:
+        if dims[-2] == dims[-1]:
             last_layer_model = ResidualWrapper(last_layer_model)
         else:
-            raise Exception(
-                f"use_skip_connections shouldn't be set to True, due to mismatch dimension {input_dim} != {output_dim}"
+            raise logging.warn(
+                f"Skip connections are enabled, but layer in_dim ({dims[-2]}) != out_dim ({dims[-1]}). Skip connection will not be added for this layer"
             )
     layers.append(last_layer_model)
     return nn.Sequential(*layers)
