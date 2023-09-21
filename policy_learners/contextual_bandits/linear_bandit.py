@@ -49,12 +49,14 @@ class LinearBandit(ContextualBanditBase):
         A <- A + x*x.t
         b <- b + r*x
         """
+        x = torch.cat([batch.state, batch.action], dim=1)
         self._linear_regression.learn_batch(
-            x=torch.cat([batch.state, batch.action], dim=1),
+            x=x,
             y=batch.reward,
             weight=batch.weight,
         )
-        return {}
+        current_values = self._linear_regression(x)
+        return {"current_values": current_values.mean().item()}
 
     def act(
         self,
