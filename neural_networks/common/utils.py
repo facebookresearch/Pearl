@@ -54,13 +54,13 @@ def mlp_block(
         single_layers.append(
             nn.Linear(input_dim_current_layer, output_dim_current_layer)
         )
-        if use_batch_norm:
-            single_layers.append(nn.BatchNorm1d(output_dim_current_layer))
         if use_layer_norm:
             single_layers.append(nn.LayerNorm(output_dim_current_layer))
         if dropout_ratio > 0:
             single_layers.append(nn.Dropout(p=dropout_ratio))
         single_layers.append(ACTIVATION_MAP[hidden_activation]())
+        if use_batch_norm:
+            single_layers.append(nn.BatchNorm1d(output_dim_current_layer))
         single_layer_model = nn.Sequential(*single_layers)
         if use_skip_connections:
             if input_dim_current_layer == output_dim_current_layer:
