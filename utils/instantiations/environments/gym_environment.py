@@ -1,3 +1,5 @@
+from typing import Iterable
+
 import gym
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
@@ -29,15 +31,27 @@ class GymEnvironment(Environment):
         return self.env.observation_space
 
     def reset(self) -> (Observation, ActionSpace):
-        # Gym version 0.21 still using 'reset' with no arguments
-        observation = self.env.reset()
+        reset_result = self.env.reset()
+        if isinstance(reset_result, Iterable) and isinstance(reset_result[1], dict):
+            # newer Gym versions return an info dict.
+            observation, info = reset_result
+        else:
+            observation = reset_result
         return observation, self.action_space
 
     def step(self, action: Action) -> ActionResult:
-        # Gym version 0.21 still using 'done' as opposed to 'terminated' and 'truncated'
-        observation, reward, done, info = self.env.step(action)
-        terminated = done
-        truncated = False
+        reaction = self.env.step(action)
+        if len(reaction) == 4:
+            # Older Gym versions still using 'done' as opposed to 'terminated' and 'truncated'
+            observation, reward, done, info = reaction
+            terminated = done
+            truncated = False
+        elif len(reaction) == 5:
+            observation, reward, terminated, truncated, info = reaction
+        else:
+            raise ValueError(
+                f"Unexpected action result from Gym (expected 4 or 5 elements): {reaction}"
+            )
         return ActionResult(observation, reward, terminated, truncated, info)
 
     def render(self):
