@@ -120,13 +120,16 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
     ) -> Action:
         with torch.no_grad():
             subjective_state_tensor = (
-                torch.tensor(subjective_state)
-                .view((-1, self._state_dim))
-                .to(self.device)
-            )  # (batch_size x state_dim)
+                subjective_state
+                if isinstance(subjective_state, torch.Tensor)
+                else torch.tensor(subjective_state)
+            )  # ([batch_size x ] state_dim)  # batch dimension only occurs if subjective_state is a batch
+
+            subjective_state_tensor = subjective_state_tensor.to(self.device)
+
             exploit_action = self._actor(
                 subjective_state_tensor
-            )  # (batch_size x action_dim)
+            )  # ([batch_size x ] state_dim)
 
         if exploit:
             return exploit_action

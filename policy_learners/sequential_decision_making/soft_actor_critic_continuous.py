@@ -224,8 +224,8 @@ class ContinuousSoftActorCritic(PolicyGradient):
         policy_loss.backward()
         self._actor_optimizer.step()
 
-    # overight parent class method 'act' which is for discrete case (output probs of actions)
-    # In discrete SAC, actor takes state and outputs action which is a float number.
+    # overide parent class method 'act' which is for discrete case (output probs of actions)
+    # In discrete SAC, actor takes state and outputs a float number action.
     def act(
         self,
         subjective_state: SubjectiveState,
@@ -234,10 +234,15 @@ class ContinuousSoftActorCritic(PolicyGradient):
     ) -> Action:
 
         with torch.no_grad():
-            subjective_state_tensor = torch.tensor(subjective_state).view(
-                (1, -1)
-            )  # (batch x state_dim)
-            action, _ = self._actor(subjective_state_tensor)  # (batch x 1)
+            subjective_state_tensor = (
+                subjective_state
+                if isinstance(subjective_state, torch.Tensor)
+                else torch.tensor(subjective_state)
+            )  # ([batch_size x ] state_dim)  # batch dimension only occurs if subjective_state is a batch
+
+            subjective_state_tensor = subjective_state_tensor.to(self.device)
+
+            action, _ = self._actor(subjective_state_tensor)  # ([batch_size x] 1)
 
         if exploit:
             return action
