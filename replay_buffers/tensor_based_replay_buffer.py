@@ -44,7 +44,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         )  # (1 x action_dim)
 
     def _process_single_reward(self, reward: float) -> torch.tensor:
-        return torch.tensor([reward], device=self.device)
+        return torch.tensor([reward], device=self.device).float()
 
     def _process_single_done(self, done: bool) -> torch.tensor:
         return torch.tensor([done], device=self.device).float()  # (1)

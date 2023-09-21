@@ -1,6 +1,7 @@
 from typing import Iterable
 
 import gym
+import torch
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
@@ -40,7 +41,12 @@ class GymEnvironment(Environment):
         return observation, self.action_space
 
     def step(self, action: Action) -> ActionResult:
-        reaction = self.env.step(action)
+        # Some versions of Gym do not work with tensor-represented actions,
+        # so we ensure it is a numpy array.
+        effective_action = (
+            action.numpy(force=True) if isinstance(action, torch.Tensor) else action
+        )
+        reaction = self.env.step(effective_action)
         if len(reaction) == 4:
             # Older Gym versions still using 'done' as opposed to 'terminated' and 'truncated'
             observation, reward, done, info = reaction
