@@ -65,7 +65,6 @@ class UCBExplorationBase(ValueExplorationBase):
             representation=representation,
         )
         # a safe check before reshape sigma into values
-        assert sigma.numel() == values.numel()
         sigma = sigma.view(values.shape)
         ucb_scores = values + self._alpha * sigma
         return ucb_scores.squeeze()

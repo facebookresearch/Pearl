@@ -32,11 +32,7 @@ class LinUCBExploration(UCBExplorationBase):
         """
         sigma = representation.calculate_sigma(subjective_state)
         nan_check = torch.isnan(sigma)
-        if torch.any(nan_check):
-            # nan doesnt make sense, it's usually caused by bad training data
-            # print out warning and set to 0
-            logging.warning("nan appeared in ucb sigma")
-            sigma[nan_check] = 0
+        sigma = torch.where(nan_check, torch.zeros_like(sigma), sigma)
         return sigma
 
 
