@@ -68,25 +68,15 @@ class LinearRegression(AutoDeviceNNModule):
     def append_ones(x: torch.Tensor) -> torch.Tensor:
         """
         Append a column of ones to x (for intercept of linear regression)
+        We append at the beginning along the last dimension (features)
         """
-        if x.ndim == 1:
-            return torch.cat((torch.ones(1, device=x.device, dtype=x.dtype), x), dim=-1)
-        elif x.ndim == 2:
-            return torch.cat(
-                (torch.ones(x.shape[0], 1, device=x.device, dtype=x.dtype), x), dim=-1
-            )
-        elif x.ndim == 3:
-            return torch.cat(
-                (
-                    torch.ones(
-                        x.shape[0], x.shape[1], 1, device=x.device, dtype=x.dtype
-                    ),
-                    x,
-                ),
-                dim=-1,
-            )
-        else:
-            raise ValueError(f"Unsupported input dimension {x.ndim}")
+        # Create a tensor of ones to append
+        ones = torch.ones_like(torch.select(x, dim=-1, index=0).unsqueeze(-1))
+
+        # Concatenate the input data with the tensor of ones along the last dimension
+        result = torch.cat((ones, x), dim=-1)
+
+        return result
 
     def _validate_train_inputs(
         self, x: torch.Tensor, y: torch.Tensor, weight: torch.Tensor
