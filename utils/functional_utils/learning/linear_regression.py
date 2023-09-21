@@ -124,7 +124,7 @@ class LinearRegression(AutoDeviceNNModule):
             torch.distributed.all_reduce(delta_sum_weight)
         self._A += delta_A.to(self._A.device)
         self._b += delta_b.to(self._b.device)
-        self._sum_weight += delta_sum_weight
+        self._sum_weight += delta_sum_weight.to(self._sum_weight.device)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -169,7 +169,7 @@ class LinearRegression(AutoDeviceNNModule):
 
     def calculate_sigma(self, x: torch.Tensor) -> torch.Tensor:
         x = self.append_ones(x)  # append a column of ones for intercept
-        sigma = torch.sqrt(self.batch_quadratic_form(x, self.inv_A) / self.sum_weight)
+        sigma = torch.sqrt(self.batch_quadratic_form(x, self.inv_A))
         return sigma
 
     def __str__(self) -> str:
