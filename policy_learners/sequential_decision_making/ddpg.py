@@ -122,7 +122,7 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
             subjective_state_tensor = (
                 subjective_state
                 if isinstance(subjective_state, torch.Tensor)
-                else torch.tensor(subjective_state)
+                else torch.tensor(subjective_state, dtype=torch.float32)
             )  # ([batch_size x ] state_dim)  # batch dimension only occurs if subjective_state is a batch
 
             subjective_state_tensor = subjective_state_tensor.to(self.device)

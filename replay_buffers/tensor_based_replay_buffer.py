@@ -30,7 +30,9 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         self.device = get_pearl_device()
 
     def _process_single_state(self, state: SubjectiveState) -> torch.tensor:
-        return torch.tensor(state, device=self.device).unsqueeze(0)  # (1 x state_dim)
+        return (
+            torch.tensor(state, device=self.device).unsqueeze(0).float()
+        )  # (1 x state_dim)
 
     def _process_single_action(
         self, action: Action, action_space: ActionSpace

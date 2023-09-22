@@ -11,6 +11,9 @@ try:
 except ModuleNotFoundError:
     import gym
 
+import logging
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -180,14 +183,16 @@ def generate_plots(data_by_environment_and_method: Dict[str, str]):
         plt.ylabel("Return")
         for method, returns in data_by_method.items():
             plt.plot(returns, label=method)
-            window_size = 5
+            window_size = 10
             rolling_mean_returns = (
                 np.convolve(returns, np.ones(window_size), "valid") / window_size
             )
 
             plt.plot(rolling_mean_returns, label=f"Rolling Mean {method}")
         plt.legend()
-        plt.savefig(f"{environment_name}.png")
+        filename = f"{environment_name}.png"
+        logging.info(f"Saving plot to {os.getcwd()}/{filename}")
+        plt.savefig(filename)
         plt.close()
 
 
@@ -324,6 +329,9 @@ if __name__ == "__main__":
             PearlPPO("Acrobot-v1"),
             PearlDDPG("Pendulum-v1"),
             PearlTD3("Pendulum-v1"),
+            # MuJoCo environments -- require MuJoCo to be installed.
+            PearlDDPG("HalfCheetah-v4"),
+            PearlTD3("HalfCheetah-v4"),
         ]
     )
 
