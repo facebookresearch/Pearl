@@ -1,6 +1,10 @@
 from abc import ABC, abstractmethod
 
-import gym
+try:
+    import gymnasium as gym
+except ModuleNotFoundError:
+    import gym
+
 import numpy as np
 import torch
 import torch.nn.functional as F

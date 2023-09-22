@@ -6,7 +6,10 @@ from abc import ABC, abstractmethod
 from numbers import Number
 from typing import Dict, Iterable
 
-import gym
+try:
+    import gymnasium as gym
+except ModuleNotFoundError:
+    import gym
 
 import matplotlib.pyplot as plt
 import numpy as np

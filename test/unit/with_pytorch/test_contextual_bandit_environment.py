@@ -2,7 +2,11 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
 
-import gym
+try:
+    import gymnasium as gym
+except ModuleNotFoundError:
+    import gym
+
 import torch
 from pearl.utils.instantiations.environments.contextual_bandit_linear_synthetic_environment import (
     ContextualBanditLinearSyntheticEnvironment,

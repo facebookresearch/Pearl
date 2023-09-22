@@ -1,6 +1,15 @@
+import logging
 from typing import Iterable
 
-import gym
+try:
+    import gymnasium as gym
+
+    logging.info("Using 'gymnasium' package.")
+except ModuleNotFoundError:
+    import gym
+
+    logging.warning("Using deprecated 'gym' package.")
+
 import torch
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult

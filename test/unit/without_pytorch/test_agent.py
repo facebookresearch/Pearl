@@ -2,7 +2,11 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
 
-import gym
+try:
+    import gymnasium as gym
+except ModuleNotFoundError:
+    import gym
+
 from pearl.pearl_agent import PearlAgent
 
 from pearl.policy_learners.sequential_decision_making.tabular_q_learning import (
