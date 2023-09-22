@@ -150,6 +150,74 @@ class VanillaCNN(ValueNetwork):
         return out_fc
 
 
+class CNNQValueNetwork(VanillaCNN):
+    """
+    A CNN version of state-action value (Q-value) network.
+    """
+
+    def __init__(
+        self,
+        input_width: int,
+        input_height: int,
+        input_channels_count: int,
+        kernel_sizes: List[int],
+        output_channels_list: List[int],
+        strides: List[int],
+        paddings: List[int],
+        action_dim: int,
+        hidden_dims_fully_connected: Optional[List[int]] = None,
+        output_dim: int = 1,
+        use_batch_norm_conv: bool = False,
+        use_batch_norm_fully_connected: bool = False,
+    ):
+        super(CNNQValueNetwork, self).__init__(
+            input_width=input_width,
+            input_height=input_height,
+            input_channels_count=input_channels_count,
+            kernel_sizes=kernel_sizes,
+            output_channels_list=output_channels_list,
+            strides=strides,
+            paddings=paddings,
+            hidden_dims_fully_connected=hidden_dims_fully_connected,
+            use_batch_norm_conv=use_batch_norm_conv,
+            use_batch_norm_fully_connected=use_batch_norm_fully_connected,
+            output_dim=output_dim,
+        )
+        # we concatenate actions to state representations in the mlp block of the Q-value network
+        self._mlp_input_dims = self.compute_output_dim_model_cnn() + action_dim
+        self._model_fc = mlp_block(
+            input_dim=self._mlp_input_dims,
+            hidden_dims=self._hidden_dims_fully_connected,
+            output_dim=self._output_dim,
+            use_batch_norm=self._use_batch_norm_fully_connected,
+        )
+        self._action_dim = action_dim
+
+    def forward(self, x: Tensor) -> Tensor:
+        return self._model(x)
+
+    def get_q_values(
+        self,
+        state_batch: Tensor,
+        action_batch: Tensor,
+        curr_available_actions_batch: Optional[Tensor] = None,
+    ):
+        batch_size = state_batch.shape[0]
+        state_representation_batch = self._model_cnn(state_batch)
+        state_embedding_batch = torch.flatten(
+            state_representation_batch, start_dim=1, end_dim=-1
+        ).view(batch_size, -1)
+
+        # concatenate actions to state representations and do a forward pass through the mlp_block
+        x = torch.cat([state_embedding_batch, action_batch], dim=-1)
+        q_values_batch = self._model_fc(x)
+        return q_values_batch.view(-1)
+
+    @property
+    def action_dim(self) -> int:
+        return self._action_dim
+
+
 class VanillaQValueNetwork(QValueNetwork):
     """
     A vanilla version of state-action value (Q-value) network.

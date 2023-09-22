@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader, Subset
 from torchvision import transforms
 
 
-class TestVanillaMlps(unittest.TestCase):
+class TestVanillaCNNs(unittest.TestCase):
     def setUp(self) -> None:
         transform = transforms.Compose([transforms.ToTensor()])
         mnist_dataset = torchvision.datasets.MNIST(
