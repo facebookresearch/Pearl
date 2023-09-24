@@ -56,10 +56,18 @@ number_of_episodes = 300
 
 
 class Evaluation(ABC):
-    """Evaluation of an RL method on a given environment."""
+    """
+    Evaluation of an RL method on a given gym environment.
+    Args:
+        gym_environment_name: name of the gym environment to be evaluated
+        *args: arguments passed to the constructor of the gym environment
+        **kwargs: keyword arguments passed to the constructor of the gym environment
+    """
 
-    def __init__(self, gym_environment_name):
+    def __init__(self, gym_environment_name, *args, **kwargs):
         self.gym_environment_name = gym_environment_name
+        self.args = args
+        self.kwargs = kwargs
 
     @abstractmethod
     def evaluate(self) -> Iterable[Number]:
@@ -68,11 +76,11 @@ class Evaluation(ABC):
 
 
 class PearlDQN(Evaluation):
-    def __init__(self, gym_environment_name):
-        super(PearlDQN, self).__init__(gym_environment_name)
+    def __init__(self, gym_environment_name, *args, **kwargs):
+        super(PearlDQN, self).__init__(gym_environment_name, *args, **kwargs)
 
     def evaluate(self) -> Iterable[Number]:
-        env = GymEnvironment(self.gym_environment_name)
+        env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=DeepQLearning(
                 state_dim=env.observation_space.shape[0],
@@ -89,11 +97,11 @@ class PearlDQN(Evaluation):
 
 
 class PearlPPO(Evaluation):
-    def __init__(self, gym_environment_name):
-        super(PearlPPO, self).__init__(gym_environment_name)
+    def __init__(self, gym_environment_name, *args, **kwargs):
+        super(PearlPPO, self).__init__(gym_environment_name, *args, **kwargs)
 
     def evaluate(self) -> Iterable[Number]:
-        env = GymEnvironment(self.gym_environment_name)
+        env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=ProximalPolicyOptimization(
                 state_dim=env.observation_space.shape[0],
@@ -112,11 +120,11 @@ class PearlPPO(Evaluation):
 
 
 class PearlDDPG(Evaluation):
-    def __init__(self, gym_environment_name):
-        super(PearlDDPG, self).__init__(gym_environment_name)
+    def __init__(self, gym_environment_name, *args, **kwargs):
+        super(PearlDDPG, self).__init__(gym_environment_name, *args, **kwargs)
 
     def evaluate(self) -> Iterable[Number]:
-        env = GymEnvironment(self.gym_environment_name)
+        env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=DeepDeterministicPolicyGradient(
                 state_dim=env.observation_space.shape[0],
@@ -135,11 +143,11 @@ class PearlDDPG(Evaluation):
 
 
 class PearlTD3(Evaluation):
-    def __init__(self, gym_environment_name):
-        super(PearlTD3, self).__init__(gym_environment_name)
+    def __init__(self, gym_environment_name, *args, **kwargs):
+        super(PearlTD3, self).__init__(gym_environment_name, *args, **kwargs)
 
     def evaluate(self) -> Iterable[Number]:
-        env = GymEnvironment(self.gym_environment_name)
+        env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=TD3(
                 state_dim=env.observation_space.shape[0],
