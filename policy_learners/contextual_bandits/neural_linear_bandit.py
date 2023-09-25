@@ -18,6 +18,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.device import get_pearl_device
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
@@ -113,6 +114,7 @@ class NeuralLinearBandit(NeuralBandit):
         subjective_state: SubjectiveState,
         action_space: DiscreteActionSpace = None,
     ) -> torch.Tensor:
+        self.device = get_pearl_device()
         # TODO generalize for all kinds of exploration module
         assert isinstance(self._exploration_module, LinUCBExploration)
         subjective_state = subjective_state.to(self.device)
