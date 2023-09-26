@@ -35,6 +35,9 @@ from pearl.policy_learners.sequential_decision_making.quantile_regression_deep_q
 from pearl.policy_learners.sequential_decision_making.soft_actor_critic import (
     SoftActorCritic,
 )
+from pearl.policy_learners.sequential_decision_making.soft_actor_critic_continuous import (
+    ContinuousSoftActorCritic,
+)
 from pearl.policy_learners.sequential_decision_making.td3 import TD3
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
@@ -298,13 +301,14 @@ class IntegrationTests(unittest.TestCase):
         env = GymEnvironment("CartPole-v1")
         agent = PearlAgent(
             policy_learner=SoftActorCritic(
-                env.observation_space.shape[0],
-                env.action_space,
-                [64, 64, 64],
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                hidden_dims=[64, 64, 64],
                 training_rounds=100,
                 batch_size=100,
                 entropy_coef=0.1,
-                learning_rate=0.0003,
+                actor_learning_rate=0.0001,
+                critic_learning_rate=0.0003,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(50000),
         )
@@ -314,6 +318,38 @@ class IntegrationTests(unittest.TestCase):
                 env=env,
                 target_return=500,
                 max_episodes=1_000,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+            )
+        )
+
+    def test_continuous_sac(self) -> None:
+        """
+        This test is checking if continuous SAC will eventually learn for Pendulum-v1.
+        The target is to get moving average of returns to -250 or less.
+        """
+        env = GymEnvironment("Pendulum-v1")
+
+        agent = PearlAgent(
+            policy_learner=ContinuousSoftActorCritic(
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                hidden_dims=[64, 64],
+                training_rounds=50,
+                batch_size=100,
+                entropy_coef=0.1,
+                actor_learning_rate=0.001,
+                critic_learning_rate=0.001,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(100000),
+        )
+        self.assertTrue(
+            target_return_is_reached(
+                agent=agent,
+                env=env,
+                target_return=-250,
+                max_episodes=1500,
                 learn=True,
                 learn_after_episode=True,
                 exploit=False,

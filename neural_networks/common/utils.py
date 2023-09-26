@@ -138,6 +138,12 @@ def init_weights(m):
         m.bias.data.fill_(0.01)
 
 
+def uniform_init_weights(m):
+    if isinstance(m, nn.Linear):
+        nn.init.uniform_(m.weight, -0.001, 0.001)
+        nn.init.uniform_(m.bias, -0.001, 0.001)
+
+
 def update_target_network(target_network, source_network, tau):
     # Q_target = (1 - tao) * Q_target + tao*Q
     target_net_state_dict = target_network.state_dict()

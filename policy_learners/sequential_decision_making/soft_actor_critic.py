@@ -1,9 +1,8 @@
-from typing import Any, Dict, Iterable, Type
+from typing import Iterable, Type
 
 import torch
 import torch.nn.functional as F
 from pearl.api.action_space import ActionSpace
-from pearl.neural_networks.common.utils import init_weights, update_target_networks
 from pearl.neural_networks.common.value_networks import VanillaQValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetworkType,
@@ -13,26 +12,28 @@ from pearl.neural_networks.sequential_decision_making.actor_networks import (
 from pearl.neural_networks.sequential_decision_making.q_value_network import (
     QValueNetwork,
 )
+from pearl.policy_learners.exploration_modules.common.propensity_exploration import (
+    PropensityExploration,
+)
 
-from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
+# from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
-from pearl.policy_learners.sequential_decision_making.policy_gradient import (
-    PolicyGradient,
+from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
+    OffPolicyActorCritic,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from torch import optim
 
 
-# TODO: Only support discrete action space problems for now and assumes Gym action space.
 # Currently available actions is not used. Needs to be updated once we know the input structure
 # of production stack on this param.
 
 # TODO: to make things easier with a single optimizer, we need to further polish this method.
-class SoftActorCritic(PolicyGradient):
+class SoftActorCritic(OffPolicyActorCritic):
     """
-    Soft Actor Critic Policy Learner.
+    Implementation of Soft Actor Critic Policy Learner for discrete action spaces.
     """
 
     def __init__(
@@ -41,62 +42,33 @@ class SoftActorCritic(PolicyGradient):
         action_space: ActionSpace,
         hidden_dims: Iterable[int],
         exploration_module: ExplorationModule = None,
-        learning_rate: float = 0.0001,
+        critic_learning_rate: float = 0.0001,
+        actor_learning_rate: float = 0.0001,
         discount_factor: float = 0.99,
         training_rounds: int = 100,
         batch_size: int = 128,
         entropy_coef: float = 0.2,
-        soft_update_tau: float = 0.005,
+        critic_soft_update_tau: float = 0.005,
         actor_network_type: ActorNetworkType = VanillaActorNetwork,
         critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
     ) -> None:
         super(SoftActorCritic, self).__init__(
             state_dim=state_dim,
             action_space=action_space,
+            action_dim=action_space.n,
             hidden_dims=hidden_dims,
-            exploration_module=exploration_module,
-            learning_rate=learning_rate,
+            critic_learning_rate=critic_learning_rate,
+            actor_learning_rate=actor_learning_rate,
+            exploration_module=exploration_module
+            if exploration_module is not None
+            else PropensityExploration(),
             discount_factor=discount_factor,
+            training_rounds=training_rounds,
             batch_size=batch_size,
-            network_type=actor_network_type,
-            on_policy=False,
-        )
-
-        # TODO: Assumes Gym interface, fix it.
-        def make_specified_critic_network():
-            return critic_network_type(
-                state_dim=state_dim,
-                action_dim=action_space.n,
-                hidden_dims=hidden_dims,
-                output_dim=1,
-            )
-
-        # twin critic: using two separate critic networks to reduce overestimation bias
-        # optimizers of two critics are alredy initialized in TwinCritic
-        self._twin_critics = TwinCritic(
-            state_dim=state_dim,
-            action_dim=action_space.n,
-            hidden_dims=hidden_dims,
-            learning_rate=learning_rate,
-            network_type=critic_network_type,
-            init_fn=init_weights,
-        )
-
-        # target networks of twin critics
-        self._targets_of_twin_critics = TwinCritic(
-            state_dim=state_dim,
-            action_dim=action_space.n,
-            hidden_dims=hidden_dims,
-            learning_rate=learning_rate,
-            network_type=critic_network_type,
-            init_fn=init_weights,
-        )
-
-        # target networks are initialized to parameters of the source network (tau is set to 1)
-        update_target_networks(
-            self._targets_of_twin_critics._critic_networks_combined,
-            self._twin_critics._critic_networks_combined,
-            tau=1,
+            critic_soft_update_tau=critic_soft_update_tau,
+            is_action_continuous=False,
+            actor_network_type=actor_network_type,
+            critic_network_type=critic_network_type,
         )
 
         # This is needed to avoid actor softmax overflow issue.
@@ -109,27 +81,10 @@ class SoftActorCritic(PolicyGradient):
         self._entropy_coef = entropy_coef
         self._rounds = 0
 
-        self._soft_update_tau = soft_update_tau
-        self._training_rounds = training_rounds
-
+    ## sac uses a learning rate scheduler specifically
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space
         self.scheduler.step()
-
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
-
-        self._critic_learn_batch(batch)  # update critic
-        self._actor_learn_batch(batch)  # update actor
-
-        self._rounds += 1
-
-        # update targets of twin critics using soft updates
-        update_target_networks(
-            self._targets_of_twin_critics._critic_networks_combined,
-            self._twin_critics._critic_networks_combined,
-            self._soft_update_tau,
-        )
-        return {}
 
     def _critic_learn_batch(self, batch: TransitionBatch) -> None:
 
@@ -142,7 +97,6 @@ class SoftActorCritic(PolicyGradient):
             * (1 - done_batch)
         ) + reward_batch  # (batch_size), r + gamma * V(s)
 
-        # self._critics.optimize(target_fn, expected_state_action_values)
         loss_critic_update = self._twin_critics.optimize_twin_critics_towards_target(
             state_batch=batch.state,
             action_batch=batch.action,

@@ -13,6 +13,7 @@ except ModuleNotFoundError:
 
 import logging
 import os
+import pickle
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,6 +31,9 @@ from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
 from pearl.policy_learners.sequential_decision_making.ppo import (
     ProximalPolicyOptimization,
 )
+from pearl.policy_learners.sequential_decision_making.soft_actor_critic_continuous import (
+    ContinuousSoftActorCritic,
+)
 from pearl.policy_learners.sequential_decision_making.td3 import TD3
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
@@ -37,6 +41,7 @@ from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buff
 from pearl.replay_buffers.sequential_decision_making.on_policy_episodic_replay_buffer import (
     OnPolicyEpisodicReplayBuffer,
 )
+from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
     online_learning_returns,
 )
@@ -52,7 +57,8 @@ from torch import nn
 
 warnings.filterwarnings("ignore")
 
-number_of_episodes = 300
+number_of_episodes = 500
+save_path = "../fbsource/fbcode/pearl/"
 
 
 class Evaluation(ABC):
@@ -92,6 +98,31 @@ class PearlDQN(Evaluation):
         )
         returns = online_learning_returns(
             agent, env, number_of_episodes=number_of_episodes, learn_after_episode=True
+        )
+        return returns
+
+
+class PearlContinuousSAC(Evaluation):
+    def __init__(self, gym_environment_name, *args, **kwargs):
+        super(PearlContinuousSAC, self).__init__(gym_environment_name, *args, **kwargs)
+
+    def evaluate(self) -> Iterable[Number]:
+        env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
+        agent = PearlAgent(
+            policy_learner=ContinuousSoftActorCritic(
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                hidden_dims=[64, 64, 64],
+                training_rounds=1,
+                batch_size=256,
+                entropy_coef=0.1,
+                actor_learning_rate=0.0005,
+                critic_learning_rate=0.0005,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(100000),
+        )
+        returns = online_learning_returns(
+            agent, env, number_of_episodes=number_of_episodes, learn_after_episode=False
         )
         return returns
 
@@ -167,11 +198,15 @@ class PearlTD3(Evaluation):
 
 def evaluate(evaluations: Iterable[Evaluation]):
     """Obtain data from evaluations and plot them, one plot per environment"""
-    data_by_environment_and_method = collect_data(evaluations)
-    generate_plots(data_by_environment_and_method)
+    num_seeds = 4
+    for seed in range(num_seeds):
+        set_seed(seed)
+        print(f"Seed {seed}")
+        data_by_environment_and_method = collect_data(evaluations, seed=seed)
+        generate_plots(data_by_environment_and_method, seed=seed)
 
 
-def collect_data(evaluations: Iterable[Evaluation]) -> Dict[str, str]:
+def collect_data(evaluations: Iterable[Evaluation], seed: int) -> Dict[str, str]:
     data_by_environment_and_method = {}
     for evaluation in evaluations:
         method = type(evaluation).__name__
@@ -181,10 +216,16 @@ def collect_data(evaluations: Iterable[Evaluation]) -> Dict[str, str]:
         if environment not in data_by_environment_and_method:
             data_by_environment_and_method[environment] = {}
         data_by_environment_and_method[environment][method] = returns
+        with open(
+            save_path + "returns_data_seed_" + str(seed) + ".pickle", "wb"
+        ) as handle:
+            pickle.dump(
+                data_by_environment_and_method, handle, protocol=pickle.HIGHEST_PROTOCOL
+            )
     return data_by_environment_and_method
 
 
-def generate_plots(data_by_environment_and_method: Dict[str, str]):
+def generate_plots(data_by_environment_and_method: Dict[str, str], seed: int):
     for environment_name, data_by_method in data_by_environment_and_method.items():
         plt.title(environment_name)
         plt.xlabel("Episode")
@@ -198,9 +239,10 @@ def generate_plots(data_by_environment_and_method: Dict[str, str]):
 
             plt.plot(rolling_mean_returns, label=f"Rolling Mean {method}")
         plt.legend()
-        filename = f"{environment_name}.png"
+        filename = f"{environment_name} and seed = {seed}.png"
         logging.info(f"Saving plot to {os.getcwd()}/{filename}")
         plt.savefig(filename)
+        plt.savefig(save_path + filename)
         plt.close()
 
 
@@ -331,15 +373,16 @@ if __name__ == "__main__":
     evaluate(
         [
             # Methods applied to the same environment will be grouped in the same plot.
-            PearlDQN("CartPole-v1"),
-            PearlPPO("CartPole-v1"),
-            PearlDQN("Acrobot-v1"),
-            PearlPPO("Acrobot-v1"),
-            PearlDDPG("Pendulum-v1"),
-            PearlTD3("Pendulum-v1"),
+            # PearlDQN("CartPole-v1"),
+            # PearlPPO("CartPole-v1"),
+            # PearlDQN("Acrobot-v1"),
+            # PearlPPO("Acrobot-v1"),
+            # PearlDDPG("Pendulum-v1"),
+            # PearlTD3("Pendulum-v1"),
             # MuJoCo environments -- require MuJoCo to be installed.
-            PearlDDPG("HalfCheetah-v4"),
-            PearlTD3("HalfCheetah-v4"),
+            # PearlDDPG("HalfCheetah-v4"),
+            # PearlTD3("HalfCheetah-v4"),
+            PearlContinuousSAC("Ant-v4")
         ]
     )
 
