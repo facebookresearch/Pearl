@@ -13,6 +13,7 @@ from pearl.neural_networks.sequential_decision_making.q_value_network import (
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.safety_modules.safety_module import SafetyModule
+from pearl.utils.device import get_pearl_device
 from torch import Tensor
 
 
@@ -24,6 +25,7 @@ class RiskSensitiveSafetyModule(SafetyModule):
 
     def __init__(self, **options) -> None:
         self._action_space = None
+        self._device = get_pearl_device()
 
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space
@@ -110,9 +112,17 @@ class QuantileNetworkMeanVarianceSafetyModule(RiskSensitiveSafetyModule):
             state_batch,
             action_batch,
         )
+        mean_value = q_value_distribution.mean(dim=-1, keepdim=True)
+        quantiles = q_value_distribution_network.quantiles.to(self._device)
 
-        mean_value = q_value_distribution.mean(dim=-1)
-        quantiles = q_value_distribution_network.quantiles
+        """
+        variance computation:
+            - sum_{i=0}^{N-1} (tau_{i+1} - tau_{i}) * (q_value_distribution_{tau_i} - mean_value)^2
+        """
         quantile_differences = (quantiles[1:] - quantiles[:-1]) / 2
-        variance = (quantile_differences * (q_value_distribution - mean_value)).mean()
-        return mean_value - (self._beta * variance)
+        variance = (quantile_differences * (q_value_distribution - mean_value)).sum(
+            dim=-1, keepdim=True
+        )
+
+        variance_adjusted_mean = (mean_value - (self._beta * variance)).view(-1)
+        return variance_adjusted_mean
