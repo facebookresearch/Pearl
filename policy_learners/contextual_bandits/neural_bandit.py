@@ -42,6 +42,7 @@ class NeuralBandit(ContextualBanditBase):
         learning_rate: float = 0.001,
         # TODO define optimizer config to use by all deep algorithms
         use_keyed_optimizer: bool = False,
+        # pyre-fixme[2]: Parameter must be annotated.
         **kwargs,
     ) -> None:
         super(NeuralBandit, self).__init__(
@@ -56,6 +57,7 @@ class NeuralBandit(ContextualBanditBase):
             output_dim=output_dim,
             **kwargs,
         )
+        # pyre-fixme[4]: Attribute must be annotated.
         self._optimizer = optim.AdamW(
             self._deep_represent_layers.parameters(), lr=learning_rate, amsgrad=True
         )
@@ -71,8 +73,13 @@ class NeuralBandit(ContextualBanditBase):
                     ),
                 )
             ]
+            # pyre-fixme[6]: For 1st argument expected `List[Union[Tuple[str,
+            #  KeyedOptimizer], KeyedOptimizer]]` but got `List[Tuple[str,
+            #  KeyedOptimizerWrapper]]`.
             self._optimizer = CombinedOptimizer(optims)
 
+    # pyre-fixme[15]: `learn_batch` overrides method defined in
+    #  `ContextualBanditBase` inconsistently.
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         input_features = torch.cat([batch.state, batch.action], dim=1)
 
@@ -89,6 +96,8 @@ class NeuralBandit(ContextualBanditBase):
         self._optimizer.step()
         return {"loss": loss.item()}
 
+    # pyre-fixme[14]: `act` overrides method defined in `ContextualBanditBase`
+    #  inconsistently.
     def act(
         self,
         subjective_state: SubjectiveState,
@@ -103,8 +112,11 @@ class NeuralBandit(ContextualBanditBase):
             action index chosen given state and action vectors
         """
         # It doesnt make sense to call act if we are not working with action vector
+        # pyre-fixme[16]: `ActionSpace` has no attribute `action_dim`.
         assert action_space.action_dim > 0
+        # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
         action_count = action_space.n
+        # pyre-fixme[16]: `ActionSpace` has no attribute `cat_state_tensor`.
         new_feature = action_space.cat_state_tensor(subjective_state)
         values = self._deep_represent_layers(new_feature).squeeze()
         # batch_size * action_count
@@ -119,6 +131,7 @@ class NeuralBandit(ContextualBanditBase):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
+        # pyre-fixme[9]: action_space has type `DiscreteActionSpace`; used as `None`.
         action_space: DiscreteActionSpace = None,
     ) -> torch.Tensor:
         """

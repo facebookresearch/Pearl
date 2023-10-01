@@ -32,9 +32,11 @@ class PolicyLearner(ABC, torch.nn.Module):
         is_action_continuous: bool,
         training_rounds: int = 100,
         batch_size: int = 1,
+        # pyre-fixme[2]: Parameter must be annotated.
         **options,
     ) -> None:
         super(PolicyLearner, self).__init__()
+        # pyre-fixme[4]: Attribute must be annotated.
         self._exploration_module = (
             options["exploration_module"]
             if "exploration_module" in options
@@ -45,7 +47,9 @@ class PolicyLearner(ABC, torch.nn.Module):
         self._training_steps = 0
         self.on_policy = on_policy
         self.is_action_continuous = is_action_continuous
+        # pyre-fixme[4]: Attribute must be annotated.
         self.device = get_pearl_device()
+        # pyre-fixme[4]: Attribute must be annotated.
         self.distribution_enabled = is_distribution_enabled()
 
     @property
@@ -61,6 +65,7 @@ class PolicyLearner(ABC, torch.nn.Module):
         return self._exploration_module
 
     @exploration_module.setter
+    # pyre-fixme[2]: Parameter must be annotated.
     def exploration_module(self, new_exploration_module) -> None:
         self._exploration_module = new_exploration_module
 
@@ -100,6 +105,8 @@ class PolicyLearner(ABC, torch.nn.Module):
         for _ in range(self._training_rounds):
             self._training_steps += 1
             batch = replay_buffer.sample(batch_size)
+            # pyre-fixme[6]: For 1st argument expected `TransitionBatch` but got
+            #  `Iterable[typing.Any]`.
             single_report = self.learn_batch(batch)
             for k, v in single_report.items():
                 if k in report:
@@ -119,6 +126,7 @@ class PolicyLearner(ABC, torch.nn.Module):
         """
         raise NotImplementedError("learn_batch is not implemented")
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __str__(self):
         return self.__class__.__name__
 
@@ -134,6 +142,7 @@ class DistributionalPolicyLearner(PolicyLearner):
         is_action_continuous: bool,
         training_rounds: int = 100,
         batch_size: int = 1,
+        # pyre-fixme[2]: Parameter must be annotated.
         **options,
     ) -> None:
 

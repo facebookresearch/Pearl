@@ -33,13 +33,17 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
         self,
         capacity: int,
         goal_dim: int,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         reward_fn: Callable[[Any, Any], float],
+        # pyre-fixme[9]: done_fn has type `(Any, Any) -> bool`; used as `None`.
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         done_fn: Callable[[Any, Any], bool] = None,
     ) -> None:
         super(HindsightExperienceReplayBuffer, self).__init__(capacity=capacity)
         self._goal_dim = goal_dim
         self._reward_fn = reward_fn
         self._done_fn = done_fn
+        # pyre-fixme[4]: Attribute must be annotated.
         self._trajectory = []  # a list of transition
 
     def push(

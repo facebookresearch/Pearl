@@ -60,6 +60,7 @@ class TestEnsembles(unittest.TestCase):
 
         x = torch.normal(torch.zeros((1, self.x_dim)), torch.ones((1, self.x_dim)))
         x = x.unsqueeze(1).repeat(1, network.ensemble_size, 1)
+        # pyre-fixme[6]: For 1st argument expected `List[Module]` but got `ModuleList`.
         variance = torch.var(ensemble_forward(network.models, x))
 
         self.assertTrue(variance > 1e-6)

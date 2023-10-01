@@ -31,15 +31,20 @@ def scale_action(
             low and high are the same for each dimension (as is the case for most gym environments).
     """
     device = get_pearl_device()
+    # pyre-fixme[16]: `ActionSpace` has no attribute `low`.
     low, high = torch.tensor(action_space.low).to(device), torch.tensor(
+        # pyre-fixme[16]: `ActionSpace` has no attribute `high`.
         action_space.high
     ).to(device)
     return low + (0.5 * (normalized_action + 1.0) * (high - low))
 
 
 class VanillaActorNetwork(AutoDeviceNNModule):
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, input_dim, hidden_dims, output_dim, action_space=None):
         super(VanillaActorNetwork, self).__init__()
+        # pyre-fixme[4]: Attribute must be annotated.
         self._model = mlp_block(
             input_dim=input_dim,
             hidden_dims=hidden_dims,
@@ -59,8 +64,11 @@ class VanillaContinuousActorNetwork(AutoDeviceNNModule):
         output_dim: action dimension
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, input_dim, hidden_dims, output_dim, action_space=None):
         super(VanillaContinuousActorNetwork, self).__init__()
+        # pyre-fixme[4]: Attribute must be annotated.
         self._model = mlp_block(
             input_dim=input_dim,
             hidden_dims=hidden_dims,
@@ -86,6 +94,7 @@ class GaussianActorNetwork(AutoDeviceNNModule):
         action_space: action space
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         input_dim: int,
@@ -99,6 +108,7 @@ class GaussianActorNetwork(AutoDeviceNNModule):
                 "The hidden dims cannot be empty for a gaussian actor network."
             )
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self._model = mlp_block(
             input_dim=input_dim,
             hidden_dims=hidden_dims[:-1],
@@ -109,6 +119,9 @@ class GaussianActorNetwork(AutoDeviceNNModule):
         self.fc_std = torch.nn.Linear(hidden_dims[-1], output_dim)
         self._action_space = action_space
         # check this for multi-dimensional spaces
+        # pyre-fixme[4]: Attribute must be annotated.
+        # pyre-fixme[16]: `ActionSpace` has no attribute `high`.
+        # pyre-fixme[16]: `ActionSpace` has no attribute `low`.
         self._action_bound = (action_space.high[0] - action_space.low[0]) / 2
 
         # preventing the actor network from learning a high entropy distribution (soft-actor critic has a
@@ -123,6 +136,7 @@ class GaussianActorNetwork(AutoDeviceNNModule):
         log_std = torch.clamp(log_std, min=self._log_std_min, max=self._log_std_max)
         return mean, log_std
 
+    # pyre-fixme[3]: Return type must be annotated.
     def sample_action_and_get_log_prob(self, state_batch: Tensor):
         epsilon = 1e-6
         mean, log_std = self.forward(state_batch)

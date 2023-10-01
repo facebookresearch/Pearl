@@ -55,13 +55,18 @@ class DeepTDLearning(PolicyLearner):
         is_conservative: bool = False,
         conservative_alpha: float = 2.0,
         network_type: Type[QValueNetwork] = VanillaQValueNetwork,
+        # pyre-fixme[2]: Parameter must be annotated.
         state_output_dim=None,
+        # pyre-fixme[2]: Parameter must be annotated.
         action_output_dim=None,
+        # pyre-fixme[2]: Parameter must be annotated.
         state_hidden_dims=None,
+        # pyre-fixme[2]: Parameter must be annotated.
         action_hidden_dims=None,
         network_instance: Optional[QValueNetwork] = None,
         # TODO define optimizer config to use by all deep algorithms
         use_keyed_optimizer: bool = False,
+        # pyre-fixme[2]: Parameter must be annotated.
         **kwargs,
     ) -> None:
         super(DeepTDLearning, self).__init__(
@@ -80,10 +85,17 @@ class DeepTDLearning(PolicyLearner):
         self._conservative_alpha = conservative_alpha
 
         # TODO: Assumes Gym interface, fix it.
+        # pyre-fixme[53]: Captured variable `action_hidden_dims` is not annotated.
+        # pyre-fixme[53]: Captured variable `action_output_dim` is not annotated.
+        # pyre-fixme[53]: Captured variable `state_hidden_dims` is not annotated.
+        # pyre-fixme[53]: Captured variable `state_output_dim` is not annotated.
+        # pyre-fixme[3]: Return type must be annotated.
         def make_specified_network():
             if network_type == TwoTowerQValueNetwork:
+                # pyre-fixme[45]: Cannot instantiate abstract class `QValueNetwork`.
                 return network_type(
                     state_dim=state_dim,
+                    # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
                     action_dim=action_space.n,
                     hidden_dims=hidden_dims,
                     state_output_dim=state_output_dim,
@@ -93,6 +105,7 @@ class DeepTDLearning(PolicyLearner):
                     output_dim=1,
                 )
             else:
+                # pyre-fixme[45]: Cannot instantiate abstract class `QValueNetwork`.
                 return network_type(
                     state_dim=state_dim,
                     action_dim=action_space.n,
@@ -102,18 +115,23 @@ class DeepTDLearning(PolicyLearner):
 
         if network_instance is not None:
             network_instance.to(self.device)
+            # pyre-fixme[4]: Attribute must be annotated.
             self._Q = network_instance
             assert (
                 network_instance.state_dim == state_dim
             ), "state dimension doesn't match for policy learner and network"
             assert (
-                network_instance.action_dim == action_space.n
+                network_instance.action_dim
+                # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
+                == action_space.n
             ), "action dimension doesn't match for policy learner and network"
         else:
             assert hidden_dims is not None
             self._Q = make_specified_network()
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self._Q_target = copy.deepcopy(self._Q)
+        # pyre-fixme[4]: Attribute must be annotated.
         self._optimizer = optim.AdamW(
             self._Q.parameters(), lr=learning_rate, amsgrad=True
         )
@@ -129,6 +147,9 @@ class DeepTDLearning(PolicyLearner):
                     ),
                 )
             ]
+            # pyre-fixme[6]: For 1st argument expected `List[Union[Tuple[str,
+            #  KeyedOptimizer], KeyedOptimizer]]` but got `List[Tuple[str,
+            #  KeyedOptimizerWrapper]]`.
             self._optimizer = CombinedOptimizer(optims)
 
     def reset(self, action_space: ActionSpace) -> None:
@@ -147,7 +168,10 @@ class DeepTDLearning(PolicyLearner):
                 subjective_state, device=self.device
             )  # (state_dim)
             states_repeated = torch.repeat_interleave(
-                subjective_state_tensor.unsqueeze(0), available_action_space.n, dim=0
+                subjective_state_tensor.unsqueeze(0),
+                # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
+                available_action_space.n,
+                dim=0,
             ).to(
                 self.device
             )  # (action_space_size x state_dim)
@@ -173,7 +197,10 @@ class DeepTDLearning(PolicyLearner):
 
     @abstractmethod
     def _get_next_state_values(
-        self, batch: TransitionBatch, batch_size: int
+        self,
+        batch: TransitionBatch,
+        batch_size: int
+        # pyre-fixme[11]: Annotation `tensor` is not defined as a type.
     ) -> torch.tensor:
         pass
 
@@ -186,6 +213,7 @@ class DeepTDLearning(PolicyLearner):
         batch_size = state_batch.shape[0]
         # sanity check they have same batch_size
         assert reward_batch.shape[0] == batch_size
+        # pyre-fixme[16]: `Optional` has no attribute `shape`.
         assert done_batch.shape[0] == batch_size
 
         state_action_values = self._Q.get_q_values(
@@ -198,6 +226,8 @@ class DeepTDLearning(PolicyLearner):
         expected_state_action_values = (
             self._get_next_state_values(batch, batch_size)
             * self._discount_factor
+            # pyre-fixme[58]: `-` is not supported for operand types `int` and
+            #  `Optional[torch._tensor.Tensor]`.
             * (1 - done_batch)
         ) + reward_batch  # (batch_size), r + gamma * V(s)
 

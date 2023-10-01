@@ -24,6 +24,7 @@ class ContextualBanditEnvironment(Environment):
 
     @property
     def action_space(self) -> ActionSpace:
+        # pyre-fixme[7]: Expected `ActionSpace` but got implicit return value of `None`.
         pass
 
     @abstractmethod
@@ -36,11 +37,19 @@ class ContextualBanditEnvironment(Environment):
         # so we set it to None.
         reward = self.get_reward(action)
         return ActionResult(
-            observation=None, reward=reward, terminated=True, truncated=False, info=None
+            observation=None,
+            reward=reward,
+            terminated=True,
+            truncated=False,
+            # pyre-fixme[6]: For 5th argument expected `Dict[typing.Any,
+            #  typing.Any]` but got `None`.
+            info=None,
         )
 
+    # pyre-fixme[3]: Return type must be annotated.
     def render(self):
         pass
 
+    # pyre-fixme[3]: Return type must be annotated.
     def close(self):
         pass

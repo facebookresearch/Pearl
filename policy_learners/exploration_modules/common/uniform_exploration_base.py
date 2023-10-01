@@ -17,6 +17,7 @@ class UniformExplorationBase(ExplorationModule):
     """
 
     def __init__(self) -> None:
+        # pyre-fixme[4]: Attribute must be annotated.
         self.exploration_type = ExplorationType.UNIFORM
 
     @abstractmethod
@@ -25,7 +26,9 @@ class UniformExplorationBase(ExplorationModule):
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
         exploit_action: Action,
+        # pyre-fixme[9]: values has type `Tensor`; used as `None`.
         values: torch.Tensor = None,
+        # pyre-fixme[9]: representation has type `Tensor`; used as `None`.
         representation: torch.Tensor = None,
     ) -> Action:
         pass

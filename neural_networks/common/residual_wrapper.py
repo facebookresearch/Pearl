@@ -14,6 +14,7 @@ class ResidualWrapper(AutoDeviceNNModule):
     model = torch.nn.Sequential(*layers)
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(self, module: nn.Module):
         super().__init__()
         self.module = module

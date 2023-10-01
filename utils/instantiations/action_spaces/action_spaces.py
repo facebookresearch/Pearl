@@ -8,6 +8,7 @@ from pearl.api.action_space import ActionSpace
 
 
 class DiscreteActionSpace(ActionSpace):
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(self, actions: List[Action]):
         """
         actions: List[Action] could be a list of action vector
@@ -15,6 +16,7 @@ class DiscreteActionSpace(ActionSpace):
         TODO better idea to write this cleaner?
         """
         self.actions = actions
+        # pyre-fixme[4]: Attribute must be annotated.
         self.n = len(actions)
 
     def sample(self) -> Action:
@@ -24,18 +26,22 @@ class DiscreteActionSpace(ActionSpace):
         for action in self.actions:
             yield action
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __getitem__(self, index):
         if self.action_dim == 0:
             return []  # no action vector
         return self.actions[index]  # action vector
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def action_dim(self):
         try:
             return len(self.actions[0])
         except TypeError:
             return 0  # indicate that init with action index
 
+    # pyre-fixme[3]: Return type must be annotated.
     def to_tensor(self):
         if self.action_dim == 0:
             return torch.zeros(self.n, 0)

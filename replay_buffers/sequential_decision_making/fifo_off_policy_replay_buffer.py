@@ -14,6 +14,7 @@ class FIFOOffPolicyReplayBuffer(TensorBasedReplayBuffer):
 
     # TODO: add helper to convert subjective state into tensors
     # TODO: assumes action space is gym action space with one-hot encoding
+    # pyre-fixme[14]: `push` overrides method defined in `ReplayBuffer` inconsistently.
     def push(
         self,
         state: SubjectiveState,

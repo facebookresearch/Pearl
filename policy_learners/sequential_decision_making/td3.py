@@ -29,6 +29,8 @@ class TD3(DeepDeterministicPolicyGradient):
         state_dim: int,
         action_dim: int,
         hidden_dims: Iterable[int],
+        # pyre-fixme[9]: exploration_module has type `ExplorationModule`; used as
+        #  `None`.
         exploration_module: ExplorationModule = None,
         critic_learning_rate: float = 1e-2,
         actor_learning_rate: float = 1e-3,
@@ -109,7 +111,10 @@ class TD3(DeepDeterministicPolicyGradient):
 
             # sample q values of (next_state, next_action) from targets of twin critics
             next_q1, next_q2 = self._targets_of_twin_critics.get_twin_critic_values(
-                state_batch=batch.next_state, action_batch=next_action
+                # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+                #  `Optional[Tensor]`.
+                state_batch=batch.next_state,
+                action_batch=next_action,
             )
             next_q = torch.minimum(
                 next_q1, next_q2
@@ -117,7 +122,11 @@ class TD3(DeepDeterministicPolicyGradient):
 
             # compute bellman target
             expected_state_action_values = (
-                next_q * self._discount_factor * (1 - batch.done)
+                next_q
+                * self._discount_factor
+                # pyre-fixme[58]: `-` is not supported for operand types `int` and
+                #  `Optional[torch._tensor.Tensor]`.
+                * (1 - batch.done)
             ) + batch.reward  # (batch_size), r + gamma * (min{Q_1(s', a from actor network), Q_2(s', a from actor network)})
 
         # update twin critics towards bellman target
@@ -126,4 +135,5 @@ class TD3(DeepDeterministicPolicyGradient):
             action_batch=batch.action,
             expected_target=expected_state_action_values,
         )
+        # pyre-fixme[7]: Expected `Dict[str, typing.Any]` but got `List[Tensor]`.
         return loss_critic_update

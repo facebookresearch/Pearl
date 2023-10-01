@@ -70,9 +70,14 @@ class Evaluation(ABC):
         **kwargs: keyword arguments passed to the constructor of the gym environment
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, gym_environment_name, *args, **kwargs):
+        # pyre-fixme[4]: Attribute must be annotated.
         self.gym_environment_name = gym_environment_name
+        # pyre-fixme[4]: Attribute must be annotated.
         self.args = args
+        # pyre-fixme[4]: Attribute must be annotated.
         self.kwargs = kwargs
 
     @abstractmethod
@@ -82,6 +87,8 @@ class Evaluation(ABC):
 
 
 class PearlDQN(Evaluation):
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, gym_environment_name, *args, **kwargs):
         super(PearlDQN, self).__init__(gym_environment_name, *args, **kwargs)
 
@@ -103,6 +110,8 @@ class PearlDQN(Evaluation):
 
 
 class PearlContinuousSAC(Evaluation):
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, gym_environment_name, *args, **kwargs):
         super(PearlContinuousSAC, self).__init__(gym_environment_name, *args, **kwargs)
 
@@ -128,6 +137,8 @@ class PearlContinuousSAC(Evaluation):
 
 
 class PearlPPO(Evaluation):
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, gym_environment_name, *args, **kwargs):
         super(PearlPPO, self).__init__(gym_environment_name, *args, **kwargs)
 
@@ -151,6 +162,8 @@ class PearlPPO(Evaluation):
 
 
 class PearlDDPG(Evaluation):
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, gym_environment_name, *args, **kwargs):
         super(PearlDDPG, self).__init__(gym_environment_name, *args, **kwargs)
 
@@ -174,6 +187,8 @@ class PearlDDPG(Evaluation):
 
 
 class PearlTD3(Evaluation):
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, gym_environment_name, *args, **kwargs):
         super(PearlTD3, self).__init__(gym_environment_name, *args, **kwargs)
 
@@ -196,6 +211,7 @@ class PearlTD3(Evaluation):
         return returns
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def evaluate(evaluations: Iterable[Evaluation]):
     """Obtain data from evaluations and plot them, one plot per environment"""
     num_seeds = 4
@@ -225,11 +241,13 @@ def collect_data(evaluations: Iterable[Evaluation], seed: int) -> Dict[str, str]
     return data_by_environment_and_method
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def generate_plots(data_by_environment_and_method: Dict[str, str], seed: int):
     for environment_name, data_by_method in data_by_environment_and_method.items():
         plt.title(environment_name)
         plt.xlabel("Episode")
         plt.ylabel("Return")
+        # pyre-fixme[16]: `str` has no attribute `items`.
         for method, returns in data_by_method.items():
             plt.plot(returns, label=method)
             window_size = 10
@@ -273,10 +291,15 @@ def tianshou_dqn_cart_pole() -> int:
 
     # environments
     env = gym.make("CartPole-v1")
+    # pyre-fixme[6]: For 1st argument expected `List[typing.Callable[[], Env]]` but
+    #  got `List[typing.Callable[[], Env[typing.Any, typing.Any]]]`.
     train_envs = DummyVectorEnv([lambda: gym.make("CartPole-v1") for _ in range(20)])
+    # pyre-fixme[6]: For 1st argument expected `List[typing.Callable[[], Env]]` but
+    #  got `List[typing.Callable[[], Env[typing.Any, typing.Any]]]`.
     test_envs = DummyVectorEnv([lambda: gym.make("CartPole-v1") for _ in range(10)])
 
     # model & optimizer
+    # pyre-fixme[16]: `Space` has no attribute `n`.
     net = Net(env.observation_space.shape, env.action_space.n).to(device)
     optim = torch.optim.Adam(net.parameters(), lr=0.0003)
 
@@ -325,11 +348,18 @@ def tianshou_ppo_cart_pole() -> int:
 
     # environments
     env = gym.make("CartPole-v1")
+    # pyre-fixme[6]: For 1st argument expected `List[typing.Callable[[], Env]]` but
+    #  got `List[typing.Callable[[], Env[typing.Any, typing.Any]]]`.
     train_envs = DummyVectorEnv([lambda: gym.make("CartPole-v1") for _ in range(20)])
+    # pyre-fixme[6]: For 1st argument expected `List[typing.Callable[[], Env]]` but
+    #  got `List[typing.Callable[[], Env[typing.Any, typing.Any]]]`.
     test_envs = DummyVectorEnv([lambda: gym.make("CartPole-v1") for _ in range(10)])
 
     # model & optimizer
+    # pyre-fixme[6]: For 1st argument expected `Union[Sequence[int], int]` but got
+    #  `Optional[typing.Tuple[int, ...]]`.
     net = Net(env.observation_space.shape, hidden_sizes=[64, 64], device=device)
+    # pyre-fixme[16]: `Space` has no attribute `n`.
     actor = Actor(net, env.action_space.n, device=device).to(device)
     critic = Critic(net, device=device).to(device)
     actor_critic = ActorCritic(actor, critic)

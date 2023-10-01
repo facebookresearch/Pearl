@@ -10,6 +10,8 @@ import torch.multiprocessing as mp
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def train(rank, world_size):
     feature_dim = 3
     batch_size = 3
@@ -32,6 +34,9 @@ def train(rank, world_size):
 
 
 class TestLinearRegression(unittest.TestCase):
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `__manifest__.fbmake.get("build_mode", "") != "opt"` to decorator factory
+    #  `unittest.skipIf`.
     @unittest.skipIf(
         __manifest__.fbmake.get("build_mode", "") != "opt",
         "This test only works with opt mode",

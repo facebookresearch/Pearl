@@ -9,6 +9,7 @@ from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActio
 
 
 class TestPPO(unittest.TestCase):
+    # pyre-fixme[3]: Return type must be annotated.
     def test_optimizer_param_count(self):
         """
         This test is to ensure optimizer defined in PPO has all the parameters needed
@@ -16,6 +17,8 @@ class TestPPO(unittest.TestCase):
         """
         policy_learner = ProximalPolicyOptimization(
             16,
+            # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got
+            #  `range`.
             DiscreteActionSpace(range(3)),
             [64, 64],
             training_rounds=1,
@@ -30,6 +33,7 @@ class TestPPO(unittest.TestCase):
         )
         self.assertEqual(optimizer_params_count, model_params_count)
 
+    # pyre-fixme[3]: Return type must be annotated.
     def test_training_round_setup(self):
         """
         PPO inherit from PG and overwrite training_rounds
@@ -37,6 +41,8 @@ class TestPPO(unittest.TestCase):
         """
         policy_learner = ProximalPolicyOptimization(
             16,
+            # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got
+            #  `range`.
             DiscreteActionSpace(range(3)),
             [64, 64],
             training_rounds=10,

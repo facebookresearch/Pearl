@@ -34,7 +34,9 @@ class ExplorationModule(ABC):
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
         exploit_action: Action = None,
+        # pyre-fixme[9]: values has type `Tensor`; used as `None`.
         values: torch.Tensor = None,
+        # pyre-fixme[9]: representation has type `Tensor`; used as `None`.
         representation: torch.Tensor = None,
     ) -> Action:
         pass

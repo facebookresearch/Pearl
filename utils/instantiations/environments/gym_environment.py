@@ -23,6 +23,7 @@ class GymEnvironment(Environment):
     A wrapper for `gym.Env` (Gym 0.21) to behave like Pearl's `Environment`.
     """
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, *args, **kwargs) -> None:
         """
         Initializes the wrapper to be around a `gym.Env`.
@@ -30,18 +31,23 @@ class GymEnvironment(Environment):
             args: positional arguments to be passed on to Gym's environment.
             kwargs: keyword arguments to be passed on to Gym's environment.
         """
+        # pyre-fixme[4]: Attribute must be annotated.
         self.env = gym.make(*args, **kwargs)
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def action_space(self):
         return self.env.action_space
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def observation_space(self):
         return self.env.observation_space
 
+    # pyre-fixme[31]: Expression `ActionSpace)` is not a valid type.
     def reset(self) -> (Observation, ActionSpace):
         reset_result = self.env.reset()
+        # pyre-fixme[16]: `Iterable` has no attribute `__getitem__`.
         if isinstance(reset_result, Iterable) and isinstance(reset_result[1], dict):
             # newer Gym versions return an info dict.
             observation, info = reset_result
@@ -69,12 +75,16 @@ class GymEnvironment(Environment):
             )
         return ActionResult(observation, reward, terminated, truncated, info)
 
+    # pyre-fixme[3]: Return type must be annotated.
     def render(self):
         return self.env.render()
 
+    # pyre-fixme[3]: Return type must be annotated.
     def close(self):
         return self.env.close()
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def seed(self, seed=None):
         return self.env.seed(seed)
 

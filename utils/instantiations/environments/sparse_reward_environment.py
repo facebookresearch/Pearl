@@ -33,12 +33,15 @@ from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
+# pyre-fixme[4]: Attribute annotation cannot be `Any`.
+# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 SparseRewardEnvironmentObservation = namedtuple(
     "SparseRewardEnvironmentObservation", ["agent_position", "goal"]
 )
 
 
 class SparseRewardEnvironment(Environment):
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         length: float,
@@ -50,7 +53,9 @@ class SparseRewardEnvironment(Environment):
         self._height = height
         self._max_episode_duration = max_episode_duration
         # reset will initialize following
+        # pyre-fixme[4]: Attribute must be annotated.
         self._agent_position = None
+        # pyre-fixme[4]: Attribute must be annotated.
         self._goal = None
         self._step_count = 0
         self._reward_distance = reward_distance
@@ -59,6 +64,7 @@ class SparseRewardEnvironment(Environment):
     def step(self, action: Action) -> ActionResult:
         pass
 
+    # pyre-fixme[31]: Expression `ActionSpace)` is not a valid type.
     def reset(self) -> (SparseRewardEnvironmentObservation, ActionSpace):
         # reset (x, y)
         self._agent_position = (self._length / 2, self._height / 2)
@@ -71,6 +77,7 @@ class SparseRewardEnvironment(Environment):
             self.action_space,
         )
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def _update_position(self, delta) -> None:
         """
         This API is to update and clip and ensure agent always stay in map
@@ -112,11 +119,14 @@ class ContinuousSparseRewardEnvironment(SparseRewardEnvironment):
             reward=0 if has_win else -1,
             terminated=terminated,
             truncated=False,
+            # pyre-fixme[6]: For 5th argument expected `Dict[typing.Any,
+            #  typing.Any]` but got `None`.
             info=None,
         )
 
     @property
     def action_space(self) -> ActionSpace:
+        # pyre-fixme[7]: Expected `ActionSpace` but got `None`.
         return None
 
 
@@ -128,6 +138,7 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
     y +=  sin(360/N * n) * step_size
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         length: float,
@@ -135,6 +146,7 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
         step_size: float = 0.01,
         action_count: int = 4,
         max_episode_duration: int = 500,
+        # pyre-fixme[9]: reward_distance has type `float`; used as `None`.
         reward_distance: float = None,
     ):
         super(DiscreteSparseRewardEnvironment, self).__init__(
@@ -145,7 +157,10 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
         )
         self._step_size = step_size
         self._action_count = action_count
+        # pyre-fixme[4]: Attribute must be annotated.
         self._actions = [
+            # pyre-fixme[58]: `*` is not supported for operand types `Tuple[float,
+            #  float]` and `float`.
             (
                 math.cos(2 * math.pi / self._action_count * i),
                 math.sin(2 * math.pi / self._action_count * i),
@@ -160,6 +175,7 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
 
     @property
     def action_space(self) -> DiscreteActionSpace:
+        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `range`.
         return DiscreteActionSpace(range(self._action_count))
 
 
@@ -168,6 +184,7 @@ class SparseRewardEnvSummarizationModule(HistorySummarizationModule):
     A history summarization module that is used for sparse reward game environment
     """
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, **options) -> None:
         pass
 

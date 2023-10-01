@@ -24,11 +24,17 @@ class AutoDeviceNNModule(nn.Module):
     # the module to the device if needed. This same method then restores `forward` to be the original, check-less method,
     # and, finally, invokes the original forward (since it's meant to be its first run, after all).
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, *args, **kwargs):
         super(AutoDeviceNNModule, self).__init__(*args, **kwargs)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.forward = self.forward_first_run
+        # pyre-fixme[4]: Attribute must be annotated.
         self.distribution_enabled = is_distribution_enabled()
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def forward_first_run(self, *args, **kwargs):
         self.to(get_pearl_device())
 

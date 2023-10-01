@@ -23,6 +23,7 @@ class ThompsonSamplingExplorationLinear(ValueExplorationBase):
         super(ThompsonSamplingExplorationLinear, self).__init__()
         self._enable_efficient_sampling = enable_efficient_sampling
 
+    # pyre-fixme[3]: Return type must be annotated.
     def sampling(
         self, subjective_state: SubjectiveState, linear_bandit_model: torch.nn.Module
     ):
@@ -52,11 +53,14 @@ class ThompsonSamplingExplorationLinear(ValueExplorationBase):
             )
         return score
 
+    # pyre-fixme[14]: `act` overrides method defined in `ValueExplorationBase`
+    #  inconsistently.
     def act(
         self,
         subjective_state: SubjectiveState,
         action_space: DiscreteActionSpace,
         values: torch.Tensor,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,
         exploit_action: Action = None,
     ) -> Action:
@@ -87,6 +91,7 @@ class ThompsonSamplingExplorationLinearDisjoint(ThompsonSamplingExplorationLinea
         subjective_state: SubjectiveState,
         action_space: DiscreteActionSpace,
         values: torch.Tensor,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,
         exploit_action: Action = None,
     ) -> Action:

@@ -42,6 +42,9 @@ class IntegrationReplayBufferTests(unittest.TestCase):
             reward_distance=1,
         )
 
+        # pyre-fixme[53]: Captured variable `env` is not annotated.
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def done_fn(state, action):
             next_state = state[:2] + torch.Tensor(env._actions[action])
             goal = state[-2:]
@@ -49,6 +52,8 @@ class IntegrationReplayBufferTests(unittest.TestCase):
                 return True
             return False
 
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def reward_fn(state, action):
             done = done_fn(state, action)
             if done:

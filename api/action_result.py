@@ -12,6 +12,8 @@ class ActionResult:
     reward: Reward
     terminated: bool
     truncated: bool
+    # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
+    #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting errors.
     info: Dict
 
     @property

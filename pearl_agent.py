@@ -34,9 +34,13 @@ class PearlAgent(Agent):
     # TODO: define a data structure that hosts the configs for a Pearl Agent
     def __init__(
         self,
+        # pyre-fixme[2]: Parameter must be annotated.
         policy_learner,
+        # pyre-fixme[2]: Parameter must be annotated.
         safety_module=None,
+        # pyre-fixme[2]: Parameter must be annotated.
         replay_buffer=None,
+        # pyre-fixme[2]: Parameter must be annotated.
         history_summarization_module=None,
     ) -> None:
         """
@@ -49,8 +53,10 @@ class PearlAgent(Agent):
             history_summarization_module: (optional) a HistorySummarizationModule instance (default is IdentityHistorySummarizationModule)
             replay_buffer: (optional) a replay buffer (default is single-transition replay buffer for now -- will very likely to change)
         """
+        # pyre-fixme[4]: Attribute must be annotated.
         self.policy_learner = policy_learner
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self.safety_module = (
             safety_module
             if safety_module is not None
@@ -63,11 +69,13 @@ class PearlAgent(Agent):
         # adds the safety module to the policy learner as well
         self.policy_learner.safety_module = self.safety_module
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self.replay_buffer = (
             PearlAgent.default_replay_buffer_type()
             if replay_buffer is None
             else replay_buffer
         )
+        # pyre-fixme[4]: Attribute must be annotated.
         self.history_summarization_module = (
             PearlAgent.default_history_summarization_module_type()
             if history_summarization_module is None
@@ -83,7 +91,9 @@ class PearlAgent(Agent):
         pearl_agent_compatibility_check(
             self.policy_learner, self.safety_module, self.replay_buffer
         )
+        # pyre-fixme[4]: Attribute must be annotated.
         self._subjective_state = None
+        # pyre-fixme[4]: Attribute must be annotated.
         self._latest_action = None
 
     def act(self, exploit: bool = False) -> Action:
@@ -107,6 +117,7 @@ class PearlAgent(Agent):
             self._latest_action,
             action_result.reward,
             new_subjective_state,
+            # pyre-fixme[16]: `PearlAgent` has no attribute `_action_space`.
             self._action_space,  # curr_available_actions
             self._action_space,  # next_available_actions
             self._action_space,  # action_space
@@ -115,6 +126,7 @@ class PearlAgent(Agent):
 
         self._subjective_state = new_subjective_state
 
+    # pyre-fixme[15]: `learn` overrides method defined in `Agent` inconsistently.
     def learn(self) -> Dict[str, Any]:
         report = self.policy_learner.learn(self.replay_buffer)
         self.safety_module.learn(self.replay_buffer)
@@ -136,6 +148,7 @@ class PearlAgent(Agent):
 
     def reset(self, observation: Observation, action_space: ActionSpace) -> None:
         self._subjective_state = self._update_subjective_state(observation)
+        # pyre-fixme[16]: `PearlAgent` has no attribute `_action_space`.
         self._action_space = action_space
         self.safety_module.reset(action_space)
         self.policy_learner.reset(action_space)

@@ -11,6 +11,7 @@ from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActio
 
 
 class TestHindsightExperienceReplayBuffer(unittest.TestCase):
+    # pyre-fixme[3]: Return type must be annotated.
     def test_basic(self):
         """
         Test setup:
@@ -30,6 +31,9 @@ class TestHindsightExperienceReplayBuffer(unittest.TestCase):
             action: states[action + 1] for action in range(len(states) - 1)
         }
 
+        # pyre-fixme[53]: Captured variable `action_to_next_states` is not annotated.
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def reward_fn(state, action):
             goal = state[-2:]
             next_state = action_to_next_states[action]
@@ -41,6 +45,7 @@ class TestHindsightExperienceReplayBuffer(unittest.TestCase):
             capacity=10, goal_dim=2, reward_fn=reward_fn
         )
 
+        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `range`.
         action_space = DiscreteActionSpace(range(4))
         for i in range(len(states) - 1):
             rb.push(
@@ -77,5 +82,6 @@ class TestHindsightExperienceReplayBuffer(unittest.TestCase):
         # check for same transition, goal in state and next state should stay the same
         for i in range(2 * len(states) - 2):
             self.assertTrue(
+                # pyre-fixme[16]: Optional type has no attribute `__getitem__`.
                 torch.all(torch.eq(batch.state[i][-2:], batch.next_state[i][-2:]))
             )

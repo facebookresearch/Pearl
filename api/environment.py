@@ -17,6 +17,7 @@ class Environment(ABC):
         pass
 
     @abstractmethod
+    # pyre-fixme[31]: Expression `ActionSpace)` is not a valid type.
     def reset(self) -> (Observation, ActionSpace):
         pass
 
@@ -24,10 +25,12 @@ class Environment(ABC):
     def step(self, action: Action) -> ActionResult:
         pass
 
+    # pyre-fixme[3]: Return type must be annotated.
     def render(self):  # noqa: B027
         """Renders environment. Default implementation does nothing."""
         pass
 
+    # pyre-fixme[3]: Return type must be annotated.
     def close(self):  # noqa: B027
         """Closes environment, taking care of any cleanup needed. Default implementation does nothing."""
         pass

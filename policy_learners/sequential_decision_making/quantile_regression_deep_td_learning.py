@@ -66,9 +66,13 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         self._soft_update_tau = soft_update_tau
         self._num_quantiles = num_quantiles
 
+        # pyre-fixme[3]: Return type must be annotated.
         def make_specified_network():
+            # pyre-fixme[45]: Cannot instantiate abstract class
+            #  `DistributionalQValueNetwork`.
             return network_type(
                 state_dim=state_dim,
+                # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
                 action_dim=action_space.n,
                 hidden_dims=hidden_dims,
                 num_quantiles=num_quantiles,
@@ -76,22 +80,27 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
 
         if network_instance is not None:
             network_instance.to(self.device)
+            # pyre-fixme[4]: Attribute must be annotated.
             self._Q = network_instance
             assert (
                 network_instance.state_dim == state_dim
             ), "input state dimension doesn't match network state dimension for QuantileQValueNetwork"
             assert (
-                network_instance.action_dim == action_space.n
+                network_instance.action_dim
+                # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
+                == action_space.n
             ), "input action dimension doesn't match network action dimension for QuantileQValueNetwork"
         else:
             assert hidden_dims is not None
             self._Q = make_specified_network()
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self._Q_target = copy.deepcopy(self._Q)
         self._optimizer = optim.AdamW(
             self._Q.parameters(), lr=learning_rate, amsgrad=True
         )
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self._quantile_midpoints = (self._Q._quantile_midpoints).to(self.device)
 
     def reset(self, action_space: ActionSpace) -> None:
@@ -110,7 +119,10 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
                 subjective_state, device=self.device
             )  # (state_dim)
             states_repeated = torch.repeat_interleave(
-                subjective_state_tensor.unsqueeze(0), available_action_space.n, dim=0
+                subjective_state_tensor.unsqueeze(0),
+                # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
+                available_action_space.n,
+                dim=0,
             ).to(
                 self.device
             )  # (action_space_size x state_dim)
@@ -137,7 +149,10 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
     # QR DQN, QR SAC and QR SARSA will implement this differently
     @abstractmethod
     def _get_next_state_quantiles(
-        self, batch: TransitionBatch, batch_size: int
+        self,
+        batch: TransitionBatch,
+        batch_size: int
+        # pyre-fixme[11]: Annotation `tensor` is not defined as a type.
     ) -> torch.tensor:
         pass
 
@@ -178,7 +193,10 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         """
 
         quantile_next_state_greedy_action_values = self._get_next_state_quantiles(
-            batch, batch_size
+            batch,
+            batch_size
+            # pyre-fixme[58]: `-` is not supported for operand types `int` and
+            #  `Optional[torch._tensor.Tensor]`.
         ) * self._discount_factor * (1 - batch.done).unsqueeze(
             -1
         ) + batch.reward.unsqueeze(

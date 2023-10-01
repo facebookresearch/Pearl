@@ -34,31 +34,42 @@ class NormalDistributionExploration(ValueExplorationBase):
 
     def __init__(
         self,
+        # pyre-fixme[2]: Parameter must be annotated.
         max_action_value,
+        # pyre-fixme[2]: Parameter must be annotated.
         min_action_value,
         mean: float = 0.0,
         std_dev: float = 1.0,
+        # pyre-fixme[2]: Parameter must be annotated.
         noise_clip=None,
     ) -> None:
         super(NormalDistributionExploration, self).__init__()
         self._mean = mean
         self._std_dev = std_dev
+        # pyre-fixme[4]: Attribute must be annotated.
         self._max_action_value = max_action_value
+        # pyre-fixme[4]: Attribute must be annotated.
         self._noise_clip = (
             noise_clip if noise_clip is not None else max_action_value / 10
         )
+        # pyre-fixme[4]: Attribute must be annotated.
         self._min_action_value = min_action_value
         assert torch.all(
             torch.tensor(self._noise_clip) >= 0
         ), "clip value for noise should be >= 0"
 
+    # pyre-fixme[14]: `act` overrides method defined in `ValueExplorationBase`
+    #  inconsistently.
     def act(
         self,
         exploit_action: Action,
         # arguments below are useless for NormalDistributionExploration
         subjective_state: SubjectiveState = None,
+        # pyre-fixme[9]: available_action_space has type `ActionSpace`; used as `None`.
         available_action_space: ActionSpace = None,
+        # pyre-fixme[9]: values has type `Tensor`; used as `None`.
         values: torch.Tensor = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,
     ) -> Action:
         # input exploit_action is from an actor network, which should be normalized to [-1, 1]

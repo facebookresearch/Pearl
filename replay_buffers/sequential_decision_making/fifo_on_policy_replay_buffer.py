@@ -13,8 +13,10 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
         # this is used to delay push SARS
         # wait for next action is available and then final push
         # this is designed for single transition for now
+        # pyre-fixme[4]: Attribute must be annotated.
         self.cache = None
 
+    # pyre-fixme[14]: `push` overrides method defined in `ReplayBuffer` inconsistently.
     def push(
         self,
         state: SubjectiveState,

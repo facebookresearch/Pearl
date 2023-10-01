@@ -8,15 +8,18 @@ from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCri
 
 
 class TestTwinCritic(unittest.TestCase):
+    # pyre-fixme[3]: Return type must be annotated.
     def setUp(self):
         self.state_dim = 20
         self.action_dim = 10
         self.batch_size = 128
 
+    # pyre-fixme[3]: Return type must be annotated.
     def test_twin_critic(self):
         twin_critics = TwinCritic(
             state_dim=self.state_dim,
             action_dim=self.action_dim,
+            # pyre-fixme[6]: For 3rd argument expected `int` but got `List[int]`.
             hidden_dims=[10, 10],
             learning_rate=1e-3,
             init_fn=init_weights,

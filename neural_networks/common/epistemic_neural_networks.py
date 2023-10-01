@@ -58,7 +58,9 @@ class MLPWithPrior(AutoDeviceNNModule):
         scale: float = 1.0,
     ) -> None:
         super(MLPWithPrior, self).__init__()
+        # pyre-fixme[4]: Attribute must be annotated.
         self.base_net = mlp_block(input_dim, hidden_dims, output_dim)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.prior_net = mlp_block(input_dim, hidden_dims, output_dim).eval()
         self.scale = scale
 

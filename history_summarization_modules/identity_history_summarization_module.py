@@ -12,6 +12,7 @@ class IdentityHistorySummarizationModule(HistorySummarizationModule):
     A history summarization module that simply uses the original observations.
     """
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, **options) -> None:
         pass
 

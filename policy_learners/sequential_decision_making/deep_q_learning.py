@@ -30,6 +30,7 @@ class DeepQLearning(DeepTDLearning):
         learning_rate: float = 0.001,
         exploration_module: Optional[ExplorationModule] = None,
         soft_update_tau: float = 1.0,  # no soft update
+        # pyre-fixme[2]: Parameter must be annotated.
         **kwargs,
     ) -> None:
         super(DeepQLearning, self).__init__(
@@ -46,7 +47,10 @@ class DeepQLearning(DeepTDLearning):
 
     @torch.no_grad()
     def _get_next_state_values(
-        self, batch: TransitionBatch, batch_size: int
+        self,
+        batch: TransitionBatch,
+        batch_size: int
+        # pyre-fixme[11]: Annotation `tensor` is not defined as a type.
     ) -> torch.tensor:
         next_state_batch = batch.next_state  # (batch_size x state_dim)
         next_available_actions_batch = (
@@ -57,7 +61,12 @@ class DeepQLearning(DeepTDLearning):
         )  # (batch_size x action_space_size)
 
         next_state_batch_repeated = torch.repeat_interleave(
-            next_state_batch.unsqueeze(1), self._action_space.n, dim=1
+            # pyre-fixme[16]: `Optional` has no attribute `unsqueeze`.
+            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
+            next_state_batch.unsqueeze(1),
+            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
+            self._action_space.n,
+            dim=1,
         )  # (batch_size x action_space_size x state_dim)
 
         # for duelling, this does a forward pass; since the batch of next available actions is already input

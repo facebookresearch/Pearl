@@ -38,6 +38,7 @@ class NeuralLinearBandit(NeuralBandit):
         batch_size: int = 128,
         learning_rate: float = 0.001,
         l2_reg_lambda_linear: float = 1.0,
+        # pyre-fixme[2]: Parameter must be annotated.
         **kwargs,
     ) -> None:
         assert (
@@ -57,6 +58,7 @@ class NeuralLinearBandit(NeuralBandit):
             feature_dim=hidden_dims[-1],
             l2_reg_lambda=l2_reg_lambda_linear,
         )
+        # pyre-fixme[4]: Attribute must be annotated.
         self._linear_regression_dim = hidden_dims[-1]
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
@@ -77,7 +79,11 @@ class NeuralLinearBandit(NeuralBandit):
         self._optimizer.step()
         # Optimize linear regression
         self._linear_regression.learn_batch(
-            mlp_output.detach(), expected_values, batch.weight
+            mlp_output.detach(),
+            expected_values,
+            # pyre-fixme[6]: For 3rd argument expected `Tensor` but got
+            #  `Optional[Tensor]`.
+            batch.weight,
         )
         return {"mlp_loss": loss.item(), "current_values": current_values.mean().item()}
 
@@ -88,9 +94,11 @@ class NeuralLinearBandit(NeuralBandit):
         exploit: bool = False,
     ) -> Action:
         # It doesnt make sense to call act if we are not working with action vector
+        # pyre-fixme[16]: `ActionSpace` has no attribute `action_dim`.
         assert action_space.action_dim > 0
         subjective_state = subjective_state.to(self.device)
 
+        # pyre-fixme[16]: `ActionSpace` has no attribute `cat_state_tensor`.
         new_feature = action_space.cat_state_tensor(subjective_state)
         mlp_values = self._deep_represent_layers(new_feature)
         # `_linear_regression` is not nn.Linear(). It is a customized linear layer
@@ -98,6 +106,7 @@ class NeuralLinearBandit(NeuralBandit):
         values = self._linear_regression(mlp_values)
 
         # batch_size * action_count
+        # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
         assert values.numel() == new_feature.shape[0] * action_space.n
 
         # subjective_state=mlp_values makes sense for LinUCBExploration
@@ -112,6 +121,7 @@ class NeuralLinearBandit(NeuralBandit):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
+        # pyre-fixme[9]: action_space has type `DiscreteActionSpace`; used as `None`.
         action_space: DiscreteActionSpace = None,
     ) -> torch.Tensor:
         self.device = get_pearl_device()

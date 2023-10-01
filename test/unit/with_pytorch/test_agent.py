@@ -123,6 +123,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
         """
         This is an integration test for ContextualBandit with ContextualBanditLinearSyntheticEnvironment
         """
+        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `range`.
         action_space = DiscreteActionSpace(range(3))
         feature_dim = 3
 
@@ -149,6 +150,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
             action_result = env.step(action)
             agent.observe(action_result)
             agent.learn()
+            # pyre-fixme[16]: `Number` has no attribute `squeeze`.
             regrets.append(regret.squeeze().item())
 
         # to test learning ability of linear contextual bandits we check

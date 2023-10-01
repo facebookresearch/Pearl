@@ -17,6 +17,7 @@ class TwinCritic(torch.nn.Module):
     NOTE: For more than two critics, the standard way is to use nn.ModuleList()
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         state_dim: int,
@@ -24,16 +25,21 @@ class TwinCritic(torch.nn.Module):
         hidden_dims: int,
         learning_rate: float,
         network_type: Type[QValueNetwork] = VanillaQValueNetwork,
+        # pyre-fixme[9]: init_fn has type `(Module) -> None`; used as `None`.
         init_fn: Callable[[torch.nn.Module], None] = None,
         output_dim: int = 1,
     ):
         super(TwinCritic, self).__init__()
+        # pyre-fixme[4]: Attribute must be annotated.
+        # pyre-fixme[45]: Cannot instantiate abstract class `QValueNetwork`.
         self._critic_1 = network_type(
             state_dim=state_dim,
             action_dim=action_dim,
             hidden_dims=hidden_dims,
             output_dim=output_dim,
         )
+        # pyre-fixme[4]: Attribute must be annotated.
+        # pyre-fixme[45]: Cannot instantiate abstract class `QValueNetwork`.
         self._critic_2 = network_type(
             state_dim=state_dim,
             action_dim=action_dim,
@@ -75,6 +81,7 @@ class TwinCritic(torch.nn.Module):
         loss.backward()
         self._optimizer.step()
 
+        # pyre-fixme[7]: Expected `List[Tensor]` but got `Dict[str, typing.Any]`.
         return {
             "mean_loss": loss.item(),
             "critic_1_loss": q_1.mean().item(),

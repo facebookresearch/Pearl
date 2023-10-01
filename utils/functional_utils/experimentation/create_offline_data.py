@@ -13,7 +13,9 @@ def create_offline_data(
     agent: Agent,
     env: Environment,
     max_len_offline_data: int = 50000,
+    # pyre-fixme[2]: Parameter must be annotated.
     learn=True,
+    # pyre-fixme[2]: Parameter must be annotated.
     learn_after_episode=True,
 ) -> None:
 
@@ -47,6 +49,7 @@ def create_offline_data(
         agent.reset(observation, action_space)
         done = False
         while not done:
+            # pyre-fixme[28]: Unexpected keyword argument `exploit`.
             action = agent.act(
                 exploit=False
             )  # exploit is explicitly set to False as we want exploration during data collection.
@@ -76,4 +79,5 @@ def create_offline_data(
 
     torch.save(raw_transitions_buffer, "offline_raw_transitions_dict.pt")
 
+    # pyre-fixme[7]: Expected `None` but got `List[typing.Any]`.
     return epi_returns  # for plotting; to check the quality of the policy used to collect offine data

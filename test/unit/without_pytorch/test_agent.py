@@ -50,6 +50,7 @@ class TestAgentWithoutPyTorch(unittest.TestCase):
         number_of_actions = 5
         max_action = number_of_actions - 1
         env = RewardIsEqualToTenTimesActionContextualBanditEnvironment(
+            # pyre-fixme[6]: For 1st argument expected `ActionSpace` but got `Discrete`.
             action_space=gym.spaces.Discrete(number_of_actions)
         )
 

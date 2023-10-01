@@ -12,6 +12,8 @@ from pearl.utils.functional_utils.experimentation.plots import fontsize_for
 MA_WINDOW_SIZE = 10
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def latest_moving_average(data):
     return (
         sum(data[-MA_WINDOW_SIZE:]) * 1.0 / MA_WINDOW_SIZE
@@ -23,8 +25,11 @@ def latest_moving_average(data):
 def online_learning_to_png_graph(
     agent: Agent,
     env: Environment,
+    # pyre-fixme[2]: Parameter must be annotated.
     filename="returns.png",
+    # pyre-fixme[2]: Parameter must be annotated.
     number_of_episodes=1000,
+    # pyre-fixme[2]: Parameter must be annotated.
     learn_after_episode=False,
 ) -> None:
     """
@@ -73,6 +78,7 @@ def online_learning_returns(
     return returns
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def online_learning(
     agent: Agent,
     env: Environment,
@@ -110,6 +116,7 @@ def target_return_is_reached(
     learn: bool,
     learn_after_episode: bool,
     exploit: bool,
+    # pyre-fixme[2]: Parameter must be annotated.
     required_target_returns_in_a_row=1,
     check_moving_average: bool = False,
 ) -> bool:
@@ -151,6 +158,7 @@ def target_return_is_reached(
     return False
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def episode_return(
     agent: Agent,
     env: Environment,
@@ -177,6 +185,7 @@ def episode_return(
     done = False
     step = 1
     while not done:
+        # pyre-fixme[28]: Unexpected keyword argument `exploit`.
         action = agent.act(exploit=exploit)
         action = (
             action.cpu() if isinstance(action, torch.Tensor) else action

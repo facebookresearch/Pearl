@@ -23,8 +23,11 @@ class RiskSensitiveSafetyModule(SafetyModule):
     Base class for different risk metrics, e.g. mean-variance, Value-at-risk (VaR) etc.
     """
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, **options) -> None:
+        # pyre-fixme[4]: Attribute must be annotated.
         self._action_space = None
+        # pyre-fixme[4]: Attribute must be annotated.
         self._device = get_pearl_device()
 
     def reset(self, action_space: ActionSpace) -> None:
@@ -54,12 +57,16 @@ class RiskNeutralSafetyModule(RiskSensitiveSafetyModule):
     A safety module that computes q values as expectation of a q value distribution.
     """
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, **options) -> None:
         super(RiskNeutralSafetyModule, self).__init__()
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __str__(self):
         return f"Safety module type {self.__class__.__name__}"
 
+    # pyre-fixme[14]: `get_q_values_under_risk_metric` overrides method defined in
+    #  `RiskSensitiveSafetyModule` inconsistently.
     def get_q_values_under_risk_metric(
         self,
         state_batch: Tensor,
@@ -75,6 +82,7 @@ class RiskNeutralSafetyModule(RiskSensitiveSafetyModule):
         Returns:
             Q-values of (state, action) pairs: (batch_size) under a risk neutral measure, that is, Q(s, a) = E[Z(s, a)]
         """
+        # pyre-fixme[20]: Argument `action_batch` expected.
         q_value_distribution = q_value_distribution_network.get_q_value_distribution(
             state_batch,
             action_batch,
@@ -96,9 +104,12 @@ class QuantileNetworkMeanVarianceSafetyModule(RiskSensitiveSafetyModule):
         super(QuantileNetworkMeanVarianceSafetyModule, self).__init__()
         self._beta = variance_weighting_coefficient
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __str__(self):
         return f"Safety module type {self.__class__.__name__}"
 
+    # pyre-fixme[14]: `get_q_values_under_risk_metric` overrides method defined in
+    #  `RiskSensitiveSafetyModule` inconsistently.
     def get_q_values_under_risk_metric(
         self,
         state_batch: Tensor,
@@ -108,17 +119,22 @@ class QuantileNetworkMeanVarianceSafetyModule(RiskSensitiveSafetyModule):
         ] = QuantileQValueNetwork,
     ) -> torch.Tensor:
 
+        # pyre-fixme[20]: Argument `action_batch` expected.
         q_value_distribution = q_value_distribution_network.get_q_value_distribution(
             state_batch,
             action_batch,
         )
         mean_value = q_value_distribution.mean(dim=-1, keepdim=True)
+        # pyre-fixme[16]: `int` has no attribute `to`.
         quantiles = q_value_distribution_network.quantiles.to(self._device)
 
         """
         variance computation:
             - sum_{i=0}^{N-1} (tau_{i+1} - tau_{i}) * (q_value_distribution_{tau_i} - mean_value)^2
         """
+        mean_value = q_value_distribution.mean(dim=-1)
+        quantiles = q_value_distribution_network.quantiles
+        # pyre-fixme[16]: `int` has no attribute `__getitem__`.
         quantile_differences = (quantiles[1:] - quantiles[:-1]) / 2
         variance = (quantile_differences * (q_value_distribution - mean_value)).sum(
             dim=-1, keepdim=True

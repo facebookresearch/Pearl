@@ -31,6 +31,8 @@ from pearl.utils.instantiations.environments.gym_environment import GymEnvironme
 MA_WINDOW_SIZE = 100.0
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def moving_average(data):
     return [
         sum(data[int(i - MA_WINDOW_SIZE + 1) : i + 1]) / MA_WINDOW_SIZE
@@ -40,6 +42,7 @@ def moving_average(data):
     ]
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def main():
     logging.basicConfig(level=logging.DEBUG)
     env = GymEnvironment("CartPole-v1")
@@ -53,6 +56,7 @@ def main():
         policy_learner=DeepQLearning(
             env.observation_space.shape[0],
             env.action_space,
+            # pyre-fixme[6]: For 3rd argument expected `float` but got `List[int]`.
             [64, 64],
             training_rounds=20,
         ),
@@ -72,6 +76,8 @@ def main():
         policy_learner=DeepSARSA(
             env.observation_space.shape[0],
             env.action_space,
+            # pyre-fixme[6]: For 3rd argument expected `Optional[ExplorationModule]`
+            #  but got `List[int]`.
             [64, 64],
             training_rounds=20,
         ),

@@ -18,7 +18,9 @@ from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActio
 
 
 class TestDisjointLinearBandits(unittest.TestCase):
+    # pyre-fixme[3]: Return type must be annotated.
     def setUp(self):
+        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `range`.
         action_space = DiscreteActionSpace(range(3))
         policy_learner = DisjointLinearBandit(
             feature_dim=2,
@@ -151,6 +153,7 @@ class TestDisjointLinearBandits(unittest.TestCase):
         action_count = 3
         batch_size = 10
 
+        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `Tensor`.
         action_space = DiscreteActionSpace(torch.randn(action_count, action_dim))
         policy_learner = DisjointLinearBandit(
             feature_dim=state_dim + action_dim,

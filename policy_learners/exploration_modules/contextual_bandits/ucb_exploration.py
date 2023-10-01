@@ -26,6 +26,7 @@ class UCBExplorationBase(ValueExplorationBase):
         self,
         subjective_state: SubjectiveState,
         available_action_space: DiscreteActionSpace,
+        # pyre-fixme[9]: representation has type `Tensor`; used as `None`.
         representation: torch.Tensor = None,
     ) -> torch.Tensor:
         """
@@ -42,6 +43,7 @@ class UCBExplorationBase(ValueExplorationBase):
         subjective_state: SubjectiveState,
         values: torch.Tensor,
         available_action_space: DiscreteActionSpace,
+        # pyre-fixme[9]: representation has type `Tensor`; used as `None`.
         representation: torch.Tensor = None,
     ) -> torch.Tensor:
         """
@@ -70,11 +72,14 @@ class UCBExplorationBase(ValueExplorationBase):
         return ucb_scores.squeeze()
 
     # TODO: We should make discrete action space itself iterable
+    # pyre-fixme[14]: `act` overrides method defined in `ValueExplorationBase`
+    #  inconsistently.
     def act(
         self,
         subjective_state: SubjectiveState,
         action_space: DiscreteActionSpace,
         values: torch.Tensor,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,
         exploit_action: Action = None,
     ) -> Action:
@@ -104,13 +109,16 @@ class VanillaUCBExploration(UCBExplorationBase):
 
     def __init__(self) -> None:
         super(UCBExplorationBase, self).__init__(alpha=1)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.action_execution_count = {}
+        # pyre-fixme[4]: Attribute must be annotated.
         self.action_executed = torch.tensor(1)
 
     def sigma(
         self,
         subjective_state: SubjectiveState,
         available_action_space: DiscreteActionSpace,
+        # pyre-fixme[9]: representation has type `Tensor`; used as `None`.
         representation: torch.Tensor = None,
     ) -> torch.Tensor:
         exploration_bonus = torch.zeros(
@@ -130,6 +138,7 @@ class VanillaUCBExploration(UCBExplorationBase):
         subjective_state: SubjectiveState,
         action_space: DiscreteActionSpace,
         values: torch.Tensor,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,
         exploit_action: Action = None,
     ) -> Action:

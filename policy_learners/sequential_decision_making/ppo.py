@@ -30,6 +30,8 @@ class ProximalPolicyOptimization(PolicyGradient):
         state_dim: int,
         action_space: ActionSpace,
         hidden_dims: Iterable[int],
+        # pyre-fixme[9]: exploration_module has type `ExplorationModule`; used as
+        #  `None`.
         exploration_module: ExplorationModule = None,
         learning_rate: float = 0.0001,
         training_rounds: int = 100,
@@ -51,16 +53,21 @@ class ProximalPolicyOptimization(PolicyGradient):
         self._epsilon = epsilon
         self._critic_loss_scaling = critic_loss_scaling
         self._entropy_bonus_scaling = entropy_bonus_scaling
+        # pyre-fixme[4]: Attribute must be annotated.
         self._actor_old = copy.deepcopy(self._actor)
         self._training_rounds = training_rounds
         # V(s)
+        # pyre-fixme[3]: Return type must be annotated.
         def make_critic_network():
             return VanillaValueNetwork(
                 input_dim=state_dim,
+                # pyre-fixme[6]: For 2nd argument expected `Optional[List[int]]` but
+                #  got `Iterable[int]`.
                 hidden_dims=hidden_dims,
                 output_dim=1,
             )
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self._critic = make_critic_network()
         self._optimizer = optim.AdamW(
             [
@@ -111,6 +118,7 @@ class ProximalPolicyOptimization(PolicyGradient):
         loss = (
             torch.sum(-torch.min(r_thelta * advantage, clip * advantage))
             + self._critic_loss_scaling * vs_loss
+            # pyre-fixme[6]: For 1st argument expected `Tensor` but got `float`.
             - torch.sum(self._entropy_bonus_scaling * entropy)
         )
 
@@ -123,4 +131,6 @@ class ProximalPolicyOptimization(PolicyGradient):
     def learn(self, replay_buffer: ReplayBuffer) -> Dict[str, Any]:
         super().learn(replay_buffer)
         # update old actor with latest actor for next round
+        # pyre-fixme[7]: Expected `Dict[str, typing.Any]` but got implicit return
+        #  value of `None`.
         self._actor_old.load_state_dict(self._actor.state_dict())

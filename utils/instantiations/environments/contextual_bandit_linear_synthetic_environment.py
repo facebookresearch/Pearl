@@ -22,6 +22,7 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
     the context for an arm is the concatenation of the observation feature vector and the arm feature vevctor.
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         action_space: ActionSpace,
@@ -44,7 +45,9 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         self.reward_noise_sigma = reward_noise_sigma
         self._simple_linear_mapping = simple_linear_mapping
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self._features_of_all_arms = self._generate_features_of_all_arms()
+        # pyre-fixme[4]: Attribute must be annotated.
         self._linear_mapping = self._make_initial_linear_mapping()
 
     @property
@@ -63,9 +66,12 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
     def linear_mapping(self) -> torch.nn.Module:
         return self._linear_mapping
 
+    # pyre-fixme[3]: Return type must be annotated.
     def _generate_features_of_all_arms(self):
         features_of_all_arms = torch.rand(
-            self.action_space.n, self.arm_feature_vector_dim
+            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
+            self.action_space.n,
+            self.arm_feature_vector_dim,
         )  # features of each arm. (num of action, num of features)
         return features_of_all_arms
 
@@ -82,10 +88,13 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
             out_features=1,
         )
 
+    # pyre-fixme[31]: Expression `ActionSpace)` is not a valid type.
     def reset(self) -> (Observation, ActionSpace):
         """
         Provides the observation and action space to the agent.
         """
+        # pyre-fixme[16]: `ContextualBanditLinearSyntheticEnvironment` has no
+        #  attribute `_observation`.
         self._observation = torch.rand(self.observation_dim)
         return self._observation, self.action_space
 
@@ -95,6 +104,7 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         """
         context = self._get_context_for_arm(action)
         reward = self._compute_reward_from_context(context)
+        # pyre-fixme[7]: Expected `Number` but got `Tensor`.
         return reward
 
     def get_regret(self, action: Action) -> Value:
@@ -104,12 +114,20 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         """
         rewards = [
             self._compute_reward_from_context(self._get_context_for_arm(i))
+            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
             for i in range(self._action_space.n)
         ]
+        # pyre-fixme[6]: For 1st argument expected
+        #  `Iterable[Variable[SupportsRichComparisonT (bound to
+        #  Union[SupportsDunderGT[typing.Any], SupportsDunderLT[typing.Any]])]]` but
+        #  got `List[Tensor]`.
         return max(rewards) - rewards[action]
 
     def _get_context_for_arm(self, action: int) -> torch.Tensor:
+        # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
         assert action in range(self._action_space.n)  # action is index in action_space
+        # pyre-fixme[16]: `ContextualBanditLinearSyntheticEnvironment` has no
+        #  attribute `_observation`.
         return torch.cat([self._observation, self.features_of_all_arms[action]])
 
     def _compute_reward_from_context(
@@ -145,13 +163,16 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         else:
             return reward
 
+    # pyre-fixme[3]: Return type must be annotated.
     def render(self):
         # Either print or open rendering of environment (optional).
         pass
 
+    # pyre-fixme[3]: Return type must be annotated.
     def close(self):
         # Close resources (files etc)
         pass
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __str__(self):
         return "Bandit with reward linearly mapped from context feature vector"

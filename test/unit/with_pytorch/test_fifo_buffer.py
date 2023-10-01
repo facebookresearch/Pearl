@@ -13,6 +13,7 @@ from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActio
 
 
 class TestFifoBuffer(unittest.TestCase):
+    # pyre-fixme[3]: Return type must be annotated.
     def setUp(self):
         self.batch_size = 3
         state_dim = 10
@@ -23,6 +24,7 @@ class TestFifoBuffer(unittest.TestCase):
             self.batch_size,
         )
         self.next_states = torch.rand(self.batch_size, state_dim)
+        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `range`.
         self.action_space = DiscreteActionSpace(range(action_dim))
         self.curr_available_actions = self.action_space
         self.next_available_actions = self.action_space
@@ -75,12 +77,16 @@ class TestFifoBuffer(unittest.TestCase):
         self.assertTrue(torch.equal(batch.reward, torch.tensor([self.rewards[0]])))
         self.assertTrue(
             torch.equal(
+                # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+                #  `Optional[Tensor]`.
                 batch.next_state,
                 self.next_states[0].view(1, -1),
             )
         )
         self.assertTrue(
             torch.equal(
+                # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+                #  `Optional[Tensor]`.
                 batch.next_action,
                 F.one_hot(
                     torch.tensor([self.actions[1]]), num_classes=self.action_space.n
@@ -105,4 +111,5 @@ class TestFifoBuffer(unittest.TestCase):
         )
         # expect one sample returned
         batch = replay_buffer.sample(1)
+        # pyre-fixme[16]: Optional type has no attribute `__getitem__`.
         self.assertTrue(batch.done[0])

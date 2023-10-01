@@ -92,6 +92,8 @@ class ImplicitQLearning(PolicyGradient):
         )
 
         # a single actor network
+        # pyre-fixme[4]: Attribute must be annotated.
+        # pyre-fixme[28]: Unexpected keyword argument `input_dim`.
         self._actor = actor_network_type(
             input_dim=state_dim,
             hidden_dims=hidden_dims,
@@ -107,6 +109,7 @@ class ImplicitQLearning(PolicyGradient):
         self._twin_critics = TwinCritic(
             state_dim=state_dim,
             action_dim=action_dim,
+            # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
             hidden_dims=hidden_dims,
             learning_rate=critic_learning_rate,
             network_type=critic_network_type,
@@ -117,6 +120,7 @@ class ImplicitQLearning(PolicyGradient):
         self._targets_of_twin_critics = TwinCritic(
             state_dim=state_dim,
             action_dim=action_dim,
+            # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
             hidden_dims=hidden_dims,
             learning_rate=critic_learning_rate,
             network_type=critic_network_type,
@@ -134,6 +138,8 @@ class ImplicitQLearning(PolicyGradient):
         # value network
         self._value_network = VanillaValueNetwork(
             input_dim=state_dim,
+            # pyre-fixme[6]: For 2nd argument expected `Optional[List[int]]` but got
+            #  `Iterable[int]`.
             hidden_dims=hidden_dims,
             output_dim=1,
         )
@@ -207,13 +213,18 @@ class ImplicitQLearning(PolicyGradient):
 
             # compute targets for batch of (state, action, next_state)
             target = (
-                values_next_states * self._discount_factor * (1 - batch.done)
+                values_next_states
+                * self._discount_factor
+                # pyre-fixme[58]: `-` is not supported for operand types `int` and
+                #  `Optional[torch._tensor.Tensor]`.
+                * (1 - batch.done)
             ) + batch.reward  # shape: (batch_size);  target y = r + gamma * V(s')
 
         # update twin critics towards target
         loss_critic_update = self._twin_critics.optimize_twin_critics_towards_target(
             state_batch=batch.state, action_batch=batch.action, expected_target=target
         )
+        # pyre-fixme[7]: Expected `Dict[str, typing.Any]` but got `List[Tensor]`.
         return loss_critic_update
 
     def _value_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
@@ -239,6 +250,8 @@ class ImplicitQLearning(PolicyGradient):
 
     # we do not expect this method to be reused in different algorithms, so it is defined here
     # To Do: add a utils method separately if needed in future for other algorithms to reuse
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _expectile_loss(self, input_loss):
         """
         Expectile loss applies an asymmetric weight to the input loss function parameterized by self._expectile.

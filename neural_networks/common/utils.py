@@ -29,6 +29,7 @@ def mlp_block(
     last_activation: Optional[str] = None,
     dropout_ratio: float = 0.0,
     use_skip_connections: bool = False,
+    # pyre-fixme[2]: Parameter must be annotated.
     **kwargs,
 ) -> nn.Module:
     """
@@ -45,6 +46,8 @@ def mlp_block(
     Returns:
         an nn.Sequential module consisting of mlp layers
     """
+    # pyre-fixme[58]: `+` is not supported for operand types `List[int]` and
+    #  `Optional[List[int]]`.
     dims = [input_dim] + hidden_dims + [output_dim]
     layers = []
     for i in range(len(dims) - 2):
@@ -80,6 +83,10 @@ def mlp_block(
         if dims[-2] == dims[-1]:
             last_layer_model = ResidualWrapper(last_layer_model)
         else:
+            # pyre-fixme[48]: Expression `logging.warn("Skip connections are
+            #  enabled, but layer in_dim ("f"{dims[-2]}"") != out_dim
+            #  ("f"{dims[-1]}""). Skip connection will not be added for this layer")`
+            #  has type `None` but must extend BaseException.
             raise logging.warn(
                 f"Skip connections are enabled, but layer in_dim ({dims[-2]}) != out_dim ({dims[-1]}). Skip connection will not be added for this layer"
             )
@@ -93,6 +100,7 @@ def conv_block(
     kernel_sizes: List[int],
     strides: List[int],
     paddings: List[int],
+    # pyre-fixme[2]: Parameter must be annotated.
     use_batch_norm=False,
 ) -> nn.Module:
     """
@@ -132,18 +140,24 @@ def conv_block(
 
 
 ## To do: the name of this function needs to be revised to xavier_init_weights
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def init_weights(m):
     if isinstance(m, nn.Linear):
         nn.init.xavier_uniform_(m.weight)
         m.bias.data.fill_(0.01)
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def uniform_init_weights(m):
     if isinstance(m, nn.Linear):
         nn.init.uniform_(m.weight, -0.001, 0.001)
         nn.init.uniform_(m.bias, -0.001, 0.001)
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def update_target_network(target_network, source_network, tau):
     # Q_target = (1 - tao) * Q_target + tao*Q
     target_net_state_dict = target_network.state_dict()
@@ -161,6 +175,8 @@ def ensemble_forward(models: List[nn.Module], features: torch.Tensor) -> torch.T
     batch_size = features.shape[0]
     features = features.permute((1, 0, 2))
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def wrapper(params, buffers, data):
         return torch.func.functional_call(models[0], (params, buffers), data)
 
@@ -173,6 +189,8 @@ def ensemble_forward(models: List[nn.Module], features: torch.Tensor) -> torch.T
     return values.permute(1, 0)
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def update_target_networks(list_of_target_networks, list_of_source_networks, tau):
     """
     Args:

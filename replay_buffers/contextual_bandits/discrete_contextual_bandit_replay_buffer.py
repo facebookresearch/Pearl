@@ -26,6 +26,7 @@ class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
             has_next_available_actions=False,
         )
 
+    # pyre-fixme[14]: `push` overrides method defined in `ReplayBuffer` inconsistently.
     def push(
         self,
         state: SubjectiveState,

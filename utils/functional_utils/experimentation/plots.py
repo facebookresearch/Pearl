@@ -1,3 +1,4 @@
+# pyre-fixme[3]: Return type must be annotated.
 def fontsize_for(
     string: str,
     max_fontsize: float = 24,

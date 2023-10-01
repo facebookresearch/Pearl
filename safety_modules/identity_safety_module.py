@@ -12,7 +12,9 @@ class IdentitySafetyModule(SafetyModule):
     A safety module that does not restrict action spaces.
     """
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, **options) -> None:
+        # pyre-fixme[4]: Attribute must be annotated.
         self._action_space = None
 
     def reset(self, action_space: ActionSpace) -> None:

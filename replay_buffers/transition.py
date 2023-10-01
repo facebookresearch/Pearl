@@ -25,6 +25,7 @@ class Transition:
     done: Optional[torch.Tensor] = None
     weight: Optional[torch.Tensor] = None
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __post_init__(self):
         pearl_device = get_pearl_device()
         # iterate over all fields, move to correct device
@@ -53,6 +54,7 @@ class TransitionBatch:
     done: Optional[torch.Tensor] = None
     weight: Optional[torch.Tensor] = None
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __post_init__(self):
         pearl_device = get_pearl_device()
         # iterate over all fields, move to correct device

@@ -19,6 +19,7 @@ import torch
 from pearl.neural_networks.common.auto_device_nn_module import AutoDeviceNNModule
 from pearl.utils.device import get_pearl_device
 
+# pyre-fixme[5]: Global expression must be annotated.
 logger = logging.getLogger(__name__)
 
 
@@ -29,6 +30,7 @@ class LinearRegression(AutoDeviceNNModule):
         l2_reg_lambda: L2 regularization parameter
         """
         super(LinearRegression, self).__init__()
+        # pyre-fixme[4]: Attribute must be annotated.
         self.device = get_pearl_device()
         self.register_buffer(
             "_A",

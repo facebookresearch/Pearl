@@ -23,11 +23,14 @@ CORP_ENDPOINT = "https://npm.thefacebook.com/"
 
 FB_CA_BUNDLE = "/var/facebook/rootcanal/ca.pem"
 
+# pyre-fixme[5]: Global expression must be annotated.
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def is_file_readable(file_path):
     return os.path.isfile(file_path) and os.access(file_path, os.R_OK)
 
@@ -84,6 +87,7 @@ def get_offline_data_in_buffer(url: str, size: int = 1000000) -> ReplayBuffer:
 def offline_learning(
     url: str,
     offline_agent: Agent,
+    # pyre-fixme[9]: data_buffer has type `ReplayBuffer`; used as `None`.
     data_buffer: ReplayBuffer = None,
     training_epochs: int = 1000,
 ) -> None:
@@ -105,12 +109,15 @@ def offline_learning(
 
     # training loop
     for i in range(training_epochs):
+        # pyre-fixme[16]: `Agent` has no attribute `policy_learner`.
         batch = data_buffer.sample(offline_agent.policy_learner.batch_size)
+        # pyre-fixme[16]: `Agent` has no attribute `learn_batch`.
         loss = offline_agent.learn_batch(batch=batch)
         if i % 500 == 0:
             print("training epoch", i, "training loss", loss)
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def offline_evaluation(
     offline_agent: Agent,
     env: Environment,

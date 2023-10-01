@@ -44,6 +44,8 @@ class LinearBandit(ContextualBanditBase):
             feature_dim=feature_dim, l2_reg_lambda=l2_reg_lambda
         )
 
+    # pyre-fixme[15]: `learn_batch` overrides method defined in
+    #  `ContextualBanditBase` inconsistently.
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """
         A <- A + x*x.t
@@ -53,11 +55,15 @@ class LinearBandit(ContextualBanditBase):
         self._linear_regression.learn_batch(
             x=x,
             y=batch.reward,
+            # pyre-fixme[6]: For 3rd argument expected `Tensor` but got
+            #  `Optional[Tensor]`.
             weight=batch.weight,
         )
         current_values = self._linear_regression(x)
         return {"current_values": current_values.mean().item()}
 
+    # pyre-fixme[14]: `act` overrides method defined in `ContextualBanditBase`
+    #  inconsistently.
     def act(
         self,
         subjective_state: SubjectiveState,
@@ -89,6 +95,7 @@ class LinearBandit(ContextualBanditBase):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
+        # pyre-fixme[9]: action_space has type `DiscreteActionSpace`; used as `None`.
         action_space: DiscreteActionSpace = None,
     ) -> torch.Tensor:
         """
@@ -110,5 +117,7 @@ class LinearBandit(ContextualBanditBase):
             available_action_space=action_space
             if action_space is not None
             else DiscreteActionSpace([0]),
+            # pyre-fixme[6]: For 4th argument expected `Tensor` but got
+            #  `LinearRegression`.
             representation=self._linear_regression,
         ).squeeze()

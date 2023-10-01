@@ -20,16 +20,19 @@ from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActio
 
 
 class TestDeepTDLearning(unittest.TestCase):
+    # pyre-fixme[3]: Return type must be annotated.
     def setUp(self):
         self.batch_size = 24
         self.state_dim = 10
         self.action_dim = 3
+        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `range`.
         self.action_space = DiscreteActionSpace(range(self.action_dim))
         buffer = FIFOOffPolicyReplayBuffer(self.batch_size)
         for _ in range(self.batch_size):
             buffer.push(
                 torch.randn(self.state_dim),
                 torch.randint(self.action_dim, (1,)),
+                # pyre-fixme[6]: For 3rd argument expected `float` but got `Tensor`.
                 torch.randint(1, (1,)),
                 torch.randn(self.state_dim),
                 self.action_space,

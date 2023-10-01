@@ -19,11 +19,14 @@ class PropensityExploration(ValueExplorationBase):
         super(PropensityExploration, self).__init__()
 
     # TODO: We should make discrete action space itself iterable
+    # pyre-fixme[14]: `act` overrides method defined in `ValueExplorationBase`
+    #  inconsistently.
     def act(
         self,
         subjective_state: SubjectiveState,
         available_action_space: DiscreteActionSpace,
         values: torch.Tensor,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,
         exploit_action: Action = None,
     ) -> Action:

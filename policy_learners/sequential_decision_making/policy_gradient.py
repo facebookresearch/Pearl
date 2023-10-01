@@ -34,6 +34,8 @@ class PolicyGradient(PolicyLearner):
         state_dim: int,
         action_space: ActionSpace,
         hidden_dims: Iterable[int],
+        # pyre-fixme[9]: exploration_module has type `ExplorationModule`; used as
+        #  `None`.
         exploration_module: ExplorationModule = None,
         learning_rate: float = 0.0001,
         discount_factor: float = 0.99,
@@ -59,6 +61,7 @@ class PolicyGradient(PolicyLearner):
         self.hidden_dims = hidden_dims
         self.action_space = action_space
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self._actor = self.make_specified_network()
         self._actor.apply(init_weights)
         self._actor_optimizer = optim.AdamW(
@@ -67,12 +70,15 @@ class PolicyGradient(PolicyLearner):
         self._discount_factor = discount_factor
 
     # TODO: Assumes Gym interface, fix it.
+    # pyre-fixme[3]: Return type must be annotated.
     def make_specified_network(
         self,
     ):
+        # pyre-fixme[28]: Unexpected keyword argument `input_dim`.
         return self.network_type(
             input_dim=self.state_dim,
             hidden_dims=self.hidden_dims,
+            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
             output_dim=self.action_space.n,
         )
 
@@ -130,6 +136,8 @@ class PolicyGradient(PolicyLearner):
 
         return {"loss": loss.mean().item()}
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _get_action_prob(self, state_batch, action_batch, actor=None):
         if actor is None:
             action_probs = self._actor(state_batch)

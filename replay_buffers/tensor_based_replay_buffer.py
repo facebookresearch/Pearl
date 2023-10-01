@@ -18,17 +18,22 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         capacity: int,
         has_next_state: bool = True,
         has_next_action: bool = True,
+        # pyre-fixme[2]: Parameter must be annotated.
         has_next_available_actions=True,
     ) -> None:
         self.capacity = capacity
+        # pyre-fixme[4]: Attribute must be annotated.
         self.memory = deque([], maxlen=capacity)
         self._has_next_state = has_next_state
         self._has_next_action = has_next_action
+        # pyre-fixme[4]: Attribute must be annotated.
         self._has_next_available_actions = has_next_available_actions
         # TODO we could add to init input if needed in the future
         self.is_action_continuous = False
+        # pyre-fixme[4]: Attribute must be annotated.
         self.device = get_pearl_device()
 
+    # pyre-fixme[11]: Annotation `tensor` is not defined as a type.
     def _process_single_state(self, state: SubjectiveState) -> torch.tensor:
         return (
             torch.tensor(state, device=self.device).unsqueeze(0).float()
@@ -42,7 +47,9 @@ class TensorBasedReplayBuffer(ReplayBuffer):
                 1, -1
             )  # (1 x action_dim)
         return F.one_hot(
-            torch.tensor([action], device=self.device), num_classes=action_space.n
+            torch.tensor([action], device=self.device),
+            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
+            num_classes=action_space.n,
         )  # (1 x action_dim)
 
     def _process_single_reward(self, reward: float) -> torch.tensor:
@@ -52,12 +59,17 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         return torch.tensor([done], device=self.device).float()  # (1)
 
     def _create_action_tensor_and_mask(
-        self, action_space: ActionSpace, available_actions: ActionSpace
+        self,
+        action_space: ActionSpace,
+        available_actions: ActionSpace
+        # pyre-fixme[31]: Expression `tensor)` is not a valid type.
     ) -> (torch.tensor, torch.tensor):
         if self.is_action_continuous:
             return (None, None)  # continuous action does not have limited space
         available_actions_tensor_with_padding = torch.zeros(
-            (1, action_space.n, action_space.n), device=self.device
+            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
+            (1, action_space.n, action_space.n),
+            device=self.device,
         )  # (1 x action_space_size x action_dim)
         available_actions_tensor = F.one_hot(
             torch.arange(0, available_actions.n, device=self.device),
@@ -74,6 +86,8 @@ class TensorBasedReplayBuffer(ReplayBuffer):
 
         return (available_actions_tensor_with_padding, available_actions_mask)
 
+    # pyre-fixme[15]: `sample` overrides method defined in `ReplayBuffer`
+    #  inconsistently.
     def sample(self, batch_size: int) -> TransitionBatch:
         """
         The shapes of input and output are:

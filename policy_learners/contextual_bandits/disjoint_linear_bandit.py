@@ -42,8 +42,10 @@ class DisjointLinearBandit(ContextualBanditBase):
             batch_size=batch_size,
             exploration_module=exploration_module,
         )
+        # pyre-fixme[4]: Attribute must be annotated.
         self.device = get_pearl_device()
         # Currently our disjoint LinUCB usecase only use LinearRegression
+        # pyre-fixme[4]: Attribute must be annotated.
         self._linear_regressions = torch.nn.ModuleList(
             [
                 LinearRegression(feature_dim=feature_dim, l2_reg_lambda=l2_reg_lambda)
@@ -52,6 +54,8 @@ class DisjointLinearBandit(ContextualBanditBase):
         ).to(self.device)
         self._discrete_action_space = action_space
 
+    # pyre-fixme[15]: `learn_batch` overrides method defined in
+    #  `ContextualBanditBase` inconsistently.
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """
         Assumption of input is that action in batch is action idx instead of action value
@@ -96,6 +100,8 @@ class DisjointLinearBandit(ContextualBanditBase):
 
         return {}
 
+    # pyre-fixme[14]: `act` overrides method defined in `ContextualBanditBase`
+    #  inconsistently.
     def act(
         self,
         subjective_state: SubjectiveState,

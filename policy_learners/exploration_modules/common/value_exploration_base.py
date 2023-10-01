@@ -18,7 +18,9 @@ class ValueExplorationBase(ExplorationModule):
     """
 
     def __init__(self) -> None:
+        # pyre-fixme[4]: Attribute must be annotated.
         self.exploration_type = ExplorationType.VALUE
+        # pyre-fixme[4]: Attribute must be annotated.
         self.device = get_pearl_device()
 
     @abstractmethod
@@ -28,6 +30,7 @@ class ValueExplorationBase(ExplorationModule):
         action_space: ActionSpace,
         values: torch.Tensor,
         exploit_action: Action = None,
+        # pyre-fixme[9]: representation has type `Tensor`; used as `None`.
         representation: torch.Tensor = None,
     ) -> Action:
         pass

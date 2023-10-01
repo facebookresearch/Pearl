@@ -34,6 +34,10 @@ class TestLinearRegression(unittest.TestCase):
         feature_dim = 15
         batch_size = feature_dim * 4  # it is important to have enough data for training
 
+        # pyre-fixme[53]: Captured variable `batch_size` is not annotated.
+        # pyre-fixme[53]: Captured variable `feature_dim` is not annotated.
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def single_test(linear_regression_class):
             linear_regression = linear_regression_class(feature_dim=feature_dim)
             losses = []

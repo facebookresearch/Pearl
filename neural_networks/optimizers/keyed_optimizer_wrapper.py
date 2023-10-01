@@ -22,6 +22,7 @@ class KeyedOptimizerWrapper(KeyedOptimizer):
     def __init__(
         self,
         models: Mapping[str, torch.nn.Module],
+        # pyre-fixme[31]: Expression `Optimizer)` is not a valid type.
         optimizer_cls: type(torch.optim.Optimizer),
         **kwargs: Any,
     ) -> None:
@@ -39,16 +40,19 @@ class KeyedOptimizerWrapper(KeyedOptimizer):
     def zero_grad(self, set_to_none: bool = False) -> None:
         self._optimizer.zero_grad()
 
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     def step(self, closure: Any = None) -> None:
         self._optimizer.step(closure=closure)
 
 
 class NoOpOptimizer(KeyedOptimizer):
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(self):
         super().__init__({}, {}, {})
 
     def zero_grad(self, set_to_none: bool = False) -> None:
         pass
 
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     def step(self, closure: Any = None) -> None:
         pass

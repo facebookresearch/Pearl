@@ -13,6 +13,7 @@ from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActio
 
 
 class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
+    # pyre-fixme[3]: Return type must be annotated.
     def setUp(self):
         self.batch_size = 3
         self.capacity = 10
@@ -21,6 +22,7 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         self.cum_returns = [15.0, 11.0, 5.0]  # cumulative returns
         self.trajectory_len = len(self.rewards)
         self.action_size = 3
+        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `range`.
         self.action_space = DiscreteActionSpace(range(self.action_size))
 
     def test_push_incomplete_trajectory(self) -> None:
@@ -68,6 +70,7 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         self.assertTrue(torch.equal(cum_returns_buffer, torch.tensor(self.cum_returns)))
 
         # validate terminal state indicators - 1 only for the last element
+        # pyre-fixme[16]: Optional type has no attribute `__getitem__`.
         done = batch.done[order]
         self.assertTrue(
             torch.equal(done, torch.eye(self.trajectory_len)[self.trajectory_len - 1])
@@ -134,6 +137,7 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         )  # 2nd trajectory
 
         # validate terminal state indicators - 1 only for the last element
+        # pyre-fixme[16]: Optional type has no attribute `__getitem__`.
         done = batch.done[order]
         self.assertTrue(
             torch.equal(

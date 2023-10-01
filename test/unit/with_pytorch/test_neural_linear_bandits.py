@@ -73,6 +73,7 @@ class TestNeuralLinearBandits(unittest.TestCase):
         action = policy_learner.act(subjective_state=state, action_space=action_space)
         self.assertEqual(action.shape, batch.reward.shape)
 
+    # pyre-fixme[3]: Return type must be annotated.
     def test_state_dict(self):
         # There has been discussions and debating on how to support state dict of policy learner
         # This unittest is to ensure regardless of solution, this functionality needs to be there

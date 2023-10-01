@@ -20,6 +20,7 @@ class LinUCBExploration(UCBExplorationBase):
         self,
         subjective_state: SubjectiveState,
         available_action_space: DiscreteActionSpace,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,
     ) -> torch.Tensor:
         """
@@ -45,6 +46,7 @@ class DisjointLinUCBExploration(LinUCBExploration):
         self,
         subjective_state: SubjectiveState,
         available_action_space: DiscreteActionSpace,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,
     ) -> torch.Tensor:
         """

@@ -20,7 +20,9 @@ class TestVanillaCNNs(unittest.TestCase):
 
         self.num_data_points = 5000
         self.mnist_train_dataset = Subset(
-            mnist_dataset, torch.arange(1, self.num_data_points)
+            mnist_dataset,
+            # pyre-fixme[6]: For 2nd argument expected `Sequence[int]` but got `Tensor`.
+            torch.arange(1, self.num_data_points),
         )
         self.learning_rate = 0.001
         self.batch_size = 64

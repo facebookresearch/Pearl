@@ -41,6 +41,8 @@ class SoftActorCritic(OffPolicyActorCritic):
         state_dim: int,
         action_space: ActionSpace,
         hidden_dims: Iterable[int],
+        # pyre-fixme[9]: exploration_module has type `ExplorationModule`; used as
+        #  `None`.
         exploration_module: ExplorationModule = None,
         critic_learning_rate: float = 0.0001,
         actor_learning_rate: float = 0.0001,
@@ -55,6 +57,7 @@ class SoftActorCritic(OffPolicyActorCritic):
         super(SoftActorCritic, self).__init__(
             state_dim=state_dim,
             action_space=action_space,
+            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
             action_dim=action_space.n,
             hidden_dims=hidden_dims,
             critic_learning_rate=critic_learning_rate,
@@ -86,6 +89,10 @@ class SoftActorCritic(OffPolicyActorCritic):
         self._action_space = action_space
         self.scheduler.step()
 
+    # pyre-fixme[14]: `_critic_learn_batch` overrides method defined in
+    #  `OffPolicyActorCritic` inconsistently.
+    # pyre-fixme[15]: `_critic_learn_batch` overrides method defined in
+    #  `OffPolicyActorCritic` inconsistently.
     def _critic_learn_batch(self, batch: TransitionBatch) -> None:
 
         reward_batch = batch.reward  # (batch_size)
@@ -94,6 +101,8 @@ class SoftActorCritic(OffPolicyActorCritic):
         expected_state_action_values = (
             self._get_next_state_expected_values(batch)
             * self._discount_factor
+            # pyre-fixme[58]: `-` is not supported for operand types `int` and
+            #  `Optional[torch._tensor.Tensor]`.
             * (1 - done_batch)
         ) + reward_batch  # (batch_size), r + gamma * V(s)
 
@@ -103,9 +112,11 @@ class SoftActorCritic(OffPolicyActorCritic):
             expected_target=expected_state_action_values,
         )
 
+        # pyre-fixme[7]: Expected `None` but got `List[Tensor]`.
         return loss_critic_update
 
     @torch.no_grad()
+    # pyre-fixme[11]: Annotation `tensor` is not defined as a type.
     def _get_next_state_expected_values(self, batch: TransitionBatch) -> torch.tensor:
         next_state_batch = batch.next_state  # (batch_size x state_dim)
         next_available_actions_batch = (
@@ -116,12 +127,17 @@ class SoftActorCritic(OffPolicyActorCritic):
         )  # (batch_size x action_space_size)
 
         next_state_batch_repeated = torch.repeat_interleave(
-            next_state_batch.unsqueeze(1), self._action_space.n, dim=1
+            # pyre-fixme[16]: Optional type has no attribute `unsqueeze`.
+            next_state_batch.unsqueeze(1),
+            self._action_space.n,
+            dim=1,
         )  # (batch_size x action_space_size x state_dim)
 
         # get q values of (states, all actions) from twin critics
         next_q1, next_q2 = self._targets_of_twin_critics.get_twin_critic_values(
             state_batch=next_state_batch_repeated,
+            # pyre-fixme[6]: For 2nd argument expected `Tensor` but got
+            #  `Optional[Tensor]`.
             action_batch=next_available_actions_batch,
         )
 
@@ -154,6 +170,10 @@ class SoftActorCritic(OffPolicyActorCritic):
 
         return next_state_action_values.sum(dim=1)
 
+    # pyre-fixme[14]: `_actor_learn_batch` overrides method defined in
+    #  `OffPolicyActorCritic` inconsistently.
+    # pyre-fixme[15]: `_actor_learn_batch` overrides method defined in
+    #  `OffPolicyActorCritic` inconsistently.
     def _actor_learn_batch(self, batch: TransitionBatch) -> None:
         state_batch = batch.state  # (batch_size x state_dim)
 

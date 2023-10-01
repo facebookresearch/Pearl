@@ -29,6 +29,7 @@ class DeepSARSA(DeepTDLearning):
         state_dim: int,
         action_space: ActionSpace,
         exploration_module: Optional[ExplorationModule] = None,
+        # pyre-fixme[2]: Parameter must be annotated.
         **kwargs,
     ) -> None:
         super(DeepSARSA, self).__init__(
@@ -43,7 +44,10 @@ class DeepSARSA(DeepTDLearning):
 
     @torch.no_grad()
     def _get_next_state_values(
-        self, batch: TransitionBatch, batch_size: int
+        self,
+        batch: TransitionBatch,
+        batch_size: int
+        # pyre-fixme[11]: Annotation `tensor` is not defined as a type.
     ) -> torch.tensor:
         """
         For SARSA, next state values comes from committed next action + next state value

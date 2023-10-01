@@ -16,10 +16,13 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
         # this is used to delay push SARS
         # wait for next action is available and then final push
         # this is designed for single transition for now
+        # pyre-fixme[4]: Attribute must be annotated.
         self.reward_cache = []
+        # pyre-fixme[4]: Attribute must be annotated.
         self.state_action_cache = []
         self._discounted_factor = discounted_factor
 
+    # pyre-fixme[14]: `push` overrides method defined in `ReplayBuffer` inconsistently.
     def push(
         self,
         state: SubjectiveState,
@@ -44,6 +47,7 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
             Transition(
                 state=current_state,
                 action=current_action,
+                # pyre-fixme[6]: For 3rd argument expected `Tensor` but got `None`.
                 reward=None,
                 next_state=None,
                 curr_available_actions=curr_available_actions_tensor_with_padding,

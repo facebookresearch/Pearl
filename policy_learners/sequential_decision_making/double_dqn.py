@@ -16,7 +16,10 @@ class DoubleDQN(DeepQLearning):
 
     @torch.no_grad()
     def _get_next_state_values(
-        self, batch: TransitionBatch, batch_size: int
+        self,
+        batch: TransitionBatch,
+        batch_size: int
+        # pyre-fixme[11]: Annotation `tensor` is not defined as a type.
     ) -> torch.tensor:
         next_state_batch = batch.next_state  # (batch_size x state_dim)
         next_available_actions_batch = (
@@ -27,7 +30,12 @@ class DoubleDQN(DeepQLearning):
         )  # (batch_size x action_space_size)
 
         next_state_batch_repeated = torch.repeat_interleave(
-            next_state_batch.unsqueeze(1), self._action_space.n, dim=1
+            # pyre-fixme[16]: Optional type has no attribute `unsqueeze`.
+            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
+            next_state_batch.unsqueeze(1),
+            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
+            self._action_space.n,
+            dim=1,
         )  # (batch_size x action_space_size x state_dim)
 
         next_state_action_values = self._Q.get_q_values(
@@ -40,7 +48,9 @@ class DoubleDQN(DeepQLearning):
 
         # Torch.max(1) returns value, indices
         next_action_indices = next_state_action_values.max(1)[1]  # (batch_size)
+        # pyre-fixme[16]: Optional type has no attribute `__getitem__`.
         next_action_batch = next_available_actions_batch[
+            # pyre-fixme[16]: Optional type has no attribute `size`.
             torch.arange(next_available_actions_batch.size(0)),
             next_action_indices.squeeze(),
         ]

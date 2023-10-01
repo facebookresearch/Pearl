@@ -39,6 +39,8 @@ class ContextualBanditBase(PolicyLearner):
         return self._feature_dim
 
     @abstractmethod
+    # pyre-fixme[15]: `learn_batch` overrides method defined in `PolicyLearner`
+    #  inconsistently.
     def learn_batch(self, batch: TransitionBatch) -> None:
         pass
 
@@ -52,6 +54,7 @@ class ContextualBanditBase(PolicyLearner):
         pass
 
     @abstractmethod
+    # pyre-fixme[3]: Return type must be annotated.
     def get_scores(
         self,
         subjective_state: SubjectiveState,

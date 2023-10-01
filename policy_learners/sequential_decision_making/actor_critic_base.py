@@ -41,6 +41,8 @@ class OffPolicyActorCritic(PolicyLearner):
         hidden_dims: Iterable[int],
         critic_learning_rate: float = 1e-4,
         actor_learning_rate: float = 1e-4,
+        # pyre-fixme[9]: exploration_module has type `ExplorationModule`; used as
+        #  `None`.
         exploration_module: ExplorationModule = None,
         discount_factor: float = 0.99,
         training_rounds: int = 100,
@@ -63,7 +65,9 @@ class OffPolicyActorCritic(PolicyLearner):
         self.is_action_continuous = is_action_continuous
         self._exploration_module = exploration_module
 
+        # pyre-fixme[3]: Return type must be annotated.
         def make_specified_actor_network():
+            # pyre-fixme[28]: Unexpected keyword argument `input_dim`.
             return actor_network_type(
                 input_dim=state_dim,
                 hidden_dims=hidden_dims,
@@ -72,6 +76,7 @@ class OffPolicyActorCritic(PolicyLearner):
             )
 
         # actor network takes state as input and outputs an action vector
+        # pyre-fixme[4]: Attribute must be annotated.
         self._actor = make_specified_actor_network()
         self._actor.apply(init_weights)
         self._actor_optimizer = optim.AdamW(
@@ -83,6 +88,7 @@ class OffPolicyActorCritic(PolicyLearner):
         self._twin_critics = TwinCritic(
             state_dim=state_dim,
             action_dim=action_dim,
+            # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
             hidden_dims=hidden_dims,
             learning_rate=critic_learning_rate,
             network_type=critic_network_type,
@@ -93,6 +99,7 @@ class OffPolicyActorCritic(PolicyLearner):
         self._targets_of_twin_critics = TwinCritic(
             state_dim=state_dim,
             action_dim=action_dim,
+            # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
             hidden_dims=hidden_dims,
             learning_rate=critic_learning_rate,
             network_type=critic_network_type,
@@ -173,9 +180,11 @@ class OffPolicyActorCritic(PolicyLearner):
         return {}
 
     @abstractmethod
+    # pyre-fixme[2]: Parameter must be annotated.
     def _actor_learn_batch(self, batch: TransitionBatch, **options) -> Dict[str, Any]:
         pass
 
     @abstractmethod
+    # pyre-fixme[2]: Parameter must be annotated.
     def _critic_learn_batch(self, batch: TransitionBatch, **options) -> Dict[str, Any]:
         pass

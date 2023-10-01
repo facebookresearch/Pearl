@@ -64,7 +64,9 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
         self._state_dim = state_dim
         self._action_dim = action_dim
 
+        # pyre-fixme[3]: Return type must be annotated.
         def make_specified_actor_network():
+            # pyre-fixme[28]: Unexpected keyword argument `input_dim`.
             return actor_network_type(
                 input_dim=state_dim,
                 hidden_dims=hidden_dims,
@@ -72,7 +74,9 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
             )
 
         # actor network takes state as input and outputs an action vector
+        # pyre-fixme[4]: Attribute must be annotated.
         self._actor = make_specified_actor_network()
+        # pyre-fixme[4]: Attribute must be annotated.
         self._actor_target = make_specified_actor_network()  # target of actor network
         self._actor.apply(init_weights)
         self._actor_target.load_state_dict(self._actor.state_dict())
@@ -85,6 +89,7 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
         self._twin_critics = TwinCritic(
             state_dim=state_dim,
             action_dim=action_dim,
+            # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
             hidden_dims=hidden_dims,
             learning_rate=critic_learning_rate,
             network_type=critic_network_type,
@@ -95,6 +100,7 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
         self._targets_of_twin_critics = TwinCritic(
             state_dim=state_dim,
             action_dim=action_dim,
+            # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
             hidden_dims=hidden_dims,
             learning_rate=critic_learning_rate,
             network_type=critic_network_type,
@@ -115,6 +121,7 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
     def act(
         self,
         subjective_state: SubjectiveState,
+        # pyre-fixme[9]: available_action_space has type `ActionSpace`; used as `None`.
         available_action_space: ActionSpace = None,
         exploit: bool = False,
     ) -> Action:
@@ -182,7 +189,10 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
 
             # get q values of (batch.next_state, next_action) from targets of twin critic
             next_q1, next_q2 = self._targets_of_twin_critics.get_twin_critic_values(
-                state_batch=batch.next_state, action_batch=next_action
+                # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+                #  `Optional[Tensor]`.
+                state_batch=batch.next_state,
+                action_batch=next_action,
             )
             next_q = torch.minimum(
                 next_q1, next_q2
@@ -190,7 +200,11 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
 
             # compute bellman target
             expected_state_action_values = (
-                next_q * self._discount_factor * (1 - batch.done)
+                next_q
+                * self._discount_factor
+                # pyre-fixme[58]: `-` is not supported for operand types `int` and
+                #  `Optional[torch._tensor.Tensor]`.
+                * (1 - batch.done)
             ) + batch.reward  # (batch_size), r + gamma * (min{Q_1(s', a from actor network), Q_2(s', a from actor network)})
 
         # update twin critics towards bellman target
@@ -200,4 +214,5 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
             expected_target=expected_state_action_values,
         )
 
+        # pyre-fixme[7]: Expected `Dict[str, typing.Any]` but got `List[Tensor]`.
         return loss_critic_update
