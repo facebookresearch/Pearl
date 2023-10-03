@@ -1,12 +1,8 @@
-from typing import Iterable, Optional, Type
+from typing import Optional
 
 import torch
 
 from pearl.api.action_space import ActionSpace
-from pearl.neural_networks.common.value_networks import VanillaQValueNetwork
-from pearl.neural_networks.sequential_decision_making.q_value_network import (
-    QValueNetwork,
-)
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
     EGreedyExploration,
 )
