@@ -1,5 +1,6 @@
 import random
 from collections import deque
+from typing import List
 
 import torch
 import torch.nn.functional as F
@@ -8,7 +9,7 @@ from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
-from pearl.replay_buffers.transition import TransitionBatch
+from pearl.replay_buffers.transition import Transition, TransitionBatch
 from pearl.utils.device import get_pearl_device
 
 
@@ -110,37 +111,12 @@ class TensorBasedReplayBuffer(ReplayBuffer):
                 f"Can't get a batch of size {batch_size} from a replay buffer with only {len(self)} elements"
             )
         samples = random.sample(self.memory, batch_size)
-        return TransitionBatch(
-            state=torch.cat([x.state for x in samples]),
-            action=torch.cat([x.action for x in samples]),
-            reward=torch.cat([x.reward for x in samples]),
-            next_state=torch.cat([x.next_state for x in samples])
-            if self._has_next_state
-            else None,
-            next_action=torch.cat([x.next_action for x in samples])
-            if self._has_next_action
-            else None,
-            curr_available_actions=torch.cat(
-                [x.curr_available_actions for x in samples]
-            )
-            if not self.is_action_continuous
-            else None,
-            curr_available_actions_mask=torch.cat(
-                [x.curr_available_actions_mask for x in samples]
-            )
-            if not self.is_action_continuous
-            else None,
-            next_available_actions=torch.cat(
-                [x.next_available_actions for x in samples]
-            )
-            if not self.is_action_continuous and self._has_next_available_actions
-            else None,
-            next_available_actions_mask=torch.cat(
-                [x.next_available_actions_mask for x in samples]
-            )
-            if not self.is_action_continuous and self._has_next_available_actions
-            else None,
-            done=torch.cat([x.done for x in samples]),
+        return _create_transition_batch(
+            transitions=samples,
+            has_next_state=self._has_next_state,
+            has_next_action=self._has_next_action,
+            is_action_continuous=self.is_action_continuous,
+            has_next_available_actions=self._has_next_available_actions,
         )
 
     def __len__(self) -> int:
@@ -148,3 +124,57 @@ class TensorBasedReplayBuffer(ReplayBuffer):
 
     def empty(self) -> None:
         self.memory = deque([], maxlen=self.capacity)
+
+
+def _create_transition_batch(
+    transitions: List[Transition],
+    has_next_state: bool,
+    has_next_action: bool,
+    is_action_continuous: bool,
+    has_next_available_actions: bool,
+) -> TransitionBatch:
+    # TODO[drjiang]: Will properly handle the None pyre errors in this function,
+    # in a subsequent diff. Errors are due to parts of the transition potentially
+    # being None.
+    state_batch = torch.cat([x.state for x in transitions])
+    action_batch = torch.cat([x.action for x in transitions])
+    reward_batch = torch.cat([x.reward for x in transitions])
+    done_batch = torch.cat([x.done for x in transitions])  # pyre-ignore
+
+    next_state_batch, next_action_batch = None, None
+    if has_next_state:
+        next_state_batch = torch.cat([x.next_state for x in transitions])  # pyre-ignore
+    if has_next_action:
+        next_action_batch = torch.cat(
+            [x.next_action for x in transitions]  # pyre-ignore
+        )
+
+    curr_available_actions_batch, curr_available_actions_mask_batch = None, None
+    if not is_action_continuous:
+        curr_available_actions_batch = torch.cat(
+            [x.curr_available_actions for x in transitions]  # pyre-ignore
+        )
+        curr_available_actions_mask_batch = torch.cat(
+            [x.curr_available_actions_mask for x in transitions]  # pyre-ignore
+        )
+
+    next_available_actions_batch, next_available_actions_mask_batch = None, None
+    if not is_action_continuous and has_next_available_actions:
+        next_available_actions_batch = torch.cat(
+            [x.next_available_actions for x in transitions]  # pyre-ignore
+        )
+        next_available_actions_mask_batch = torch.cat(
+            [x.next_available_actions_mask for x in transitions]  # pyre-ignore
+        )
+    return TransitionBatch(
+        state=state_batch,
+        action=action_batch,
+        reward=reward_batch,
+        next_state=next_state_batch,
+        next_action=next_action_batch,
+        curr_available_actions=curr_available_actions_batch,
+        curr_available_actions_mask=curr_available_actions_mask_batch,
+        next_available_actions=next_available_actions_batch,
+        next_available_actions_mask=next_available_actions_mask_batch,
+        done=done_batch,
+    )

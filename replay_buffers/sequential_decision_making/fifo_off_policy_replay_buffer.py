@@ -36,7 +36,6 @@ class FIFOOffPolicyReplayBuffer(TensorBasedReplayBuffer):
             next_available_actions_tensor_with_padding,
             next_available_actions_mask,
         ) = self._create_action_tensor_and_mask(action_space, next_available_actions)
-
         self.memory.append(
             Transition(
                 state=self._process_single_state(state),
