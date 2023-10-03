@@ -9,7 +9,7 @@ from typing import List, Optional
 import torch
 import torch.nn as nn
 from pearl.neural_networks.common.auto_device_nn_module import AutoDeviceNNModule
-from pearl.neural_networks.common.value_networks import mlp_block
+from pearl.neural_networks.common.utils import mlp_block
 from torch import Tensor
 
 

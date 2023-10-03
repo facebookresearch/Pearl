@@ -9,6 +9,7 @@ from typing import List, Optional
 import torch
 import torch.nn as nn
 from pearl.neural_networks.common.auto_device_nn_module import AutoDeviceNNModule
+from pearl.neural_networks.common.epistemic_neural_networks import Ensemble
 
 from pearl.neural_networks.sequential_decision_making.q_value_network import (
     DistributionalQValueNetwork,
@@ -631,3 +632,55 @@ class TwoTowerQValueNetwork(TwoTowerNetwork):
             hidden_dims=hidden_dims,
             output_dim=output_dim,
         )
+
+
+class EnsembleQValueNetwork(QValueNetwork):
+    r"""A Q-value network that uses the `Ensemble` model."""
+
+    def __init__(
+        self,
+        state_dim: int,
+        action_dim: int,
+        hidden_dims: Optional[List[int]],
+        output_dim: int,
+        ensemble_size: int,
+        prior_scale: float = 1.0,
+    ) -> None:
+        super(EnsembleQValueNetwork, self).__init__()
+        self._state_dim = state_dim
+        self._action_dim = action_dim
+        self._model = Ensemble(
+            input_dim=state_dim + action_dim,
+            hidden_dims=hidden_dims,
+            output_dim=output_dim,
+            ensemble_size=ensemble_size,
+            prior_scale=prior_scale,
+        )
+
+    def resample_epistemic_index(self) -> None:
+        r"""Resamples the epistemic index of the underlying model."""
+        self._model._resample_epistemic_index()
+
+    def forward(
+        self, x: Tensor, z: Optional[Tensor] = None, persistent: bool = False
+    ) -> Tensor:
+        return self._model(x, z=z, persistent=persistent)
+
+    def get_q_values(
+        self,
+        state_batch: Tensor,
+        action_batch: Tensor,
+        curr_available_actions_batch: Optional[Tensor] = None,
+        z: Optional[Tensor] = None,
+        persistent: bool = False,
+    ) -> Tensor:
+        x = torch.cat([state_batch, action_batch], dim=-1)
+        return self.forward(x, z=z, persistent=persistent).view(-1)
+
+    @property
+    def state_dim(self) -> int:
+        return self._state_input_dim
+
+    @property
+    def action_dim(self) -> int:
+        return self._action_input_dim
