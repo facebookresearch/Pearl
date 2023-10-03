@@ -5,6 +5,7 @@ from typing import Optional
 import torch
 
 from pearl.utils.device import get_pearl_device
+from torch import Tensor
 
 
 @dataclass(frozen=False)
@@ -73,3 +74,40 @@ class TransitionWithBootstrapMask(Transition):
 @dataclass(frozen=False)
 class TransitionWithBootstrapMaskBatch(TransitionBatch):
     bootstrap_mask: Optional[torch.Tensor] = None
+
+
+def filter_batch_by_bootstrap_mask(
+    batch: TransitionWithBootstrapMaskBatch, z: Tensor
+) -> TransitionBatch:
+    r"""A helper function that filters a `TransitionBatch` to only those transitions
+    that are marked as active (by its `bootstrap_mask` field) for a given ensemble
+    index `z`.
+
+    Args:
+        batch: The original `TransitionWithBootstrapMask`.
+        z: The ensemble index to filter on.
+
+    Returns:
+        A filtered `TransitionBatch`.
+    """
+    mask = batch.bootstrap_mask
+
+    # pyre-ignore[53]
+    def _filter_tensor(x: Optional[torch.Tensor]) -> Optional[torch.Tensor]:
+        if x is None or mask is None:
+            return None
+        return x[mask[:, z] == 1]
+
+    return TransitionBatch(
+        state=_filter_tensor(batch.state),  # pyre-ignore
+        action=_filter_tensor(batch.action),  # pyre-ignore
+        reward=_filter_tensor(batch.reward),  # pyre-ignore
+        next_state=_filter_tensor(batch.next_state),
+        next_action=_filter_tensor(batch.next_action),
+        curr_available_actions=_filter_tensor(batch.curr_available_actions),
+        curr_available_actions_mask=_filter_tensor(batch.curr_available_actions_mask),
+        next_available_actions=_filter_tensor(batch.next_available_actions),
+        next_available_actions_mask=_filter_tensor(batch.next_available_actions_mask),
+        done=_filter_tensor(batch.done),
+        weight=_filter_tensor(batch.weight),
+    )

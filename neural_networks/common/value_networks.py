@@ -657,6 +657,10 @@ class EnsembleQValueNetwork(QValueNetwork):
             prior_scale=prior_scale,
         )
 
+    @property
+    def ensemble_size(self) -> int:
+        return self._model.ensemble_size
+
     def resample_epistemic_index(self) -> None:
         r"""Resamples the epistemic index of the underlying model."""
         self._model._resample_epistemic_index()
