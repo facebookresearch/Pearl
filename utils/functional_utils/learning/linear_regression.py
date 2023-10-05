@@ -16,14 +16,14 @@ import logging
 from typing import Tuple
 
 import torch
-from pearl.neural_networks.common.auto_device_nn_module import AutoDeviceNNModule
-from pearl.utils.device import get_pearl_device
+from pearl.utils.device import get_pearl_device, is_distribution_enabled
+from torch import nn
 
 # pyre-fixme[5]: Global expression must be annotated.
 logger = logging.getLogger(__name__)
 
 
-class LinearRegression(AutoDeviceNNModule):
+class LinearRegression(nn.Module):
     def __init__(self, feature_dim: int, l2_reg_lambda: float = 1.0) -> None:
         """
         feature_dim: number of features
@@ -40,6 +40,7 @@ class LinearRegression(AutoDeviceNNModule):
         self.register_buffer("_b", torch.zeros(feature_dim + 1, device=self.device))
         self.register_buffer("_sum_weight", torch.zeros(1, device=self.device))
         self._feature_dim = feature_dim
+        self.distribution_enabled: bool = is_distribution_enabled()
 
     @property
     def A(self) -> torch.Tensor:

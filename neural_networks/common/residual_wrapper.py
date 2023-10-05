@@ -1,9 +1,8 @@
 import torch
-from pearl.neural_networks.common.auto_device_nn_module import AutoDeviceNNModule
 from torch import nn
 
 
-class ResidualWrapper(AutoDeviceNNModule):
+class ResidualWrapper(nn.Module):
     """
     A wrapper block for residual networks. It is used to wrap a single layer of the network.
 

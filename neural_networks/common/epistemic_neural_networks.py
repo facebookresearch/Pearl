@@ -8,12 +8,11 @@ from typing import List, Optional
 
 import torch
 import torch.nn as nn
-from pearl.neural_networks.common.auto_device_nn_module import AutoDeviceNNModule
 from pearl.neural_networks.common.utils import mlp_block
 from torch import Tensor
 
 
-class EpistemicNeuralNetwork(ABC, AutoDeviceNNModule):
+class EpistemicNeuralNetwork(ABC, nn.Module):
     """
     Epistemic Neural Network is an abstract neural network model that can model posterior of
         the expectation of a random variable, i.e. epistemic uncertainty.
@@ -40,7 +39,7 @@ class EpistemicNeuralNetwork(ABC, AutoDeviceNNModule):
         pass
 
 
-class MLPWithPrior(AutoDeviceNNModule):
+class MLPWithPrior(nn.Module):
     """
     MLP model with prior regularization. If used as a single model, this is equivalent to L2 regularization.
     Args:

@@ -13,7 +13,6 @@ import torch
 import torch.nn as nn
 
 from pearl.api.action_space import ActionSpace
-from pearl.neural_networks.common.auto_device_nn_module import AutoDeviceNNModule
 from pearl.neural_networks.common.utils import mlp_block
 
 from pearl.utils.device import get_pearl_device
@@ -39,7 +38,7 @@ def scale_action(
     return low + (0.5 * (normalized_action + 1.0) * (high - low))
 
 
-class VanillaActorNetwork(AutoDeviceNNModule):
+class VanillaActorNetwork(nn.Module):
     # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, input_dim, hidden_dims, output_dim, action_space=None):
@@ -56,7 +55,7 @@ class VanillaActorNetwork(AutoDeviceNNModule):
         return self._model(x)
 
 
-class VanillaContinuousActorNetwork(AutoDeviceNNModule):
+class VanillaContinuousActorNetwork(nn.Module):
     """
     This is vanilla version of deterministic actor network
     Given input state, output an action vector
@@ -81,7 +80,7 @@ class VanillaContinuousActorNetwork(AutoDeviceNNModule):
         return self._model(x)
 
 
-class GaussianActorNetwork(AutoDeviceNNModule):
+class GaussianActorNetwork(nn.Module):
     """
     A multivariate gaussian actor network: parameterize the policy (action distirbution) as a multivariate gaussian.
     Given input state, the network outputs a pair of mu and sigma, where mu is the mean of the Gaussian distribution,

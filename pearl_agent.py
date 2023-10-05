@@ -17,6 +17,7 @@ from pearl.replay_buffers.transition import TransitionBatch
 from pearl.safety_modules.identity_safety_module import IdentitySafetyModule
 from pearl.safety_modules.risk_sensitive_safety_modules import RiskNeutralSafetyModule
 from pearl.utils.compatibility_checks import pearl_agent_compatibility_check
+from pearl.utils.device import get_pearl_device
 
 
 class PearlAgent(Agent):
@@ -95,6 +96,8 @@ class PearlAgent(Agent):
         self._subjective_state = None
         # pyre-fixme[4]: Attribute must be annotated.
         self._latest_action = None
+
+        self.policy_learner.to(get_pearl_device())
 
     def act(self, exploit: bool = False) -> Action:
         safe_action_space = self.safety_module.filter_action(self._subjective_state)

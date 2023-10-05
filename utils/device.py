@@ -14,6 +14,5 @@ def get_pearl_device():
     return torch.device(f"cuda:{local_rank}" if torch.cuda.is_available() else "cpu")
 
 
-# pyre-fixme[3]: Return type must be annotated.
-def is_distribution_enabled():
+def is_distribution_enabled() -> bool:
     return dist.is_initialized() and dist.is_available()

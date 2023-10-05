@@ -8,7 +8,6 @@ from typing import List, Optional
 
 import torch
 import torch.nn as nn
-from pearl.neural_networks.common.auto_device_nn_module import AutoDeviceNNModule
 from pearl.neural_networks.common.epistemic_neural_networks import Ensemble
 
 from pearl.neural_networks.sequential_decision_making.q_value_network import (
@@ -23,7 +22,7 @@ from torch import Tensor
 from .utils import conv_block, mlp_block
 
 
-class ValueNetwork(AutoDeviceNNModule, ABC):
+class ValueNetwork(nn.Module, ABC):
     """
     An interface for value neural networks.
     It does not add any required methods to those already present in

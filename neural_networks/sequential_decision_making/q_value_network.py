@@ -11,10 +11,10 @@ import abc
 from typing import Optional
 
 import torch
-from pearl.neural_networks.common.auto_device_nn_module import AutoDeviceNNModule
+from torch import nn
 
 
-class QValueNetwork(abc.ABC, AutoDeviceNNModule):
+class QValueNetwork(abc.ABC, nn.Module):
     """
     An interface for state-action value (Q-value) estimators (typically, neural networks).
     These are value neural networks with a special method
@@ -51,7 +51,7 @@ class QValueNetwork(abc.ABC, AutoDeviceNNModule):
         ...
 
 
-class DistributionalQValueNetwork(abc.ABC, AutoDeviceNNModule):
+class DistributionalQValueNetwork(abc.ABC, nn.Module):
     """
     An interface for estimators of state-action value distribution (Q-value distribution).
     These are value neural networks with special method for computing the Q-value distribution and the expected Q-values for a state-action pair.
