@@ -25,6 +25,9 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 )
 from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.functional_utils.learning.nn_learning_utils import (
+    optimize_twin_critics_towards_target,
+)
 from torch import optim
 
 
@@ -91,7 +94,6 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
             action_dim=action_dim,
             # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
             hidden_dims=hidden_dims,
-            learning_rate=critic_learning_rate,
             network_type=critic_network_type,
             init_fn=init_weights,
         )
@@ -102,9 +104,14 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
             action_dim=action_dim,
             # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
             hidden_dims=hidden_dims,
-            learning_rate=critic_learning_rate,
             network_type=critic_network_type,
             init_fn=init_weights,
+        )
+
+        self._critic_optimizer = optim.AdamW(
+            self._twin_critics.parameters(),
+            lr=critic_learning_rate,
+            amsgrad=True,
         )
 
         # target networks are initialized to parameters of the source network (tau is set to 1)
@@ -208,11 +215,12 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
             ) + batch.reward  # (batch_size), r + gamma * (min{Q_1(s', a from actor network), Q_2(s', a from actor network)})
 
         # update twin critics towards bellman target
-        loss_critic_update = self._twin_critics.optimize_twin_critics_towards_target(
+        loss_critic_update = optimize_twin_critics_towards_target(
+            twin_critic=self._twin_critics,
+            optimizer=self._critic_optimizer,
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target=expected_state_action_values,
         )
 
-        # pyre-fixme[7]: Expected `Dict[str, typing.Any]` but got `List[Tensor]`.
         return loss_critic_update

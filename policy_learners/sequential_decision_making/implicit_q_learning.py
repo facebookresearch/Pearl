@@ -26,6 +26,9 @@ from pearl.policy_learners.sequential_decision_making.policy_gradient import (
     PolicyGradient,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.functional_utils.learning.nn_learning_utils import (
+    optimize_twin_critics_towards_target,
+)
 from torch import optim
 
 
@@ -111,7 +114,6 @@ class ImplicitQLearning(PolicyGradient):
             action_dim=action_dim,
             # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
             hidden_dims=hidden_dims,
-            learning_rate=critic_learning_rate,
             network_type=critic_network_type,
             init_fn=init_weights,
         )
@@ -122,10 +124,16 @@ class ImplicitQLearning(PolicyGradient):
             action_dim=action_dim,
             # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
             hidden_dims=hidden_dims,
-            learning_rate=critic_learning_rate,
             network_type=critic_network_type,
             init_fn=init_weights,
         )
+
+        self._critic_optimizer = optim.AdamW(
+            self._twin_critics.parameters(),
+            lr=critic_learning_rate,
+            amsgrad=True,
+        )
+
         # for twin critic and corresponding target, there is a temptation to use deepcopy or clone instead.
         # this can however create problems in distibuted computing or because of shared buffers (when using batch norm for example)
         # params of targets of twin critics initialized to params of twin critics (tau is set to 1)
@@ -221,10 +229,13 @@ class ImplicitQLearning(PolicyGradient):
             ) + batch.reward  # shape: (batch_size);  target y = r + gamma * V(s')
 
         # update twin critics towards target
-        loss_critic_update = self._twin_critics.optimize_twin_critics_towards_target(
-            state_batch=batch.state, action_batch=batch.action, expected_target=target
+        loss_critic_update = optimize_twin_critics_towards_target(
+            twin_critic=self._twin_critics,
+            optimizer=self._critic_optimizer,
+            state_batch=batch.state,
+            action_batch=batch.action,
+            expected_target=target,
         )
-        # pyre-fixme[7]: Expected `Dict[str, typing.Any]` but got `List[Tensor]`.
         return loss_critic_update
 
     def _value_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:

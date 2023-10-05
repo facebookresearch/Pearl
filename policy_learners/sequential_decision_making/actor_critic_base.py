@@ -1,6 +1,6 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, Type
+from typing import Any, Dict, Iterable, List, Type
 
 import torch
 
@@ -90,7 +90,6 @@ class OffPolicyActorCritic(PolicyLearner):
             action_dim=action_dim,
             # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
             hidden_dims=hidden_dims,
-            learning_rate=critic_learning_rate,
             network_type=critic_network_type,
             init_fn=init_weights,
         )
@@ -101,9 +100,14 @@ class OffPolicyActorCritic(PolicyLearner):
             action_dim=action_dim,
             # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
             hidden_dims=hidden_dims,
-            learning_rate=critic_learning_rate,
             network_type=critic_network_type,
             init_fn=init_weights,
+        )
+
+        self._critic_optimizer = optim.AdamW(
+            self._twin_critics.parameters(),
+            lr=critic_learning_rate,
+            amsgrad=True,
         )
 
         # target networks are initialized to parameters of the source network (tau is set to 1)

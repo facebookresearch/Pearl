@@ -21,6 +21,9 @@ from pearl.policy_learners.sequential_decision_making.ddpg import (
     DeepDeterministicPolicyGradient,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.functional_utils.learning.nn_learning_utils import (
+    optimize_twin_critics_towards_target,
+)
 
 
 class TD3(DeepDeterministicPolicyGradient):
@@ -130,10 +133,11 @@ class TD3(DeepDeterministicPolicyGradient):
             ) + batch.reward  # (batch_size), r + gamma * (min{Q_1(s', a from actor network), Q_2(s', a from actor network)})
 
         # update twin critics towards bellman target
-        loss_critic_update = self._twin_critics.optimize_twin_critics_towards_target(
+        loss_critic_update = optimize_twin_critics_towards_target(
+            twin_critic=self._twin_critics,
+            optimizer=self._critic_optimizer,
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target=expected_state_action_values,
         )
-        # pyre-fixme[7]: Expected `Dict[str, typing.Any]` but got `List[Tensor]`.
         return loss_critic_update
