@@ -138,7 +138,7 @@ def target_return_is_reached(
     target_returns_in_a_row = 0
     returns = []
     for i in range(max_episodes):
-        if i % 100 == 0:
+        if i % 10 == 0:
             print(f"episode {i}")
         g = episode_return(
             agent=agent,

@@ -1,10 +1,9 @@
+from pearl.api.history import History
 from pearl.api.observation import Observation
 from pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
     SubjectiveState,
 )
-from pearl.replay_buffers.replay_buffer import ReplayBuffer
-from pearl.replay_buffers.transition import TransitionBatch
 
 
 class IdentityHistorySummarizationModule(HistorySummarizationModule):
@@ -12,17 +11,16 @@ class IdentityHistorySummarizationModule(HistorySummarizationModule):
     A history summarization module that simply uses the original observations.
     """
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, **options) -> None:
-        pass
+    def __init__(self) -> None:
+        super(IdentityHistorySummarizationModule, self).__init__()
+        self.history: History = None
 
-    def summarize_history(
-        self, subjective_state: SubjectiveState, observation: Observation
-    ) -> SubjectiveState:
+    def summarize_history(self, observation: Observation) -> SubjectiveState:
+        self.history = observation
         return observation
 
-    def learn(self, replay_buffer: ReplayBuffer) -> None:
-        pass
+    def get_history(self) -> History:
+        return self.history
 
-    def learn_batch(self, batch: TransitionBatch) -> None:
-        pass
+    def forward(self, x: History) -> SubjectiveState:
+        return x

@@ -84,7 +84,7 @@ class BootstrappedDQN(DeepQLearning):
             # filter the batch to only the transitions belonging to ensemble `z`
             batch_filtered = filter_batch_by_bootstrap_mask(batch=batch, z=z)
             state_action_values = self._Q.get_q_values(
-                state_batch=batch_filtered.state,
+                state_batch=self._history_summarization_module(batch_filtered.state),
                 action_batch=batch_filtered.action,
                 curr_available_actions_batch=batch_filtered.curr_available_actions,
                 z=z,

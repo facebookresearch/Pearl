@@ -67,7 +67,9 @@ class PearlAgent(Agent):
                 else PearlAgent.default_safety_module_type()
             )
         )
+
         # adds the safety module to the policy learner as well
+        # @jalaj, we need to follow the practice below for safety module
         self.policy_learner.safety_module = self.safety_module
 
         # pyre-fixme[4]: Attribute must be annotated.
@@ -110,16 +112,18 @@ class PearlAgent(Agent):
         self,
         action_result: ActionResult,
     ) -> None:
+        current_history = self.history_summarization_module.get_history()
         new_subjective_state = self._update_subjective_state(action_result.observation)
+        new_history = self.history_summarization_module.get_history()
 
         # TODO: define each push with a uuid
         # TODO: currently assumes the same action space across all steps
         # need to modify ActionResults
         self.replay_buffer.push(
-            self._subjective_state,
+            current_history,
             self._latest_action,
             action_result.reward,
-            new_subjective_state,
+            new_history,
             # pyre-fixme[16]: `PearlAgent` has no attribute `_action_space`.
             self._action_space,  # curr_available_actions
             self._action_space,  # next_available_actions
@@ -133,7 +137,6 @@ class PearlAgent(Agent):
     def learn(self) -> Dict[str, Any]:
         report = self.policy_learner.learn(self.replay_buffer)
         self.safety_module.learn(self.replay_buffer)
-        self.history_summarization_module.learn(self.replay_buffer)
 
         if self.policy_learner.on_policy:
             self.replay_buffer.empty()
@@ -147,7 +150,6 @@ class PearlAgent(Agent):
         """
         self.policy_learner.learn_batch(batch)
         self.safety_module.learn_batch(batch)
-        self.history_summarization_module.learn_batch(batch)
 
     def reset(self, observation: Observation, action_space: ActionSpace) -> None:
         self._subjective_state = self._update_subjective_state(observation)
@@ -157,9 +159,7 @@ class PearlAgent(Agent):
         self.policy_learner.reset(action_space)
 
     def _update_subjective_state(self, observation: Observation) -> SubjectiveState:
-        return self.history_summarization_module.summarize_history(
-            self._subjective_state, observation
-        )
+        return self.history_summarization_module.summarize_history(observation)
 
     def __str__(self) -> str:
         items = []

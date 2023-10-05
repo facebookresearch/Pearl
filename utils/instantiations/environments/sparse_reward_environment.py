@@ -24,13 +24,12 @@ from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
 
 from pearl.api.environment import Environment
+from pearl.api.history import History
 
 from pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
     SubjectiveState,
 )
-from pearl.replay_buffers.replay_buffer import ReplayBuffer
-from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 # pyre-fixme[4]: Attribute annotation cannot be `Any`.
@@ -184,20 +183,22 @@ class SparseRewardEnvSummarizationModule(HistorySummarizationModule):
     A history summarization module that is used for sparse reward game environment
     """
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, **options) -> None:
+    def __init__(self) -> None:
+        self.subjective_state: torch.Tensor = torch.zeros((0,))
         pass
 
     def summarize_history(
         self,
-        subjective_state: SubjectiveState,
         observation: SparseRewardEnvironmentObservation,
     ) -> SubjectiveState:
         # for this game, state is a cat between agent position and goal position
-        return torch.Tensor(list(observation.agent_position) + list(observation.goal))
+        self.subjective_state = torch.Tensor(
+            list(observation.agent_position) + list(observation.goal)
+        )
+        return self.subjective_state
 
-    def learn(self, replay_buffer: ReplayBuffer) -> None:
-        pass
+    def get_history(self) -> History:
+        return self.subjective_state
 
-    def learn_batch(self, batch: TransitionBatch) -> None:
-        pass
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return x
