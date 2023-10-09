@@ -2,6 +2,8 @@ import dataclasses
 from dataclasses import dataclass
 from typing import Optional
 
+import numpy as np
+
 import torch
 
 from pearl.utils.device import get_pearl_device
@@ -33,7 +35,8 @@ class Transition:
         for field in dataclasses.fields(self.__class__):
             if getattr(self, field.name) is not None:
                 super().__setattr__(
-                    field.name, getattr(self, field.name).to(pearl_device)
+                    field.name,
+                    torch.as_tensor(getattr(self, field.name)).to(pearl_device),
                 )
 
 
@@ -58,11 +61,20 @@ class TransitionBatch:
     # pyre-fixme[3]: Return type must be annotated.
     def __post_init__(self):
         pearl_device = get_pearl_device()
-        # iterate over all fields, move to correct device
+        # iterate over all fields
         for field in dataclasses.fields(self.__class__):
             if getattr(self, field.name) is not None:
+                item = getattr(self, field.name)
+                if (
+                    isinstance(item, np.ndarray)
+                    or isinstance(item, float)
+                    or isinstance(item, int)
+                ):
+                    item = torch.tensor(item)  # convert to tensor if it wasn't a tensor
+                item = item.to(pearl_device)  # move to correct device
                 super().__setattr__(
-                    field.name, getattr(self, field.name).to(pearl_device)
+                    field.name,
+                    item,
                 )
 
 

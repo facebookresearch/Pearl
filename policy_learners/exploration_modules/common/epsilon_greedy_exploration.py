@@ -1,4 +1,5 @@
 import random
+from typing import Optional
 
 import torch
 
@@ -24,11 +25,12 @@ class EGreedyExploration(UniformExplorationBase):
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
         exploit_action: Action,
-        # pyre-fixme[9]: values has type `Tensor`; used as `None`.
-        values: torch.Tensor = None,
-        # pyre-fixme[9]: representation has type `Tensor`; used as `None`.
-        representation: torch.Tensor = None,
+        values: Optional[torch.Tensor] = None,
+        action_availability_mask: Optional[torch.Tensor] = None,
+        representation: Optional[torch.nn.Module] = None,
     ) -> Action:
+        if action_availability_mask is not None:
+            raise NotImplementedError("Action availability mask is not supported.")
         if random.random() < self.epsilon:
             return action_space.sample()
 

@@ -7,8 +7,8 @@ from pearl.neural_networks.common.residual_wrapper import ResidualWrapper
 from pearl.policy_learners.contextual_bandits.neural_linear_bandit import (
     NeuralLinearBandit,
 )
-from pearl.policy_learners.exploration_modules.contextual_bandits.linucb_exploration import (
-    LinUCBExploration,
+from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
+    UCBExploration,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
@@ -21,7 +21,7 @@ class TestNeuralLinearBandits(unittest.TestCase):
             feature_dim=feature_dim,
             hidden_dims=[16, 16],
             learning_rate=0.01,
-            exploration_module=LinUCBExploration(alpha=0.1),
+            exploration_module=UCBExploration(alpha=0.1),
             use_skip_connections=True,
         )
         # assert ResidualWrapper is used in NeuralLinearBandit
@@ -35,7 +35,7 @@ class TestNeuralLinearBandits(unittest.TestCase):
             feature_dim=feature_dim,
             hidden_dims=[16, 16],
             learning_rate=0.01,
-            exploration_module=LinUCBExploration(alpha=0.1),
+            exploration_module=UCBExploration(alpha=0.1),
             dropout_ratio=0.0001,
         )
         self.assertEqual(feature_dim, policy_learner.feature_dim)
@@ -84,7 +84,7 @@ class TestNeuralLinearBandits(unittest.TestCase):
             feature_dim=feature_dim,
             hidden_dims=[16, 16],
             learning_rate=0.01,
-            exploration_module=LinUCBExploration(alpha=0.1),
+            exploration_module=UCBExploration(alpha=0.1),
         )
         state = torch.randn(batch_size, 3)
         action = torch.randn(batch_size, feature_dim - 3)
@@ -102,7 +102,7 @@ class TestNeuralLinearBandits(unittest.TestCase):
             feature_dim=feature_dim,
             hidden_dims=[16, 16],
             learning_rate=0.01,
-            exploration_module=LinUCBExploration(alpha=0.1),
+            exploration_module=UCBExploration(alpha=0.1),
         )
         copy_policy_learner.load_state_dict(policy_learner.state_dict())
 

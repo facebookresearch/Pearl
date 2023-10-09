@@ -11,8 +11,8 @@ from pearl.pearl_agent import PearlAgent
 from pearl.policy_learners.contextual_bandits.disjoint_linear_bandit import (
     DisjointLinearBandit,
 )
-from pearl.policy_learners.exploration_modules.contextual_bandits.linucb_exploration import (
-    DisjointLinUCBExploration,
+from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
+    DisjointUCBExploration,
 )
 
 from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
@@ -131,7 +131,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
             policy_learner=DisjointLinearBandit(
                 feature_dim=feature_dim,
                 action_space=action_space,
-                exploration_module=DisjointLinUCBExploration(alpha=0.1),
+                exploration_module=DisjointUCBExploration(alpha=0.1),
                 batch_size=1,
             ),
             replay_buffer=DiscreteContextualBanditReplayBuffer(1),

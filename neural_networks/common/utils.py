@@ -171,7 +171,13 @@ def update_target_network(target_network, source_network, tau):
 
 
 def ensemble_forward(models: List[nn.Module], features: torch.Tensor) -> torch.Tensor:
+    """
+    features shape: (batch_size, num_models, num_features)
+    """
     # followed example in https://pytorch.org/docs for ensembling
+    assert features.shape[1] == len(
+        models
+    ), "Number of models must match features.shape[1]"
     batch_size = features.shape[0]
     features = features.permute((1, 0, 2))
 

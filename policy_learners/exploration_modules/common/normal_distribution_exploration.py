@@ -1,19 +1,19 @@
 #!/usr/bin/env fbpython
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 
-from typing import Any
+from typing import Any, Optional
 
 import torch
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
-from pearl.policy_learners.exploration_modules.common.value_exploration_base import (
-    ValueExplorationBase,
+from pearl.policy_learners.exploration_modules.exploration_module import (
+    ExplorationModule,
 )
 
 
-class NormalDistributionExploration(ValueExplorationBase):
+class NormalDistributionExploration(ExplorationModule):
     """
     Normal Distribution exploration module. Add noise to action vector
 
@@ -67,8 +67,7 @@ class NormalDistributionExploration(ValueExplorationBase):
         subjective_state: SubjectiveState = None,
         # pyre-fixme[9]: available_action_space has type `ActionSpace`; used as `None`.
         available_action_space: ActionSpace = None,
-        # pyre-fixme[9]: values has type `Tensor`; used as `None`.
-        values: torch.Tensor = None,
+        values: Optional[torch.Tensor] = None,
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,
     ) -> Action:

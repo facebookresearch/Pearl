@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum
+from typing import Optional
 
 import torch
 
@@ -9,6 +10,7 @@ from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
+from pearl.utils.device import get_pearl_device
 
 
 class ExplorationType(Enum):
@@ -24,6 +26,9 @@ class ExplorationModule(ABC):
     An abstract interface for exploration module.
     """
 
+    def __init__(self) -> None:
+        self.device: torch.device = get_pearl_device()
+
     def reset(self) -> None:  # noqa: B027
         """Resets the internal state of the exploration module. Default implementation does nothing."""
         pass
@@ -33,11 +38,10 @@ class ExplorationModule(ABC):
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
+        values: Optional[torch.Tensor] = None,
         exploit_action: Action = None,
-        # pyre-fixme[9]: values has type `Tensor`; used as `None`.
-        values: torch.Tensor = None,
-        # pyre-fixme[9]: representation has type `Tensor`; used as `None`.
-        representation: torch.Tensor = None,
+        action_availability_mask: Optional[torch.Tensor] = None,
+        representation: Optional[torch.nn.Module] = None,
     ) -> Action:
         pass
 

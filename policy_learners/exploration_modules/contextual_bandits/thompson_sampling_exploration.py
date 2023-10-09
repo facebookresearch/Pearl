@@ -1,17 +1,18 @@
-from typing import Any
+from typing import Any, Optional
 
 import torch
 
 from pearl.api.action import Action
 from pearl.api.state import SubjectiveState
-from pearl.policy_learners.exploration_modules.common.value_exploration_base import (
-    ValueExplorationBase,
+from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
+    ScoreExplorationBase,
 )
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.action_spaces import ActionSpace
 
 
-class ThompsonSamplingExplorationLinear(ValueExplorationBase):
+# TODO: generalize for non-linear models
+class ThompsonSamplingExplorationLinear(ScoreExplorationBase):
     """
     Thompson Sampling exploration module for the joint linear bandits.
     """
@@ -23,57 +24,41 @@ class ThompsonSamplingExplorationLinear(ValueExplorationBase):
         super(ThompsonSamplingExplorationLinear, self).__init__()
         self._enable_efficient_sampling = enable_efficient_sampling
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def sampling(
-        self, subjective_state: SubjectiveState, linear_bandit_model: torch.nn.Module
-    ):
+    def get_scores(
+        self,
+        subjective_state: SubjectiveState,
+        action_space: ActionSpace,
+        values: torch.Tensor,
+        representation: Optional[torch.nn.Module] = None,
+        exploit_action: Action = None,
+    ) -> torch.Tensor:
         """
         Given the linear bandit model, sample its parameters, and multiplies with feature to get predicted score.
         """
+        assert representation is not None
+        batch_size = subjective_state.shape[0]
         if self._enable_efficient_sampling:
-            expected_reward = linear_bandit_model(
+            expected_reward = representation(
                 subjective_state
             )  # batch_size, action_count, 1
             assert expected_reward.shape == subjective_state.shape[:-1]
-            sigma = linear_bandit_model.calculate_sigma(
+            sigma = representation.calculate_sigma(
                 subjective_state
             )  # batch_size, action_count, 1
             assert sigma.shape == subjective_state.shape[:-1]
-            score = torch.normal(mean=expected_reward, std=sigma)
+            scores = torch.normal(mean=expected_reward, std=sigma)
         else:
             thompson_sampling_coefs = (
                 torch.distributions.multivariate_normal.MultivariateNormal(
-                    loc=linear_bandit_model.coefs,
-                    precision_matrix=linear_bandit_model.A,
+                    loc=representation.coefs,
+                    precision_matrix=representation.A,
                 ).sample()
             )
-            score = torch.matmul(
+            scores = torch.matmul(
                 LinearRegression.append_ones(subjective_state),
                 thompson_sampling_coefs.t(),
             )
-        return score
-
-    # pyre-fixme[14]: `act` overrides method defined in `ValueExplorationBase`
-    #  inconsistently.
-    def act(
-        self,
-        subjective_state: SubjectiveState,
-        action_space: DiscreteActionSpace,
-        values: torch.Tensor,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        representation: Any = None,
-        exploit_action: Action = None,
-    ) -> Action:
-
-        # DisJoint Linear Bandits
-        # The representation is a nn.Module, e.g., a linear regression model.
-        # subjective_state is in shape of (batch_size, feature_dim)
-        score = self.sampling(subjective_state, representation)
-
-        # get the best action with the highest value
-        values_sampled = score.view(-1, action_space.n)  # (batch_size, )
-        selected_action = torch.argmax(values_sampled, dim=1).squeeze()
-        return selected_action
+        return scores.view(batch_size, -1)
 
 
 class ThompsonSamplingExplorationLinearDisjoint(ThompsonSamplingExplorationLinear):
@@ -83,31 +68,38 @@ class ThompsonSamplingExplorationLinearDisjoint(ThompsonSamplingExplorationLinea
 
     def __init__(
         self,
+        enable_efficient_sampling: bool = False,
     ) -> None:
-        super(ThompsonSamplingExplorationLinearDisjoint, self).__init__()
+        super(ThompsonSamplingExplorationLinearDisjoint, self).__init__(
+            enable_efficient_sampling=enable_efficient_sampling
+        )
 
-    def act(
+    def get_scores(
         self,
         subjective_state: SubjectiveState,
-        action_space: DiscreteActionSpace,
+        action_space: ActionSpace,
         values: torch.Tensor,
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,
         exploit_action: Action = None,
-    ) -> Action:
+    ) -> torch.Tensor:
 
         # DisJoint Linear Bandits
         # The representation is a list for different actions.
-        values_sampled = []
+        scores = []
         for i, model in enumerate(representation):
             # subjective_state is in shape of batch_size, action_count, feature_dim
-            score = self.sampling(subjective_state[:, i, :], model)
-            values_sampled.append(score)
-        values_sampled = torch.stack(values_sampled)
+            score = super(
+                ThompsonSamplingExplorationLinearDisjoint, self
+            ).get_scores(  # call get_scores() from joint TS
+                subjective_state=subjective_state[:, i, :],
+                action_space=action_space,
+                values=values,
+                representation=model,
+                exploit_action=exploit_action,
+            )
+            scores.append(score)
+        scores = torch.stack(scores)
 
-        # get the best action with the highest value
-        values_sampled = values_sampled.view(
-            -1, action_space.n
-        )  # batch_size, action_count
-        selected_action = torch.argmax(values_sampled, dim=1).squeeze()
-        return selected_action
+        # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
+        return scores.view(-1, action_space.n)

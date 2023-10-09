@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import torch
 
@@ -102,6 +102,7 @@ class NeuralBandit(ContextualBanditBase):
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
+        action_availability_mask: Optional[torch.Tensor] = None,
         exploit: bool = False,
     ) -> Action:
         """
@@ -125,6 +126,7 @@ class NeuralBandit(ContextualBanditBase):
             subjective_state=subjective_state,
             action_space=action_space,
             values=values,
+            action_availability_mask=action_availability_mask,
             representation=None,  # fill in as needed in the future
         )
 

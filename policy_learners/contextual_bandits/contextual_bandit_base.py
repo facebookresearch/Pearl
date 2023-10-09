@@ -1,4 +1,7 @@
 from abc import abstractmethod
+from typing import Optional
+
+import torch
 
 from pearl.api.action import Action
 
@@ -49,6 +52,7 @@ class ContextualBanditBase(PolicyLearner):
         self,
         subjective_state: SubjectiveState,
         available_action_space: ActionSpace,
+        action_availability_mask: Optional[torch.Tensor] = None,
         exploit: bool = False,
     ) -> Action:
         pass

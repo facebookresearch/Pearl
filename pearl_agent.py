@@ -1,5 +1,7 @@
 from typing import Any, Dict
 
+import torch
+
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace

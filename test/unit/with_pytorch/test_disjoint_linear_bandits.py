@@ -7,11 +7,11 @@ import torch
 from pearl.policy_learners.contextual_bandits.disjoint_linear_bandit import (
     DisjointLinearBandit,
 )
-from pearl.policy_learners.exploration_modules.contextual_bandits.linucb_exploration import (
-    DisjointLinUCBExploration,
-)
 from pearl.policy_learners.exploration_modules.contextual_bandits.thompson_sampling_exploration import (
     ThompsonSamplingExplorationLinearDisjoint,
+)
+from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
+    DisjointUCBExploration,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
@@ -26,7 +26,7 @@ class TestDisjointLinearBandits(unittest.TestCase):
             feature_dim=2,
             action_space=action_space,
             # UCB score == rewards
-            exploration_module=DisjointLinUCBExploration(alpha=0),
+            exploration_module=DisjointUCBExploration(alpha=0),
         )
         # y0 = x1  + x2
         # y1 = 2x1 + x2
@@ -94,7 +94,7 @@ class TestDisjointLinearBandits(unittest.TestCase):
             )
         )
         # set a different alpha value to increase weight of sigma
-        policy_learner.exploration_module = DisjointLinUCBExploration(alpha=10000)
+        policy_learner.exploration_module = DisjointUCBExploration(alpha=10000)
         # observe state [1,1] for action 1 and 2 many times, this will increase sigma of action0
         # on this state, and give us act(1,1) -> 0
         batch = TransitionBatch(
@@ -158,7 +158,7 @@ class TestDisjointLinearBandits(unittest.TestCase):
         policy_learner = DisjointLinearBandit(
             feature_dim=state_dim + action_dim,
             action_space=action_space,
-            exploration_module=DisjointLinUCBExploration(alpha=0.1),
+            exploration_module=DisjointUCBExploration(alpha=0.1),
         )
         batch = TransitionBatch(
             state=torch.randn(batch_size, state_dim),

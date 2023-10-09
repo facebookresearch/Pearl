@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import torch
 
@@ -11,8 +11,8 @@ from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
 from pearl.policy_learners.contextual_bandits.neural_bandit import NeuralBandit
-from pearl.policy_learners.exploration_modules.contextual_bandits.linucb_exploration import (
-    LinUCBExploration,
+from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
+    UCBExploration,
 )
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
@@ -91,6 +91,7 @@ class NeuralLinearBandit(NeuralBandit):
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
+        action_availability_mask: Optional[torch.Tensor] = None,
         exploit: bool = False,
     ) -> Action:
         # It doesnt make sense to call act if we are not working with action vector
@@ -109,12 +110,13 @@ class NeuralLinearBandit(NeuralBandit):
         # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
         assert values.numel() == new_feature.shape[0] * action_space.n
 
-        # subjective_state=mlp_values makes sense for LinUCBExploration
+        # subjective_state=mlp_values because uncertainty is only measure in the output linear layer
         # revisit for other exploration module
         return self._exploration_module.act(
             subjective_state=mlp_values,
             action_space=action_space,
             values=values,
+            action_availability_mask=action_availability_mask,
             representation=self._linear_regression,
         )
 
@@ -126,7 +128,7 @@ class NeuralLinearBandit(NeuralBandit):
     ) -> torch.Tensor:
         self.device = get_pearl_device()
         # TODO generalize for all kinds of exploration module
-        assert isinstance(self._exploration_module, LinUCBExploration)
+        assert isinstance(self._exploration_module, UCBExploration)
         subjective_state = subjective_state.to(self.device)
         feature = (
             action_space.cat_state_tensor(subjective_state)
@@ -135,11 +137,11 @@ class NeuralLinearBandit(NeuralBandit):
         )
         feature.to(self.device)
         processed_feature = self._deep_represent_layers(feature)
-        return self._exploration_module.get_ucb_scores(
+        return self._exploration_module.get_scores(
             subjective_state=processed_feature,
             values=self._linear_regression(processed_feature),
             # when action_space is None, we are querying score for one action
-            available_action_space=action_space
+            action_space=action_space
             if action_space is not None
             else DiscreteActionSpace([0]),
             representation=self._linear_regression,

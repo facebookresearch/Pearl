@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from typing import Optional
 
 import torch
 
@@ -26,9 +27,8 @@ class UniformExplorationBase(ExplorationModule):
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
         exploit_action: Action,
-        # pyre-fixme[9]: values has type `Tensor`; used as `None`.
-        values: torch.Tensor = None,
-        # pyre-fixme[9]: representation has type `Tensor`; used as `None`.
-        representation: torch.Tensor = None,
+        values: Optional[torch.Tensor] = None,
+        action_availability_mask: Optional[torch.Tensor] = None,
+        representation: Optional[torch.nn.Module] = None,
     ) -> Action:
         pass

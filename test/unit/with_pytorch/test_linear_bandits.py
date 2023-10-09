@@ -5,11 +5,11 @@ import unittest
 
 import torch
 from pearl.policy_learners.contextual_bandits.linear_bandit import LinearBandit
-from pearl.policy_learners.exploration_modules.contextual_bandits.linucb_exploration import (
-    LinUCBExploration,
-)
 from pearl.policy_learners.exploration_modules.contextual_bandits.thompson_sampling_exploration import (
     ThompsonSamplingExplorationLinear,
+)
+from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
+    UCBExploration,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
@@ -21,7 +21,7 @@ class TestLinearBandits(unittest.TestCase):
     def setUp(self):
         self.policy_learner = LinearBandit(
             feature_dim=4,
-            exploration_module=LinUCBExploration(alpha=0),
+            exploration_module=UCBExploration(alpha=0),
             l2_reg_lambda=1e-8,
         )
         # y = sum of state + sum of action
@@ -69,7 +69,7 @@ class TestLinearBandits(unittest.TestCase):
     def test_linear_ucb_scores(self) -> None:
         # with ucb_alpha == 0, ucb scores == rewards
         # we view action space as 1, in order to get ucb scores for given feature
-        self.policy_learner.exploration_module = LinUCBExploration(alpha=0)
+        self.policy_learner.exploration_module = UCBExploration(alpha=0)
         batch = self.batch
 
         # query scores by feature vector directly
@@ -108,7 +108,7 @@ class TestLinearBandits(unittest.TestCase):
         actions = policy_learner.act(batch.state, action_space)
         self.assertEqual(actions.shape, batch.reward.shape)
 
-        policy_learner.exploration_module = LinUCBExploration(alpha=1)
+        policy_learner.exploration_module = UCBExploration(alpha=1)
 
     def test_linear_ucb_sigma(self) -> None:
         """
@@ -116,7 +116,7 @@ class TestLinearBandits(unittest.TestCase):
         """
         policy_learner = LinearBandit(
             feature_dim=2,
-            exploration_module=LinUCBExploration(alpha=1),
+            exploration_module=UCBExploration(alpha=1),
             l2_reg_lambda=1e-2,
         )
 

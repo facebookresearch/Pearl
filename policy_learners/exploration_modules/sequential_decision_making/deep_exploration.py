@@ -43,7 +43,8 @@ class DeepExploration(ExplorationModule):
         action_space: ActionSpace,
         exploit_action: Optional[Action] = None,
         values: Optional[torch.Tensor] = None,
-        representation: Optional[torch.Tensor] = None,
+        action_availability_mask: Optional[torch.Tensor] = None,
+        representation: Optional[torch.nn.Module] = None,
     ) -> Action:
         device = get_pearl_device()
 

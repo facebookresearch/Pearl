@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import torch
 from pearl.api.action import Action
@@ -10,8 +10,8 @@ from pearl.history_summarization_modules.history_summarization_module import (
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
 )
-from pearl.policy_learners.exploration_modules.contextual_bandits.linucb_exploration import (
-    LinUCBExploration,
+from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
+    ScoreExplorationBase,
 )
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
@@ -68,6 +68,7 @@ class LinearBandit(ContextualBanditBase):
         self,
         subjective_state: SubjectiveState,
         available_action_space: DiscreteActionSpace,
+        action_availability_mask: Optional[torch.Tensor] = None,
         exploit: bool = False,
     ) -> Action:
         """
@@ -89,6 +90,7 @@ class LinearBandit(ContextualBanditBase):
             subjective_state=new_feature,
             action_space=available_action_space,
             values=values,
+            action_availability_mask=action_availability_mask,
             representation=self._linear_regression,
         )
 
@@ -103,21 +105,18 @@ class LinearBandit(ContextualBanditBase):
             UCB scores when exploration module is UCB
             Shape is (batch)
         """
-        # TODO generalize for all kinds of exploration module
-        assert isinstance(self._exploration_module, LinUCBExploration)
+        assert isinstance(self._exploration_module, ScoreExplorationBase)
         feature = (
             action_space.cat_state_tensor(subjective_state)
             if action_space is not None
             else subjective_state
         )
-        return self._exploration_module.get_ucb_scores(
+        return self._exploration_module.get_scores(
             subjective_state=feature,
             values=self._linear_regression(feature),
             # when action_space is None, we are querying score for one action
-            available_action_space=action_space
+            action_space=action_space
             if action_space is not None
             else DiscreteActionSpace([0]),
-            # pyre-fixme[6]: For 4th argument expected `Tensor` but got
-            #  `LinearRegression`.
             representation=self._linear_regression,
         ).squeeze()

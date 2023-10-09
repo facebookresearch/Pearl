@@ -1,16 +1,16 @@
-from typing import Any
+from typing import Any, Optional
 
 import torch
 
 from pearl.api.action import Action
 from pearl.api.state import SubjectiveState
-from pearl.policy_learners.exploration_modules.common.value_exploration_base import (
-    ValueExplorationBase,
+from pearl.policy_learners.exploration_modules.exploration_module import (
+    ExplorationModule,
 )
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
-class PropensityExploration(ValueExplorationBase):
+class PropensityExploration(ExplorationModule):
     """
     Propensity exploration module.
     """
@@ -25,7 +25,7 @@ class PropensityExploration(ValueExplorationBase):
         self,
         subjective_state: SubjectiveState,
         available_action_space: DiscreteActionSpace,
-        values: torch.Tensor,
+        values: Optional[torch.Tensor] = None,
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,
         exploit_action: Action = None,
