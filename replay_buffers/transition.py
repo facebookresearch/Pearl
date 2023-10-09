@@ -77,6 +77,9 @@ class TransitionBatch:
                     item,
                 )
 
+    def __len__(self) -> int:
+        return self.reward.shape[0]
+
 
 @dataclass(frozen=False)
 class TransitionWithBootstrapMask(Transition):

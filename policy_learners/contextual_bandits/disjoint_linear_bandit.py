@@ -3,6 +3,8 @@
 
 from typing import Any, Dict
 
+from warnings import warn
+
 import torch
 
 from pearl.api.action import Action
@@ -36,6 +38,10 @@ class DisjointLinearBandit(ContextualBanditBase):
         training_rounds: int = 100,
         batch_size: int = 128,
     ) -> None:
+        warn(
+            "DisjointLinearBandit will be deprecated. Use DisjointBanditContainer instead",
+            DeprecationWarning,
+        )
         super(DisjointLinearBandit, self).__init__(
             feature_dim=feature_dim,
             training_rounds=training_rounds,
@@ -54,8 +60,6 @@ class DisjointLinearBandit(ContextualBanditBase):
         ).to(self.device)
         self._discrete_action_space = action_space
 
-    # pyre-fixme[15]: `learn_batch` overrides method defined in
-    #  `ContextualBanditBase` inconsistently.
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """
         Assumption of input is that action in batch is action idx instead of action value

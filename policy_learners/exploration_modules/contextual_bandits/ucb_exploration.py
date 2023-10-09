@@ -74,6 +74,37 @@ class UCBExploration(ScoreExplorationBase):
         return ucb_scores.view(-1, action_space.n)  # batch_size, action_count
 
 
+class DisjointUCBExploration(UCBExploration):
+    """
+    Same as UCBExploration, but with a separate bandit model for each action
+    """
+
+    # pyre-fixme[14]: `sigma` overrides method defined in `UCBExploration`
+    #  inconsistently.
+    def sigma(
+        self,
+        subjective_state: SubjectiveState,
+        representation: torch.nn.ModuleList,
+    ) -> torch.Tensor:
+        """
+        Args:
+            subjective_state: this is feature vector in shape, batch_size, action_count, feature
+            representation: a list of bandit models, one per action (arm)
+        """
+        sigma = []
+        for i, arm_model in enumerate(representation):
+            sigma.append(
+                super(DisjointUCBExploration, self).sigma(
+                    subjective_state=subjective_state[:, i, :],
+                    representation=arm_model,
+                )
+            )
+        sigma = torch.stack(sigma)
+        # change from shape(action_count, batch_size) to shape(batch_size, action_count)
+        sigma = sigma.permute(1, 0)
+        return sigma
+
+
 class VanillaUCBExploration(UCBExploration):
     """
     Vanilla UCB exploration module with counter.
@@ -127,34 +158,3 @@ class VanillaUCBExploration(UCBExploration):
         self.action_execution_count[selected_action] += 1
         self.action_executed += 1
         return selected_action
-
-
-class DisjointUCBExploration(UCBExploration):
-    """
-    Same as UCBExploration, but with a separate bandit model for each action
-    """
-
-    # pyre-fixme[14]: `sigma` overrides method defined in `UCBExploration`
-    #  inconsistently.
-    def sigma(
-        self,
-        subjective_state: SubjectiveState,
-        representation: List[torch.nn.Module],
-    ) -> torch.Tensor:
-        """
-        Args:
-            subjective_state: this is feature vector in shape, batch_size, action_count, feature
-            representation: a list of ban dit models, one per action (arm)
-        """
-        sigma = []
-        for i, arm_model in enumerate(representation):
-            sigma.append(
-                super(DisjointUCBExploration, self).sigma(
-                    subjective_state=subjective_state[:, i, :],
-                    representation=arm_model,
-                )
-            )
-        sigma = torch.stack(sigma)
-        # change from shape(action_count, batch_size) to shape(batch_size, action_count)
-        sigma = sigma.permute(1, 0)
-        return sigma

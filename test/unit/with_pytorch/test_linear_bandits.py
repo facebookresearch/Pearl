@@ -48,9 +48,7 @@ class TestLinearBandits(unittest.TestCase):
         # a single input
         self.assertTrue(
             torch.allclose(
-                self.policy_learner._linear_regression(
-                    torch.cat([batch.state[0], batch.action[0]])
-                ),
+                self.policy_learner.model(torch.cat([batch.state[0], batch.action[0]])),
                 batch.reward[0],
                 atol=1e-4,
             )
@@ -58,7 +56,7 @@ class TestLinearBandits(unittest.TestCase):
         # a batch input
         self.assertTrue(
             torch.allclose(
-                self.policy_learner._linear_regression(
+                self.policy_learner.model(
                     torch.cat([batch.state, batch.action], dim=1)
                 ),
                 batch.reward,
@@ -169,7 +167,7 @@ class TestLinearBandits(unittest.TestCase):
         # expect output is (batch_size,)
         ucb_scores = policy_learner.get_scores(features)
         self.assertEqual(ucb_scores.shape, batch.reward.shape)
-        A = policy_learner._linear_regression._A
+        A = policy_learner.model._A
         A_inv = torch.linalg.inv(A)
         features_with_ones = LinearRegression.append_ones(features)
         sigma = torch.sqrt(

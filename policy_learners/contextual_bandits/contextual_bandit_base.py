@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import torch
 
@@ -42,9 +42,7 @@ class ContextualBanditBase(PolicyLearner):
         return self._feature_dim
 
     @abstractmethod
-    # pyre-fixme[15]: `learn_batch` overrides method defined in `PolicyLearner`
-    #  inconsistently.
-    def learn_batch(self, batch: TransitionBatch) -> None:
+    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         pass
 
     @abstractmethod

@@ -29,7 +29,7 @@ class LinearBandit(ContextualBanditBase):
     def __init__(
         self,
         feature_dim: int,
-        exploration_module: ExplorationModule,
+        exploration_module: Optional[ExplorationModule] = None,
         l2_reg_lambda: float = 1.0,
         training_rounds: int = 100,
         batch_size: int = 128,
@@ -38,28 +38,28 @@ class LinearBandit(ContextualBanditBase):
             feature_dim=feature_dim,
             training_rounds=training_rounds,
             batch_size=batch_size,
+            # pyre-fixme[6]: For 4th argument expected `ExplorationModule` but got
+            #  `Optional[ExplorationModule]`.
             exploration_module=exploration_module,
         )
-        self._linear_regression = LinearRegression(
+        self.model = LinearRegression(
             feature_dim=feature_dim, l2_reg_lambda=l2_reg_lambda
         )
 
-    # pyre-fixme[15]: `learn_batch` overrides method defined in
-    #  `ContextualBanditBase` inconsistently.
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """
         A <- A + x*x.t
         b <- b + r*x
         """
         x = torch.cat([batch.state, batch.action], dim=1)
-        self._linear_regression.learn_batch(
+        self.model.learn_batch(
             x=x,
             y=batch.reward,
             # pyre-fixme[6]: For 3rd argument expected `Tensor` but got
             #  `Optional[Tensor]`.
             weight=batch.weight,
         )
-        current_values = self._linear_regression(x)
+        current_values = self.model(x)
         return {"current_values": current_values.mean().item()}
 
     # pyre-fixme[14]: `act` overrides method defined in `ContextualBanditBase`
@@ -79,10 +79,13 @@ class LinearBandit(ContextualBanditBase):
             action index chosen given state and action vectors
         """
         # It doesnt make sense to call act if we are not working with action vector
+        assert (
+            self._exploration_module is not None
+        ), "exploration module must be set to call act()"
         assert available_action_space.action_dim > 0
         action_count = available_action_space.n
         new_feature = available_action_space.cat_state_tensor(subjective_state)
-        values = self._linear_regression(new_feature)  # (batch_size, action_count)
+        values = self.model(new_feature)  # (batch_size, action_count)
         assert values.shape == (new_feature.shape[0], action_count)
         return self._exploration_module.act(
             # TODO we might want to name this new_feature
@@ -91,7 +94,7 @@ class LinearBandit(ContextualBanditBase):
             action_space=available_action_space,
             values=values,
             action_availability_mask=action_availability_mask,
-            representation=self._linear_regression,
+            representation=self.model,
         )
 
     def get_scores(
@@ -113,10 +116,10 @@ class LinearBandit(ContextualBanditBase):
         )
         return self._exploration_module.get_scores(
             subjective_state=feature,
-            values=self._linear_regression(feature),
+            values=self.model(feature),
             # when action_space is None, we are querying score for one action
             action_space=action_space
             if action_space is not None
             else DiscreteActionSpace([0]),
-            representation=self._linear_regression,
+            representation=self.model,
         ).squeeze()

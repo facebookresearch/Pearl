@@ -78,8 +78,6 @@ class NeuralBandit(ContextualBanditBase):
             #  KeyedOptimizerWrapper]]`.
             self._optimizer = CombinedOptimizer(optims)
 
-    # pyre-fixme[15]: `learn_batch` overrides method defined in
-    #  `ContextualBanditBase` inconsistently.
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         input_features = torch.cat([batch.state, batch.action], dim=1)
 
