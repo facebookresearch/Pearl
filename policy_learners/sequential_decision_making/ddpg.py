@@ -43,7 +43,7 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
     def __init__(
         self,
         state_dim: int,
-        action_dim: int,
+        action_space: ActionSpace,
         exploration_module: ExplorationModule,
         hidden_dims: Iterable[int],
         critic_learning_rate: float = 1e-2,
@@ -65,7 +65,8 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
             is_action_continuous=True,
         )
         self._state_dim = state_dim
-        self._action_dim = action_dim
+        # pyre-fixme[16]: `ActionSpace` has no attribute `shape`.
+        self._action_dim: int = action_space.shape[0]
 
         # pyre-fixme[3]: Return type must be annotated.
         def make_specified_actor_network():
@@ -73,7 +74,7 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
             return actor_network_type(
                 input_dim=state_dim,
                 hidden_dims=hidden_dims,
-                output_dim=action_dim,
+                output_dim=self._action_dim,
             )
 
         # actor network takes state as input and outputs an action vector
@@ -91,8 +92,7 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
         # optimizers of two critics are alredy initialized in TwinCritic
         self._twin_critics = TwinCritic(
             state_dim=state_dim,
-            action_dim=action_dim,
-            # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
+            action_dim=self._action_dim,
             hidden_dims=hidden_dims,
             network_type=critic_network_type,
             init_fn=init_weights,
@@ -101,8 +101,7 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
         # target networks of twin critics
         self._targets_of_twin_critics = TwinCritic(
             state_dim=state_dim,
-            action_dim=action_dim,
-            # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
+            action_dim=self._action_dim,
             hidden_dims=hidden_dims,
             network_type=critic_network_type,
             init_fn=init_weights,

@@ -1,4 +1,4 @@
-from typing import Callable, Tuple, Type
+from typing import Callable, Iterable, Tuple, Type
 
 import torch
 import torch.nn as nn
@@ -21,7 +21,7 @@ class TwinCritic(torch.nn.Module):
         self,
         state_dim: int,
         action_dim: int,
-        hidden_dims: int,
+        hidden_dims: Iterable[int],
         network_type: Type[QValueNetwork] = VanillaQValueNetwork,
         # pyre-fixme[9]: init_fn has type `(Module) -> None`; used as `None`.
         init_fn: Callable[[torch.nn.Module], None] = None,

@@ -1,6 +1,7 @@
 from typing import Any, Dict, Iterable, Type
 
 import torch
+from pearl.api.action_space import ActionSpace
 from pearl.neural_networks.common.utils import (
     update_target_network,
     update_target_networks,
@@ -30,7 +31,7 @@ class TD3(DeepDeterministicPolicyGradient):
     def __init__(
         self,
         state_dim: int,
-        action_dim: int,
+        action_space: ActionSpace,
         hidden_dims: Iterable[int],
         # pyre-fixme[9]: exploration_module has type `ExplorationModule`; used as
         #  `None`.
@@ -50,7 +51,7 @@ class TD3(DeepDeterministicPolicyGradient):
     ) -> None:
         super(TD3, self).__init__(
             state_dim=state_dim,
-            action_dim=action_dim,
+            action_space=action_space,
             hidden_dims=hidden_dims,
             exploration_module=exploration_module,
             critic_learning_rate=critic_learning_rate,

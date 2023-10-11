@@ -22,7 +22,6 @@ class TestTwinCritic(unittest.TestCase):
         twin_critics = TwinCritic(
             state_dim=self.state_dim,
             action_dim=self.action_dim,
-            # pyre-fixme[6]: For 3rd argument expected `int` but got `List[int]`.
             hidden_dims=[10, 10],
             init_fn=init_weights,
         )

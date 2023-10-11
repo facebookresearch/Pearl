@@ -53,8 +53,6 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
         super(ContinuousSoftActorCritic, self).__init__(
             state_dim=state_dim,
             action_space=action_space,
-            # pyre-fixme[16]: `ActionSpace` has no attribute `shape`.
-            action_dim=action_space.shape[0],
             hidden_dims=hidden_dims,
             critic_learning_rate=critic_learning_rate,
             actor_learning_rate=actor_learning_rate,

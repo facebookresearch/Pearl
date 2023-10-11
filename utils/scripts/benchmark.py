@@ -172,7 +172,7 @@ class PearlDDPG(Evaluation):
         agent = PearlAgent(
             policy_learner=DeepDeterministicPolicyGradient(
                 state_dim=env.observation_space.shape[0],
-                action_dim=env.action_space.shape[0],
+                action_space=env.action_space.shape[0],
                 hidden_dims=[400, 300],
                 exploration_module=NormalDistributionExploration(
                     mean=0, std_dev=0.2, max_action_value=2, min_action_value=-2
@@ -197,7 +197,7 @@ class PearlTD3(Evaluation):
         agent = PearlAgent(
             policy_learner=TD3(
                 state_dim=env.observation_space.shape[0],
-                action_dim=env.action_space.shape[0],
+                action_space=env.action_space.shape[0],
                 hidden_dims=[400, 300],
                 exploration_module=NormalDistributionExploration(
                     mean=0, std_dev=0.2, max_action_value=2, min_action_value=-2

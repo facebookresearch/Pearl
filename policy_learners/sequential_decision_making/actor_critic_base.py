@@ -1,6 +1,11 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, List, Type
+from typing import Any, Dict, Iterable, Type
+
+try:
+    import gymnasium as gym
+except ModuleNotFoundError:
+    import gym
 
 import torch
 
@@ -23,6 +28,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 )
 from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 from torch import optim
 
 
@@ -37,7 +43,6 @@ class OffPolicyActorCritic(PolicyLearner):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        action_dim: int,  # should get it from action space but currently action space does not have action dim as an attribute
         hidden_dims: Iterable[int],
         critic_learning_rate: float = 1e-4,
         actor_learning_rate: float = 1e-4,
@@ -61,7 +66,16 @@ class OffPolicyActorCritic(PolicyLearner):
         )
 
         self._state_dim = state_dim
-        self._action_dim = action_dim
+        if (
+            type(action_space) == gym.spaces.discrete.Discrete
+            or type(action_space) == DiscreteActionSpace
+        ):
+            # pyre-fixme[16]: `ActionSpace` has no attribute `shape`.
+            self._action_dim: int = action_space.n
+        elif type(action_space) == gym.spaces.box.Box:
+            self._action_dim = action_space.shape[0]
+        else:
+            raise NotImplementedError("Action space not implemented")
         self.is_action_continuous = is_action_continuous
         self._exploration_module = exploration_module
 
@@ -71,7 +85,7 @@ class OffPolicyActorCritic(PolicyLearner):
             return actor_network_type(
                 input_dim=state_dim,
                 hidden_dims=hidden_dims,
-                output_dim=action_dim,
+                output_dim=self._action_dim,
                 action_space=action_space,
             )
 
@@ -87,8 +101,7 @@ class OffPolicyActorCritic(PolicyLearner):
         # optimizers of two critics are alredy initialized in TwinCritic
         self._twin_critics = TwinCritic(
             state_dim=state_dim,
-            action_dim=action_dim,
-            # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
+            action_dim=self._action_dim,
             hidden_dims=hidden_dims,
             network_type=critic_network_type,
             init_fn=init_weights,
@@ -97,8 +110,7 @@ class OffPolicyActorCritic(PolicyLearner):
         # target networks of twin critics
         self._targets_of_twin_critics = TwinCritic(
             state_dim=state_dim,
-            action_dim=action_dim,
-            # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
+            action_dim=self._action_dim,
             hidden_dims=hidden_dims,
             network_type=critic_network_type,
             init_fn=init_weights,

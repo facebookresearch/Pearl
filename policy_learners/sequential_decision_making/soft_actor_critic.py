@@ -59,8 +59,6 @@ class SoftActorCritic(OffPolicyActorCritic):
         super(SoftActorCritic, self).__init__(
             state_dim=state_dim,
             action_space=action_space,
-            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
-            action_dim=action_space.n,
             hidden_dims=hidden_dims,
             critic_learning_rate=critic_learning_rate,
             actor_learning_rate=actor_learning_rate,
@@ -129,11 +127,10 @@ class SoftActorCritic(OffPolicyActorCritic):
         next_available_actions_mask_batch = (
             batch.next_available_actions_mask
         )  # (batch_size x action_space_size)
-
         next_state_batch_repeated = torch.repeat_interleave(
             # pyre-fixme[16]: Optional type has no attribute `unsqueeze`.
             next_state_batch.unsqueeze(1),
-            self._action_space.n,
+            self._action_dim,
             dim=1,
         )  # (batch_size x action_space_size x state_dim)
 
@@ -183,7 +180,7 @@ class SoftActorCritic(OffPolicyActorCritic):
 
         # TODO: assumes all current actions are available. Needs to fix.
         action_space = (
-            F.one_hot(torch.arange(0, self._action_space.n))
+            F.one_hot(torch.arange(0, self._action_dim))
             .unsqueeze(0)
             .repeat(self.batch_size, 1, 1)
         ).to(
@@ -192,7 +189,7 @@ class SoftActorCritic(OffPolicyActorCritic):
 
         new_policy_dist = self._actor(state_batch)  # (batch_size x action_space_size)
         state_batch_repeated = torch.repeat_interleave(
-            state_batch.unsqueeze(1), self._action_space.n, dim=1
+            state_batch.unsqueeze(1), self._action_dim, dim=1
         )  # (batch_size x action_space_size x state_dim)
 
         # get q values of (states, all actions) from twin critics
@@ -207,7 +204,7 @@ class SoftActorCritic(OffPolicyActorCritic):
         # q = q1 if random_index == 0 else q2
 
         state_action_values = q.view(
-            (self.batch_size, self._action_space.n)
+            (self.batch_size, self._action_dim)
         )  # (batch_size x action_space_size)
 
         policy_loss = (

@@ -58,7 +58,6 @@ class ImplicitQLearning(PolicyGradient):
     def __init__(
         self,
         state_dim: int,
-        action_dim: int,
         action_space: ActionSpace,
         hidden_dims: Iterable[int],
         critic_learning_rate: float = 1e-3,
@@ -100,7 +99,8 @@ class ImplicitQLearning(PolicyGradient):
         self._actor = actor_network_type(
             input_dim=state_dim,
             hidden_dims=hidden_dims,
-            output_dim=action_dim,
+            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
+            output_dim=action_space.n,
         )
         self._actor.apply(init_weights)
         self._actor_optimizer = optim.AdamW(
@@ -111,8 +111,7 @@ class ImplicitQLearning(PolicyGradient):
         # optimizers of two critics are alredy initialized in TwinCritic
         self._twin_critics = TwinCritic(
             state_dim=state_dim,
-            action_dim=action_dim,
-            # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
+            action_dim=action_space.n,
             hidden_dims=hidden_dims,
             network_type=critic_network_type,
             init_fn=init_weights,
@@ -121,8 +120,7 @@ class ImplicitQLearning(PolicyGradient):
         # targets of twin critics
         self._targets_of_twin_critics = TwinCritic(
             state_dim=state_dim,
-            action_dim=action_dim,
-            # pyre-fixme[6]: For 3rd argument expected `int` but got `Iterable[int]`.
+            action_dim=action_space.n,
             hidden_dims=hidden_dims,
             network_type=critic_network_type,
             init_fn=init_weights,
