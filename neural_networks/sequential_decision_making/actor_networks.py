@@ -129,7 +129,7 @@ class GaussianActorNetwork(nn.Module):
         self._log_std_max = 2
 
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        x = self._model(x.float())
+        x = self._model(x)
         mean = self.fc_mu(x)
         log_std = self.fc_std(x)
         log_std = torch.clamp(log_std, min=self._log_std_min, max=self._log_std_max)

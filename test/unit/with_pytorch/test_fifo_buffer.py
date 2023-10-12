@@ -28,7 +28,7 @@ class TestFifoBuffer(unittest.TestCase):
         self.action_space = DiscreteActionSpace(range(action_dim))
         self.curr_available_actions = self.action_space
         self.next_available_actions = self.action_space
-        self.done = torch.randint(2, (self.batch_size,)).float()
+        self.done = torch.randint(2, (self.batch_size,))
 
     def test_on_poliy_buffer_sarsa_match(self) -> None:
         """
@@ -111,5 +111,4 @@ class TestFifoBuffer(unittest.TestCase):
         )
         # expect one sample returned
         batch = replay_buffer.sample(1)
-        # pyre-fixme[16]: Optional type has no attribute `__getitem__`.
         self.assertTrue(batch.done[0])

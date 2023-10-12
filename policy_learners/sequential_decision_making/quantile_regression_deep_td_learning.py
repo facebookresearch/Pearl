@@ -193,11 +193,8 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         """
 
         quantile_next_state_greedy_action_values = self._get_next_state_quantiles(
-            batch,
-            batch_size
-            # pyre-fixme[58]: `-` is not supported for operand types `int` and
-            #  `Optional[torch._tensor.Tensor]`.
-        ) * self._discount_factor * (1 - batch.done).unsqueeze(
+            batch, batch_size
+        ) * self._discount_factor * (1 - batch.done.float()).unsqueeze(
             -1
         ) + batch.reward.unsqueeze(
             -1

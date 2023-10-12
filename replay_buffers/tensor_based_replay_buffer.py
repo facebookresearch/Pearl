@@ -36,9 +36,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
 
     # pyre-fixme[11]: Annotation `tensor` is not defined as a type.
     def _process_single_state(self, state: SubjectiveState) -> torch.tensor:
-        return (
-            torch.tensor(state, device=self.device).unsqueeze(0).float()
-        )  # (1 x state_dim)
+        return torch.tensor(state, device=self.device).unsqueeze(0)
 
     def _process_single_action(
         self, action: Action, action_space: ActionSpace
@@ -54,10 +52,10 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         )  # (1 x action_dim)
 
     def _process_single_reward(self, reward: float) -> torch.tensor:
-        return torch.tensor([reward], device=self.device).float()
+        return torch.tensor([reward], device=self.device)
 
     def _process_single_done(self, done: bool) -> torch.tensor:
-        return torch.tensor([done], device=self.device).float()  # (1)
+        return torch.tensor([done], device=self.device)  # (1,)
 
     def _create_action_tensor_and_mask(
         self,
@@ -139,7 +137,7 @@ def _create_transition_batch(
     state_batch = torch.cat([x.state for x in transitions])
     action_batch = torch.cat([x.action for x in transitions])
     reward_batch = torch.cat([x.reward for x in transitions])
-    done_batch = torch.cat([x.done for x in transitions])  # pyre-ignore
+    done_batch = torch.cat([x.done for x in transitions])
 
     next_state_batch, next_action_batch = None, None
     if has_next_state:

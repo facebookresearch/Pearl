@@ -130,7 +130,7 @@ class BoxObservationsFromDiscrete(BoxObservationsEnvironmentBase):
     # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     def compute_tensor_observation(self, observation):
-        return torch.tensor([observation], dtype=torch.float32)
+        return torch.tensor([observation])
 
 
 class OneHotObservationsFromDiscrete(BoxObservationsEnvironmentBase):
@@ -165,7 +165,7 @@ class OneHotObservationsFromDiscrete(BoxObservationsEnvironmentBase):
             observation_tensor,
             # pyre-fixme[16]: `Environment` has no attribute `observation_space`.
             self.base_environment.observation_space.n,
-        ).float()
+        )
 
     @property
     # pyre-fixme[3]: Return type must be annotated.

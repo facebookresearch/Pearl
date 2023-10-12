@@ -89,13 +89,14 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
         reward_batch = batch.reward  # shape: (batch_size)
         done_batch = batch.done  # shape: (batch_size)
 
-        expected_state_action_values = (
-            self._get_next_state_expected_values(batch)
-            * self._discount_factor
-            # pyre-fixme[58]: `-` is not supported for operand types `int` and
-            #  `Optional[torch._tensor.Tensor]`.
-            * (1 - done_batch)
-        ) + reward_batch  # shape of expected_state_action_values: (batch_size)
+        if done_batch is not None:
+            expected_state_action_values = (
+                self._get_next_state_expected_values(batch)
+                * self._discount_factor
+                * (1 - done_batch.float())
+            ) + reward_batch  # shape of expected_state_action_values: (batch_size)
+        else:
+            raise AssertionError("done_batch should not be None")
 
         loss_critic_update = optimize_twin_critics_towards_target(
             twin_critic=self._twin_critics,

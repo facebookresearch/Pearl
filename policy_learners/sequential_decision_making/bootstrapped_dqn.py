@@ -96,7 +96,7 @@ class BootstrappedDQN(DeepQLearning):
                     batch=batch_filtered, batch_size=batch_filtered.state.shape[0], z=z
                 )
                 * self._discount_factor
-                * (1 - batch_filtered.done)  # pyre-ignore
+                * (1 - batch_filtered.done)
             ) + batch_filtered.reward  # (batch_size), r + gamma * V(s)
 
             criterion = torch.nn.MSELoss()

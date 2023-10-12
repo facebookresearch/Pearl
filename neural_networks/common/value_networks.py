@@ -575,8 +575,9 @@ class TwoTowerNetwork(QValueNetwork):
         state_batch_features = self._state_features.forward(state_batch)
         """ this might need to be done in tensor_based_replay_buffer """
         action_batch_features = self._action_features.forward(
-            action_batch.to(torch.float32)
+            action_batch.to(torch.get_default_dtype())
         )
+
         x = torch.cat([state_batch_features, action_batch_features], dim=-1)
         return self._interaction_features.forward(x).view(-1)  # (batch_size)
 

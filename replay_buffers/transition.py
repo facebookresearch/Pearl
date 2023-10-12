@@ -19,13 +19,13 @@ class Transition:
     state: torch.Tensor
     action: torch.Tensor
     reward: torch.Tensor
+    done: torch.Tensor = torch.tensor(True)  # default True is useful for bandits
     next_state: Optional[torch.Tensor] = None
     next_action: Optional[torch.Tensor] = None
     curr_available_actions: Optional[torch.Tensor] = None
     curr_available_actions_mask: Optional[torch.Tensor] = None
     next_available_actions: Optional[torch.Tensor] = None
     next_available_actions_mask: Optional[torch.Tensor] = None
-    done: Optional[torch.Tensor] = None
     weight: Optional[torch.Tensor] = None
 
     # pyre-fixme[3]: Return type must be annotated.
@@ -49,13 +49,13 @@ class TransitionBatch:
     state: torch.Tensor
     action: torch.Tensor
     reward: torch.Tensor
+    done: torch.Tensor = torch.tensor(True)  # default True is useful for bandits
     next_state: Optional[torch.Tensor] = None
     next_action: Optional[torch.Tensor] = None
     curr_available_actions: Optional[torch.Tensor] = None
     curr_available_actions_mask: Optional[torch.Tensor] = None
     next_available_actions: Optional[torch.Tensor] = None
     next_available_actions_mask: Optional[torch.Tensor] = None
-    done: Optional[torch.Tensor] = None
     weight: Optional[torch.Tensor] = None
 
     # pyre-fixme[3]: Return type must be annotated.
@@ -117,12 +117,12 @@ def filter_batch_by_bootstrap_mask(
         state=_filter_tensor(batch.state),  # pyre-ignore
         action=_filter_tensor(batch.action),  # pyre-ignore
         reward=_filter_tensor(batch.reward),  # pyre-ignore
+        done=_filter_tensor(batch.done),  # pyre-ignore
         next_state=_filter_tensor(batch.next_state),
         next_action=_filter_tensor(batch.next_action),
         curr_available_actions=_filter_tensor(batch.curr_available_actions),
         curr_available_actions_mask=_filter_tensor(batch.curr_available_actions_mask),
         next_available_actions=_filter_tensor(batch.next_available_actions),
         next_available_actions_mask=_filter_tensor(batch.next_available_actions_mask),
-        done=_filter_tensor(batch.done),
         weight=_filter_tensor(batch.weight),
     )

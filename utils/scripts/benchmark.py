@@ -282,7 +282,7 @@ def tianshou_dqn_cart_pole() -> int:
 
         def forward(self, obs, state=None, info=None):
             if not isinstance(obs, torch.Tensor):
-                obs = torch.tensor(obs, dtype=torch.float)
+                obs = torch.tensor(obs)
             batch = obs.shape[0]
             logits = self.model(obs.view(batch, -1))
             return logits, state

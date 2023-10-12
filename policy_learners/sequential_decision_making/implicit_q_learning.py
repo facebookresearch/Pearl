@@ -219,11 +219,7 @@ class ImplicitQLearning(PolicyGradient):
 
             # compute targets for batch of (state, action, next_state)
             target = (
-                values_next_states
-                * self._discount_factor
-                # pyre-fixme[58]: `-` is not supported for operand types `int` and
-                #  `Optional[torch._tensor.Tensor]`.
-                * (1 - batch.done)
+                values_next_states * self._discount_factor * (1 - batch.done.float())
             ) + batch.reward  # shape: (batch_size);  target y = r + gamma * V(s')
 
         # update twin critics towards target

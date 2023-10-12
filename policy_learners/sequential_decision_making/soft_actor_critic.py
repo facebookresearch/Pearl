@@ -98,12 +98,11 @@ class SoftActorCritic(OffPolicyActorCritic):
         reward_batch = batch.reward  # (batch_size)
         done_batch = batch.done  # (batch_size)
 
+        assert done_batch is not None
         expected_state_action_values = (
             self._get_next_state_expected_values(batch)
             * self._discount_factor
-            # pyre-fixme[58]: `-` is not supported for operand types `int` and
-            #  `Optional[torch._tensor.Tensor]`.
-            * (1 - done_batch)
+            * (1 - done_batch.float())
         ) + reward_batch  # (batch_size), r + gamma * V(s)
 
         loss_critic_update = optimize_twin_critics_towards_target(

@@ -135,7 +135,7 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
             subjective_state_tensor = (
                 subjective_state
                 if isinstance(subjective_state, torch.Tensor)
-                else torch.tensor(subjective_state, dtype=torch.float32)
+                else torch.tensor(subjective_state)
             )  # ([batch_size x ] state_dim)  # batch dimension only occurs if subjective_state is a batch
 
             subjective_state_tensor = subjective_state_tensor.to(self.device)
@@ -205,12 +205,9 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
             )  # clipped double q learning (reduce overestimation bias)
 
             # compute bellman target
+
             expected_state_action_values = (
-                next_q
-                * self._discount_factor
-                # pyre-fixme[58]: `-` is not supported for operand types `int` and
-                #  `Optional[torch._tensor.Tensor]`.
-                * (1 - batch.done)
+                next_q * self._discount_factor * (1 - batch.done.float())
             ) + batch.reward  # (batch_size), r + gamma * (min{Q_1(s', a from actor network), Q_2(s', a from actor network)})
 
         # update twin critics towards bellman target

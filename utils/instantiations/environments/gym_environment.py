@@ -10,6 +10,7 @@ except ModuleNotFoundError:
 
     logging.warning("Using deprecated 'gym' package.")
 
+import numpy as np
 import torch
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
@@ -53,6 +54,10 @@ class GymEnvironment(Environment):
             observation, info = reset_result
         else:
             observation = reset_result
+            # newer Gym versions return an info dict.
+            observation = list(observation.values())[0]
+        if isinstance(observation, np.ndarray):
+            observation = observation.astype(np.float32)
         return observation, self.action_space
 
     def step(self, action: Action) -> ActionResult:
@@ -73,6 +78,10 @@ class GymEnvironment(Environment):
             raise ValueError(
                 f"Unexpected action result from Gym (expected 4 or 5 elements): {reaction}"
             )
+        if isinstance(observation, np.ndarray):
+            observation = observation.astype(np.float32)
+        if isinstance(reward, np.float64):
+            reward = reward.astype(np.float32)
         return ActionResult(observation, reward, terminated, truncated, info)
 
     # pyre-fixme[3]: Return type must be annotated.

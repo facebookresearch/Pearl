@@ -66,7 +66,7 @@ class TestVanillaCNNs(unittest.TestCase):
             network.parameters(), lr=self.learning_rate, amsgrad=True
         )
         criterion = torch.nn.CrossEntropyLoss()
-        accuracy_train = 0
+        accuracy_train = 0.0
 
         # training loop
         accuracy_above_threshold = False
@@ -80,7 +80,8 @@ class TestVanillaCNNs(unittest.TestCase):
                 loss.backward()
                 optimizer.step()
 
-                is_correct = (torch.argmax(pred, dim=1) == y_batch).float()
+                is_correct = torch.argmax(pred, dim=1) == y_batch
+
                 accuracy_train += is_correct.sum()
 
             accuracy_train /= len(self.train_dl.dataset)

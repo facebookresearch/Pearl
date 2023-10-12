@@ -30,7 +30,7 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         replay_buffer = OnPolicyEpisodicReplayBuffer(self.capacity)
         for i in range(3):
             replay_buffer.push(
-                state=torch.tensor([i]).float(),
+                state=torch.tensor([i]),
                 action=torch.tensor(i),
                 reward=self.rewards[i],
                 next_state=None,
@@ -47,7 +47,7 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         replay_buffer = OnPolicyEpisodicReplayBuffer(self.capacity)
         for i in range(self.trajectory_len):
             replay_buffer.push(
-                state=torch.tensor([i]).float(),
+                state=torch.tensor([i]),
                 action=torch.tensor(i),
                 reward=self.rewards[i],
                 next_state=None,
@@ -70,7 +70,6 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         self.assertTrue(torch.equal(cum_returns_buffer, torch.tensor(self.cum_returns)))
 
         # validate terminal state indicators - 1 only for the last element
-        # pyre-fixme[16]: Optional type has no attribute `__getitem__`.
         done = batch.done[order]
         self.assertTrue(
             torch.equal(done, torch.eye(self.trajectory_len)[self.trajectory_len - 1])
@@ -86,7 +85,7 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         # push 1st trajectory
         for i in range(self.trajectory_len):
             replay_buffer.push(
-                state=torch.tensor([i]).float(),
+                state=torch.tensor([i]),
                 action=torch.tensor(i),
                 reward=self.rewards[i],
                 next_state=None,
@@ -104,7 +103,7 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         # push 2nd trajectory
         for i in range(trajectory_len_2):
             replay_buffer.push(
-                state=torch.tensor([states_2[i]]).float(),
+                state=torch.tensor([states_2[i]]),
                 action=torch.tensor(i),
                 reward=rewards_2[i],
                 next_state=None,
@@ -137,7 +136,6 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         )  # 2nd trajectory
 
         # validate terminal state indicators - 1 only for the last element
-        # pyre-fixme[16]: Optional type has no attribute `__getitem__`.
         done = batch.done[order]
         self.assertTrue(
             torch.equal(
@@ -172,7 +170,7 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
             # 0.5*5+6=8.5 --> state 1
             # 5 --> state 2
             replay_buffer.push(
-                state=torch.tensor([i]).float(),
+                state=torch.tensor([i]),
                 action=torch.tensor(i),
                 reward=self.rewards[i],
                 next_state=None,

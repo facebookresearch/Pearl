@@ -213,7 +213,6 @@ class DeepTDLearning(PolicyLearner):
         batch_size = state_batch.shape[0]
         # sanity check they have same batch_size
         assert reward_batch.shape[0] == batch_size
-        # pyre-fixme[16]: `Optional` has no attribute `shape`.
         assert done_batch.shape[0] == batch_size
 
         state_action_values = self._Q.get_q_values(
@@ -226,9 +225,7 @@ class DeepTDLearning(PolicyLearner):
         expected_state_action_values = (
             self._get_next_state_values(batch, batch_size)
             * self._discount_factor
-            # pyre-fixme[58]: `-` is not supported for operand types `int` and
-            #  `Optional[torch._tensor.Tensor]`.
-            * (1 - done_batch)
+            * (1 - done_batch.float())
         ) + reward_batch  # (batch_size), r + gamma * V(s)
 
         criterion = torch.nn.MSELoss()

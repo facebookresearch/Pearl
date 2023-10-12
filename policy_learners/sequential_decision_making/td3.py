@@ -126,11 +126,7 @@ class TD3(DeepDeterministicPolicyGradient):
 
             # compute bellman target
             expected_state_action_values = (
-                next_q
-                * self._discount_factor
-                # pyre-fixme[58]: `-` is not supported for operand types `int` and
-                #  `Optional[torch._tensor.Tensor]`.
-                * (1 - batch.done)
+                next_q * self._discount_factor * (1 - batch.done.float())
             ) + batch.reward  # (batch_size), r + gamma * (min{Q_1(s', a from actor network), Q_2(s', a from actor network)})
 
         # update twin critics towards bellman target
