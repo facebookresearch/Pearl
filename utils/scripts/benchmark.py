@@ -399,7 +399,7 @@ def tianshou_ppo_cart_pole() -> int:
     return 0
 
 
-if __name__ == "__main__":
+def main() -> None:
     evaluate(
         [
             # Methods applied to the same environment will be grouped in the same plot.
@@ -418,3 +418,7 @@ if __name__ == "__main__":
 
     # tianshou_dqn_cart_pole()
     # tianshou_ppo_cart_pole()
+
+
+if __name__ == "__main__":
+    main()
