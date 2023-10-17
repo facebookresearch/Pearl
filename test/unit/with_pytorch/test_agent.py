@@ -11,6 +11,9 @@ from pearl.pearl_agent import PearlAgent
 from pearl.policy_learners.contextual_bandits.disjoint_linear_bandit import (
     DisjointLinearBandit,
 )
+
+from pearl.policy_learners.contextual_bandits.square_cb import SquareCB
+
 from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
     DisjointUCBExploration,
 )
@@ -132,6 +135,46 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 feature_dim=feature_dim,
                 action_space=action_space,
                 exploration_module=DisjointUCBExploration(alpha=0.1),
+                batch_size=1,
+            ),
+            replay_buffer=DiscreteContextualBanditReplayBuffer(1),
+        )
+        env = ContextualBanditLinearSyntheticEnvironment(
+            action_space=action_space,
+            observation_dim=feature_dim,
+        )
+
+        regrets = []
+        for _ in range(100):
+            observation, action_space = env.reset()
+            agent.reset(observation, action_space)
+            action = agent.act()
+            regret = env.get_regret(action)
+            action_result = env.step(action)
+            agent.observe(action_result)
+            agent.learn()
+            # pyre-fixme[16]: `Number` has no attribute `squeeze`.
+            regrets.append(regret.squeeze().item())
+
+        # to test learning ability of linear contextual bandits we check
+        # that the regret is decreasing over learning steps
+        self.assertTrue(sum(regrets[10:]) >= sum(regrets[-10:]))
+
+    def test_squarecb(self) -> None:
+        """
+        This is an integration test for SquareCB
+        The parameter gamma should be set proportionally to sqrt{A T / d}
+        (see https://arxiv.org/pdf/2002.04926.pdf and discussion after Theorem 1)
+        """
+        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `range`.
+        action_space = DiscreteActionSpace(range(3))
+        feature_dim = 3
+
+        agent = PearlAgent(
+            policy_learner=SquareCB(
+                feature_dim=feature_dim,
+                action_space=action_space,
+                gamma=10,
                 batch_size=1,
             ),
             replay_buffer=DiscreteContextualBanditReplayBuffer(1),
