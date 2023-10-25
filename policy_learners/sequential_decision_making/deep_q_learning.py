@@ -26,8 +26,7 @@ class DeepQLearning(DeepTDLearning):
         learning_rate: float = 0.001,
         exploration_module: Optional[ExplorationModule] = None,
         soft_update_tau: float = 1.0,  # no soft update
-        # pyre-fixme[2]: Parameter must be annotated.
-        **kwargs,
+        **kwargs,  # pyre-ignore[2]: Parameter must be annotated.
     ) -> None:
         super(DeepQLearning, self).__init__(
             exploration_module=exploration_module
@@ -43,23 +42,19 @@ class DeepQLearning(DeepTDLearning):
 
     @torch.no_grad()
     def _get_next_state_values(
-        self,
-        batch: TransitionBatch,
-        batch_size: int
-        # pyre-fixme[11]: Annotation `tensor` is not defined as a type.
-    ) -> torch.tensor:
+        self, batch: TransitionBatch, batch_size: int
+    ) -> torch.Tensor:
         (
             next_state,
             next_avail_actions,
             next_avail_actions_mask,
         ) = self._prepare_next_state_action_batch(batch)
 
-        # for dueling, this does a forward pass; since the batch of next available
-        # actions is already input
-        # (batch_size x action_space_size)
         next_state_action_values = self._Q_target.get_q_values(
             next_state, next_avail_actions
-        ).view(batch_size, -1)
+        ).view(
+            batch_size, -1
+        )  # (batch_size x action_space_size)
 
         # Make sure that unavailable actions' Q values are assigned to -inf
         next_state_action_values[next_avail_actions_mask] = -float("inf")
@@ -71,16 +66,19 @@ class DeepQLearning(DeepTDLearning):
         self, batch: TransitionBatch
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[torch.Tensor]]:
         next_state_batch = batch.next_state  # (batch_size x state_dim)
-        # (batch_size x action_space_size x action_dim)
+        assert next_state_batch is not None
+
         next_available_actions_batch = batch.next_available_actions
+        # (batch_size x action_space_size x action_dim)
 
-        # (batch_size x action_space_size)
         next_available_actions_mask_batch = batch.next_available_actions_mask
+        # (batch_size x action_space_size)
 
-        # (batch_size x action_space_size x state_dim)
+        number_of_actions = self._action_space.n  # pyre-ignore
         next_state_batch_repeated = torch.repeat_interleave(
-            next_state_batch.unsqueeze(1), self._action_space.n, dim=1  # pyre-ignore
-        )
+            next_state_batch.unsqueeze(1), number_of_actions, dim=1
+        )  # (batch_size x action_space_size x state_dim)
+
         return (
             next_state_batch_repeated,
             next_available_actions_batch,

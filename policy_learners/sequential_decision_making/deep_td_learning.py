@@ -1,6 +1,6 @@
 import copy
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, List, Optional, Type
+from typing import Any, Dict, Iterable, Optional, Type
 
 import torch
 import torch.nn.functional as F
@@ -66,8 +66,7 @@ class DeepTDLearning(PolicyLearner):
         network_instance: Optional[QValueNetwork] = None,
         # TODO define optimizer config to use by all deep algorithms
         use_keyed_optimizer: bool = False,
-        # pyre-fixme[2]: Parameter must be annotated.
-        **kwargs,
+        **kwargs,  # pyre-ignore[2]: Parameter must be annotated.
     ) -> None:
         super(DeepTDLearning, self).__init__(
             training_rounds=training_rounds,
