@@ -332,9 +332,11 @@ class QuantileQValueNetwork(DistributionalQValueNetwork):
         # pyre-fixme[4]: Attribute must be annotated.
         self._num_quantiles = num_quantiles
         # pyre-fixme[4]: Attribute must be annotated.
-        self._quantiles = torch.arange(0, self._num_quantiles + 1)
+        self._quantiles = torch.arange(0, self._num_quantiles + 1) / self._num_quantiles
         # pyre-fixme[4]: Attribute must be annotated.
-        self._quantile_midpoints = (self._quantiles[1:] + self._quantiles[:-1]) / 2
+        self._quantile_midpoints = (
+            ((self._quantiles[1:] + self._quantiles[:-1]) / 2).unsqueeze(0).unsqueeze(0)
+        )
 
     def forward(self, x: Tensor) -> Tensor:
         return self._model(x)

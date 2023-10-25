@@ -192,21 +192,22 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             - add a dimension to the reward and (1-done) vectors so they can be broadcasted with the next state quantiles
         """
 
-        quantile_next_state_greedy_action_values = self._get_next_state_quantiles(
-            batch, batch_size
-        ) * self._discount_factor * (1 - batch.done.float()).unsqueeze(
-            -1
-        ) + batch.reward.unsqueeze(
-            -1
-        )
+        with torch.no_grad():
+            quantile_next_state_greedy_action_values = self._get_next_state_quantiles(
+                batch, batch_size
+            ) * self._discount_factor * (1 - batch.done.float()).unsqueeze(
+                -1
+            ) + batch.reward.unsqueeze(
+                -1
+            )
 
         """
         Step 3: pairwise distributional quantile loss: T theta_j(s',a*) - theta_i(s,a) for i,j in (1, .. , N)
             - output shape: (batch_size, N, N)
         """
-        pairwise_quantile_loss = quantile_state_action_values.unsqueeze(
+        pairwise_quantile_loss = quantile_next_state_greedy_action_values.unsqueeze(
             2
-        ) - quantile_next_state_greedy_action_values.unsqueeze(1)
+        ) - quantile_state_action_values.unsqueeze(1)
 
         # elementwise huber loss smoothes the quantile loss, since it is non-smooth at 0
         huber_loss = compute_elementwise_huber_loss(pairwise_quantile_loss)
