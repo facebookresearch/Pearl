@@ -2,8 +2,10 @@ import torch
 import torch.distributed as dist
 
 
-# pyre-fixme[3]: Return type must be annotated.
-def get_pearl_device():
+def get_pearl_device(device_id: int = -1) -> torch.device:
+    if device_id != -1:
+        return torch.device("cuda:" + str(device_id))
+
     try:
         # This is to pytorch distributed run, and should not affect
         # original implementation of this file

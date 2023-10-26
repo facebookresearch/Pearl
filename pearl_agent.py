@@ -1,6 +1,4 @@
-from typing import Any, Dict
-
-import torch
+from typing import Any, Dict, Optional
 
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
@@ -8,16 +6,24 @@ from pearl.api.action_space import ActionSpace
 from pearl.api.agent import Agent
 from pearl.api.observation import Observation
 from pearl.api.state import SubjectiveState
+from pearl.history_summarization_modules.history_summarization_module import (
+    HistorySummarizationModule,
+)
 from pearl.history_summarization_modules.identity_history_summarization_module import (
     IdentityHistorySummarizationModule,
 )
-from pearl.policy_learners.policy_learner import DistributionalPolicyLearner
+from pearl.policy_learners.policy_learner import (
+    DistributionalPolicyLearner,
+    PolicyLearner,
+)
 from pearl.replay_buffers.examples.single_transition_replay_buffer import (
     SingleTransitionReplayBuffer,
 )
+from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.safety_modules.identity_safety_module import IdentitySafetyModule
 from pearl.safety_modules.risk_sensitive_safety_modules import RiskNeutralSafetyModule
+from pearl.safety_modules.safety_module import SafetyModule
 from pearl.utils.compatibility_checks import pearl_agent_compatibility_check
 from pearl.utils.device import get_pearl_device
 
@@ -37,27 +43,28 @@ class PearlAgent(Agent):
     # TODO: define a data structure that hosts the configs for a Pearl Agent
     def __init__(
         self,
-        # pyre-fixme[2]: Parameter must be annotated.
-        policy_learner,
-        # pyre-fixme[2]: Parameter must be annotated.
-        safety_module=None,
-        # pyre-fixme[2]: Parameter must be annotated.
-        replay_buffer=None,
-        # pyre-fixme[2]: Parameter must be annotated.
-        history_summarization_module=None,
+        policy_learner: PolicyLearner,
+        safety_module: Optional[SafetyModule] = None,
+        replay_buffer: Optional[ReplayBuffer] = None,
+        history_summarization_module: Optional[HistorySummarizationModule] = None,
+        device_id: int = -1,
     ) -> None:
         """
         Initializes the PearlAgent.
         Args:
             policy_learner: a PolicyLearner instance
-            safety_module: (optional) a SafetyModule instance (default is RiskNeutralSafetyModule for distributional policy learner
-                            types and IdentitySafetyModule for all other types)
-            risk_sensitive_safety_module: (optional) a RiskSensitiveSafetyModule instance (default is RiskNeutralSafetyModule)
-            history_summarization_module: (optional) a HistorySummarizationModule instance (default is IdentityHistorySummarizationModule)
-            replay_buffer: (optional) a replay buffer (default is single-transition replay buffer for now -- will very likely to change)
+            safety_module: (optional) a SafetyModule instance (default is
+                    RiskNeutralSafetyModule for distributional policy learner
+                    types and IdentitySafetyModule for all other types)
+            risk_sensitive_safety_module: (optional) a RiskSensitiveSafetyModule
+                                            instance (default is RiskNeutralSafetyModule)
+            history_summarization_module: (optional) a HistorySummarizationModule
+                                   instance (default is IdentityHistorySummarizationModule)
+            replay_buffer: (optional) a replay buffer (default is single-transition
+                                    replay buffer for now -- will very likely to change)
         """
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.policy_learner = policy_learner
+        self.policy_learner: PolicyLearner = policy_learner
+        self._device_id: int = device_id
 
         # pyre-fixme[4]: Attribute must be annotated.
         self.safety_module = (
@@ -91,6 +98,7 @@ class PearlAgent(Agent):
         self.replay_buffer.is_action_continuous = (
             self.policy_learner.is_action_continuous
         )
+        self.replay_buffer.device = get_pearl_device(device_id)
 
         # check that all components of the agent are compatible with each other
         pearl_agent_compatibility_check(
@@ -101,7 +109,7 @@ class PearlAgent(Agent):
         # pyre-fixme[4]: Attribute must be annotated.
         self._latest_action = None
 
-        self.policy_learner.to(get_pearl_device())
+        self.policy_learner.to(get_pearl_device(device_id))
 
     def act(self, exploit: bool = False) -> Action:
         safe_action_space = self.safety_module.filter_action(self._subjective_state)

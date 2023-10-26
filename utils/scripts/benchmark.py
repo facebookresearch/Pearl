@@ -11,6 +11,7 @@ try:
 except ModuleNotFoundError:
     import gym
 
+import argparse
 import logging
 import os
 import pickle
@@ -70,11 +71,17 @@ class Evaluation(ABC):
         **kwargs: keyword arguments passed to the constructor of the gym environment
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, gym_environment_name, *args, **kwargs):
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.gym_environment_name = gym_environment_name
+    def __init__(
+        self,
+        gym_environment_name: str,
+        device_id: int,
+        # pyre-fixme[2]: Parameter must be annotated.
+        *args,
+        # pyre-fixme[2]: Parameter must be annotated.
+        **kwargs,
+    ) -> None:
+        self.gym_environment_name: str = gym_environment_name
+        self.device_id: int = device_id
         # pyre-fixme[4]: Attribute must be annotated.
         self.args = args
         # pyre-fixme[4]: Attribute must be annotated.
@@ -87,10 +94,16 @@ class Evaluation(ABC):
 
 
 class PearlDQN(Evaluation):
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, gym_environment_name, *args, **kwargs):
-        super(PearlDQN, self).__init__(gym_environment_name, *args, **kwargs)
+    def __init__(
+        self,
+        gym_environment_name: str,
+        device_id: int,
+        # pyre-fixme[2]: Parameter must be annotated.
+        *args,
+        # pyre-fixme[2]: Parameter must be annotated.
+        **kwargs,
+    ) -> None:
+        super(PearlDQN, self).__init__(gym_environment_name, device_id, *args, **kwargs)
 
     def evaluate(self) -> Iterable[Number]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
@@ -102,6 +115,7 @@ class PearlDQN(Evaluation):
                 training_rounds=20,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
+            device_id=self.device_id,
         )
         returns = online_learning_returns(
             agent, env, number_of_episodes=number_of_episodes, learn_after_episode=True
@@ -110,10 +124,18 @@ class PearlDQN(Evaluation):
 
 
 class PearlContinuousSAC(Evaluation):
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, gym_environment_name, *args, **kwargs):
-        super(PearlContinuousSAC, self).__init__(gym_environment_name, *args, **kwargs)
+    def __init__(
+        self,
+        gym_environment_name: str,
+        device_id: int,
+        # pyre-fixme[2]: Parameter must be annotated.
+        *args,
+        # pyre-fixme[2]: Parameter must be annotated.
+        **kwargs,
+    ) -> None:
+        super(PearlContinuousSAC, self).__init__(
+            gym_environment_name, device_id, *args, **kwargs
+        )
 
     def evaluate(self) -> Iterable[Number]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
@@ -129,6 +151,7 @@ class PearlContinuousSAC(Evaluation):
                 critic_learning_rate=0.0005,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(100000),
+            device_id=self.device_id,
         )
         returns = online_learning_returns(
             agent, env, number_of_episodes=number_of_episodes, learn_after_episode=False
@@ -137,10 +160,16 @@ class PearlContinuousSAC(Evaluation):
 
 
 class PearlPPO(Evaluation):
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, gym_environment_name, *args, **kwargs):
-        super(PearlPPO, self).__init__(gym_environment_name, *args, **kwargs)
+    def __init__(
+        self,
+        gym_environment_name: str,
+        device_id: int,
+        # pyre-fixme[2]: Parameter must be annotated.
+        *args,
+        # pyre-fixme[2]: Parameter must be annotated.
+        **kwargs,
+    ) -> None:
+        super(PearlPPO, self).__init__(gym_environment_name, device_id, *args, **kwargs)
 
     def evaluate(self) -> Iterable[Number]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
@@ -154,6 +183,7 @@ class PearlPPO(Evaluation):
                 epsilon=0.1,
             ),
             replay_buffer=OnPolicyEpisodicReplayBuffer(10_000),
+            device_id=self.device_id,
         )
         returns = online_learning_returns(
             agent, env, number_of_episodes=number_of_episodes, learn_after_episode=True
@@ -162,10 +192,18 @@ class PearlPPO(Evaluation):
 
 
 class PearlDDPG(Evaluation):
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, gym_environment_name, *args, **kwargs):
-        super(PearlDDPG, self).__init__(gym_environment_name, *args, **kwargs)
+    def __init__(
+        self,
+        gym_environment_name: str,
+        device_id: int,
+        # pyre-fixme[2]: Parameter must be annotated.
+        *args,
+        # pyre-fixme[2]: Parameter must be annotated.
+        **kwargs,
+    ) -> None:
+        super(PearlDDPG, self).__init__(
+            gym_environment_name, device_id, *args, **kwargs
+        )
 
     def evaluate(self) -> Iterable[Number]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
@@ -179,6 +217,7 @@ class PearlDDPG(Evaluation):
                 ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(50000),
+            device_id=self.device_id,
         )
         returns = online_learning_returns(
             agent, env, number_of_episodes=number_of_episodes, learn_after_episode=True
@@ -187,10 +226,16 @@ class PearlDDPG(Evaluation):
 
 
 class PearlTD3(Evaluation):
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, gym_environment_name, *args, **kwargs):
-        super(PearlTD3, self).__init__(gym_environment_name, *args, **kwargs)
+    def __init__(
+        self,
+        gym_environment_name: str,
+        device_id: int,
+        # pyre-fixme[2]: Parameter must be annotated.
+        *args,
+        # pyre-fixme[2]: Parameter must be annotated.
+        **kwargs,
+    ) -> None:
+        super(PearlTD3, self).__init__(gym_environment_name, device_id, *args, **kwargs)
 
     def evaluate(self) -> Iterable[Number]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
@@ -204,6 +249,7 @@ class PearlTD3(Evaluation):
                 ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(50000),
+            device_id=self.device_id,
         )
         returns = online_learning_returns(
             agent, env, number_of_episodes=number_of_episodes, learn_after_episode=True
@@ -399,7 +445,8 @@ def tianshou_ppo_cart_pole() -> int:
     return 0
 
 
-def main() -> None:
+def main(device_id: int = -1) -> None:
+    # TODO: this should be part of argparse instead of hardcoded.
     evaluate(
         [
             # Methods applied to the same environment will be grouped in the same plot.
@@ -412,7 +459,7 @@ def main() -> None:
             # MuJoCo environments -- require MuJoCo to be installed.
             # PearlDDPG("HalfCheetah-v4"),
             # PearlTD3("HalfCheetah-v4"),
-            PearlContinuousSAC("Ant-v4")
+            PearlContinuousSAC("Ant-v4", device_id=device_id),
         ]
     )
 
@@ -421,4 +468,15 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Pearl Benchmark")
+    parser.add_argument(
+        "-d",
+        "--device",
+        help="GPU device ID (optional)",
+        required=False,
+        type=int,
+        default=-1,
+    )
+    args: argparse.Namespace = parser.parse_args()
+
+    main(args.device)

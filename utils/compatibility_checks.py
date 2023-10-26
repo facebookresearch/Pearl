@@ -11,9 +11,9 @@ from pearl.safety_modules.safety_module import SafetyModule
 
 
 def pearl_agent_compatibility_check(
-    policy_learner: Type[PolicyLearner],
-    safety_module: Type[SafetyModule],
-    replay_buffer: Type[ReplayBuffer],
+    policy_learner: PolicyLearner,
+    safety_module: SafetyModule,
+    replay_buffer: ReplayBuffer,
 ) -> None:
     """
     Check if different modules of the Pearl agent are compatible with each other.
