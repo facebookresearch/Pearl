@@ -48,6 +48,9 @@ from pearl.replay_buffers.sequential_decision_making.fifo_on_policy_replay_buffe
 from pearl.replay_buffers.sequential_decision_making.on_policy_episodic_replay_buffer import (
     OnPolicyEpisodicReplayBuffer,
 )
+from pearl.safety_modules.risk_sensitive_safety_modules import (
+    QuantileNetworkMeanVarianceSafetyModule,
+)
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.offline_learning_and_evaluation import (
     offline_evaluation,
@@ -252,6 +255,7 @@ class IntegrationTests(unittest.TestCase):
                 learning_rate=5e-4,
                 training_rounds=20,
             ),
+            safety_module=QuantileNetworkMeanVarianceSafetyModule(0.2),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
         )
         self.assertTrue(

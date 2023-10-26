@@ -118,27 +118,22 @@ class QuantileNetworkMeanVarianceSafetyModule(RiskSensitiveSafetyModule):
             DistributionalQValueNetwork
         ] = QuantileQValueNetwork,
     ) -> torch.Tensor:
-
         # pyre-fixme[20]: Argument `action_batch` expected.
         q_value_distribution = q_value_distribution_network.get_q_value_distribution(
             state_batch,
             action_batch,
         )
-        mean_value = q_value_distribution.mean(dim=-1, keepdim=True)
-        # pyre-fixme[16]: `int` has no attribute `to`.
-        quantiles = q_value_distribution_network.quantiles.to(self._device)
-
+        device = get_pearl_device()
         """
         variance computation:
             - sum_{i=0}^{N-1} (tau_{i+1} - tau_{i}) * (q_value_distribution_{tau_i} - mean_value)^2
         """
-        mean_value = q_value_distribution.mean(dim=-1)
-        quantiles = q_value_distribution_network.quantiles
-        # pyre-fixme[16]: `int` has no attribute `__getitem__`.
-        quantile_differences = (quantiles[1:] - quantiles[:-1]) / 2
-        variance = (quantile_differences * (q_value_distribution - mean_value)).sum(
-            dim=-1, keepdim=True
-        )
-
+        mean_value = q_value_distribution.mean(dim=-1, keepdim=True)
+        # pyre-fixme[16]: `int` has no attribute `to`.
+        quantiles = q_value_distribution_network.quantiles.to(device)
+        quantile_differences = quantiles[1:] - quantiles[:-1]
+        variance = (
+            quantile_differences * torch.square(q_value_distribution - mean_value)
+        ).sum(dim=-1, keepdim=True)
         variance_adjusted_mean = (mean_value - (self._beta * variance)).view(-1)
         return variance_adjusted_mean
