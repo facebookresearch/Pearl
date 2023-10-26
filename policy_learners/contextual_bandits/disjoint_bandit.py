@@ -13,12 +13,18 @@ from pearl.neural_networks.common.utils import ensemble_forward
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
 )
+from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
+    ScoreExplorationBase,
+)
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.device import get_pearl_device
-from pearl.utils.instantiations.action_spaces.action_spaces import ActionSpace
+from pearl.utils.instantiations.action_spaces.action_spaces import (
+    ActionSpace,
+    DiscreteActionSpace,
+)
 
 
 class DisjointBanditContainer(ContextualBanditBase):
@@ -154,5 +160,23 @@ class DisjointBanditContainer(ContextualBanditBase):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
+        action_space: DiscreteActionSpace,
     ) -> torch.Tensor:
-        raise NotImplementedError("Implement when necessary")
+        """
+        Returns:
+            UCB scores when exploration module is UCB
+            Shape is (batch, num_arms) or (num_arms,)
+        """
+        assert isinstance(self._exploration_module, ScoreExplorationBase)
+        feature = action_space.cat_state_tensor(
+            subjective_state=subjective_state
+        )  # batch_size, action_count, feature_size
+        return self._exploration_module.get_scores(
+            subjective_state=feature,
+            values=ensemble_forward(self.models, feature),
+            # when action_space is None, we are querying score for one action
+            action_space=action_space
+            if action_space is not None
+            else DiscreteActionSpace([0]),
+            representation=self.models,
+        ).squeeze()

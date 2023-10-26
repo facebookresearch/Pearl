@@ -342,3 +342,30 @@ class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
             subjective_state=batch.state, available_action_space=action_space
         )
         self.assertEqual(action.shape, torch.Size([batch_size]))
+
+    def test_get_scores_linear(self) -> None:
+        policy_learner = copy.deepcopy(
+            self.policy_learner
+        )  # deep copy as we are going to change exploration module
+        alpha = 3.0
+        policy_learner.exploration_module = DisjointUCBExploration(alpha=alpha)
+        # action_space = self.action_space
+        # batch = self.batch
+        batch_size = len(self.batch)
+
+        # get scores
+        scores = policy_learner.get_scores(
+            subjective_state=self.batch.state, action_space=self.action_space
+        )
+        self.assertEqual(scores.shape, torch.Size([batch_size, self.action_space.n]))
+
+        # test that scores have the correct values
+        features = self.batch.state
+        expected_scores = []
+        for i in range(self.action_space.n):
+            model = policy_learner.models[i]  # model for arm i
+            mus = model(features)
+            sigmas = model.calculate_sigma(features)
+            expected_scores.append(mus + alpha * sigmas)
+        expected_scores = torch.stack(expected_scores, dim=1)
+        self.assertTrue(torch.allclose(scores, expected_scores, atol=1e-1))
