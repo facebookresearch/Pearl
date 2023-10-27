@@ -29,7 +29,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
-from torch import optim
+from torch import nn, optim
 
 
 class OffPolicyActorCritic(PolicyLearner):
@@ -79,8 +79,7 @@ class OffPolicyActorCritic(PolicyLearner):
         self.is_action_continuous = is_action_continuous
         self._exploration_module = exploration_module
 
-        # pyre-fixme[3]: Return type must be annotated.
-        def make_specified_actor_network():
+        def make_specified_actor_network() -> nn.Module:
             # pyre-fixme[28]: Unexpected keyword argument `input_dim`.
             return actor_network_type(
                 input_dim=state_dim,
@@ -90,8 +89,7 @@ class OffPolicyActorCritic(PolicyLearner):
             )
 
         # actor network takes state as input and outputs an action vector
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._actor = make_specified_actor_network()
+        self._actor: nn.Module = make_specified_actor_network()
         self._actor.apply(init_weights)
         self._actor_optimizer = optim.AdamW(
             self._actor.parameters(), lr=actor_learning_rate, amsgrad=True
@@ -196,11 +194,9 @@ class OffPolicyActorCritic(PolicyLearner):
         return {}
 
     @abstractmethod
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _actor_learn_batch(self, batch: TransitionBatch, **options) -> Dict[str, Any]:
+    def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         pass
 
     @abstractmethod
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _critic_learn_batch(self, batch: TransitionBatch, **options) -> Dict[str, Any]:
+    def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         pass

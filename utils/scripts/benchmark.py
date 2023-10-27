@@ -4,7 +4,7 @@
 import warnings
 from abc import ABC, abstractmethod
 from numbers import Number
-from typing import Dict, Iterable
+from typing import Dict, Iterable, List
 
 try:
     import gymnasium as gym
@@ -143,11 +143,12 @@ class PearlContinuousSAC(Evaluation):
             policy_learner=ContinuousSoftActorCritic(
                 state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
-                hidden_dims=[64, 64, 64],
+                hidden_dims=[256, 256],
                 training_rounds=1,
                 batch_size=256,
-                entropy_coef=0.1,
-                actor_learning_rate=0.0005,
+                entropy_coef=0.05,
+                entropy_autotune=True,
+                actor_learning_rate=0.0003,
                 critic_learning_rate=0.0005,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(100000),
@@ -257,10 +258,9 @@ class PearlTD3(Evaluation):
         return returns
 
 
-# pyre-fixme[3]: Return type must be annotated.
-def evaluate(evaluations: Iterable[Evaluation]):
+def evaluate(evaluations: Iterable[Evaluation]) -> None:
     """Obtain data from evaluations and plot them, one plot per environment"""
-    num_seeds = 4
+    num_seeds = 5
     for seed in range(num_seeds):
         set_seed(seed)
         print(f"Seed {seed}")
@@ -268,7 +268,9 @@ def evaluate(evaluations: Iterable[Evaluation]):
         generate_plots(data_by_environment_and_method, seed=seed)
 
 
-def collect_data(evaluations: Iterable[Evaluation], seed: int) -> Dict[str, str]:
+def collect_data(
+    evaluations: Iterable[Evaluation], seed: int
+) -> Dict[str, Dict[str, List[float]]]:
     data_by_environment_and_method = {}
     for evaluation in evaluations:
         method = type(evaluation).__name__
@@ -278,8 +280,10 @@ def collect_data(evaluations: Iterable[Evaluation], seed: int) -> Dict[str, str]
         if environment not in data_by_environment_and_method:
             data_by_environment_and_method[environment] = {}
         data_by_environment_and_method[environment][method] = returns
+        dir_name = save_path + str(method) + "/" + str(environment) + "/"
+        os.makedirs(dir_name, exist_ok=True)
         with open(
-            save_path + "returns_data_seed_" + str(seed) + ".pickle", "wb"
+            dir_name + "returns_data_seed_" + str(seed) + ".pickle", "wb"
         ) as handle:
             pickle.dump(
                 data_by_environment_and_method, handle, protocol=pickle.HIGHEST_PROTOCOL
@@ -287,26 +291,31 @@ def collect_data(evaluations: Iterable[Evaluation], seed: int) -> Dict[str, str]
     return data_by_environment_and_method
 
 
-# pyre-fixme[3]: Return type must be annotated.
-def generate_plots(data_by_environment_and_method: Dict[str, str], seed: int):
+def generate_plots(
+    data_by_environment_and_method: Dict[str, Dict[str, List[float]]],
+    seed: int,
+) -> None:
     for environment_name, data_by_method in data_by_environment_and_method.items():
         plt.title(environment_name)
         plt.xlabel("Episode")
         plt.ylabel("Return")
-        # pyre-fixme[16]: `str` has no attribute `items`.
+        method, _ = next(iter(data_by_method.items()))
+        window_size = 10
+
         for method, returns in data_by_method.items():
             plt.plot(returns, label=method)
-            window_size = 10
             rolling_mean_returns = (
                 np.convolve(returns, np.ones(window_size), "valid") / window_size
             )
 
             plt.plot(rolling_mean_returns, label=f"Rolling Mean {method}")
         plt.legend()
-        filename = f"{environment_name} and seed = {seed}.png"
+        dir_name = save_path + str(method) + "/" + str(environment_name) + "/"
+        os.makedirs(dir_name, exist_ok=True)
+        filename = f"{environment_name} and {method} and seed = {seed}.png"
         logging.info(f"Saving plot to {os.getcwd()}/{filename}")
         plt.savefig(filename)
-        plt.savefig(save_path + filename)
+        plt.savefig(dir_name + "/" + filename)
         plt.close()
 
 

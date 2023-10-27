@@ -1,4 +1,4 @@
-from typing import Iterable, Type
+from typing import Any, Dict, Iterable, Type
 
 import torch
 import torch.nn.functional as F
@@ -29,10 +29,10 @@ from pearl.utils.functional_utils.learning.nn_learning_utils import (
 from torch import optim
 
 
-# Currently available actions is not used. Needs to be updated once we know the input structure
-# of production stack on this param.
+# Currently available actions is not used. Needs to be updated once we know the input
+# structure of production stack on this param.
 
-# TODO: to make things easier with a single optimizer, we need to further polish this method.
+# TODO: to make things easier with a single optimizer, we need to polish this method.
 class SoftActorCritic(OffPolicyActorCritic):
     """
     Implementation of Soft Actor Critic Policy Learner for discrete action spaces.
@@ -84,16 +84,12 @@ class SoftActorCritic(OffPolicyActorCritic):
         self._entropy_coef = entropy_coef
         self._rounds = 0
 
-    ## sac uses a learning rate scheduler specifically
+    # sac uses a learning rate scheduler specifically
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space
         self.scheduler.step()
 
-    # pyre-fixme[14]: `_critic_learn_batch` overrides method defined in
-    #  `OffPolicyActorCritic` inconsistently.
-    # pyre-fixme[15]: `_critic_learn_batch` overrides method defined in
-    #  `OffPolicyActorCritic` inconsistently.
-    def _critic_learn_batch(self, batch: TransitionBatch) -> None:
+    def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
         reward_batch = batch.reward  # (batch_size)
         done_batch = batch.done  # (batch_size)
@@ -113,7 +109,6 @@ class SoftActorCritic(OffPolicyActorCritic):
             expected_target=expected_state_action_values,
         )
 
-        # pyre-fixme[7]: Expected `None` but got `List[Tensor]`.
         return loss_critic_update
 
     @torch.no_grad()
@@ -170,11 +165,7 @@ class SoftActorCritic(OffPolicyActorCritic):
 
         return next_state_action_values.sum(dim=1)
 
-    # pyre-fixme[14]: `_actor_learn_batch` overrides method defined in
-    #  `OffPolicyActorCritic` inconsistently.
-    # pyre-fixme[15]: `_actor_learn_batch` overrides method defined in
-    #  `OffPolicyActorCritic` inconsistently.
-    def _actor_learn_batch(self, batch: TransitionBatch) -> None:
+    def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         state_batch = batch.state  # (batch_size x state_dim)
 
         # TODO: assumes all current actions are available. Needs to fix.
@@ -221,3 +212,5 @@ class SoftActorCritic(OffPolicyActorCritic):
         self._actor_optimizer.zero_grad()
         policy_loss.backward()
         self._actor_optimizer.step()
+
+        return {"actor_loss": policy_loss.item()}

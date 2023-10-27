@@ -16,7 +16,6 @@ class TwinCritic(torch.nn.Module):
     NOTE: For more than two critics, the standard way is to use nn.ModuleList()
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         state_dim: int,
@@ -26,7 +25,7 @@ class TwinCritic(torch.nn.Module):
         # pyre-fixme[9]: init_fn has type `(Module) -> None`; used as `None`.
         init_fn: Callable[[torch.nn.Module], None] = None,
         output_dim: int = 1,
-    ):
+    ) -> None:
         super(TwinCritic, self).__init__()
         # pyre-fixme[4]: Attribute must be annotated.
         # pyre-fixme[45]: Cannot instantiate abstract class `QValueNetwork`.

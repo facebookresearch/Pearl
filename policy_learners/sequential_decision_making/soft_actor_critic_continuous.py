@@ -1,4 +1,4 @@
-from typing import Iterable, Type
+from typing import Any, Dict, Iterable, Type
 
 import torch
 from pearl.api.action_space import ActionSpace
@@ -21,6 +21,7 @@ from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
 )
 
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.device import get_pearl_device
 from pearl.utils.functional_utils.learning.nn_learning_utils import (
     optimize_twin_critics_towards_target,
 )
@@ -46,6 +47,7 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
         training_rounds: int = 100,
         batch_size: int = 128,
         entropy_coef: float = 0.2,
+        entropy_autotune: bool = True,
         critic_soft_update_tau: float = 0.005,
         actor_network_type: ActorNetworkType = GaussianActorNetwork,
         critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
@@ -67,24 +69,29 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
             critic_network_type=critic_network_type,
         )
 
-        # This is needed to avoid actor softmax overflow issue.
-        # Should not be left for users to choose.
-        self.scheduler = optim.lr_scheduler.ExponentialLR(
-            self._actor_optimizer, gamma=0.99
-        )
+        device = get_pearl_device()
+        self._entropy_autotune = entropy_autotune
+        if entropy_autotune:
+            # initialize the entropy coefficient to 0
+            self._log_entropy = torch.zeros(  # pyre-ignore
+                1, requires_grad=True, device=device
+            )
+            self._entropy_optimizer = optim.AdamW(  # pyre-ignore
+                [self._log_entropy], lr=critic_learning_rate, amsgrad=True
+            )
+            self._entropy_coef = torch.exp(self._log_entropy).detach()  # pyre-ignore
+            self._target_entropy = -torch.tensor(  # pyre-ignore
+                action_space.shape[0]  # pyre-ignore
+            )
+        else:
+            self._entropy_coef = torch.tensor(entropy_coef)
 
-        self._entropy_coef = entropy_coef
         self._rounds = 0
 
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space
-        self.scheduler.step()
 
-    # pyre-fixme[14]: `_critic_learn_batch` overrides method defined in
-    #  `OffPolicyActorCritic` inconsistently.
-    # pyre-fixme[15]: `_critic_learn_batch` overrides method defined in
-    #  `OffPolicyActorCritic` inconsistently.
-    def _critic_learn_batch(self, batch: TransitionBatch) -> None:
+    def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
         reward_batch = batch.reward  # shape: (batch_size)
         done_batch = batch.done  # shape: (batch_size)
@@ -106,12 +113,10 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
             expected_target=expected_state_action_values,
         )
 
-        # pyre-fixme[7]: Expected `None` but got `List[Tensor]`.
         return loss_critic_update
 
     @torch.no_grad()
-    # pyre-fixme[11]: Annotation `tensor` is not defined as a type.
-    def _get_next_state_expected_values(self, batch: TransitionBatch) -> torch.tensor:
+    def _get_next_state_expected_values(self, batch: TransitionBatch) -> torch.Tensor:
         next_state_batch = batch.next_state  # shape: (batch_size x state_dim)
 
         # shape of next_action_batch: (batch_size, action_dim)
@@ -142,11 +147,7 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
 
         return next_state_action_values.view(-1)
 
-    # pyre-fixme[14]: `_actor_learn_batch` overrides method defined in
-    #  `OffPolicyActorCritic` inconsistently.
-    # pyre-fixme[15]: `_actor_learn_batch` overrides method defined in
-    #  `OffPolicyActorCritic` inconsistently.
-    def _actor_learn_batch(self, batch: TransitionBatch) -> None:
+    def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         state_batch = batch.state  # shape: (batch_size x state_dim)
 
         # shape of action_batch: (batch_size, action_dim)
@@ -164,10 +165,29 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
         q = torch.minimum(q1, q2)  # shape: (batch_size)
         state_action_values = q.view((self.batch_size, 1))  # shape: (batch_size x 1)
 
-        policy_loss = (
+        actor_loss = (
             self._entropy_coef * action_batch_log_prob - state_action_values
         ).mean()
 
         self._actor_optimizer.zero_grad()
-        policy_loss.backward()
+        actor_loss.backward()
         self._actor_optimizer.step()
+
+        if self._entropy_autotune:
+            with torch.no_grad():
+                _, action_batch_log_prob = self._actor.sample_action_and_get_log_prob(
+                    state_batch
+                )
+
+            entropy_optimizer_loss = (
+                -torch.exp(self._log_entropy)
+                * (action_batch_log_prob + self._target_entropy)
+            ).mean()
+
+            self._entropy_optimizer.zero_grad()
+            entropy_optimizer_loss.backward()
+            self._entropy_optimizer.step()
+
+            self._entropy_coef = torch.exp(self._log_entropy).detach()
+
+        return {"actor_loss": actor_loss.item()}

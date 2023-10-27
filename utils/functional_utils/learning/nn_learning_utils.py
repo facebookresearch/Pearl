@@ -5,6 +5,8 @@ from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCri
 
 # TODO: this function should be moved to actor_critic_base once all actor critic classes
 # inherits from it.
+
+
 def optimize_twin_critics_towards_target(
     twin_critic: TwinCritic,
     optimizer: torch.optim.Optimizer,
@@ -32,6 +34,6 @@ def optimize_twin_critics_towards_target(
 
     return {
         "mean_loss": loss.item(),
-        "critic_1_loss": q_1.mean().item(),
-        "critic_2_loss": q_2.mean().item(),
+        "critic_1_values": q_1.mean().item(),
+        "critic_2_values": q_2.mean().item(),
     }

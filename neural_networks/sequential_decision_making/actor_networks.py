@@ -2,8 +2,9 @@
 This module defines several types of actor neural networks.
 
 Constants:
-    ActorNetworkType: a type (and therefore a callable) getting state_dim, hidden_dims, output_dim and producing a neural network with
-    able to produce an action probability given a state.
+    ActorNetworkType: a type (and therefore a callable) getting state_dim, hidden_dims,
+    output_dim and instantiating a neural network to output an action probability given
+    a state.
 """
 
 
@@ -24,10 +25,13 @@ def scale_action(
     action_space: ActionSpace, normalized_action: torch.Tensor
 ) -> torch.Tensor:
     """
-    For continous action spaces, actor networks output "normalized_actions", i.e. actions in the range [-1, 1]^{action_dim}
-    This function rescales the normalized_action from [-1, 1]^{action_dim} to [low, high]^{action_dim}
-    - Note: while the action space is not assumed to be symmetric (low = -high), it is assumed that
-            low and high are the same for each dimension (as is the case for most gym environments).
+    For continuous action spaces, actor networks output "normalized_actions",
+    i.e. actions in the range [-1, 1]^{action_dim}.
+    This function rescales the normalized_action from [-1, 1]^{action_dim}
+    to [low, high]^{action_dim}.
+    - Note: while the action space is not assumed to be symmetric (low = -high),
+    it is assumed that low and high are the same for each dimension
+    (as is the case for most gym environments).
     """
     device = get_pearl_device()
     # pyre-fixme[16]: `ActionSpace` has no attribute `low`.
@@ -39,12 +43,10 @@ def scale_action(
 
 
 class VanillaActorNetwork(nn.Module):
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, input_dim, hidden_dims, output_dim, action_space=None):
+    def __init__(self, input_dim, hidden_dims, output_dim, action_space=None) -> None:
         super(VanillaActorNetwork, self).__init__()
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._model = mlp_block(
+        self._model: nn.Module = mlp_block(
             input_dim=input_dim,
             hidden_dims=hidden_dims,
             output_dim=output_dim,
@@ -63,12 +65,10 @@ class VanillaContinuousActorNetwork(nn.Module):
         output_dim: action dimension
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, input_dim, hidden_dims, output_dim, action_space=None):
+    def __init__(self, input_dim, hidden_dims, output_dim, action_space=None) -> None:
         super(VanillaContinuousActorNetwork, self).__init__()
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._model = mlp_block(
+        self._model: nn.Module = mlp_block(
             input_dim=input_dim,
             hidden_dims=hidden_dims,
             output_dim=output_dim,
@@ -82,10 +82,12 @@ class VanillaContinuousActorNetwork(nn.Module):
 
 class GaussianActorNetwork(nn.Module):
     """
-    A multivariate gaussian actor network: parameterize the policy (action distirbution) as a multivariate gaussian.
-    Given input state, the network outputs a pair of mu and sigma, where mu is the mean of the Gaussian distribution,
-    and sigma is its standard deviation along different dimension
-       - Note: the action distribution is assumed to be independent across different action dimensions
+    A multivariate gaussian actor network: parameterize the policy (action distirbution)
+    as a multivariate gaussian. Given input state, the network outputs a pair of
+    (mu, sigma), where mu is the mean of the Gaussian distribution, and sigma is its
+    standard deviation along different dimensions.
+       - Note: action distribution is assumed to be independent across different
+         dimensions
     Args:
         input_dim: input state dimension
         hidden_dims: list of hidden layer dimensions; cannot pass an empty list
@@ -93,46 +95,52 @@ class GaussianActorNetwork(nn.Module):
         action_space: action space
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         input_dim: int,
         hidden_dims: List[int],
         output_dim: int,
         action_space: ActionSpace,
-    ):
+    ) -> None:
         super(GaussianActorNetwork, self).__init__()
         if len(hidden_dims) < 1:
             raise ValueError(
                 "The hidden dims cannot be empty for a gaussian actor network."
             )
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._model = mlp_block(
+        self._model: nn.Module = mlp_block(
             input_dim=input_dim,
             hidden_dims=hidden_dims[:-1],
             output_dim=hidden_dims[-1],
+            last_activation="relu",
         )
-
+        device = get_pearl_device()
         self.fc_mu = torch.nn.Linear(hidden_dims[-1], output_dim)
         self.fc_std = torch.nn.Linear(hidden_dims[-1], output_dim)
         self._action_space = action_space
         # check this for multi-dimensional spaces
         # pyre-fixme[4]: Attribute must be annotated.
-        # pyre-fixme[16]: `ActionSpace` has no attribute `high`.
-        # pyre-fixme[16]: `ActionSpace` has no attribute `low`.
-        self._action_bound = (action_space.high[0] - action_space.low[0]) / 2
+        self._action_bound = torch.tensor(
+            (action_space.high - action_space.low) / 2  # pyre-ignore
+        ).to(device)
 
-        # preventing the actor network from learning a high entropy distribution (soft-actor critic has a
-        # maximum entropy regularization which encourgaes learning a high entropy distribution)
-        self._log_std_min = -2
+        # preventing the actor network from learning a flat or a point mass distribution
+        self._log_std_min = -5
         self._log_std_max = 2
 
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         x = self._model(x)
         mean = self.fc_mu(x)
         log_std = self.fc_std(x)
-        log_std = torch.clamp(log_std, min=self._log_std_min, max=self._log_std_max)
+        # log_std = torch.clamp(log_std, min=self._log_std_min, max=self._log_std_max)
+
+        # alternate to standard clamping; not sure if it makes a difference but still
+        # trying out
+        log_std = torch.tanh(log_std)
+        log_std = self._log_std_min + 0.5 * (self._log_std_max - self._log_std_min) * (
+            log_std + 1
+        )
+
         return mean, log_std
 
     # pyre-fixme[3]: Return type must be annotated.
@@ -147,7 +155,7 @@ class GaussianActorNetwork(nn.Module):
         normalized_action = torch.tanh(sample)
 
         # clamp each action dimension to prevent numerical issues in tanh
-        normalized_action.clamp(-1 + epsilon, 1 - epsilon)
+        # normalized_action.clamp(-1 + epsilon, 1 - epsilon)
         action = scale_action(self._action_space, normalized_action)
 
         log_prob = normal.log_prob(sample)
@@ -155,11 +163,12 @@ class GaussianActorNetwork(nn.Module):
             self._action_bound * (1 - normalized_action.pow(2)) + epsilon
         )
 
-        # when working with multi-dimensional action space, we sum log probabilities over individual action dimension
+        # for multi-dimensional action space, sum log probabilities over individual
+        # action dimension
         if log_prob.dim() == 2:
             log_prob = log_prob.sum(dim=1, keepdim=True)
 
         return action, log_prob
 
 
-ActorNetworkType = Callable[[int, int, List[int], int], nn.Module]
+ActorNetworkType = Callable[[int, List[int], int], nn.Module]
