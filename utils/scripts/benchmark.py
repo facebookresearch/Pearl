@@ -118,7 +118,11 @@ class PearlDQN(Evaluation):
             device_id=self.device_id,
         )
         returns = online_learning_returns(
-            agent, env, number_of_episodes=number_of_episodes, learn_after_episode=True
+            agent,
+            env,
+            number_of_episodes=number_of_episodes,
+            learn_after_episode=True,
+            print_every_x_episodes=1,
         )
         return returns
 
@@ -155,7 +159,11 @@ class PearlContinuousSAC(Evaluation):
             device_id=self.device_id,
         )
         returns = online_learning_returns(
-            agent, env, number_of_episodes=number_of_episodes, learn_after_episode=False
+            agent,
+            env,
+            number_of_episodes=number_of_episodes,
+            learn_after_episode=False,
+            print_every_x_episodes=1,
         )
         return returns
 
@@ -187,7 +195,11 @@ class PearlPPO(Evaluation):
             device_id=self.device_id,
         )
         returns = online_learning_returns(
-            agent, env, number_of_episodes=number_of_episodes, learn_after_episode=True
+            agent,
+            env,
+            number_of_episodes=number_of_episodes,
+            learn_after_episode=True,
+            print_every_x_episodes=1,
         )
         return returns
 
@@ -221,7 +233,11 @@ class PearlDDPG(Evaluation):
             device_id=self.device_id,
         )
         returns = online_learning_returns(
-            agent, env, number_of_episodes=number_of_episodes, learn_after_episode=True
+            agent,
+            env,
+            number_of_episodes=number_of_episodes,
+            learn_after_episode=True,
+            print_every_x_episodes=1,
         )
         return returns
 
@@ -253,7 +269,11 @@ class PearlTD3(Evaluation):
             device_id=self.device_id,
         )
         returns = online_learning_returns(
-            agent, env, number_of_episodes=number_of_episodes, learn_after_episode=True
+            agent,
+            env,
+            number_of_episodes=number_of_episodes,
+            learn_after_episode=True,
+            print_every_x_episodes=1,
         )
         return returns
 
@@ -462,13 +482,13 @@ def main(device_id: int = -1) -> None:
             # PearlDQN("CartPole-v1"),
             # PearlPPO("CartPole-v1"),
             # PearlDQN("Acrobot-v1"),
-            # PearlPPO("Acrobot-v1"),
+            PearlPPO("Acrobot-v1", device_id=device_id),
             # PearlDDPG("Pendulum-v1"),
             # PearlTD3("Pendulum-v1"),
             # MuJoCo environments -- require MuJoCo to be installed.
             # PearlDDPG("HalfCheetah-v4"),
             # PearlTD3("HalfCheetah-v4"),
-            PearlContinuousSAC("Ant-v4", device_id=device_id),
+            # PearlContinuousSAC("Ant-v4")
         ]
     )
 

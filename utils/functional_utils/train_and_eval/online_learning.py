@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 import matplotlib.pyplot as plt
 import torch
@@ -66,6 +66,7 @@ def online_learning_returns(
     env: Environment,
     number_of_episodes: int = 1000,
     learn_after_episode: bool = False,
+    print_every_x_episodes: Optional[int] = None,
 ) -> List[Value]:
     returns = []
     online_learning(
@@ -74,6 +75,7 @@ def online_learning_returns(
         number_of_episodes=number_of_episodes,
         learn_after_episode=learn_after_episode,
         process_return=returns.append,
+        print_every_x_episodes=print_every_x_episodes,
     )
     return returns
 
@@ -85,6 +87,7 @@ def online_learning(
     number_of_episodes: int = 1000,
     learn_after_episode: bool = False,
     process_return: Callable[[Value], None] = lambda g: None,
+    print_every_x_episodes: Optional[int] = None,
 ):
     """
     Performs online learning for a number of episodes.
@@ -104,7 +107,8 @@ def online_learning(
             exploit=False,
             learn_after_episode=learn_after_episode,
         )
-        print(f"\repisode {i}, return={g}", end="")
+        if print_every_x_episodes is not None and i % print_every_x_episodes == 0:
+            print(f"\repisode {i}, agent={agent}, env={env}, return={g}", end="")
         process_return(g)
 
 
