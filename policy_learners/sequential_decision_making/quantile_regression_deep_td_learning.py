@@ -100,9 +100,6 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             self._Q.parameters(), lr=learning_rate, amsgrad=True
         )
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._quantile_midpoints = (self._Q._quantile_midpoints).to(self.device)
-
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space
 
@@ -214,7 +211,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
 
         with torch.no_grad():
             asymmetric_weight = torch.abs(
-                self._quantile_midpoints - (pairwise_quantile_loss < 0).float()
+                self._Q.quantile_midpoints - (pairwise_quantile_loss < 0).float()
             )
 
         """

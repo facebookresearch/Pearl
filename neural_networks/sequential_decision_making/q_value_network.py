@@ -77,8 +77,13 @@ class DistributionalQValueNetwork(abc.ABC, nn.Module):
 
     @property
     @abc.abstractmethod
-    def quantiles(self) -> int:
+    def quantiles(self) -> torch.Tensor:
         """Returns quantiles of the approximate value distribution"""
+
+    @property
+    @abc.abstractmethod
+    def quantile_midpoints(self) -> torch.Tensor:
+        """Returns midpoints of the quantiles"""
 
     @abc.abstractmethod
     def get_q_value_distribution(

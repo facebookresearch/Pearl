@@ -331,11 +331,14 @@ class QuantileQValueNetwork(DistributionalQValueNetwork):
         self._action_dim = action_dim
         # pyre-fixme[4]: Attribute must be annotated.
         self._num_quantiles = num_quantiles
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._quantiles = torch.arange(0, self._num_quantiles + 1) / self._num_quantiles
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._quantile_midpoints = (
-            ((self._quantiles[1:] + self._quantiles[:-1]) / 2).unsqueeze(0).unsqueeze(0)
+        self.register_buffer(
+            "_quantiles", torch.arange(0, self._num_quantiles + 1) / self._num_quantiles
+        )
+        self.register_buffer(
+            "_quantile_midpoints",
+            ((self._quantiles[1:] + self._quantiles[:-1]) / 2)
+            .unsqueeze(0)
+            .unsqueeze(0),
         )
 
     def forward(self, x: Tensor) -> Tensor:
@@ -353,6 +356,10 @@ class QuantileQValueNetwork(DistributionalQValueNetwork):
     @property
     def quantiles(self) -> Tensor:
         return self._quantiles
+
+    @property
+    def quantile_midpoints(self) -> Tensor:
+        return self._quantile_midpoints
 
     @property
     def num_quantiles(self) -> int:

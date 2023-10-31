@@ -129,7 +129,6 @@ class QuantileNetworkMeanVarianceSafetyModule(RiskSensitiveSafetyModule):
             - sum_{i=0}^{N-1} (tau_{i+1} - tau_{i}) * (q_value_distribution_{tau_i} - mean_value)^2
         """
         mean_value = q_value_distribution.mean(dim=-1, keepdim=True)
-        # pyre-fixme[16]: `int` has no attribute `to`.
         quantiles = q_value_distribution_network.quantiles.to(device)
         quantile_differences = quantiles[1:] - quantiles[:-1]
         variance = (
