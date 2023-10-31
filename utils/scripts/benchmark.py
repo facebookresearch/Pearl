@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from pearl.pearl_agent import PearlAgent
-from pearl.policy_learners.exploration_modules.common.normal_distribution_exploration import (
+from pearl.policy_learners.exploration_modules.common.normal_distribution_exploration import (  # noqa E501
     NormalDistributionExploration,
 )
 from pearl.policy_learners.sequential_decision_making.ddpg import (
@@ -32,14 +32,14 @@ from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
 from pearl.policy_learners.sequential_decision_making.ppo import (
     ProximalPolicyOptimization,
 )
-from pearl.policy_learners.sequential_decision_making.soft_actor_critic_continuous import (
+from pearl.policy_learners.sequential_decision_making.soft_actor_critic_continuous import (  # noqa E501
     ContinuousSoftActorCritic,
 )
 from pearl.policy_learners.sequential_decision_making.td3 import TD3
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
+from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (  # noqa E501
     FIFOOffPolicyReplayBuffer,
 )
-from pearl.replay_buffers.sequential_decision_making.on_policy_episodic_replay_buffer import (
+from pearl.replay_buffers.sequential_decision_making.on_policy_episodic_replay_buffer import (  # noqa E501
     OnPolicyEpisodicReplayBuffer,
 )
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
@@ -223,7 +223,7 @@ class PearlDDPG(Evaluation):
         agent = PearlAgent(
             policy_learner=DeepDeterministicPolicyGradient(
                 state_dim=env.observation_space.shape[0],
-                action_space=env.action_space.shape[0],
+                action_space=env.action_space,
                 hidden_dims=[400, 300],
                 exploration_module=NormalDistributionExploration(
                     mean=0, std_dev=0.2, max_action_value=2, min_action_value=-2
@@ -259,7 +259,7 @@ class PearlTD3(Evaluation):
         agent = PearlAgent(
             policy_learner=TD3(
                 state_dim=env.observation_space.shape[0],
-                action_space=env.action_space.shape[0],
+                action_space=env.action_space,
                 hidden_dims=[400, 300],
                 exploration_module=NormalDistributionExploration(
                     mean=0, std_dev=0.2, max_action_value=2, min_action_value=-2
@@ -479,16 +479,17 @@ def main(device_id: int = -1) -> None:
     evaluate(
         [
             # Methods applied to the same environment will be grouped in the same plot.
-            # PearlDQN("CartPole-v1"),
-            # PearlPPO("CartPole-v1"),
-            # PearlDQN("Acrobot-v1"),
+            # All receive device id
+            PearlDQN("CartPole-v1", device_id=device_id),
+            PearlPPO("CartPole-v1", device_id=device_id),
+            PearlDQN("Acrobot-v1", device_id=device_id),
             PearlPPO("Acrobot-v1", device_id=device_id),
-            # PearlDDPG("Pendulum-v1"),
-            # PearlTD3("Pendulum-v1"),
+            PearlDDPG("Pendulum-v1", device_id=device_id),
+            PearlTD3("Pendulum-v1", device_id=device_id),
             # MuJoCo environments -- require MuJoCo to be installed.
-            # PearlDDPG("HalfCheetah-v4"),
-            # PearlTD3("HalfCheetah-v4"),
-            # PearlContinuousSAC("Ant-v4")
+            PearlDDPG("HalfCheetah-v4", device_id=device_id),
+            PearlTD3("HalfCheetah-v4", device_id=device_id),
+            PearlContinuousSAC("Ant-v4", device_id=device_id),
         ]
     )
 
