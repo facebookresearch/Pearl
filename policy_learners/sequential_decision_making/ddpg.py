@@ -36,7 +36,8 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
     A Class for Deep Deterministic Deep Policy Gradient policy learner.
     paper: https://arxiv.org/pdf/1509.02971.pdf
 
-    num_critic_network default to 2, because performance of one critic is 10X slower than twin critic
+    num_critic_network default to 2, because performance of one critic is 10X slower
+    than twin critic
     Users are free to play with different number here on performance difference
     """
 
@@ -113,7 +114,8 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
             amsgrad=True,
         )
 
-        # target networks are initialized to parameters of the source network (tau is set to 1)
+        # target networks are initialized to parameters of the source network
+        # (tau is set to 1)
         update_target_networks(
             self._targets_of_twin_critics._critic_networks_combined,
             self._twin_critics._critic_networks_combined,
@@ -136,7 +138,8 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
                 subjective_state
                 if isinstance(subjective_state, torch.Tensor)
                 else torch.tensor(subjective_state)
-            )  # ([batch_size x ] state_dim)  # batch dimension only occurs if subjective_state is a batch
+            )  # ([batch_size x ] state_dim)
+            # batch dimension only occurs if subjective_state is a batch
 
             subjective_state_tensor = subjective_state_tensor.to(self.device)
 
@@ -193,7 +196,8 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
                 batch.next_state
             )  # sample next action from target actor network
 
-            # get q values of (batch.next_state, next_action) from targets of twin critic
+            # get q values of (batch.next_state, next_action)
+            # from targets of twin critic
             next_q1, next_q2 = self._targets_of_twin_critics.get_twin_critic_values(
                 # pyre-fixme[6]: For 1st argument expected `Tensor` but got
                 #  `Optional[Tensor]`.
@@ -208,7 +212,8 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
 
             expected_state_action_values = (
                 next_q * self._discount_factor * (1 - batch.done.float())
-            ) + batch.reward  # (batch_size), r + gamma * (min{Q_1(s', a from actor network), Q_2(s', a from actor network)})
+            ) + batch.reward
+            # (batch_size)
 
         # update twin critics towards bellman target
         loss_critic_update = optimize_twin_critics_towards_target(

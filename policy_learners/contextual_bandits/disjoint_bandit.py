@@ -31,7 +31,8 @@ class DisjointBanditContainer(ContextualBanditBase):
     """
     Wrapper for disjoint models with discrete (and usually small) action space.
     Each action has its own bandit model (can be based on UCB or Thompson Sampling).
-    Using the Composite design pattern: https://refactoring.guru/design-patterns/composite
+    Using the Composite design pattern:
+    https://refactoring.guru/design-patterns/composite
     """
 
     def __init__(

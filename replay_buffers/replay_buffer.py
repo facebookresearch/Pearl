@@ -4,6 +4,7 @@ from typing import Any, Iterable
 
 class ReplayBuffer(ABC):
     def __init__(self) -> None:
+        super().__init__()
         self._is_action_continuous: bool = False
 
     @abstractmethod

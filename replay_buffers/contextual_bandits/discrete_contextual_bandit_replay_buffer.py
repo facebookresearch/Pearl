@@ -12,7 +12,8 @@ from pearl.replay_buffers.transition import Transition, TransitionBatch
 
 class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
     """
-    DiscreteContextualBanditReplayBuffer has the following key differences from other replay buffers
+    DiscreteContextualBanditReplayBuffer has the following key differences
+    from other replay buffers
     - No next action or next state related
     - action is action idx instead of action value
     - done is not needed, as for contextual bandit, it is always True

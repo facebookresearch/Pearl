@@ -111,7 +111,8 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         """
         if batch_size > len(self):
             raise ValueError(
-                f"Can't get a batch of size {batch_size} from a replay buffer with only {len(self)} elements"
+                f"Can't get a batch of size {batch_size} from a replay buffer with"
+                f"only {len(self)} elements"
             )
         samples = random.sample(self.memory, batch_size)
         return _create_transition_batch(

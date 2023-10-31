@@ -4,7 +4,7 @@ import torch
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
+from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (  # noqa E501
     FIFOOffPolicyReplayBuffer,
 )
 from pearl.replay_buffers.tensor_based_replay_buffer import _create_transition_batch
@@ -87,7 +87,8 @@ class BootstrapReplayBuffer(FIFOOffPolicyReplayBuffer):
     def sample(self, batch_size: int) -> TransitionWithBootstrapMaskBatch:
         if batch_size > len(self):
             raise ValueError(
-                f"Can't get a batch of size {batch_size} from a replay buffer with only {len(self)} elements"
+                f"Can't get a batch of size {batch_size} from a "
+                f"replay buffer with only {len(self)} elements"
             )
         samples = random.sample(self.memory, batch_size)
         transition_batch = _create_transition_batch(

@@ -26,7 +26,8 @@ from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActio
 
 class DisjointLinearBandit(ContextualBanditBase):
     """
-    LinearBandit for discrete action space with each action has its own linear regression
+    LinearBandit for discrete action space with each action has its own linear
+    regression
     """
 
     def __init__(
@@ -39,7 +40,8 @@ class DisjointLinearBandit(ContextualBanditBase):
         batch_size: int = 128,
     ) -> None:
         warn(
-            "DisjointLinearBandit will be deprecated. Use DisjointBanditContainer instead",
+            "DisjointLinearBandit will be deprecated. "
+            "Use DisjointBanditContainer instead",
             DeprecationWarning,
         )
         super(DisjointLinearBandit, self).__init__(
@@ -62,7 +64,8 @@ class DisjointLinearBandit(ContextualBanditBase):
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """
-        Assumption of input is that action in batch is action idx instead of action value
+        Assumption of input is that action in
+        batch is action idx instead of action value
         Only discrete action problem will use DisjointLinearBandit
         """
 
@@ -112,7 +115,8 @@ class DisjointLinearBandit(ContextualBanditBase):
         action_space: DiscreteActionSpace,
         _exploit: bool = False,
     ) -> Action:
-        # TODO static discrete action space only, so here action_space should == self._discrete_action_space
+        # TODO static discrete action space only,
+        # so here action_space should == self.discrete_action_space
         feature = self._discrete_action_space.cat_state_tensor(
             subjective_state=subjective_state
         )  # batch_size, action_count, feature_size

@@ -57,11 +57,11 @@ class PearlAgent(Agent):
                     RiskNeutralSafetyModule for distributional policy learner
                     types and IdentitySafetyModule for all other types)
             risk_sensitive_safety_module: (optional) a RiskSensitiveSafetyModule
-                                            instance (default is RiskNeutralSafetyModule)
+                    instance (default is RiskNeutralSafetyModule)
             history_summarization_module: (optional) a HistorySummarizationModule
-                                   instance (default is IdentityHistorySummarizationModule)
+                    instance (default is IdentityHistorySummarizationModule)
             replay_buffer: (optional) a replay buffer (default is single-transition
-                                    replay buffer for now -- will very likely to change)
+                    replay buffer for now -- will very likely change)
         """
         self.policy_learner: PolicyLearner = policy_learner
         self._device_id: int = device_id
