@@ -20,10 +20,10 @@ class ReplayBuffer(ABC):
     def sample(self, batch_size) -> Iterable[Any]:
         pass
 
-    def empty(self) -> None:
-        """Indicates whether replay buffer is empty. Default implementations is len(self) == 0."""
-        # pyre-fixme[7]: Expected `None` but got `bool`.
-        return len(self) == 0
+    @abstractmethod
+    def clear(self) -> None:
+        """Empties replay buffer"""
+        pass
 
     @abstractmethod
     def __len__(self) -> int:

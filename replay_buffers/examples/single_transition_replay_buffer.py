@@ -19,5 +19,8 @@ class SingleTransitionReplayBuffer(ReplayBuffer):
         assert batch_size == 1, "Only batch size 1 is supported"
         return [self._transition]
 
+    def clear(self) -> None:
+        raise Exception("Cannot clear SingleTransitionReplayBuffer")
+
     def __len__(self) -> int:
         return 1

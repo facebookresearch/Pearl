@@ -149,7 +149,7 @@ class PearlAgent(Agent):
         self.safety_module.learn(self.replay_buffer)
 
         if self.policy_learner.on_policy:
-            self.replay_buffer.empty()
+            self.replay_buffer.clear()
 
         return report
 

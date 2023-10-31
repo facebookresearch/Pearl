@@ -125,7 +125,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
     def __len__(self) -> int:
         return len(self.memory)
 
-    def empty(self) -> None:
+    def clear(self) -> None:
         self.memory = deque([], maxlen=self.capacity)
 
 
