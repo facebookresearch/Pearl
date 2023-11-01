@@ -10,6 +10,9 @@ from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
 from pearl.neural_networks.common.utils import ensemble_forward
+from pearl.neural_networks.optimizers.keyed_optimizer_wrapper import (
+    KeyedOptimizerWrapper,
+)
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
 )
@@ -25,6 +28,8 @@ from pearl.utils.instantiations.action_spaces.action_spaces import (
     ActionSpace,
     DiscreteActionSpace,
 )
+from torch import optim
+from torchrec.optim.keyed import CombinedOptimizer
 
 
 class DisjointBanditContainer(ContextualBanditBase):
@@ -181,3 +186,22 @@ class DisjointBanditContainer(ContextualBanditBase):
             else DiscreteActionSpace([0]),
             representation=self.models,
         ).squeeze()
+
+    @property
+    def optimizer(self) -> torch.optim.Optimizer:
+        dummy_linear_layer: torch.nn.Module = torch.nn.Linear(1, 1)
+        optims = [
+            (
+                "",
+                KeyedOptimizerWrapper(
+                    models={"_dummy_linear_layer.": dummy_linear_layer},
+                    optimizer_cls=optim.Adam,
+                ),
+            )
+        ]
+        # pyre-fixme[6]: For 1st argument expected `List[Union[Tuple[str,
+        #  KeyedOptimizer], KeyedOptimizer]]` but got `List[Tuple[str,
+        #  KeyedOptimizerWrapper]]`.
+        ret = CombinedOptimizer(optims)
+        ret.init_state()
+        return ret
