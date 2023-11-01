@@ -8,4 +8,4 @@
 ignore = T484, T499, W503, E704, E231, E203
 
 # Consistent with Black
-max-line-length = 88
+max-line-length = 100

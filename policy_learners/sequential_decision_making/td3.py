@@ -22,32 +22,33 @@ from pearl.policy_learners.sequential_decision_making.ddpg import (
     DeepDeterministicPolicyGradient,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.functional_utils.learning.nn_learning_utils import (
-    optimize_twin_critics_towards_target,
-)
 
 
 class TD3(DeepDeterministicPolicyGradient):
+    """
+    TD3 uses a deterministic actor, Twin critics, and a delayed actor update.
+        - An exploration module is used with deterministic actors.
+        - To avoid exploration, use NoExploration module.
+    """
+
     def __init__(
         self,
         state_dim: int,
         action_space: ActionSpace,
         hidden_dims: Iterable[int],
-        # pyre-fixme[9]: exploration_module has type `ExplorationModule`; used as
-        #  `None`.
-        exploration_module: ExplorationModule = None,
-        critic_learning_rate: float = 1e-2,
+        exploration_module: ExplorationModule,
+        critic_learning_rate: float = 1e-3,
         actor_learning_rate: float = 1e-3,
-        batch_size: int = 500,
+        batch_size: int = 256,
         actor_network_type: ActorNetworkType = VanillaContinuousActorNetwork,
         critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
-        training_rounds: int = 5,
-        actor_soft_update_tau: float = 0.05,
-        critic_soft_update_tau: float = 0.05,
-        discount_factor: float = 0.98,
+        training_rounds: int = 1,
+        actor_soft_update_tau: float = 0.005,
+        critic_soft_update_tau: float = 0.005,
+        discount_factor: float = 0.99,
         actor_update_freq: int = 2,
-        learning_action_noise_std: float = 0.1,
-        learning_action_noise_clip: float = 0.5,
+        actor_update_noise: float = 0.2,
+        actor_update_noise_clip: float = 0.5,
     ) -> None:
         super(TD3, self).__init__(
             state_dim=state_dim,
@@ -63,55 +64,66 @@ class TD3(DeepDeterministicPolicyGradient):
             actor_soft_update_tau=actor_soft_update_tau,
             critic_soft_update_tau=critic_soft_update_tau,
             discount_factor=discount_factor,
-            num_critic_network=2,
         )
+        self._action_space = action_space
         self._actor_update_freq = actor_update_freq
-        self._learning_action_noise_std = learning_action_noise_std
-        self._learning_action_noise_clip = learning_action_noise_clip
+        self._actor_update_noise = actor_update_noise
+        self._actor_update_noise_clip = actor_update_noise_clip
         self._critic_update_count = 0
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
+        self._critic_learn_batch(batch)  # critic update
         self._critic_update_count += 1
-        report = self._critic_learn_batch(batch)  # critic update
 
-        # see ddpg base class for actor update details
-        if self._critic_update_count == self._actor_update_freq:
-            report.update(self._actor_learn_batch(batch))  # actor update
-            self._critic_update_count = 0  # reset counter
+        # delayed actor update
+        if self._critic_update_count % self._actor_update_freq == 0:
+            # see ddpg base class for actor update details
+            self._actor_learn_batch(batch)
 
-        # update targets of twin critics using soft updates
-        update_target_networks(
-            self._targets_of_twin_critics._critic_networks_combined,
-            self._twin_critics._critic_networks_combined,
-            self._critic_soft_update_tau,
-        )
-        # update target of actor network using soft updates
-        update_target_network(
-            self._actor_target, self._actor, self._actor_soft_update_tau
-        )
-        return report
+            # update targets of twin critics using soft updates
+            update_target_networks(
+                self._targets_of_twin_critics._critic_networks_combined,
+                self._twin_critics._critic_networks_combined,
+                self._critic_soft_update_tau,
+            )
+            # update target of actor network using soft updates
+            update_target_network(
+                self._actor_target, self._actor, self._actor_soft_update_tau
+            )
+
+        return {}
 
     def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
         with torch.no_grad():
-
-            # sample next_action from actor's target network
-            next_action = self._actor_target(batch.next_state)
+            # sample next_action from actor's target network; shape (batch_size, action_dim)
+            next_action = self._actor_target.sample_action(batch.next_state)
 
             # sample clipped gaussian noise
             noise = torch.normal(
                 mean=0,
-                std=self._learning_action_noise_std,
+                std=self._actor_update_noise,
                 size=next_action.size(),
                 device=self.device,
             )
+
             noise = torch.clamp(
                 noise,
-                -self._learning_action_noise_clip,
-                self._learning_action_noise_clip,
+                -self._actor_update_noise_clip,
+                self._actor_update_noise_clip,
+            )  # shape (batch_size, action_dim)
+
+            # add clipped noise to next_action
+            low, high = torch.tensor(
+                self._action_space.low, device=self.device  # pyre-ignore
+            ), torch.tensor(
+                self._action_space.high, device=self.device  # pyre-ignore
             )
-            next_action = next_action + noise  # add noise to next_action
+
+            next_action = torch.clamp(
+                next_action + noise, low, high
+            )  # shape (batch_size, action_dim)
 
             # sample q values of (next_state, next_action) from targets of twin critics
             next_q1, next_q2 = self._targets_of_twin_critics.get_twin_critic_values(
@@ -119,20 +131,19 @@ class TD3(DeepDeterministicPolicyGradient):
                 #  `Optional[Tensor]`.
                 state_batch=batch.next_state,
                 action_batch=next_action,
-            )
-            next_q = torch.minimum(
-                next_q1, next_q2
-            )  # clipped double q learning (reduce overestimation bias)
+            )  # shape (batch_size)
 
-            # compute bellman target
+            # clipped double q learning (reduce overestimation bias)
+            next_q = torch.minimum(next_q1, next_q2)
+
+            # compute bellman target:
+            # r + gamma * (min{Qtarget_1(s', a from target actor network), Qtarget_2(s', a from target actor network)})
             expected_state_action_values = (
                 next_q * self._discount_factor * (1 - batch.done.float())
-            ) + batch.reward  # (batch_size), r + gamma * (min{Q_1(s', a from actor network), Q_2(s', a from actor network)})
+            ) + batch.reward  # (batch_size)
 
         # update twin critics towards bellman target
-        loss_critic_update = optimize_twin_critics_towards_target(
-            twin_critic=self._twin_critics,
-            optimizer=self._critic_optimizer,
+        loss_critic_update = self.twin_critic_update(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target=expected_state_action_values,

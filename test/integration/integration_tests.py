@@ -402,8 +402,14 @@ class IntegrationTests(unittest.TestCase):
                 state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 hidden_dims=[400, 300],
+                critic_learning_rate=1e-2,
+                actor_learning_rate=1e-3,
+                training_rounds=5,
+                actor_soft_update_tau=0.05,
+                critic_soft_update_tau=0.05,
                 exploration_module=NormalDistributionExploration(
-                    mean=0, std_dev=0.2, max_action_value=2, min_action_value=-2
+                    mean=0,
+                    std_dev=0.2,
                 ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(50000),
@@ -433,8 +439,14 @@ class IntegrationTests(unittest.TestCase):
                 state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 hidden_dims=[400, 300],
+                critic_learning_rate=1e-2,
+                actor_learning_rate=1e-3,
+                training_rounds=5,
+                actor_soft_update_tau=0.05,
+                critic_soft_update_tau=0.05,
                 exploration_module=NormalDistributionExploration(
-                    mean=0, std_dev=0.2, max_action_value=2, min_action_value=-2
+                    mean=0,
+                    std_dev=0.2,
                 ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(50000),

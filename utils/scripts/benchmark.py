@@ -58,7 +58,7 @@ from torch import nn
 
 warnings.filterwarnings("ignore")
 
-number_of_episodes = 500
+number_of_episodes = 2000
 save_path = "../fbsource/fbcode/pearl/"
 
 
@@ -88,7 +88,7 @@ class Evaluation(ABC):
         self.kwargs = kwargs
 
     @abstractmethod
-    def evaluate(self) -> Iterable[Number]:
+    def evaluate(self, seed: int = 0) -> Iterable[Number]:
         """Runs evaluation and returns sequence of obtained returns during training"""
         pass
 
@@ -105,8 +105,9 @@ class PearlDQN(Evaluation):
     ) -> None:
         super(PearlDQN, self).__init__(gym_environment_name, device_id, *args, **kwargs)
 
-    def evaluate(self) -> Iterable[Number]:
+    def evaluate(self, seed: int) -> Iterable[Number]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
+        env.seed(seed)
         agent = PearlAgent(
             policy_learner=DeepQLearning(
                 state_dim=env.observation_space.shape[0],
@@ -141,8 +142,9 @@ class PearlContinuousSAC(Evaluation):
             gym_environment_name, device_id, *args, **kwargs
         )
 
-    def evaluate(self) -> Iterable[Number]:
+    def evaluate(self, seed: int) -> Iterable[Number]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
+        env.seed(seed)
         agent = PearlAgent(
             policy_learner=ContinuousSoftActorCritic(
                 state_dim=env.observation_space.shape[0],
@@ -180,8 +182,9 @@ class PearlPPO(Evaluation):
     ) -> None:
         super(PearlPPO, self).__init__(gym_environment_name, device_id, *args, **kwargs)
 
-    def evaluate(self) -> Iterable[Number]:
+    def evaluate(self, seed: int) -> Iterable[Number]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
+        env.seed(seed)
         agent = PearlAgent(
             policy_learner=ProximalPolicyOptimization(
                 state_dim=env.observation_space.shape[0],
@@ -218,15 +221,20 @@ class PearlDDPG(Evaluation):
             gym_environment_name, device_id, *args, **kwargs
         )
 
-    def evaluate(self) -> Iterable[Number]:
+    def evaluate(self, seed: int) -> Iterable[Number]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
+        env.seed(seed)
         agent = PearlAgent(
             policy_learner=DeepDeterministicPolicyGradient(
                 state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
-                hidden_dims=[400, 300],
+                hidden_dims=[256, 256],
+                critic_learning_rate=3e-4,
+                actor_learning_rate=3e-4,
+                training_rounds=1,
                 exploration_module=NormalDistributionExploration(
-                    mean=0, std_dev=0.2, max_action_value=2, min_action_value=-2
+                    mean=0,
+                    std_dev=0.1,
                 ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(50000),
@@ -254,15 +262,20 @@ class PearlTD3(Evaluation):
     ) -> None:
         super(PearlTD3, self).__init__(gym_environment_name, device_id, *args, **kwargs)
 
-    def evaluate(self) -> Iterable[Number]:
+    def evaluate(self, seed: int) -> Iterable[Number]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
+        env.seed(seed)
         agent = PearlAgent(
             policy_learner=TD3(
                 state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
-                hidden_dims=[400, 300],
+                hidden_dims=[256, 256],
+                critic_learning_rate=3e-4,
+                actor_learning_rate=3e-4,
+                training_rounds=1,
                 exploration_module=NormalDistributionExploration(
-                    mean=0, std_dev=0.2, max_action_value=2, min_action_value=-2
+                    mean=0,
+                    std_dev=0.1,
                 ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(50000),
@@ -282,7 +295,7 @@ def evaluate(evaluations: Iterable[Evaluation]) -> None:
     """Obtain data from evaluations and plot them, one plot per environment"""
     num_seeds = 5
     for seed in range(num_seeds):
-        set_seed(seed)
+        set_seed(seed)  # seed all sources of randomness except the envronment reset
         print(f"Seed {seed}")
         data_by_environment_and_method = collect_data(evaluations, seed=seed)
         generate_plots(data_by_environment_and_method, seed=seed)
@@ -296,7 +309,7 @@ def collect_data(
         method = type(evaluation).__name__
         environment = evaluation.gym_environment_name
         print(f"Running {method} on {environment} ...")
-        returns = evaluation.evaluate()
+        returns = evaluation.evaluate(seed=seed)  # to set the environment seed
         if environment not in data_by_environment_and_method:
             data_by_environment_and_method[environment] = {}
         data_by_environment_and_method[environment][method] = returns
@@ -487,9 +500,15 @@ def main(device_id: int = -1) -> None:
             PearlDDPG("Pendulum-v1", device_id=device_id),
             PearlTD3("Pendulum-v1", device_id=device_id),
             # MuJoCo environments -- require MuJoCo to be installed.
-            PearlDDPG("HalfCheetah-v4", device_id=device_id),
-            PearlTD3("HalfCheetah-v4", device_id=device_id),
-            PearlContinuousSAC("Ant-v4", device_id=device_id),
+            # PearlDDPG("HalfCheetah-v4"),
+            # PearlDDPG("Ant-v4"),
+            # PearlDDPG("Hopper-v4")
+            # PearlDDPG("Walker2d-v4")
+            # PearlTD3("HalfCheetah-v4"),
+            # PearlTD3("Ant-v4"),
+            # PearlTD3("Hopper-v4"),
+            # PearlTD3("Walker2d-v4"),
+            # PearlContinuousSAC("Ant-v4")
         ]
     )
 

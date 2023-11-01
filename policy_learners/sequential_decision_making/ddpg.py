@@ -1,15 +1,9 @@
 from typing import Any, Dict, Iterable, Type
 
 import torch
-from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
-from pearl.api.state import SubjectiveState
 
-from pearl.neural_networks.common.utils import (
-    init_weights,
-    update_target_network,
-    update_target_networks,
-)
+from pearl.neural_networks.common.utils import update_target_network
 
 from pearl.neural_networks.common.value_networks import VanillaQValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
@@ -19,26 +13,20 @@ from pearl.neural_networks.sequential_decision_making.actor_networks import (
 from pearl.neural_networks.sequential_decision_making.q_value_network import (
     QValueNetwork,
 )
-from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
-from pearl.policy_learners.policy_learner import PolicyLearner
-from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.functional_utils.learning.nn_learning_utils import (
-    optimize_twin_critics_towards_target,
+from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
+    OffPolicyActorCritic,
 )
-from torch import optim
+from pearl.replay_buffers.transition import TransitionBatch
+from torch import nn
 
 
-class DeepDeterministicPolicyGradient(PolicyLearner):
+class DeepDeterministicPolicyGradient(OffPolicyActorCritic):
     """
     A Class for Deep Deterministic Deep Policy Gradient policy learner.
     paper: https://arxiv.org/pdf/1509.02971.pdf
-
-    num_critic_network default to 2, because performance of one critic is 10X slower
-    than twin critic
-    Users are free to play with different number here on performance difference
     """
 
     def __init__(
@@ -47,141 +35,75 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
         action_space: ActionSpace,
         exploration_module: ExplorationModule,
         hidden_dims: Iterable[int],
-        critic_learning_rate: float = 1e-2,
+        critic_learning_rate: float = 1e-3,
         actor_learning_rate: float = 1e-3,
-        batch_size: int = 500,
+        batch_size: int = 256,
         actor_network_type: ActorNetworkType = VanillaContinuousActorNetwork,
         critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
-        training_rounds: int = 5,
-        actor_soft_update_tau: float = 0.05,
-        critic_soft_update_tau: float = 0.05,
-        discount_factor: float = 0.98,
-        num_critic_network: int = 2,
+        training_rounds: int = 1,
+        actor_soft_update_tau: float = 0.005,
+        critic_soft_update_tau: float = 0.005,
+        discount_factor: float = 0.99,
     ) -> None:
         super(DeepDeterministicPolicyGradient, self).__init__(
+            state_dim=state_dim,
+            action_space=action_space,
+            hidden_dims=hidden_dims,
+            critic_learning_rate=critic_learning_rate,
+            actor_learning_rate=actor_learning_rate,
             exploration_module=exploration_module,
+            discount_factor=discount_factor,
             training_rounds=training_rounds,
             batch_size=batch_size,
-            on_policy=False,
+            critic_soft_update_tau=critic_soft_update_tau,
             is_action_continuous=True,
+            actor_network_type=actor_network_type,
+            critic_network_type=critic_network_type,
         )
-        self._state_dim = state_dim
-        # pyre-fixme[16]: `ActionSpace` has no attribute `shape`.
-        self._action_dim: int = action_space.shape[0]
 
-        # pyre-fixme[3]: Return type must be annotated.
-        def make_specified_actor_network():
-            # pyre-fixme[28]: Unexpected keyword argument `input_dim`.
-            return actor_network_type(
-                input_dim=state_dim,
-                hidden_dims=hidden_dims,
-                output_dim=self._action_dim,
-            )
+        # target of actor network: DDPG and TD3 use an additional target network for actor networks
+        # pyre-ignore
+        self._actor_target: nn.Module = actor_network_type(
+            input_dim=state_dim,
+            hidden_dims=hidden_dims,
+            output_dim=self._action_dim,  # OffPolicyActorCritic base class has action_dim as an attribute
+            action_space=action_space,
+        )
 
-        # actor network takes state as input and outputs an action vector
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._actor = make_specified_actor_network()
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._actor_target = make_specified_actor_network()  # target of actor network
-        self._actor.apply(init_weights)
+        # initialize weights of actor target network to be the same as the actor network
+        # actor network is instantiated by the OffPolicyActorCritic base class
         self._actor_target.load_state_dict(self._actor.state_dict())
-        self._actor_optimizer = optim.AdamW(
-            self._actor.parameters(), lr=actor_learning_rate, amsgrad=True
-        )
-
-        # twin critic: using two separate critic networks to reduce overestimation bias
-        # optimizers of two critics are alredy initialized in TwinCritic
-        self._twin_critics = TwinCritic(
-            state_dim=state_dim,
-            action_dim=self._action_dim,
-            hidden_dims=hidden_dims,
-            network_type=critic_network_type,
-            init_fn=init_weights,
-        )
-
-        # target networks of twin critics
-        self._targets_of_twin_critics = TwinCritic(
-            state_dim=state_dim,
-            action_dim=self._action_dim,
-            hidden_dims=hidden_dims,
-            network_type=critic_network_type,
-            init_fn=init_weights,
-        )
-
-        self._critic_optimizer = optim.AdamW(
-            self._twin_critics.parameters(),
-            lr=critic_learning_rate,
-            amsgrad=True,
-        )
-
-        # target networks are initialized to parameters of the source network
-        # (tau is set to 1)
-        update_target_networks(
-            self._targets_of_twin_critics._critic_networks_combined,
-            self._twin_critics._critic_networks_combined,
-            tau=1,
-        )
 
         self._actor_soft_update_tau = actor_soft_update_tau
-        self._critic_soft_update_tau = critic_soft_update_tau
-        self._discount_factor = discount_factor
-
-    def act(
-        self,
-        subjective_state: SubjectiveState,
-        # pyre-fixme[9]: available_action_space has type `ActionSpace`; used as `None`.
-        available_action_space: ActionSpace = None,
-        exploit: bool = False,
-    ) -> Action:
-        with torch.no_grad():
-            subjective_state_tensor = (
-                subjective_state
-                if isinstance(subjective_state, torch.Tensor)
-                else torch.tensor(subjective_state)
-            )  # ([batch_size x ] state_dim)
-            # batch dimension only occurs if subjective_state is a batch
-
-            subjective_state_tensor = subjective_state_tensor.to(self.device)
-
-            exploit_action = self._actor(
-                subjective_state_tensor
-            )  # ([batch_size x ] state_dim)
-
-        if exploit:
-            return exploit_action
-
-        return self._exploration_module.act(
-            exploit_action=exploit_action,
-        )
+        self._rounds = 0
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+        # actor and critic updates, and updates of targets of twin critics are performed
+        # using the 'learn_batch' method in the OffPolicyActorCritic base class
+        super(DeepDeterministicPolicyGradient, self).learn_batch(batch)
 
-        report = self._critic_learn_batch(batch)  # critic update
-        report.update(self._actor_learn_batch(batch))  # actor update
-
-        # update targets of twin critics using soft updates
-        update_target_networks(
-            self._targets_of_twin_critics._critic_networks_combined,
-            self._twin_critics._critic_networks_combined,
-            self._critic_soft_update_tau,
-        )
-        # update target of actor network using soft update
+        # soft update target of actor network
         update_target_network(
             self._actor_target, self._actor, self._actor_soft_update_tau
         )
-        return report
+        return {}
 
     def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
-        action_batch = self._actor(batch.state)
+        # sample a batch of actions from the actor network; shape (batch_size, action_dim)
+        action_batch = self._actor.sample_action(batch.state)
+
         # samples q values for (batch.state, action_batch) from twin critics
         q1, q2 = self._twin_critics.get_twin_critic_values(
             state_batch=batch.state, action_batch=action_batch
         )
-        # optimization objective: optimize pi(.|s) to maximize Q(s, a)
-        loss = -torch.minimum(
-            q1, q2
-        ).mean()  # clipped double q learning (reduce overestimation bias)
+
+        # clipped double q learning (reduce overestimation bias); shape (batch_size)
+        q = torch.minimum(q1, q2)
+
+        # optimization objective: optimize actor to maximize Q(s, a)
+        loss = -q.mean()
+
         self._actor_optimizer.zero_grad()
         loss.backward()
         self._actor_optimizer.step()
@@ -191,34 +113,28 @@ class DeepDeterministicPolicyGradient(PolicyLearner):
     def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
         with torch.no_grad():
+            # sample a batch of next actions from target actor network; shape (batch_size, action_dim)
+            next_action = self._actor_target.sample_action(batch.next_state)
 
-            next_action = self._actor_target(
-                batch.next_state
-            )  # sample next action from target actor network
-
-            # get q values of (batch.next_state, next_action)
-            # from targets of twin critic
+            # get q values of (batch.next_state, next_action) from targets of twin critic
             next_q1, next_q2 = self._targets_of_twin_critics.get_twin_critic_values(
                 # pyre-fixme[6]: For 1st argument expected `Tensor` but got
                 #  `Optional[Tensor]`.
                 state_batch=batch.next_state,
                 action_batch=next_action,
-            )
-            next_q = torch.minimum(
-                next_q1, next_q2
-            )  # clipped double q learning (reduce overestimation bias)
+            )  # shape (batch_size)
 
-            # compute bellman target
+            # clipped double q learning (reduce overestimation bias); shape (batch_size)
+            next_q = torch.minimum(next_q1, next_q2)
 
+            # compute bellman target:
+            # r + gamma * (min{Qtarget_1(s', a from target actor network), Qtarget_2(s', a from target actor network)})
             expected_state_action_values = (
                 next_q * self._discount_factor * (1 - batch.done.float())
-            ) + batch.reward
-            # (batch_size)
+            ) + batch.reward  # shape (batch_size)
 
         # update twin critics towards bellman target
-        loss_critic_update = optimize_twin_critics_towards_target(
-            twin_critic=self._twin_critics,
-            optimizer=self._critic_optimizer,
+        loss_critic_update = self.twin_critic_update(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target=expected_state_action_values,

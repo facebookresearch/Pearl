@@ -8,7 +8,7 @@ Constants:
 """
 
 
-from typing import Callable, List, Tuple
+from typing import Callable, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -21,17 +21,22 @@ from torch import Tensor
 from torch.distributions import Normal
 
 
-def scale_action(
-    action_space: ActionSpace, normalized_action: torch.Tensor
+def action_scaling(
+    action_space: ActionSpace, input_action: torch.Tensor
 ) -> torch.Tensor:
     """
-    For continuous action spaces, actor networks output "normalized_actions",
-    i.e. actions in the range [-1, 1]^{action_dim}.
-    This function rescales the normalized_action from [-1, 1]^{action_dim}
-    to [low, high]^{action_dim}.
-    - Note: while the action space is not assumed to be symmetric (low = -high),
-    it is assumed that low and high are the same for each dimension
-    (as is the case for most gym environments).
+    Center and scale input action from [-1, 1]^{action_dim} to [low, high]^{action_dim}.
+    Use cases:
+        - For continuous action spaces, actor networks output "normalized_actions",
+            i.e. actions in the range [-1, 1]^{action_dim}.
+
+    Note: the action space is not assumed to be symmetric (low = -high).
+
+    Args:
+        action_space: the action space
+        input_action: the input action vector to be scaled
+    Returns:
+        scaled_action: centered and scaled input action vector, according to the action space
     """
     device = get_pearl_device()
     # pyre-fixme[16]: `ActionSpace` has no attribute `low`.
@@ -39,12 +44,45 @@ def scale_action(
         # pyre-fixme[16]: `ActionSpace` has no attribute `high`.
         action_space.high
     ).to(device)
-    return low + (0.5 * (normalized_action + 1.0) * (high - low))
+
+    centered_and_scaled_action = (((high - low) * (input_action + 1.0)) / 2) + low
+
+    return centered_and_scaled_action
+
+
+def noise_scaling(action_space: ActionSpace, input_noise: torch.Tensor) -> torch.Tensor:
+    """
+    This function rescales any input vector from [-1, 1]^{action_dim} to [low, high]^{action_dim}.
+    Use case:
+        - For noise based exploration, we need to scale the noise (for example, from the standard
+            normal distribution) according to the action space.
+
+    Args:
+        action_space: the action space
+        input_vector: the input vector to be scaled
+    Returns:
+        torch.Tensor: scaled input vector, according to the action space
+    """
+    device = get_pearl_device()
+    # pyre-fixme[16]: `ActionSpace` has no attribute `low`.
+    low, high = torch.tensor(action_space.low).to(device), torch.tensor(
+        # pyre-fixme[16]: `ActionSpace` has no attribute `high`.
+        action_space.high
+    ).to(device)
+
+    scaled_noise = ((high - low) / 2) * input_noise
+
+    return scaled_noise
 
 
 class VanillaActorNetwork(nn.Module):
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, input_dim, hidden_dims, output_dim, action_space=None) -> None:
+    def __init__(
+        self,
+        input_dim: int,
+        hidden_dims: Optional[List[int]],
+        output_dim: int,
+        action_space: Optional[ActionSpace] = None,
+    ) -> None:
         super(VanillaActorNetwork, self).__init__()
         self._model: nn.Module = mlp_block(
             input_dim=input_dim,
@@ -65,8 +103,13 @@ class VanillaContinuousActorNetwork(nn.Module):
         output_dim: action dimension
     """
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, input_dim, hidden_dims, output_dim, action_space=None) -> None:
+    def __init__(
+        self,
+        input_dim: int,
+        hidden_dims: Optional[List[int]],
+        output_dim: int,
+        action_space: ActionSpace,
+    ) -> None:
         super(VanillaContinuousActorNetwork, self).__init__()
         self._model: nn.Module = mlp_block(
             input_dim=input_dim,
@@ -74,10 +117,23 @@ class VanillaContinuousActorNetwork(nn.Module):
             output_dim=output_dim,
             last_activation="tanh",
         )
+        self._action_space = action_space
 
-    # the forward function should probably be renamed to sample_action
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self._model(x)
+
+    def sample_action(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Sample an action from the actor network.
+        Args:
+            x: input state
+        Returns:
+            action: sampled action, scaled to the action space bounds
+        """
+        normalized_action = self._model(x)
+        action = action_scaling(self._action_space, normalized_action)
+
+        return action
 
 
 class GaussianActorNetwork(nn.Module):
@@ -143,8 +199,16 @@ class GaussianActorNetwork(nn.Module):
 
         return mean, log_std
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def sample_action_and_get_log_prob(self, state_batch: Tensor):
+    def sample_action(
+        self, state_batch: Tensor, get_log_prob: bool = False
+    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+        """
+        Sample an action from the actor network.
+        Args:
+            x: input state
+        Returns:
+            action: sampled action, scaled to the action space bounds
+        """
         epsilon = 1e-6
         mean, log_std = self.forward(state_batch)
         std = log_std.exp()
@@ -156,7 +220,7 @@ class GaussianActorNetwork(nn.Module):
 
         # clamp each action dimension to prevent numerical issues in tanh
         # normalized_action.clamp(-1 + epsilon, 1 - epsilon)
-        action = scale_action(self._action_space, normalized_action)
+        action = action_scaling(self._action_space, normalized_action)
 
         log_prob = normal.log_prob(sample)
         log_prob -= torch.log(
@@ -168,7 +232,10 @@ class GaussianActorNetwork(nn.Module):
         if log_prob.dim() == 2:
             log_prob = log_prob.sum(dim=1, keepdim=True)
 
-        return action, log_prob
+        if get_log_prob:
+            return action, log_prob
+        else:
+            return action
 
 
 ActorNetworkType = Callable[[int, List[int], int], nn.Module]

@@ -23,9 +23,6 @@ from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     OffPolicyActorCritic,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.functional_utils.learning.nn_learning_utils import (
-    optimize_twin_critics_towards_target,
-)
 from torch import optim
 
 
@@ -101,9 +98,7 @@ class SoftActorCritic(OffPolicyActorCritic):
             * (1 - done_batch.float())
         ) + reward_batch  # (batch_size), r + gamma * V(s)
 
-        loss_critic_update = optimize_twin_critics_towards_target(
-            twin_critic=self._twin_critics,
-            optimizer=self._critic_optimizer,
+        loss_critic_update = self.twin_critic_update(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target=expected_state_action_values,

@@ -44,16 +44,16 @@ class OffPolicyActorCritic(PolicyLearner):
         state_dim: int,
         action_space: ActionSpace,
         hidden_dims: Iterable[int],
-        critic_learning_rate: float = 1e-4,
-        actor_learning_rate: float = 1e-4,
+        critic_learning_rate: float = 1e-3,
+        actor_learning_rate: float = 1e-3,
         # pyre-fixme[9]: exploration_module has type `ExplorationModule`; used as
         #  `None`.
         exploration_module: ExplorationModule = None,
         discount_factor: float = 0.99,
-        training_rounds: int = 100,
-        batch_size: int = 128,
-        critic_soft_update_tau: float = 0.05,
-        is_action_continuous: bool = False,  # can accommodate continuous action spaces but set to False by default
+        training_rounds: int = 1,
+        batch_size: int = 256,
+        critic_soft_update_tau: float = 0.005,
+        is_action_continuous: bool = True,  # can accommodate discrete action spaces but set to True by default
         actor_network_type: ActorNetworkType = VanillaActorNetwork,
         critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
     ) -> None:
@@ -79,24 +79,19 @@ class OffPolicyActorCritic(PolicyLearner):
         self.is_action_continuous = is_action_continuous
         self._exploration_module = exploration_module
 
-        def make_specified_actor_network() -> nn.Module:
-            # pyre-fixme[28]: Unexpected keyword argument `input_dim`.
-            return actor_network_type(
-                input_dim=state_dim,
-                hidden_dims=hidden_dims,
-                output_dim=self._action_dim,
-                action_space=action_space,
-            )
-
         # actor network takes state as input and outputs an action vector
-        self._actor: nn.Module = make_specified_actor_network()
+        self._actor: nn.Module = actor_network_type(  # pyre-ignore
+            input_dim=state_dim,
+            hidden_dims=hidden_dims,
+            output_dim=self._action_dim,
+            action_space=action_space,
+        )
         self._actor.apply(init_weights)
         self._actor_optimizer = optim.AdamW(
             self._actor.parameters(), lr=actor_learning_rate, amsgrad=True
         )
 
         # twin critic: using two separate critic networks to reduce overestimation bias
-        # optimizers of two critics are alredy initialized in TwinCritic
         self._twin_critics = TwinCritic(
             state_dim=state_dim,
             action_dim=self._action_dim,
@@ -114,6 +109,7 @@ class OffPolicyActorCritic(PolicyLearner):
             init_fn=init_weights,
         )
 
+        # optimizer of two critics; ame learning is applied to parameters of both critics
         self._critic_optimizer = optim.AdamW(
             self._twin_critics.parameters(),
             lr=critic_learning_rate,
@@ -130,9 +126,40 @@ class OffPolicyActorCritic(PolicyLearner):
         self._critic_soft_update_tau = critic_soft_update_tau
         self._discount_factor = discount_factor
 
+    def twin_critic_update(
+        self,
+        state_batch: torch.Tensor,
+        action_batch: torch.Tensor,
+        expected_target: torch.Tensor,
+    ) -> Dict[str, torch.Tensor]:
+        """
+        Performs an optimization step on the twin critic networks (self._twin_critics) by
+        minimizing TD error.
+        Args:
+            state_batch: a batch of states with shape (batch_size, state_dim)
+            action_batch: a batch of actions with shape (batch_size, action_dim)
+            expected_target: the batch of target estimates for Bellman equation.
+        Returns:
+            Dict[str, torch.Tensor]: mean loss and individual critic losses.
+        """
+
+        criterion = torch.nn.MSELoss()
+        self._critic_optimizer.zero_grad()
+        q_1, q_2 = self._twin_critics.get_twin_critic_values(state_batch, action_batch)
+        loss = criterion(q_1, expected_target) + criterion(q_2, expected_target)
+        loss.backward()
+        self._critic_optimizer.step()
+
+        return {
+            "mean_loss": loss.item(),
+            "critic_1_values": q_1.mean().item(),
+            "critic_2_values": q_2.mean().item(),
+        }
+
     """
-    Act method is included here but since it is intrinsically tied to the type of exploration method
-    as well as the type of action space (discrete and continuous), compatibility checks are required for implementation.
+    Different off-policy actor-critic methods use this method to act in a given environment.
+    Note that the act method is intrinsically tied to the type of exploration method as well
+    as the type of action space (discrete and continuous).
     """
 
     def act(
@@ -155,9 +182,7 @@ class OffPolicyActorCritic(PolicyLearner):
             subjective_state_tensor = subjective_state_tensor.to(self.device)
 
             if self.is_action_continuous:
-                exploit_action, _ = self._actor.sample_action_and_get_log_prob(
-                    subjective_state_tensor
-                )
+                exploit_action = self._actor.sample_action(subjective_state_tensor)
                 action_probabilities = None
             else:
                 action_probabilities = self._actor(
@@ -170,10 +195,10 @@ class OffPolicyActorCritic(PolicyLearner):
             return exploit_action
 
         return self._exploration_module.act(
-            subjective_state,
-            available_action_space,
-            values=action_probabilities,
             exploit_action=exploit_action,
+            action_space=available_action_space,
+            subjective_state=subjective_state,
+            values=action_probabilities,
         )
 
     def reset(self, action_space: ActionSpace) -> None:

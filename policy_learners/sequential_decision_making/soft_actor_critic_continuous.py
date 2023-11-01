@@ -22,9 +22,6 @@ from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
 
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.device import get_pearl_device
-from pearl.utils.functional_utils.learning.nn_learning_utils import (
-    optimize_twin_critics_towards_target,
-)
 from torch import optim
 
 
@@ -88,9 +85,6 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
 
         self._rounds = 0
 
-    def reset(self, action_space: ActionSpace) -> None:
-        self._action_space = action_space
-
     def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
         reward_batch = batch.reward  # shape: (batch_size)
@@ -105,9 +99,7 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
         else:
             raise AssertionError("done_batch should not be None")
 
-        loss_critic_update = optimize_twin_critics_towards_target(
-            twin_critic=self._twin_critics,
-            optimizer=self._critic_optimizer,
+        loss_critic_update = self.twin_critic_update(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target=expected_state_action_values,
@@ -124,7 +116,7 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
         (
             next_action_batch,
             next_action_batch_log_prob,
-        ) = self._actor.sample_action_and_get_log_prob(next_state_batch)
+        ) = self._actor.sample_action(next_state_batch, get_log_prob=True)
 
         next_q1, next_q2 = self._targets_of_twin_critics.get_twin_critic_values(
             # pyre-fixme[6]: For 1st argument expected `Tensor` but got
@@ -155,7 +147,7 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
         (
             action_batch,
             action_batch_log_prob,
-        ) = self._actor.sample_action_and_get_log_prob(state_batch)
+        ) = self._actor.sample_action(state_batch, get_log_prob=True)
 
         q1, q2 = self._twin_critics.get_twin_critic_values(
             state_batch=state_batch, action_batch=action_batch
@@ -175,8 +167,8 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
 
         if self._entropy_autotune:
             with torch.no_grad():
-                _, action_batch_log_prob = self._actor.sample_action_and_get_log_prob(
-                    state_batch
+                _, action_batch_log_prob = self._actor.sample_action(
+                    state_batch, get_log_prob=True
                 )
 
             entropy_optimizer_loss = (

@@ -1,13 +1,16 @@
 #!/usr/bin/env fbpython
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 
-from typing import Any, Optional
+from typing import Optional
 
 import torch
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
+from pearl.neural_networks.sequential_decision_making.actor_networks import (
+    noise_scaling,
+)
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
@@ -15,81 +18,54 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 
 class NormalDistributionExploration(ExplorationModule):
     """
-    Normal Distribution exploration module. Add noise to action vector
-
-    noise_clip:
-        Could be either a constant to apply to all dimensions or a tensor.
-        Default to max_action_value / 10.
-        TODO we could potentially support dynamic/relative noise clip.
-        `max_action_value / 10` can be much larger than `scaled_action`.
-        Thus, maybe `scaled_action/10` is another option.
-    max_action_value:
-        Could be either a constant or a tensor.
-        Value comes from what problem user is solving.
-        Eg for Pendulum-v1, this is 2.
-    min_action_value:
-        Same as max action value.
-        Default value is -max_action_value.
+    Normal Distribution exploration module. Adds gaussian noise to the
+    action vector
     """
 
     def __init__(
         self,
-        # pyre-fixme[2]: Parameter must be annotated.
-        max_action_value,
-        # pyre-fixme[2]: Parameter must be annotated.
-        min_action_value,
         mean: float = 0.0,
         std_dev: float = 1.0,
-        # pyre-fixme[2]: Parameter must be annotated.
-        noise_clip=None,
     ) -> None:
         super(NormalDistributionExploration, self).__init__()
         self._mean = mean
         self._std_dev = std_dev
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._max_action_value = max_action_value
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._noise_clip = (
-            noise_clip if noise_clip is not None else max_action_value / 10
-        )
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._min_action_value = min_action_value
-        assert torch.all(
-            torch.tensor(self._noise_clip) >= 0
-        ), "clip value for noise should be >= 0"
 
-    # pyre-fixme[14]: `act` overrides method defined in `ValueExplorationBase`
-    #  inconsistently.
-    def act(
+    def act(  # pyre-ignore
         self,
         exploit_action: Action,
-        # arguments below are useless for NormalDistributionExploration
+        action_space: ActionSpace,
         subjective_state: SubjectiveState = None,
-        # pyre-fixme[9]: available_action_space has type `ActionSpace`; used as `None`.
-        available_action_space: ActionSpace = None,
         values: Optional[torch.Tensor] = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        representation: Any = None,
+        representation: Optional[torch.nn.Module] = None,
     ) -> Action:
-        # input exploit_action is from an actor network, which should be normalized to [-1, 1]
-        assert torch.all(exploit_action >= -1) and torch.all(exploit_action <= 1)
-        # generate noise
+
+        # checks that the exploit action is feasible in the available action space
+        low, high = torch.tensor(
+            action_space.low, device=self.device  # pyre-ignore
+        ), torch.tensor(
+            action_space.high, device=self.device  # pyre-ignore
+        )
+        assert torch.all(exploit_action >= low) and torch.all(exploit_action <= high)
+
+        action_dim = exploit_action.size()  # dimension of the action space
+
+        # after the design of the action space is set, switch to the below line
+        # action_dim = available_action_space.shape[0]  # dimension of the action space
+
+        # generate noise from a standard normal distribution
         noise = torch.normal(
             mean=self._mean,
             std=self._std_dev,
-            size=exploit_action.size(),
+            size=action_dim,
             device=self.device,
         )
-        # clip noise
-        noise = torch.clamp(noise, -self._noise_clip, self._noise_clip)
-        # scale normalized exploit_action
-        # project from [-1, 1] to [self._min_action_value, self._max_action_value]
-        scaled_action = (self._max_action_value - self._min_action_value) * (
-            exploit_action + 1
-        ) / 2 + self._min_action_value
-        # add noise
-        scaled_action += noise
-        # clip on final action value
-        return torch.clamp(
-            scaled_action, self._min_action_value, self._max_action_value
-        )
+        # clip noise to be between [-1, 1]^{action_dim}
+        clipped_noise = torch.clip(noise, -1, 1)
+
+        # scale noise according to the action space
+        scaled_noise = noise_scaling(action_space, clipped_noise)
+        action = exploit_action + scaled_noise  # add noise
+
+        # clip final action value to be within bounds of the action space
+        return torch.clamp(action, low, high)

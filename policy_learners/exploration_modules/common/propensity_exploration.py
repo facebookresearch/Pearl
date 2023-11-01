@@ -24,7 +24,7 @@ class PropensityExploration(ExplorationModule):
     def act(
         self,
         subjective_state: SubjectiveState,
-        available_action_space: DiscreteActionSpace,
+        action_space: DiscreteActionSpace,
         values: Optional[torch.Tensor] = None,
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,

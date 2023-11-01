@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, Tuple, Type
+from typing import Iterable, Tuple, Type
 
 import torch
 import torch.nn as nn
@@ -10,8 +10,9 @@ from pearl.neural_networks.common.value_networks import (
 
 class TwinCritic(torch.nn.Module):
     """
-    This is a wrapper for using two critic networks to reduce overestimation bias in q value estimates.
-    Each critic network is initialized differently by a given random initialization function.
+    This is a wrapper for using two critic networks to reduce overestimation bias in
+    critic estimation. Each critic is initialized differently by a given
+    initialization function.
 
     NOTE: For more than two critics, the standard way is to use nn.ModuleList()
     """
@@ -21,9 +22,8 @@ class TwinCritic(torch.nn.Module):
         state_dim: int,
         action_dim: int,
         hidden_dims: Iterable[int],
+        init_fn: nn.Module,
         network_type: Type[QValueNetwork] = VanillaQValueNetwork,
-        # pyre-fixme[9]: init_fn has type `(Module) -> None`; used as `None`.
-        init_fn: Callable[[torch.nn.Module], None] = None,
         output_dim: int = 1,
     ) -> None:
         super(TwinCritic, self).__init__()

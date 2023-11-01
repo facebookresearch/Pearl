@@ -11,7 +11,7 @@ def get_pearl_device(device_id: int = -1) -> torch.device:
         # original implementation of this file
         local_rank = dist.get_rank()
     except Exception:
-        local_rank = 0
+        local_rank = 1
 
     return torch.device(f"cuda:{local_rank}" if torch.cuda.is_available() else "cpu")
 
