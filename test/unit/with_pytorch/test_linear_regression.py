@@ -59,9 +59,11 @@ class TestLinearRegression(unittest.TestCase):
         feature_dim = 15
         model = LinearRegression(feature_dim=feature_dim)
         states = model.state_dict()
-        self.assertEqual(len(states), 3)
+        self.assertEqual(len(states), 5)
         self.assertEqual(states["_A"].shape, (feature_dim + 1, feature_dim + 1))
         self.assertEqual(states["_b"].shape, (feature_dim + 1,))
+        self.assertEqual(states["_inv_A"].shape, (feature_dim + 1, feature_dim + 1))
+        self.assertEqual(states["_coefs"].shape, (feature_dim + 1,))
         self.assertEqual(states["_sum_weight"].shape, (1,))
         states["_b"] = torch.ones((feature_dim + 1,))
         model.load_state_dict(states)

@@ -19,8 +19,8 @@ import torch
 from pearl.utils.device import get_pearl_device, is_distribution_enabled
 from torch import nn
 
-# pyre-fixme[5]: Global expression must be annotated.
-logger = logging.getLogger(__name__)
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class LinearRegression(nn.Module):
@@ -39,6 +39,11 @@ class LinearRegression(nn.Module):
         )
         self.register_buffer("_b", torch.zeros(feature_dim + 1, device=self.device))
         self.register_buffer("_sum_weight", torch.zeros(1, device=self.device))
+        self.register_buffer(
+            "_inv_A",
+            torch.zeros(feature_dim + 1, feature_dim + 1, device=self.device),
+        )
+        self.register_buffer("_coefs", torch.zeros(feature_dim + 1, device=self.device))
         self._feature_dim = feature_dim
         self.distribution_enabled: bool = is_distribution_enabled()
 
@@ -47,12 +52,8 @@ class LinearRegression(nn.Module):
         return self._A
 
     @property
-    def b(self) -> torch.Tensor:
-        return self._b
-
-    @property
-    def sum_weight(self) -> torch.Tensor:
-        return self._sum_weight
+    def coefs(self) -> torch.Tensor:
+        return self._coefs
 
     @staticmethod
     def batch_quadratic_form(x: torch.Tensor, A: torch.Tensor) -> torch.Tensor:
@@ -81,6 +82,29 @@ class LinearRegression(nn.Module):
 
         return result
 
+    @staticmethod
+    def matrix_inv_fallback_pinv(A: torch.Tensor) -> torch.Tensor:
+        """
+        Try to apply regular matrix inv. If it fails, fallback to pseudo inverse
+        """
+        try:
+            inv_A = torch.linalg.inv(A).contiguous()
+        # pyre-fixme[16]: Module `_C` has no attribute `_LinAlgError`.
+        except torch._C._LinAlgError as e:
+            logger.warning(
+                "Exception raised during A inversion, falling back to pseudo-inverse",
+                e,
+            )
+            # switch from `inv` to `pinv`
+            # first check if A is Hermitian (symmetric A)
+            A_is_hermitian = torch.allclose(A, A.T, atol=1e-4, rtol=1e-4)
+            # applying hermitian=True saves about 50% computations
+            inv_A = torch.linalg.pinv(
+                A,
+                hermitian=A_is_hermitian,
+            ).contiguous()
+        return inv_A
+
     def _validate_train_inputs(
         self, x: torch.Tensor, y: torch.Tensor, weight: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -107,17 +131,23 @@ class LinearRegression(nn.Module):
         A <- A + x*x.t
         b <- b + r*x
         """
+        # this also appends a column of ones to `x`
         x, y, weight = self._validate_train_inputs(x, y, weight)
+
         delta_A = torch.matmul(x.t(), x * weight)
         delta_b = torch.matmul(x.t(), y * weight).squeeze()
         delta_sum_weight = weight.sum()
+
         if self.distribution_enabled:
             torch.distributed.all_reduce(delta_A)
             torch.distributed.all_reduce(delta_b)
             torch.distributed.all_reduce(delta_sum_weight)
+
         self._A += delta_A.to(self._A.device)
         self._b += delta_b.to(self._b.device)
         self._sum_weight += delta_sum_weight.to(self._sum_weight.device)
+
+        self.calculate_coefs()  # update coefs after updating A and b
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -126,43 +156,19 @@ class LinearRegression(nn.Module):
         return will be shape(batch_size)
         """
         x = self.append_ones(x)
-        return torch.matmul(x, self.coefs.t())
+        return torch.matmul(x, self._coefs.t())
 
-    @property
-    def coefs(self) -> torch.Tensor:
-        inv_A = self.inv_A
-        return torch.matmul(inv_A, self._b)
-
-    @property
-    def inv_A(self) -> torch.Tensor:
-        return self._A_inv_fallback_pinv()
-
-    def _A_inv_fallback_pinv(self) -> torch.Tensor:
+    def calculate_coefs(self) -> None:
         """
-        if the A A or any A in the batch of matrices A is not invertible,
-        raise a error message and then switch from `inv` to `pinv`
-        https://pytorch.org/docs/stable/generated/torch.linalg.inv.html
+        Calculate coefficients based on current A and b.
+        Save inverted A and coefficients in buffers.
         """
-        try:
-            inv_A = torch.linalg.inv(self._A).contiguous()
-        except RuntimeError as e:
-            logger.warning(
-                "Exception raised during A inversion, falling back to pseudo-inverse",
-                e,
-            )
-            # switch from `inv` to `pinv`
-            # first check if A is Hermitian (symmetric A)
-            A_is_hermitian = torch.allclose(self._A, self._A.T, atol=1e-4, rtol=1e-4)
-            # applying hermitian=True saves about 50% computations
-            inv_A = torch.linalg.pinv(
-                self._A,
-                hermitian=A_is_hermitian,
-            ).contiguous()
-        return inv_A
+        self._inv_A = self.matrix_inv_fallback_pinv(self._A)
+        self._coefs = torch.matmul(self._inv_A, self._b)
 
     def calculate_sigma(self, x: torch.Tensor) -> torch.Tensor:
         x = self.append_ones(x)  # append a column of ones for intercept
-        sigma = torch.sqrt(self.batch_quadratic_form(x, self.inv_A))
+        sigma = torch.sqrt(self.batch_quadratic_form(x, self._inv_A))
         return sigma
 
     def __str__(self) -> str:
