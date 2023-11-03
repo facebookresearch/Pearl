@@ -131,12 +131,19 @@ class BootstrappedDQN(DeepQLearning):
         # for dueling, this does a forward pass; since the batch of next available
         # actions is already input
         # (batch_size x action_space_size)
-        next_state_action_values = self._Q_target.get_q_values(
+        next_state_action_values = self._Q.get_q_values(
+            state_batch=next_state, action_batch=next_avail_actions, z=z  # pyre-ignore
+        ).view(batch_size, -1)
+
+        target_next_state_action_values = self._Q_target.get_q_values(
             state_batch=next_state, action_batch=next_avail_actions, z=z  # pyre-ignore
         ).view(batch_size, -1)
 
         # Make sure that unavailable actions' Q values are assigned to -inf
         next_state_action_values[next_avail_actions_mask] = -float("inf")
 
-        # Torch.max(1) returns value, indices
-        return next_state_action_values.max(1)[0]  # (batch_size)
+        # Get argmax actions indices
+        argmax_actions = next_state_action_values.max(1)[1]  # (batch_size)
+        return target_next_state_action_values[
+            torch.arange(batch_size), argmax_actions
+        ]  # (batch_size)
