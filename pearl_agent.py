@@ -104,10 +104,9 @@ class PearlAgent(Agent):
         pearl_agent_compatibility_check(
             self.policy_learner, self.safety_module, self.replay_buffer
         )
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._subjective_state = None
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._latest_action = None
+        self._subjective_state: SubjectiveState = None
+        self._latest_action: Action = None
+        self._action_space: Optional[ActionSpace] = None
 
         self.policy_learner.to(get_pearl_device(device_id))
 
@@ -134,7 +133,6 @@ class PearlAgent(Agent):
             self._latest_action,
             action_result.reward,
             new_history,
-            # pyre-fixme[16]: `PearlAgent` has no attribute `_action_space`.
             self._action_space,  # curr_available_actions
             self._action_space,  # next_available_actions
             self._action_space,  # action_space
@@ -162,14 +160,16 @@ class PearlAgent(Agent):
         self.safety_module.learn_batch(batch)
 
     def reset(self, observation: Observation, action_space: ActionSpace) -> None:
+        self.history_summarization_module.reset()
         self._subjective_state = self._update_subjective_state(observation)
-        # pyre-fixme[16]: `PearlAgent` has no attribute `_action_space`.
         self._action_space = action_space
         self.safety_module.reset(action_space)
         self.policy_learner.reset(action_space)
 
     def _update_subjective_state(self, observation: Observation) -> SubjectiveState:
-        return self.history_summarization_module.summarize_history(observation)
+        return self.history_summarization_module.summarize_history(
+            observation, self._latest_action
+        )
 
     def __str__(self) -> str:
         items = []

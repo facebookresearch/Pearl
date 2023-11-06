@@ -190,6 +190,7 @@ class SparseRewardEnvSummarizationModule(HistorySummarizationModule):
     def summarize_history(
         self,
         observation: SparseRewardEnvironmentObservation,
+        action: Action,
     ) -> SubjectiveState:
         # for this game, state is a cat between agent position and goal position
         self.subjective_state = torch.Tensor(
@@ -202,3 +203,6 @@ class SparseRewardEnvSummarizationModule(HistorySummarizationModule):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x
+
+    def reset(self) -> None:
+        self.subjective_state = torch.zeros((0,))

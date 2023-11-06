@@ -1,3 +1,4 @@
+from pearl.api.action import Action
 from pearl.api.history import History
 from pearl.api.observation import Observation
 from pearl.history_summarization_modules.history_summarization_module import (
@@ -15,7 +16,9 @@ class IdentityHistorySummarizationModule(HistorySummarizationModule):
         super(IdentityHistorySummarizationModule, self).__init__()
         self.history: History = None
 
-    def summarize_history(self, observation: Observation) -> SubjectiveState:
+    def summarize_history(
+        self, observation: Observation, action: Action
+    ) -> SubjectiveState:
         self.history = observation
         return observation
 
@@ -24,3 +27,6 @@ class IdentityHistorySummarizationModule(HistorySummarizationModule):
 
     def forward(self, x: History) -> SubjectiveState:
         return x
+
+    def reset(self) -> None:
+        self.history = None

@@ -1,6 +1,6 @@
 import random
 from collections import deque
-from typing import List
+from typing import List, Optional, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -39,13 +39,12 @@ class TensorBasedReplayBuffer(ReplayBuffer):
     def device(self, value: torch.device) -> None:
         self._device = value
 
-    # pyre-fixme[11]: Annotation `tensor` is not defined as a type.
-    def _process_single_state(self, state: SubjectiveState) -> torch.tensor:
+    def _process_single_state(self, state: SubjectiveState) -> torch.Tensor:
         return torch.tensor(state, device=self._device).unsqueeze(0)
 
     def _process_single_action(
         self, action: Action, action_space: ActionSpace
-    ) -> torch.tensor:
+    ) -> torch.Tensor:
         if self._is_action_continuous:
             return torch.tensor(action, device=self._device).reshape(
                 1, -1
@@ -56,18 +55,15 @@ class TensorBasedReplayBuffer(ReplayBuffer):
             num_classes=action_space.n,
         )  # (1 x action_dim)
 
-    def _process_single_reward(self, reward: float) -> torch.tensor:
+    def _process_single_reward(self, reward: float) -> torch.Tensor:
         return torch.tensor([reward], device=self._device)
 
-    def _process_single_done(self, done: bool) -> torch.tensor:
+    def _process_single_done(self, done: bool) -> torch.Tensor:
         return torch.tensor([done], device=self._device)  # (1,)
 
     def _create_action_tensor_and_mask(
-        self,
-        action_space: ActionSpace,
-        available_actions: ActionSpace
-        # pyre-fixme[31]: Expression `tensor)` is not a valid type.
-    ) -> (torch.tensor, torch.tensor):
+        self, action_space: ActionSpace, available_actions: ActionSpace
+    ) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
         if self._is_action_continuous:
             return (None, None)  # continuous action does not have limited space
         available_actions_tensor_with_padding = torch.zeros(
