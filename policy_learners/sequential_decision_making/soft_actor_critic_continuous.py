@@ -21,7 +21,6 @@ from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
 )
 
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.device import get_pearl_device
 from torch import optim
 
 
@@ -66,22 +65,22 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
             critic_network_type=critic_network_type,
         )
 
-        device = get_pearl_device()
         self._entropy_autotune = entropy_autotune
         if entropy_autotune:
             # initialize the entropy coefficient to 0
-            self._log_entropy = torch.zeros(  # pyre-ignore
-                1, requires_grad=True, device=device
+            self.register_buffer(
+                "_log_entropy",
+                torch.zeros(1, requires_grad=True),
             )
             self._entropy_optimizer = optim.AdamW(  # pyre-ignore
                 [self._log_entropy], lr=critic_learning_rate, amsgrad=True
             )
-            self._entropy_coef = torch.exp(self._log_entropy).detach()  # pyre-ignore
-            self._target_entropy = -torch.tensor(  # pyre-ignore
-                action_space.shape[0]  # pyre-ignore
+            self.register_buffer("_entropy_coef", torch.exp(self._log_entropy).detach())
+            self.register_buffer(
+                "_target_entropy", -torch.tensor(action_space.shape[0])  # pyre-ignore
             )
         else:
-            self._entropy_coef = torch.tensor(entropy_coef)
+            self.register_buffer("_entropy_coef", torch.tensor(entropy_coef))
 
         self._rounds = 0
 

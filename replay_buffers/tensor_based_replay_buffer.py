@@ -10,6 +10,7 @@ from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import Transition, TransitionBatch
+from pearl.utils.device import get_default_device
 
 
 class TensorBasedReplayBuffer(ReplayBuffer):
@@ -29,7 +30,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         self._has_next_action = has_next_action
         # pyre-fixme[4]: Attribute must be annotated.
         self._has_next_available_actions = has_next_available_actions
-        self._device = torch.device("cpu")
+        self._device: torch.device = get_default_device()
 
     @property
     def device(self) -> torch.device:
@@ -111,7 +112,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
                 f"only {len(self)} elements"
             )
         samples = random.sample(self.memory, batch_size)
-        return _create_transition_batch(
+        return self._create_transition_batch(
             transitions=samples,
             has_next_state=self._has_next_state,
             has_next_action=self._has_next_action,
@@ -125,56 +126,58 @@ class TensorBasedReplayBuffer(ReplayBuffer):
     def clear(self) -> None:
         self.memory = deque([], maxlen=self.capacity)
 
+    def _create_transition_batch(
+        self,
+        transitions: List[Transition],
+        has_next_state: bool,
+        has_next_action: bool,
+        is_action_continuous: bool,
+        has_next_available_actions: bool,
+    ) -> TransitionBatch:
+        # TODO[drjiang]: Will properly handle the None pyre errors in this function,
+        # in a subsequent diff. Errors are due to parts of the transition potentially
+        # being None.
+        state_batch = torch.cat([x.state for x in transitions])
+        action_batch = torch.cat([x.action for x in transitions])
+        reward_batch = torch.cat([x.reward for x in transitions])
+        done_batch = torch.cat([x.done for x in transitions])
 
-def _create_transition_batch(
-    transitions: List[Transition],
-    has_next_state: bool,
-    has_next_action: bool,
-    is_action_continuous: bool,
-    has_next_available_actions: bool,
-) -> TransitionBatch:
-    # TODO[drjiang]: Will properly handle the None pyre errors in this function,
-    # in a subsequent diff. Errors are due to parts of the transition potentially
-    # being None.
-    state_batch = torch.cat([x.state for x in transitions])
-    action_batch = torch.cat([x.action for x in transitions])
-    reward_batch = torch.cat([x.reward for x in transitions])
-    done_batch = torch.cat([x.done for x in transitions])
+        next_state_batch, next_action_batch = None, None
+        if has_next_state:
+            next_state_batch = torch.cat(
+                [x.next_state for x in transitions]  # pyre-ignore
+            )
+        if has_next_action:
+            next_action_batch = torch.cat(
+                [x.next_action for x in transitions]  # pyre-ignore
+            )
 
-    next_state_batch, next_action_batch = None, None
-    if has_next_state:
-        next_state_batch = torch.cat([x.next_state for x in transitions])  # pyre-ignore
-    if has_next_action:
-        next_action_batch = torch.cat(
-            [x.next_action for x in transitions]  # pyre-ignore
-        )
+        curr_available_actions_batch, curr_available_actions_mask_batch = None, None
+        if not is_action_continuous:
+            curr_available_actions_batch = torch.cat(
+                [x.curr_available_actions for x in transitions]  # pyre-ignore
+            )
+            curr_available_actions_mask_batch = torch.cat(
+                [x.curr_available_actions_mask for x in transitions]  # pyre-ignore
+            )
 
-    curr_available_actions_batch, curr_available_actions_mask_batch = None, None
-    if not is_action_continuous:
-        curr_available_actions_batch = torch.cat(
-            [x.curr_available_actions for x in transitions]  # pyre-ignore
-        )
-        curr_available_actions_mask_batch = torch.cat(
-            [x.curr_available_actions_mask for x in transitions]  # pyre-ignore
-        )
-
-    next_available_actions_batch, next_available_actions_mask_batch = None, None
-    if not is_action_continuous and has_next_available_actions:
-        next_available_actions_batch = torch.cat(
-            [x.next_available_actions for x in transitions]  # pyre-ignore
-        )
-        next_available_actions_mask_batch = torch.cat(
-            [x.next_available_actions_mask for x in transitions]  # pyre-ignore
-        )
-    return TransitionBatch(
-        state=state_batch,
-        action=action_batch,
-        reward=reward_batch,
-        next_state=next_state_batch,
-        next_action=next_action_batch,
-        curr_available_actions=curr_available_actions_batch,
-        curr_available_actions_mask=curr_available_actions_mask_batch,
-        next_available_actions=next_available_actions_batch,
-        next_available_actions_mask=next_available_actions_mask_batch,
-        done=done_batch,
-    )
+        next_available_actions_batch, next_available_actions_mask_batch = None, None
+        if not is_action_continuous and has_next_available_actions:
+            next_available_actions_batch = torch.cat(
+                [x.next_available_actions for x in transitions]  # pyre-ignore
+            )
+            next_available_actions_mask_batch = torch.cat(
+                [x.next_available_actions_mask for x in transitions]  # pyre-ignore
+            )
+        return TransitionBatch(
+            state=state_batch,
+            action=action_batch,
+            reward=reward_batch,
+            next_state=next_state_batch,
+            next_action=next_action_batch,
+            curr_available_actions=curr_available_actions_batch,
+            curr_available_actions_mask=curr_available_actions_mask_batch,
+            next_available_actions=next_available_actions_batch,
+            next_available_actions_mask=next_available_actions_mask_batch,
+            done=done_batch,
+        ).to(self.device)

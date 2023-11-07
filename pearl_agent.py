@@ -1,5 +1,7 @@
 from typing import Any, Dict, Optional
 
+import torch
+
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
@@ -65,6 +67,7 @@ class PearlAgent(Agent):
         """
         self.policy_learner: PolicyLearner = policy_learner
         self._device_id: int = device_id
+        self.device: torch.device = get_pearl_device(device_id)
 
         # pyre-fixme[4]: Attribute must be annotated.
         self.safety_module = (
@@ -98,7 +101,7 @@ class PearlAgent(Agent):
         self.replay_buffer.is_action_continuous = (
             self.policy_learner.is_action_continuous
         )
-        self.replay_buffer.device = get_pearl_device(device_id)
+        self.replay_buffer.device = self.device
 
         # check that all components of the agent are compatible with each other
         pearl_agent_compatibility_check(
@@ -108,12 +111,21 @@ class PearlAgent(Agent):
         self._latest_action: Action = None
         self._action_space: Optional[ActionSpace] = None
 
-        self.policy_learner.to(get_pearl_device(device_id))
+        self.policy_learner.to(self.device)
 
     def act(self, exploit: bool = False) -> Action:
         safe_action_space = self.safety_module.filter_action(self._subjective_state)
+
+        # PolicyLearner requires all tensor inputs to be alredy on the correct device
+        # before being passed to it.
+        subjective_state_to_be_used = (
+            torch.as_tensor(self._subjective_state).to(self.device)
+            if self.policy_learner.requires_tensors  # temporary fix before abstract interfaces
+            else self._subjective_state
+        )
+
         self._latest_action = self.policy_learner.act(
-            self._subjective_state, safe_action_space, exploit
+            subjective_state_to_be_used, safe_action_space, exploit
         )
         return self._latest_action
 

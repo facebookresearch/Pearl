@@ -173,24 +173,16 @@ class OffPolicyActorCritic(PolicyLearner):
 
         # Step 1: compute exploit_action (action computed by actor network; and without any exploration)
         with torch.no_grad():
-            subjective_state_tensor = (
-                subjective_state
-                if isinstance(subjective_state, torch.Tensor)
-                else torch.tensor(subjective_state)
-            )  # ([batch_size x ] state_dim)  # batch dimension only occurs if subjective_state is a batch
-
-            subjective_state_tensor = subjective_state_tensor.to(self.device)
-
             if self.is_action_continuous:
-                exploit_action = self._actor.sample_action(subjective_state_tensor)
+                exploit_action = self._actor.sample_action(subjective_state)
                 action_probabilities = None
             else:
-                action_probabilities = self._actor(
-                    subjective_state_tensor
-                )  # (action_space_size, 1)
+                action_probabilities = self._actor(subjective_state)
+                # (action_space_size, 1)
                 exploit_action = torch.argmax(action_probabilities).view((-1)).item()
 
-        # Step 2: return exploit action if no exploration, else pass through the exploration module
+        # Step 2: return exploit action if no exploration,
+        # else pass through the exploration module
         if exploit:
             return exploit_action
 

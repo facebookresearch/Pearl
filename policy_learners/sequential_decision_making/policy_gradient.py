@@ -91,17 +91,15 @@ class PolicyGradient(PolicyLearner):
         available_action_space: ActionSpace,
         exploit: bool = False,
     ) -> Action:
-        # TODO: Assumes subjective state is a torch tensor and gym action space.
+        # TODO: Assumes gym action space.
         # Fix the available action space.
         with torch.no_grad():
-            subjective_state_tensor = torch.tensor(
-                subjective_state, device=self.device
-            ).view(
-                (1, -1)
-            )  # (1 x state_dim)
-            action_probabilities = self._actor(
-                subjective_state_tensor
-            )  # (action_space_size, 1)
+            subjective_state = subjective_state.view((1, -1))
+            # (1 x state_dim)
+
+            action_probabilities = self._actor(subjective_state)
+            # (action_space_size, 1)
+
             exploit_action = torch.argmax(action_probabilities).view((-1)).item()
 
         if exploit:

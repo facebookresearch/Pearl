@@ -113,7 +113,6 @@ class DeepTDLearning(PolicyLearner):
                 )
 
         if network_instance is not None:
-            network_instance.to(self.device)
             # pyre-fixme[4]: Attribute must be annotated.
             self._Q = network_instance
             assert (
@@ -163,24 +162,22 @@ class DeepTDLearning(PolicyLearner):
         # TODO: Assumes subjective state is a torch tensor and gym action space.
         # Fix the available action space.
         with torch.no_grad():
-            subjective_state_tensor = torch.tensor(
-                subjective_state, device=self.device
-            )  # (state_dim)
             states_repeated = torch.repeat_interleave(
-                subjective_state_tensor.unsqueeze(0),
+                subjective_state.unsqueeze(0),
                 # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
                 available_action_space.n,
                 dim=0,
-            ).to(
-                self.device
-            )  # (action_space_size x state_dim)
-            actions = F.one_hot(torch.arange(0, available_action_space.n)).to(
-                self.device
-            )  # (action_space_size, action_dim)
+            )
+            # (action_space_size x state_dim)
 
-            q_values = self._Q.get_q_values(
-                states_repeated, actions
-            )  # this does a forward pass since all avaialble actions are already stacked together
+            actions = F.one_hot(torch.arange(0, available_action_space.n)).to(
+                subjective_state.device
+            )
+            # (action_space_size, action_dim)
+
+            q_values = self._Q.get_q_values(states_repeated, actions)
+            # this does a forward pass since all avaialble
+            # actions are already stacked together
 
             exploit_action = torch.argmax(q_values).view((-1)).item()
 

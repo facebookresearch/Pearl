@@ -58,7 +58,7 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
                     next_available_actions=self.cache.next_available_actions,
                     next_available_actions_mask=self.cache.next_available_actions_mask,
                     done=self.cache.done,
-                )
+                ).to(self.device)
             )
         if not done:
             # save current push into cache
@@ -72,7 +72,7 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
                 next_available_actions=next_available_actions_tensor_with_padding,
                 next_available_actions_mask=next_available_actions_mask,
                 done=self._process_single_done(done),
-            )
+            ).to(self.device)
         else:
             # for terminal state, push directly
             self.memory.append(
@@ -88,5 +88,5 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
                     next_available_actions=next_available_actions_tensor_with_padding,
                     next_available_actions_mask=next_available_actions_mask,
                     done=self._process_single_done(done),
-                )
+                ).to(self.device)
             )

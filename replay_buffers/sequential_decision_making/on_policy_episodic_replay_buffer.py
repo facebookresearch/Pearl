@@ -55,7 +55,7 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
                 next_available_actions=None,
                 next_available_actions_mask=None,
                 done=self._process_single_done(done),
-            )
+            ).to(self.device)
         )
 
         if done:

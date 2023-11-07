@@ -1,13 +1,15 @@
 import dataclasses
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, TypeVar
 
 import numpy as np
 
 import torch
 
-from pearl.utils.device import get_pearl_device
 from torch import Tensor
+
+
+T = TypeVar("T", bound="Transition")
 
 
 @dataclass(frozen=False)
@@ -28,16 +30,22 @@ class Transition:
     next_available_actions_mask: Optional[torch.Tensor] = None
     weight: Optional[torch.Tensor] = None
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __post_init__(self):
-        pearl_device = get_pearl_device()
+    def to(self: T, device: torch.device) -> T:
         # iterate over all fields, move to correct device
-        for field in dataclasses.fields(self.__class__):
-            if getattr(self, field.name) is not None:
+        for f in dataclasses.fields(self.__class__):
+            if getattr(self, f.name) is not None:
                 super().__setattr__(
-                    field.name,
-                    torch.as_tensor(getattr(self, field.name)).to(pearl_device),
+                    f.name,
+                    torch.as_tensor(getattr(self, f.name)).to(device),
                 )
+        return self
+
+    @property
+    def device(self) -> torch.device:
+        return self.state.device
+
+
+TB = TypeVar("TB", bound="TransitionBatch")
 
 
 @dataclass(frozen=False)
@@ -58,24 +66,24 @@ class TransitionBatch:
     next_available_actions_mask: Optional[torch.Tensor] = None
     weight: Optional[torch.Tensor] = None
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __post_init__(self):
-        pearl_device = get_pearl_device()
+    def to(self: TB, device: torch.device) -> TB:
         # iterate over all fields
-        for field in dataclasses.fields(self.__class__):
-            if getattr(self, field.name) is not None:
-                item = getattr(self, field.name)
-                if (
-                    isinstance(item, np.ndarray)
-                    or isinstance(item, float)
-                    or isinstance(item, int)
-                ):
-                    item = torch.tensor(item)  # convert to tensor if it wasn't a tensor
-                item = item.to(pearl_device)  # move to correct device
+        for f in dataclasses.fields(self.__class__):
+            if getattr(self, f.name) is not None:
+                item = getattr(self, f.name)
+                item = torch.as_tensor(item, device=device)
                 super().__setattr__(
-                    field.name,
+                    f.name,
                     item,
                 )
+        return self
+
+    @property
+    def device(self) -> torch.device:
+        """
+        The device where the batch lives.
+        """
+        return self.state.device
 
     def __len__(self) -> int:
         return self.reward.shape[0]
@@ -125,4 +133,4 @@ def filter_batch_by_bootstrap_mask(
         next_available_actions=_filter_tensor(batch.next_available_actions),
         next_available_actions_mask=_filter_tensor(batch.next_available_actions_mask),
         weight=_filter_tensor(batch.weight),
-    )
+    ).to(batch.device)

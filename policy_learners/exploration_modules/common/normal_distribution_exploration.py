@@ -39,13 +39,11 @@ class NormalDistributionExploration(ExplorationModule):
         values: Optional[torch.Tensor] = None,
         representation: Optional[torch.nn.Module] = None,
     ) -> Action:
+        device = exploit_action.device
 
         # checks that the exploit action is feasible in the available action space
-        low, high = torch.tensor(
-            action_space.low, device=self.device  # pyre-ignore
-        ), torch.tensor(
-            action_space.high, device=self.device  # pyre-ignore
-        )
+        low = torch.tensor(action_space.low).to(device)  # pyre-ignore
+        high = torch.tensor(action_space.high).to(device)  # pyre-ignore
         assert torch.all(exploit_action >= low) and torch.all(exploit_action <= high)
 
         action_dim = exploit_action.size()  # dimension of the action space
@@ -58,7 +56,7 @@ class NormalDistributionExploration(ExplorationModule):
             mean=self._mean,
             std=self._std_dev,
             size=action_dim,
-            device=self.device,
+            device=device,
         )
         # clip noise to be between [-1, 1]^{action_dim}
         clipped_noise = torch.clip(noise, -1, 1)

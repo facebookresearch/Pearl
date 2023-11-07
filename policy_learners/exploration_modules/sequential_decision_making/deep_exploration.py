@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Callable, Optional
 
 import torch
 
@@ -9,7 +9,6 @@ from pearl.neural_networks.common.value_networks import EnsembleQValueNetwork
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
-from pearl.utils.device import get_pearl_device
 from torch.nn import functional as F
 
 
@@ -28,6 +27,11 @@ class DeepExploration(ExplorationModule):
     [3] Ian Osband, Charles Blundell, Alexander Pritzel, and Benjamin
         Vay Roy, Deep exploration via bootstrapped DQN. Advances in Neural
         Information Processing Systems, 2016. https://arxiv.org/abs/1602.04621.
+
+        Args:
+            q_ensemble_network (EnsembleQValueNetwork): A network that outputs
+                a tensor of shape (num_samples, num_actions) where each row is
+                the Q-value of taking each possible action.
     """
 
     def __init__(
@@ -46,23 +50,20 @@ class DeepExploration(ExplorationModule):
         action_availability_mask: Optional[torch.Tensor] = None,
         representation: Optional[torch.nn.Module] = None,
     ) -> Action:
-        device = get_pearl_device()
-
-        # (state_dim)
-        subjective_state_tensor = torch.tensor(subjective_state, device=device)
-
-        # (action_space_size x state_dim)
         states_repeated = torch.repeat_interleave(
-            subjective_state_tensor.unsqueeze(0), action_space.n, dim=0  # pyre-ignore
-        ).to(device)
+            subjective_state.unsqueeze(0), action_space.n, dim=0  # pyre-ignore
+        )
+        # (action_space_size x state_dim)
 
+        actions = F.one_hot(torch.arange(0, action_space.n)).to(subjective_state.device)
         # (action_space_size, action_dim)
-        actions = F.one_hot(torch.arange(0, action_space.n)).to(device)
 
         with torch.no_grad():
             q_values = self.q_ensemble_network.get_q_values(
                 state_batch=states_repeated, action_batch=actions, persistent=True
-            )  # this does a forward pass since all available actions are already stacked together
+            )
+            # this does a forward pass since all available
+            # actions are already stacked together
 
         return torch.argmax(q_values).view((-1)).item()
 

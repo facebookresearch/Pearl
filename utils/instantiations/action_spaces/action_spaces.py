@@ -60,8 +60,8 @@ class DiscreteActionSpace(ActionSpace):
         state_dim = subjective_state.shape[-1]
         action_count = self.n
 
-        subjective_state = subjective_state.view(-1, state_dim).to(
-            subjective_state.device
+        subjective_state = subjective_state.view(
+            -1, state_dim
         )  # reshape to (batch_size, state_dim)
         batch_size = subjective_state.shape[0]
 

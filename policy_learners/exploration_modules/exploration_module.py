@@ -10,7 +10,6 @@ from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
-from pearl.utils.device import get_pearl_device
 
 
 class ExplorationType(Enum):
@@ -25,9 +24,6 @@ class ExplorationModule(ABC):
     """
     An abstract interface for exploration module.
     """
-
-    def __init__(self) -> None:
-        self.device: torch.device = get_pearl_device()
 
     def reset(self) -> None:  # noqa: B027
         """Resets the internal state of the exploration module. Default implementation does nothing."""

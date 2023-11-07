@@ -16,7 +16,6 @@ import torch.nn as nn
 from pearl.api.action_space import ActionSpace
 from pearl.neural_networks.common.utils import mlp_block
 
-from pearl.utils.device import get_pearl_device
 from torch import Tensor
 from torch.distributions import Normal
 
@@ -38,12 +37,11 @@ def action_scaling(
     Returns:
         scaled_action: centered and scaled input action vector, according to the action space
     """
-    device = get_pearl_device()
+    device = input_action.device
     # pyre-fixme[16]: `ActionSpace` has no attribute `low`.
-    low, high = torch.tensor(action_space.low).to(device), torch.tensor(
-        # pyre-fixme[16]: `ActionSpace` has no attribute `high`.
-        action_space.high
-    ).to(device)
+    low = torch.tensor(action_space.low).to(device)
+    # pyre-fixme[16]: `ActionSpace` has no attribute `high`.
+    high = torch.tensor(action_space.high).to(device)
 
     centered_and_scaled_action = (((high - low) * (input_action + 1.0)) / 2) + low
 
@@ -63,12 +61,11 @@ def noise_scaling(action_space: ActionSpace, input_noise: torch.Tensor) -> torch
     Returns:
         torch.Tensor: scaled input vector, according to the action space
     """
-    device = get_pearl_device()
+    device = input_noise.device
     # pyre-fixme[16]: `ActionSpace` has no attribute `low`.
-    low, high = torch.tensor(action_space.low).to(device), torch.tensor(
-        # pyre-fixme[16]: `ActionSpace` has no attribute `high`.
-        action_space.high
-    ).to(device)
+    low = torch.tensor(action_space.low).to(device)
+    # pyre-fixme[16]: `ActionSpace` has no attribute `high`.
+    high = torch.tensor(action_space.high).to(device)
 
     scaled_noise = ((high - low) / 2) * input_noise
 
@@ -170,15 +167,14 @@ class GaussianActorNetwork(nn.Module):
             output_dim=hidden_dims[-1],
             last_activation="relu",
         )
-        device = get_pearl_device()
         self.fc_mu = torch.nn.Linear(hidden_dims[-1], output_dim)
         self.fc_std = torch.nn.Linear(hidden_dims[-1], output_dim)
         self._action_space = action_space
         # check this for multi-dimensional spaces
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._action_bound = torch.tensor(
-            (action_space.high - action_space.low) / 2  # pyre-ignore
-        ).to(device)
+        self.register_buffer(
+            "_action_bound",
+            torch.tensor((action_space.high - action_space.low) / 2),  # pyre-ignore
+        )
 
         # preventing the actor network from learning a flat or a point mass distribution
         self._log_std_min = -5

@@ -8,10 +8,12 @@ import torch
 from libfb.py.certpathpicker.cert_path_picker import get_client_credential_paths
 from pearl.api.agent import Agent
 from pearl.api.environment import Environment
+from pearl.pearl_agent import PearlAgent
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
 )
+from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.online_learning import episode_return
 
@@ -86,7 +88,7 @@ def get_offline_data_in_buffer(url: str, size: int = 1000000) -> ReplayBuffer:
 
 def offline_learning(
     url: str,
-    offline_agent: Agent,
+    offline_agent: PearlAgent,
     # pyre-fixme[9]: data_buffer has type `ReplayBuffer`; used as `None`.
     data_buffer: ReplayBuffer = None,
     training_epochs: int = 1000,
@@ -105,13 +107,13 @@ def offline_learning(
     if data_buffer is None:
         # load data from a url and store it in a FIFOOffPolicyReplayBuffer
         data_buffer = get_offline_data_in_buffer(url)
+        data_buffer.device = offline_agent.device
         print("data buffer loaded")
 
     # training loop
     for i in range(training_epochs):
-        # pyre-fixme[16]: `Agent` has no attribute `policy_learner`.
         batch = data_buffer.sample(offline_agent.policy_learner.batch_size)
-        # pyre-fixme[16]: `Agent` has no attribute `learn_batch`.
+        assert isinstance(batch, TransitionBatch)
         loss = offline_agent.learn_batch(batch=batch)
         if i % 500 == 0:
             print("training epoch", i, "training loss", loss)

@@ -48,7 +48,7 @@ class BootstrappedDQN(DeepQLearning):
             self=self,
             training_rounds=training_rounds,
             batch_size=batch_size,
-            exploration_module=DeepExploration(q_ensemble_network=q_ensemble_network),
+            exploration_module=DeepExploration(q_ensemble_network),
             on_policy=False,
             is_action_continuous=False,
         )
@@ -73,10 +73,10 @@ class BootstrappedDQN(DeepQLearning):
                 f"{type(self).__name__} requires a batch of type "
                 f"`TransitionWithBootstrapMaskBatch`, but got {type(batch)}."
             )
-        loss_ensemble = torch.tensor(0.0).to(self.device)
+        loss_ensemble = torch.tensor(0.0).to(batch.device)
         mask = batch.bootstrap_mask
         for z in range(self.ensemble_size):
-            z = torch.tensor(z).to(self.device)
+            z = torch.tensor(z).to(batch.device)
             # if this batch doesn't have any items for the z-th ensemble, move on
             if mask is None or mask[:, z].sum() == 0:
                 continue

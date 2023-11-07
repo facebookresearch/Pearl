@@ -7,7 +7,6 @@ from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (  # noqa E501
     FIFOOffPolicyReplayBuffer,
 )
-from pearl.replay_buffers.tensor_based_replay_buffer import _create_transition_batch
 from pearl.replay_buffers.transition import (
     TransitionWithBootstrapMask,
     TransitionWithBootstrapMaskBatch,
@@ -91,7 +90,7 @@ class BootstrapReplayBuffer(FIFOOffPolicyReplayBuffer):
                 f"replay buffer with only {len(self)} elements"
             )
         samples = random.sample(self.memory, batch_size)
-        transition_batch = _create_transition_batch(
+        transition_batch = self._create_transition_batch(
             transitions=samples,
             has_next_state=self._has_next_state,
             has_next_action=self._has_next_action,

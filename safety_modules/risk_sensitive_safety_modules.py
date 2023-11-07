@@ -13,7 +13,6 @@ from pearl.neural_networks.sequential_decision_making.q_value_network import (
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.safety_modules.safety_module import SafetyModule
-from pearl.utils.device import get_pearl_device
 from torch import Tensor
 
 
@@ -27,8 +26,6 @@ class RiskSensitiveSafetyModule(SafetyModule):
     def __init__(self, **options) -> None:
         # pyre-fixme[4]: Attribute must be annotated.
         self._action_space = None
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._device = get_pearl_device()
 
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space
@@ -123,13 +120,12 @@ class QuantileNetworkMeanVarianceSafetyModule(RiskSensitiveSafetyModule):
             state_batch,
             action_batch,
         )
-        device = get_pearl_device()
         """
         variance computation:
             - sum_{i=0}^{N-1} (tau_{i+1} - tau_{i}) * (q_value_distribution_{tau_i} - mean_value)^2
         """
         mean_value = q_value_distribution.mean(dim=-1, keepdim=True)
-        quantiles = q_value_distribution_network.quantiles.to(device)
+        quantiles = q_value_distribution_network.quantiles
         quantile_differences = quantiles[1:] - quantiles[:-1]
         variance = (
             quantile_differences * torch.square(q_value_distribution - mean_value)

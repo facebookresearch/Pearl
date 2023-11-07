@@ -18,7 +18,6 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.device import get_pearl_device
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
@@ -97,7 +96,6 @@ class NeuralLinearBandit(NeuralBandit):
         # It doesnt make sense to call act if we are not working with action vector
         # pyre-fixme[16]: `ActionSpace` has no attribute `action_dim`.
         assert action_space.action_dim > 0
-        subjective_state = subjective_state.to(self.device)
 
         # pyre-fixme[16]: `ActionSpace` has no attribute `cat_state_tensor`.
         new_feature = action_space.cat_state_tensor(subjective_state)
@@ -126,16 +124,13 @@ class NeuralLinearBandit(NeuralBandit):
         # pyre-fixme[9]: action_space has type `DiscreteActionSpace`; used as `None`.
         action_space: DiscreteActionSpace = None,
     ) -> torch.Tensor:
-        self.device = get_pearl_device()
         # TODO generalize for all kinds of exploration module
         assert isinstance(self._exploration_module, UCBExploration)
-        subjective_state = subjective_state.to(self.device)
         feature = (
             action_space.cat_state_tensor(subjective_state)
             if action_space is not None
             else subjective_state
         )
-        feature.to(self.device)
         processed_feature = self._deep_represent_layers(feature)
         return self._exploration_module.get_scores(
             subjective_state=processed_feature,

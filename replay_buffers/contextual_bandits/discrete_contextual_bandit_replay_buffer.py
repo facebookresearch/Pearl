@@ -46,7 +46,7 @@ class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
                 state=self._process_single_state(state),
                 action=action,
                 reward=self._process_single_reward(reward),
-            )
+            ).to(self.device)
         )
 
     def sample(self, batch_size: int) -> TransitionBatch:
@@ -55,4 +55,4 @@ class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
             state=torch.cat([x.state for x in samples]),
             action=torch.stack([x.action for x in samples]),
             reward=torch.cat([x.reward for x in samples]),
-        )
+        ).to(self.device)

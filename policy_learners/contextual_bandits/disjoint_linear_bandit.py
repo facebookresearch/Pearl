@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from warnings import warn
 
@@ -19,9 +19,9 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.device import get_pearl_device
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from torch import nn
 
 
 class DisjointLinearBandit(ContextualBanditBase):
@@ -50,16 +50,15 @@ class DisjointLinearBandit(ContextualBanditBase):
             batch_size=batch_size,
             exploration_module=exploration_module,
         )
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.device = get_pearl_device()
         # Currently our disjoint LinUCB usecase only use LinearRegression
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._linear_regressions = torch.nn.ModuleList(
-            [
-                LinearRegression(feature_dim=feature_dim, l2_reg_lambda=l2_reg_lambda)
-                for _ in range(action_space.n)
-            ]
-        ).to(self.device)
+
+        # Keep list attribute since ensemble_forward requires List[nn.Module]
+        self._linear_regressions_list: List[nn.Module] = [
+            LinearRegression(feature_dim=feature_dim, l2_reg_lambda=l2_reg_lambda)
+            for _ in range(action_space.n)
+        ]
+        # create nn.ModuleList so self.to(device) will move modules along
+        self._linear_regressions = nn.ModuleList(self._linear_regressions_list)
         self._discrete_action_space = action_space
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
@@ -83,7 +82,7 @@ class DisjointLinearBandit(ContextualBanditBase):
                 torch.Tensor(self._discrete_action_space[action_idx])
                 .unsqueeze(0)
                 .expand(state.shape[0], -1)
-                .to(self.device)
+                .to(batch.device)
             )
             context = torch.cat([state, expanded_action], dim=1)
             reward = torch.index_select(
@@ -98,7 +97,7 @@ class DisjointLinearBandit(ContextualBanditBase):
                     index=index,
                 )
             else:
-                weight = torch.ones(reward.shape, device=self.device)
+                weight = torch.ones(reward.shape, device=batch.device)
             linear_regression.learn_batch(
                 x=context,
                 y=reward,
@@ -121,7 +120,7 @@ class DisjointLinearBandit(ContextualBanditBase):
             subjective_state=subjective_state
         )  # batch_size, action_count, feature_size
 
-        values = ensemble_forward(self._linear_regressions, feature)
+        values = ensemble_forward(self._linear_regressions_list, feature)
 
         return self._exploration_module.act(
             subjective_state=feature,

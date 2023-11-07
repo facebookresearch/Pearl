@@ -1,6 +1,5 @@
-import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, TypeVar
 
 import torch
 
@@ -18,13 +17,26 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 )
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.device import get_pearl_device, is_distribution_enabled
+from pearl.utils.device import is_distribution_enabled
 
 
-class PolicyLearner(ABC, torch.nn.Module):
+class PolicyLearner(torch.nn.Module, ABC):
     """
     An abstract interface for policy learners.
+
+    Important requirements for policy learners using tensors:
+        1. Attribute `requires_tensors` must be `True` (this is the default).
+        2. If a policy learner is to operate on a given torch device,
+           the policy learner must be moved to that device using method `to(device)`.
+        3. All inputs to policy leaners must be moved to the proper device,
+           including `TransitionBatch`es (which also have a `to(device)` method).
     """
+
+    # See https://mypy.readthedocs.io/en/latest/generics.html#generic-methods-and-generic-self for the use  # noqa E501
+    # of `T` to annotate `self`. At least one method of `PolicyLearner`
+    # returns `self` and we want those return values to be
+    # the type of the subclass, not the looser type of `PolicyLearner`.
+    T = TypeVar("T", bound="PolicyLearner")
 
     def __init__(
         self,
@@ -32,6 +44,8 @@ class PolicyLearner(ABC, torch.nn.Module):
         is_action_continuous: bool,
         training_rounds: int = 100,
         batch_size: int = 1,
+        requires_tensors: bool = True,
+        # temporary solution before abstract interfaces are implemented
         # pyre-fixme[2]: Parameter must be annotated.
         **options,
     ) -> None:
@@ -47,10 +61,8 @@ class PolicyLearner(ABC, torch.nn.Module):
         self._training_steps = 0
         self.on_policy = on_policy
         self.is_action_continuous = is_action_continuous
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.device = get_pearl_device()
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.distribution_enabled = is_distribution_enabled()
+        self.distribution_enabled: bool = is_distribution_enabled()
+        self.requires_tensors = requires_tensors
 
     @property
     def optimizer(self) -> torch.optim.Optimizer:

@@ -1,5 +1,7 @@
 from typing import Any, Iterable
 
+import torch
+
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 
 
@@ -8,6 +10,14 @@ class SingleTransitionReplayBuffer(ReplayBuffer):
     def __init__(self, **options) -> None:
         # pyre-fixme[4]: Attribute must be annotated.
         self._transition = None
+
+    @property
+    def device(self) -> torch.device:
+        raise ValueError("SingleTransitionReplayBuffer does not have a device.")
+
+    @device.setter
+    def device(self, new_device: torch.device) -> None:
+        pass
 
     # pyre-fixme[2]: Parameter must be annotated.
     def push(self, *args) -> None:

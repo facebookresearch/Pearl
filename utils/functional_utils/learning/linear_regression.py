@@ -16,7 +16,7 @@ import logging
 from typing import Tuple
 
 import torch
-from pearl.utils.device import get_pearl_device, is_distribution_enabled
+from pearl.utils.device import is_distribution_enabled
 from torch import nn
 
 
@@ -30,20 +30,17 @@ class LinearRegression(nn.Module):
         l2_reg_lambda: L2 regularization parameter
         """
         super(LinearRegression, self).__init__()
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.device = get_pearl_device()
         self.register_buffer(
             "_A",
-            l2_reg_lambda
-            * torch.eye(feature_dim + 1, device=self.device),  # +1 for intercept
+            l2_reg_lambda * torch.eye(feature_dim + 1),  # +1 for intercept
         )
-        self.register_buffer("_b", torch.zeros(feature_dim + 1, device=self.device))
-        self.register_buffer("_sum_weight", torch.zeros(1, device=self.device))
+        self.register_buffer("_b", torch.zeros(feature_dim + 1))
+        self.register_buffer("_sum_weight", torch.zeros(1))
         self.register_buffer(
             "_inv_A",
-            torch.zeros(feature_dim + 1, feature_dim + 1, device=self.device),
+            torch.zeros(feature_dim + 1, feature_dim + 1),
         )
-        self.register_buffer("_coefs", torch.zeros(feature_dim + 1, device=self.device))
+        self.register_buffer("_coefs", torch.zeros(feature_dim + 1))
         self._feature_dim = feature_dim
         self.distribution_enabled: bool = is_distribution_enabled()
 

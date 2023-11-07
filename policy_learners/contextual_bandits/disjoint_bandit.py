@@ -23,7 +23,6 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.device import get_pearl_device
 from pearl.utils.instantiations.action_spaces.action_spaces import (
     ActionSpace,
     DiscreteActionSpace,
@@ -54,11 +53,8 @@ class DisjointBanditContainer(ContextualBanditBase):
             training_rounds=training_rounds,
             batch_size=batch_size,
         )
-        self.device: torch.device = get_pearl_device()
         # Currently our disjoint LinUCB usecase only use LinearRegression
-        self._arm_bandits: torch.nn.ModuleList = torch.nn.ModuleList(arm_bandits).to(
-            self.device
-        )
+        self._arm_bandits: torch.nn.ModuleList = torch.nn.ModuleList(arm_bandits)
         self._n_arms: int = len(arm_bandits)
 
     @property
@@ -100,15 +96,16 @@ class DisjointBanditContainer(ContextualBanditBase):
                     weight=batch.weight[mask]
                     if batch.weight is not None
                     else torch.ones_like(mask, dtype=torch.float),
-                    # empty action features since disjoint model used action as index of per-arm model
+                    # empty action features since disjoint model used
+                    # action as index of per-arm model
                     # if arms need different features, use 3D `state` instead
                     action=torch.empty(
                         int(mask.sum().item()),
                         0,
                         dtype=torch.float,
-                        device=self.device,
+                        device=batch.device,
                     ),
-                )
+                ).to(batch.device)
             )
         return batches
 

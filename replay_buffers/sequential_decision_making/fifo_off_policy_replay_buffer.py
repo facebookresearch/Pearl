@@ -47,5 +47,5 @@ class FIFOOffPolicyReplayBuffer(TensorBasedReplayBuffer):
                 next_available_actions=next_available_actions_tensor_with_padding,
                 next_available_actions_mask=next_available_actions_mask,
                 done=self._process_single_done(done),
-            )
+            ).to(self.device)
         )

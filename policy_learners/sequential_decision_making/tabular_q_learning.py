@@ -43,6 +43,7 @@ class TabularQLearning(PolicyLearner):
             exploration_module=EGreedyExploration(exploration_rate),
             on_policy=False,
             is_action_continuous=False,
+            requires_tensors=False,  # temporary solution before abstract interfaces
         )
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor

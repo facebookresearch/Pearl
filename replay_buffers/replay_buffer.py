@@ -1,11 +1,23 @@
 from abc import ABC, abstractmethod
 from typing import Any, Iterable
 
+import torch
+
 
 class ReplayBuffer(ABC):
     def __init__(self) -> None:
         super().__init__()
         self._is_action_continuous: bool = False
+
+    @property
+    @abstractmethod
+    def device(self) -> torch.device:
+        pass
+
+    @device.setter
+    @abstractmethod
+    def device(self, new_device: torch.device) -> None:
+        pass
 
     @abstractmethod
     # pyre-fixme[2]: Parameter must be annotated.

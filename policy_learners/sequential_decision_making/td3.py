@@ -105,7 +105,7 @@ class TD3(DeepDeterministicPolicyGradient):
                 mean=0,
                 std=self._actor_update_noise,
                 size=next_action.size(),
-                device=self.device,
+                device=batch.device,
             )
 
             noise = torch.clamp(
@@ -116,9 +116,9 @@ class TD3(DeepDeterministicPolicyGradient):
 
             # add clipped noise to next_action
             low, high = torch.tensor(
-                self._action_space.low, device=self.device  # pyre-ignore
+                self._action_space.low, device=batch.device  # pyre-ignore
             ), torch.tensor(
-                self._action_space.high, device=self.device  # pyre-ignore
+                self._action_space.high, device=batch.device  # pyre-ignore
             )
 
             next_action = torch.clamp(
