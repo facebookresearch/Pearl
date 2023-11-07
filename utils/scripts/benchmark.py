@@ -107,7 +107,6 @@ class PearlDQN(Evaluation):
 
     def evaluate(self, seed: int) -> Iterable[Number]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
-        env.seed(seed)
         agent = PearlAgent(
             policy_learner=DeepQLearning(
                 state_dim=env.observation_space.shape[0],
@@ -144,7 +143,6 @@ class PearlContinuousSAC(Evaluation):
 
     def evaluate(self, seed: int) -> Iterable[Number]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
-        env.seed(seed)
         agent = PearlAgent(
             policy_learner=ContinuousSoftActorCritic(
                 state_dim=env.observation_space.shape[0],
@@ -184,7 +182,6 @@ class PearlPPO(Evaluation):
 
     def evaluate(self, seed: int) -> Iterable[Number]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
-        env.seed(seed)
         agent = PearlAgent(
             policy_learner=ProximalPolicyOptimization(
                 state_dim=env.observation_space.shape[0],
@@ -223,7 +220,6 @@ class PearlDDPG(Evaluation):
 
     def evaluate(self, seed: int) -> Iterable[Number]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
-        env.seed(seed)
         agent = PearlAgent(
             policy_learner=DeepDeterministicPolicyGradient(
                 state_dim=env.observation_space.shape[0],
@@ -264,7 +260,6 @@ class PearlTD3(Evaluation):
 
     def evaluate(self, seed: int) -> Iterable[Number]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
-        env.seed(seed)
         agent = PearlAgent(
             policy_learner=TD3(
                 state_dim=env.observation_space.shape[0],
@@ -527,5 +522,10 @@ if __name__ == "__main__":
         default=-1,
     )
     args: argparse.Namespace = parser.parse_args()
+
+    if args.device != -1:
+        print(f"Going to attempt to use GPU (cuda:{args.device})")
+    else:
+        print("Going to attempt to use CPU")
 
     main(args.device)
