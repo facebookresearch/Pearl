@@ -137,37 +137,54 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         # TODO[drjiang]: Will properly handle the None pyre errors in this function,
         # in a subsequent diff. Errors are due to parts of the transition potentially
         # being None.
-        state_batch = torch.cat([x.state for x in transitions])
-        action_batch = torch.cat([x.action for x in transitions])
-        reward_batch = torch.cat([x.reward for x in transitions])
-        done_batch = torch.cat([x.done for x in transitions])
+        state_list = []
+        action_list = []
+        reward_list = []
+        done_list = []
+        next_state_list = []
+        next_action_list = []
+        curr_available_actions_list = []
+        curr_available_actions_mask_list = []
+        next_available_actions_list = []
+        next_available_actions_mask_list = []
+        for x in transitions:
+            state_list.append(x.state)
+            action_list.append(x.action)
+            reward_list.append(x.reward)
+            done_list.append(x.done)
+            if has_next_state:
+                next_state_list.append(x.next_state)
+            if has_next_action:
+                next_action_list.append(x.next_action)
+            if not is_action_continuous:
+                curr_available_actions_list.append(x.curr_available_actions)
+                curr_available_actions_mask_list.append(x.curr_available_actions_mask)
 
+            if not is_action_continuous and has_next_available_actions:
+                next_available_actions_list.append(x.next_available_actions)
+                next_available_actions_mask_list.append(x.next_available_actions_mask)
+
+        state_batch = torch.cat(state_list)
+        action_batch = torch.cat(action_list)
+        reward_batch = torch.cat(reward_list)
+        done_batch = torch.cat(done_list)
         next_state_batch, next_action_batch = None, None
         if has_next_state:
-            next_state_batch = torch.cat(
-                [x.next_state for x in transitions]  # pyre-ignore
-            )
+            next_state_batch = torch.cat(next_state_list)
         if has_next_action:
-            next_action_batch = torch.cat(
-                [x.next_action for x in transitions]  # pyre-ignore
-            )
-
+            next_action_batch = torch.cat(next_action_list)
         curr_available_actions_batch, curr_available_actions_mask_batch = None, None
         if not is_action_continuous:
-            curr_available_actions_batch = torch.cat(
-                [x.curr_available_actions for x in transitions]  # pyre-ignore
-            )
+            curr_available_actions_batch = torch.cat(curr_available_actions_list)
             curr_available_actions_mask_batch = torch.cat(
-                [x.curr_available_actions_mask for x in transitions]  # pyre-ignore
+                curr_available_actions_mask_list
             )
 
         next_available_actions_batch, next_available_actions_mask_batch = None, None
         if not is_action_continuous and has_next_available_actions:
-            next_available_actions_batch = torch.cat(
-                [x.next_available_actions for x in transitions]  # pyre-ignore
-            )
+            next_available_actions_batch = torch.cat(next_available_actions_list)
             next_available_actions_mask_batch = torch.cat(
-                [x.next_available_actions_mask for x in transitions]  # pyre-ignore
+                next_available_actions_mask_list
             )
         return TransitionBatch(
             state=state_batch,
