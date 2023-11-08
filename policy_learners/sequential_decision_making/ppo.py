@@ -105,11 +105,12 @@ class ProximalPolicyOptimization(PolicyGradient):
         # A = sum(TD_error) = return - V(s)
         # TODO support lambda and gamma
         with torch.no_grad():
-            advantage = batch.reward - vs
+            # pyre-fixme
+            advantage = batch.cum_reward - vs
 
         # critic loss
         criterion = torch.nn.MSELoss()
-        vs_loss = criterion(vs, batch.reward)
+        vs_loss = criterion(vs, batch.cum_reward)
 
         # entropy
         # Categorical is good for Cartpole Env where actions are discrete

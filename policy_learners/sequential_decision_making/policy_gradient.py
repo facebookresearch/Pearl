@@ -116,11 +116,12 @@ class PolicyGradient(PolicyLearner):
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         state_batch = batch.state  # (batch_size x state_dim)
         action_batch = batch.action  # (batch_size x action_dim)
-        return_batch = batch.reward  # (batch_size)
+        return_batch = batch.cum_reward  # (batch_size)
 
         batch_size = state_batch.shape[0]
         # sanity check they have same batch_size
         assert action_batch.shape[0] == batch_size
+        # pyre-fixme
         assert return_batch.shape[0] == batch_size
 
         policy_propensities = self._get_action_prob(batch.state, batch.action)

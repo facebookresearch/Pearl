@@ -19,7 +19,7 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         self.capacity = 10
 
         self.rewards = [4.0, 6.0, 5.0]
-        self.cum_returns = [15.0, 11.0, 5.0]  # cumulative returns
+        self.returns = [15.0, 11.0, 5.0]  # list of returns
         self.trajectory_len = len(self.rewards)
         self.action_size = 3
         # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `range`.
@@ -66,8 +66,9 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         order = torch.argsort(batch.state.squeeze())
 
         # validate cumulative return calculation
-        cum_returns_buffer = batch.reward[order]
-        self.assertTrue(torch.equal(cum_returns_buffer, torch.tensor(self.cum_returns)))
+        # pyre-fixme
+        returns_buffer = batch.cum_reward[order]
+        self.assertTrue(torch.equal(returns_buffer, torch.tensor(self.returns)))
 
         # validate terminal state indicators - 1 only for the last element
         done = batch.done[order]
@@ -96,7 +97,7 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
             )
 
         rewards_2 = [11.0, 8.0]
-        cum_returns_2 = [19.0, 8.0]
+        returns_2 = [19.0, 8.0]
         states_2 = [4.0, 5.0]
         trajectory_len_2 = len(rewards_2)
 
@@ -122,17 +123,16 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         order = torch.argsort(batch.state.squeeze())
 
         # validate cumulative return calculation
-        cum_returns_buffer = batch.reward[order]
+        # pyre-fixme
+        returns_buffer = batch.cum_reward[order]
         self.assertTrue(
             torch.equal(
-                cum_returns_buffer[0 : self.trajectory_len],
-                torch.tensor(self.cum_returns),
+                returns_buffer[0 : self.trajectory_len],
+                torch.tensor(self.returns),
             )
         )  # 1st trajectory
         self.assertTrue(
-            torch.equal(
-                cum_returns_buffer[self.trajectory_len :], torch.tensor(cum_returns_2)
-            )
+            torch.equal(returns_buffer[self.trajectory_len :], torch.tensor(returns_2))
         )  # 2nd trajectory
 
         # validate terminal state indicators - 1 only for the last element
@@ -183,8 +183,9 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         batch = replay_buffer.sample(self.trajectory_len)
         for i in range(len(batch.action)):
             if batch.state[i] == 0:
-                self.assertEqual(4 + 8.5 * 0.5, batch.reward[i])
+                # pyre-fixme
+                self.assertEqual(4 + 8.5 * 0.5, batch.cum_reward[i])
             if batch.state[i] == 1:
-                self.assertEqual(8.5, batch.reward[i])
+                self.assertEqual(8.5, batch.cum_reward[i])
             if batch.state[i] == 2:
-                self.assertEqual(5, batch.reward[i])
+                self.assertEqual(5, batch.cum_reward[i])

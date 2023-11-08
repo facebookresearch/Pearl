@@ -17,7 +17,6 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
         # wait for next action is available and then final push
         # this is designed for single transition for now
         # pyre-fixme[4]: Attribute must be annotated.
-        self.reward_cache = []
         # pyre-fixme[4]: Attribute must be annotated.
         self.state_action_cache = []
         self._discounted_factor = discounted_factor
@@ -41,14 +40,13 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
 
         current_state = self._process_single_state(state)
         current_action = self._process_single_action(action, action_space)
-
-        self.reward_cache.append(reward)
+        next_reward = self._process_single_reward(reward)
         self.state_action_cache.append(
             Transition(
                 state=current_state,
                 action=current_action,
-                # pyre-fixme[6]: For 3rd argument expected `Tensor` but got `None`.
-                reward=None,
+                reward=next_reward,
+                cum_reward=None,
                 next_state=None,
                 curr_available_actions=curr_available_actions_tensor_with_padding,
                 curr_available_actions_mask=curr_available_actions_mask,
@@ -60,14 +58,13 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
 
         if done:
             # discounted_return at time i = sum of (self._discounted_factor^(j-i) * Rj) j is [i, T]
-            discounted_return = 0
+            discounted_return = 0.0
             for i in range(len(self.state_action_cache) - 1, -1, -1):
-                cum_return = self.reward_cache[i] + discounted_return
-                self.state_action_cache[i].reward = self._process_single_reward(
-                    cum_return
+                cum_reward = self.state_action_cache[i].reward + discounted_return
+                self.state_action_cache[i].cum_reward = self._process_single_reward(
+                    cum_reward
                 )
                 self.memory.append(self.state_action_cache[i])
-                discounted_return = self._discounted_factor * cum_return
+                discounted_return = self._discounted_factor * cum_reward
 
-            self.reward_cache = []
             self.state_action_cache = []
