@@ -177,10 +177,7 @@ class DisjointBanditContainer(ContextualBanditBase):
         return self._exploration_module.get_scores(
             subjective_state=feature,
             values=ensemble_forward(self.models, feature, use_for_loop=True),
-            # when action_space is None, we are querying score for one action
-            action_space=action_space
-            if action_space is not None
-            else DiscreteActionSpace([0]),
+            action_space=action_space,
             representation=self.models,
         ).squeeze()
 

@@ -20,6 +20,8 @@ from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
+DEFAULT_ACTION_SPACE = DiscreteActionSpace([0])
+
 
 class LinearBandit(ContextualBanditBase):
     """
@@ -100,8 +102,7 @@ class LinearBandit(ContextualBanditBase):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
-        # pyre-fixme[9]: action_space has type `DiscreteActionSpace`; used as `None`.
-        action_space: DiscreteActionSpace = None,
+        action_space: DiscreteActionSpace = DEFAULT_ACTION_SPACE,
     ) -> torch.Tensor:
         """
         Returns:
@@ -109,17 +110,10 @@ class LinearBandit(ContextualBanditBase):
             Shape is (batch)
         """
         assert isinstance(self._exploration_module, ScoreExplorationBase)
-        feature = (
-            action_space.cat_state_tensor(subjective_state)
-            if action_space is not None
-            else subjective_state
-        )
+        feature = action_space.cat_state_tensor(subjective_state)
         return self._exploration_module.get_scores(
             subjective_state=feature,
             values=self.model(feature),
-            # when action_space is None, we are querying score for one action
-            action_space=action_space
-            if action_space is not None
-            else DiscreteActionSpace([0]),
+            action_space=action_space,
             representation=self.model,
         ).squeeze()

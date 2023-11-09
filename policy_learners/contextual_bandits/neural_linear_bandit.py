@@ -21,6 +21,8 @@ from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
 from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
+DEFAULT_ACTION_SPACE = DiscreteActionSpace([0])
+
 
 class NeuralLinearBandit(NeuralBandit):
     """
@@ -121,23 +123,25 @@ class NeuralLinearBandit(NeuralBandit):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
-        # pyre-fixme[9]: action_space has type `DiscreteActionSpace`; used as `None`.
-        action_space: DiscreteActionSpace = None,
+        action_space: DiscreteActionSpace = DEFAULT_ACTION_SPACE,
     ) -> torch.Tensor:
         # TODO generalize for all kinds of exploration module
         assert isinstance(self._exploration_module, UCBExploration)
-        feature = (
-            action_space.cat_state_tensor(subjective_state)
-            if action_space is not None
-            else subjective_state
-        )
-        processed_feature = self._deep_represent_layers(feature)
-        return self._exploration_module.get_scores(
+        feature = action_space.cat_state_tensor(subjective_state)
+        batch_size = feature.shape[0]
+        feature_dim = feature.shape[-1]
+        feature = feature.reshape(
+            -1, feature_dim
+        )  # dim: [batch_size * num_arms, feature_dim]
+        processed_feature = self._deep_represent_layers(
+            feature
+        )  # dim: [batch_size, num_arms, feature_dim]
+        scores = self._exploration_module.get_scores(
             subjective_state=processed_feature,
             values=self._linear_regression(processed_feature),
-            # when action_space is None, we are querying score for one action
-            action_space=action_space
-            if action_space is not None
-            else DiscreteActionSpace([0]),
+            action_space=action_space,
             representation=self._linear_regression,
-        ).squeeze()
+        )  # dim: [batch_size * num_arms, 1]
+        return scores.reshape(
+            batch_size, -1
+        ).squeeze()  # dim: [batch_size, num_arms] or [batch_size]

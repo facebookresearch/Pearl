@@ -25,6 +25,8 @@ from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActio
 from torch import optim
 from torchrec.optim.keyed import CombinedOptimizer
 
+DEFAULT_ACTION_SPACE = DiscreteActionSpace([0])
+
 
 class NeuralBandit(ContextualBanditBase):
     """
@@ -131,8 +133,7 @@ class NeuralBandit(ContextualBanditBase):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
-        # pyre-fixme[9]: action_space has type `DiscreteActionSpace`; used as `None`.
-        action_space: DiscreteActionSpace = None,
+        action_space: DiscreteActionSpace = DEFAULT_ACTION_SPACE,
     ) -> torch.Tensor:
         """
         Args:
@@ -141,12 +142,15 @@ class NeuralBandit(ContextualBanditBase):
         Return:
             return mlp value with shape (batch_size, action_count)
         """
-        feature = (
-            action_space.cat_state_tensor(subjective_state)
-            if action_space is not None
-            else subjective_state
-        )
-        return self._deep_represent_layers(feature).squeeze()
+        feature = action_space.cat_state_tensor(subjective_state)
+        batch_size = feature.shape[0]
+        feature_dim = feature.shape[-1]
+        feature = feature.reshape(
+            -1, feature_dim
+        )  # dim: [batch_size * num_arms, feature_dim]
+        return (
+            self._deep_represent_layers(feature).reshape(batch_size, -1).squeeze()
+        )  # dim: [batch_size, num_arms] or [batch_size]
 
     @property
     def optimizer(self) -> torch.optim.Optimizer:
