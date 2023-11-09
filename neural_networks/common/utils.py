@@ -185,12 +185,14 @@ def ensemble_forward(
     Output:
         A tensor of shape (batch_size, num_models)
     """
-    assert (
-        features.ndim == 3
-    ), "Features should be of shape (batch_size, num_models, num_features)"
-    assert features.shape[1] == len(
-        models
-    ), "Number of models must match features.shape[1]"
+    torch._assert(
+        features.ndim == 3,
+        "Features should be of shape (batch_size, num_models, num_features)",
+    )
+    torch._assert(
+        features.shape[1] == len(models),
+        "Number of models must match features.shape[1]",
+    )
     batch_size = features.shape[0]
 
     if use_for_loop:

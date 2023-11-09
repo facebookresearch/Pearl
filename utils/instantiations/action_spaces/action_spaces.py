@@ -79,5 +79,9 @@ class DiscreteActionSpace(ActionSpace):
             [expanded_state, expanded_action], dim=2
         )  # batch_size, action_count, feature_dim
 
-        assert new_feature.shape == (batch_size, action_count, state_dim + action_dim)
+        torch._assert(
+            new_feature.shape == (batch_size, action_count, state_dim + action_dim),
+            "The shape of the concatenated feature is wrong. Expected "
+            f"{(batch_size, action_count, state_dim + action_dim)}, got {new_feature.shape}",
+        )
         return new_feature.to(subjective_state.device)
