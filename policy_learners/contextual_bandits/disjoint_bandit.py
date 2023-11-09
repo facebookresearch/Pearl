@@ -150,7 +150,7 @@ class DisjointBanditContainer(ContextualBanditBase):
             subjective_state=subjective_state
         )  # batch_size, action_count, feature_size
 
-        values = ensemble_forward(self.models, feature)
+        values = ensemble_forward(self.models, feature, use_for_loop=True)
 
         return self._exploration_module.act(
             subjective_state=feature,
@@ -176,7 +176,7 @@ class DisjointBanditContainer(ContextualBanditBase):
         )  # batch_size, action_count, feature_size
         return self._exploration_module.get_scores(
             subjective_state=feature,
-            values=ensemble_forward(self.models, feature),
+            values=ensemble_forward(self.models, feature, use_for_loop=True),
             # when action_space is None, we are querying score for one action
             action_space=action_space
             if action_space is not None

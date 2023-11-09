@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple, Type
+from typing import Callable, Iterable, Tuple, Type
 
 import torch
 import torch.nn as nn
@@ -22,7 +22,7 @@ class TwinCritic(torch.nn.Module):
         state_dim: int,
         action_dim: int,
         hidden_dims: Iterable[int],
-        init_fn: nn.Module,
+        init_fn: Callable[[nn.Module], None],
         network_type: Type[QValueNetwork] = VanillaQValueNetwork,
         output_dim: int = 1,
     ) -> None:

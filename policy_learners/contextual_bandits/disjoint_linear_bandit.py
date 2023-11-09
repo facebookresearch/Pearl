@@ -120,13 +120,15 @@ class DisjointLinearBandit(ContextualBanditBase):
             subjective_state=subjective_state
         )  # batch_size, action_count, feature_size
 
-        values = ensemble_forward(self._linear_regressions_list, feature)
+        values = ensemble_forward(
+            self._linear_regressions_list, feature, use_for_loop=True
+        )
 
         return self._exploration_module.act(
             subjective_state=feature,
             action_space=action_space,
             values=values,
-            representation=self._linear_regressions,
+            representation=self._linear_regressions_list,
         )
 
     def get_scores(

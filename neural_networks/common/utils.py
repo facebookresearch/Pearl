@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import Dict, List, Optional, Union
 
 import torch
 import torch.nn as nn
@@ -140,25 +140,21 @@ def conv_block(
 
 
 ## To do: the name of this function needs to be revised to xavier_init_weights
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[2]: Parameter must be annotated.
-def init_weights(m):
+def init_weights(m: nn.Module) -> None:
     if isinstance(m, nn.Linear):
         nn.init.xavier_uniform_(m.weight)
         m.bias.data.fill_(0.01)
 
 
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[2]: Parameter must be annotated.
-def uniform_init_weights(m):
+def uniform_init_weights(m: nn.Module) -> None:
     if isinstance(m, nn.Linear):
         nn.init.uniform_(m.weight, -0.001, 0.001)
         nn.init.uniform_(m.bias, -0.001, 0.001)
 
 
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[2]: Parameter must be annotated.
-def update_target_network(target_network, source_network, tau):
+def update_target_network(
+    target_network: nn.Module, source_network: nn.Module, tau: float
+) -> None:
     # Q_target = (1 - tao) * Q_target + tao*Q
     target_net_state_dict = target_network.state_dict()
     source_net_state_dict = source_network.state_dict()
@@ -170,34 +166,60 @@ def update_target_network(target_network, source_network, tau):
     target_network.load_state_dict(target_net_state_dict)
 
 
-def ensemble_forward(models: List[nn.Module], features: torch.Tensor) -> torch.Tensor:
+def ensemble_forward(
+    models: Union[nn.ModuleList, List[nn.Module]],
+    features: torch.Tensor,
+    use_for_loop: bool = True,
+) -> torch.Tensor:
     """
-    features shape: (batch_size, num_models, num_features)
+    Run forward pass on several models and return their outputs stacked as a tensor.
+    If use_for_loop is False, a vectorized implementation is used, which has some
+        limitations (see https://fburl.com/code/m4l2tjof):
+    1. All models must have the same structure.
+    2. Gradient backpropagation to original model parameters might not work properly.
+
+    Args:
+        models: list of models to run forward pass on. Length: num_models
+        features: features to run forward pass on. shape: (batch_size, num_models, num_features)
+        use_for_loop: whether to use for loop or vectorized implementation
+    Output:
+        A tensor of shape (batch_size, num_models)
     """
-    # followed example in https://pytorch.org/docs for ensembling
+    assert (
+        features.ndim == 3
+    ), "Features should be of shape (batch_size, num_models, num_features)"
     assert features.shape[1] == len(
         models
     ), "Number of models must match features.shape[1]"
     batch_size = features.shape[0]
-    features = features.permute((1, 0, 2))
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def wrapper(params, buffers, data):
-        return torch.func.functional_call(models[0], (params, buffers), data)
+    if use_for_loop:
+        values = [model(features[:, i, :]).flatten() for i, model in enumerate(models)]
+        return torch.stack(values, dim=-1)  # (batch_size, ensemble_size)
+    else:
+        features = features.permute((1, 0, 2))
 
-    params, buffers = stack_module_state(models)
-    values = torch.vmap(wrapper)(params, buffers, features).view(
-        (-1, batch_size)
-    )  # (ensemble_size, batch_size)
+        def wrapper(
+            params: Dict[str, torch.Tensor],
+            buffers: Dict[str, torch.Tensor],
+            data: torch.Tensor,
+        ) -> torch.Tensor:
+            return torch.func.functional_call(models[0], (params, buffers), data)
 
-    # change shape to (batch_size, ensemble_size)
-    return values.permute(1, 0)
+        params, buffers = stack_module_state(models)
+        values = torch.vmap(wrapper)(params, buffers, features).view(
+            (-1, batch_size)
+        )  # (ensemble_size, batch_size)
+
+        # change shape to (batch_size, ensemble_size)
+        return values.permute(1, 0)
 
 
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[2]: Parameter must be annotated.
-def update_target_networks(list_of_target_networks, list_of_source_networks, tau):
+def update_target_networks(
+    list_of_target_networks: Union[nn.ModuleList, List[nn.Module]],
+    list_of_source_networks: Union[nn.ModuleList, List[nn.Module]],
+    tau: float,
+) -> None:
     """
     Args:
         list_of_target_networks: nn.ModuleList() of nn.Module()
