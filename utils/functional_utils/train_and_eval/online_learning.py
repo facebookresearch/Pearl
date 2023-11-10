@@ -2,6 +2,7 @@ import logging
 from typing import Callable, List, Optional
 
 import matplotlib.pyplot as plt
+import numpy as np
 import torch
 
 from pearl.api.agent import Agent
@@ -44,7 +45,10 @@ def online_learning_to_png_graph(
     """
 
     returns = online_learning_returns(
-        agent, env, number_of_episodes, learn_after_episode
+        agent=agent,
+        env=env,
+        number_of_episodes=number_of_episodes,
+        learn_after_episode=learn_after_episode,
     )
 
     if filename is not None:
@@ -65,17 +69,21 @@ def online_learning_returns(
     agent: Agent,
     env: Environment,
     number_of_episodes: int = 1000,
+    number_of_steps: Optional[int] = None,
     learn_after_episode: bool = False,
     print_every_x_episodes: Optional[int] = None,
+    print_every_x_steps: Optional[int] = None,
 ) -> List[Value]:
     returns = []
     online_learning(
         agent,
         env,
         number_of_episodes=number_of_episodes,
+        number_of_steps=number_of_steps,
         learn_after_episode=learn_after_episode,
         process_return=returns.append,
         print_every_x_episodes=print_every_x_episodes,
+        print_every_x_steps=print_every_x_steps,
     )
     return returns
 
@@ -85,9 +93,11 @@ def online_learning(
     agent: Agent,
     env: Environment,
     number_of_episodes: int = 1000,
+    number_of_steps: Optional[int] = None,
     learn_after_episode: bool = False,
     process_return: Callable[[Value], None] = lambda g: None,
     print_every_x_episodes: Optional[int] = None,
+    print_every_x_steps: Optional[int] = None,
 ):
     """
     Performs online learning for a number of episodes.
@@ -99,17 +109,48 @@ def online_learning(
         learn_after_episode (bool, optional): asks the agent to only learn after every episode. Defaults to False.
         process_return (Callable[[Value], None], optional): a callable for processing the returns of the episodes. Defaults to no-op.
     """
-    for i in range(number_of_episodes):
-        g = episode_return(
+    assert (number_of_episodes is None and number_of_steps is not None) or (
+        number_of_episodes is not None and number_of_steps is None
+    )
+    total_steps = 0
+    total_episodes = 0
+    returns_within_period = []
+    while True:
+        if number_of_episodes is not None and total_episodes >= number_of_episodes:
+            break
+        if number_of_steps is not None and total_steps >= number_of_steps:
+            break
+        old_total_steps = total_steps
+        g, total_steps = episode_return(
             agent,
             env,
             learn=True,
             exploit=False,
             learn_after_episode=learn_after_episode,
+            total_steps=old_total_steps,
         )
-        if print_every_x_episodes is not None and i % print_every_x_episodes == 0:
-            print(f"\repisode {i}, agent={agent}, env={env}, return={g}", end="")
-        process_return(g)
+        total_episodes += 1
+        if (
+            print_every_x_steps is not None
+            and old_total_steps // print_every_x_steps
+            < total_steps // print_every_x_steps
+        ) or (
+            print_every_x_episodes is not None
+            and total_episodes % print_every_x_episodes == 0
+        ):
+            print(
+                f"\repisode {total_episodes}, step {total_steps}, agent={agent}, env={env}, return={g}",  # noqa E501
+                end="",
+            )
+        if number_of_episodes is not None:
+            process_return(g)
+        if number_of_steps is not None:
+            returns_within_period.append(g)
+            if old_total_steps // (number_of_steps // 100) < (total_steps) // (
+                number_of_steps // 100
+            ):  # record the average of returns every 1% of steps
+                process_return(np.mean(returns_within_period))
+                returns_within_period = []
 
 
 def target_return_is_reached(
@@ -141,15 +182,17 @@ def target_return_is_reached(
     """
     target_returns_in_a_row = 0
     returns = []
+    total_steps = 0
     for i in range(max_episodes):
         if i % 10 == 0:
             print(f"episode {i}")
-        g = episode_return(
+        g, total_steps = episode_return(
             agent=agent,
             env=env,
             learn=learn,
             learn_after_episode=learn_after_episode,
             exploit=exploit,
+            total_steps=total_steps,
         )
         returns.append(g)
         value = g if not check_moving_average else latest_moving_average(returns)
@@ -169,6 +212,7 @@ def episode_return(
     learn: bool = False,
     exploit: bool = True,
     learn_after_episode: bool = False,
+    total_steps: int = 0,
 ):
     """
     Runs one episode and returns the total reward (return).
@@ -187,7 +231,6 @@ def episode_return(
     observation, action_space = env.reset()
     agent.reset(observation, action_space)
     done = False
-    step = 1
     while not done:
         # pyre-fixme[28]: Unexpected keyword argument `exploit`.
         action = agent.act(exploit=exploit)
@@ -200,9 +243,9 @@ def episode_return(
         if learn and not learn_after_episode:
             agent.learn()
         done = action_result.done
-        step += 1
+        total_steps += 1
 
     if learn and learn_after_episode:
         agent.learn()
 
-    return g
+    return g, total_steps

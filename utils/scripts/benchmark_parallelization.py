@@ -19,35 +19,36 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch.multiprocessing as mp
 from pearl.pearl_agent import PearlAgent
-from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (  # noqa E501
-    EGreedyExploration,
-)
-from pearl.policy_learners.exploration_modules.common.normal_distribution_exploration import (  # noqa E501
-    NormalDistributionExploration,
-)
-from pearl.policy_learners.sequential_decision_making.ddpg import (
-    DeepDeterministicPolicyGradient,
-)
-from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
-    DeepQLearning,
-)
-from pearl.policy_learners.sequential_decision_making.ppo import (
-    ProximalPolicyOptimization,
-)
-from pearl.policy_learners.sequential_decision_making.soft_actor_critic_continuous import (  # noqa E501
-    ContinuousSoftActorCritic,
-)
-from pearl.policy_learners.sequential_decision_making.td3 import TD3
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (  # noqa E501
-    FIFOOffPolicyReplayBuffer,
-)
-from pearl.replay_buffers.sequential_decision_making.on_policy_episodic_replay_buffer import (  # noqa E501
-    OnPolicyEpisodicReplayBuffer,
-)
+
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
     online_learning_returns,
 )
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
+from pearl.utils.scripts.benchmark_config import (
+    # DuelingDQN_method,
+    # PPO_method,
+    # QRDQN_method,
+    # REINFORCE_method,
+    # SAC_method,
+    # SARSA_method,
+    # TD3_method,
+    # all_discrete_control_methods,
+    # BootstrappedDQN_method,
+    # CDQN_method,
+    # CSAC_method,
+    # DDPG_method,
+    # DDQN_method,
+    # mujoco_envs,
+    # all_continuous_control_envs,
+    all_discrete_control_envs,
+    # classic_continuous_control_envs,
+    # mujoco_steps,
+    # ple_steps,
+    classic_control_steps,
+    DQN_method,
+    num_runs,
+    print_every_x_steps,
+)
 
 warnings.filterwarnings("ignore")
 
@@ -62,7 +63,6 @@ def run(experiments) -> None:
 
     for p in all_processes:
         p.start()
-
     for p in all_processes:
         p.join()
 
@@ -71,8 +71,10 @@ def evaluate(experiment, all_processes: List[mp.Process]) -> None:
     """Running multiple methods and multiple runs in the given gym environment."""
     env_name = experiment["env_name"]
     num_runs = experiment["num_runs"]
-    num_episodes = experiment["num_episodes"]
-    print_every_x_episodes = experiment["print_every_x_episodes"]
+    num_episodes = experiment.get("num_episodes")
+    num_steps = experiment.get("num_steps")
+    print_every_x_episodes = experiment.get("print_every_x_episodes")
+    print_every_x_steps = experiment.get("print_every_x_steps")
     methods = experiment["methods"]
     processes = []
     for method in methods:
@@ -84,7 +86,9 @@ def evaluate(experiment, all_processes: List[mp.Process]) -> None:
                     method,
                     run_idx,
                     num_episodes,
+                    num_steps,
                     print_every_x_episodes,
+                    print_every_x_steps,
                 ),
             )
             processes.append(p)
@@ -97,7 +101,9 @@ def evaluate_single(
     method,
     run_idx,
     num_episodes,
+    num_steps,
     print_every_x_episodes,
+    print_every_x_steps,
 ):
     """Performing one run of experiment."""
     policy_learner = method["policy_learner"]
@@ -112,22 +118,50 @@ def evaluate_single(
         agent_args["replay_buffer"] = method["replay_buffer"](
             **method["replay_buffer_args"]
         )
+    if "safety_module" in method and "safety_module_args" in method:
+        agent_args["safety_module"] = method["safety_module"](
+            **method["safety_module_args"]
+        )
+    if method["name"] == "DuelingDQN":  # only for Dueling DQN
+        assert "network_module" in method and "network_args" in method
+        policy_learner_args["network_instance"] = method["network_module"](
+            state_dim=env.observation_space.shape[0],
+            action_dim=env.action_space.n,
+            **method["network_args"],
+        )
+    if method["name"] == "BootstrappedDQN":  # only for Bootstrapped DQN
+        assert "network_module" in method and "network_args" in method
+        policy_learner_args["q_ensemble_network"] = method["network_module"](
+            state_dim=env.observation_space.shape[0],
+            action_dim=env.action_space.n,
+            **method["network_args"],
+        )
+    else:
+        policy_learner_args["state_dim"] = env.observation_space.shape[0]
+    policy_learner_args["action_space"] = env.action_space
     agent = PearlAgent(
         policy_learner=policy_learner(
-            state_dim=env.observation_space.shape[0],
-            action_space=env.action_space,
             **policy_learner_args,
         ),
         **agent_args,
     )
     method_name = method["name"]
     print(f"Run #{run_idx + 1} for {method_name} in {env_name}")
+    if (
+        method["name"] == "REINFORCE" or method["name"] == "PPO"
+    ):  # REINFORCE only performs learning at the end of each episode
+        learn_after_episode = True
+    else:
+        learn_after_episode = False
 
     returns = online_learning_returns(
         agent,
         env,
         number_of_episodes=num_episodes,
+        number_of_steps=num_steps,
         print_every_x_episodes=print_every_x_episodes,
+        print_every_x_steps=print_every_x_steps,
+        learn_after_episode=learn_after_episode,
     )
     dir = f"outputs/{env_name}/{method_name}"
     os.makedirs(dir, exist_ok=True)
@@ -171,270 +205,18 @@ def generate_one_plot(experiment):
 
 
 if __name__ == "__main__":
+    methods = [DQN_method]
+    envs = all_discrete_control_envs
+    num_steps = classic_control_steps
     experiments = [
         {
-            "env_name": "CartPole-v0",
-            "num_runs": 5,
-            "num_episodes": 500,
-            "print_every_x_episodes": 10,
-            "methods": [
-                {
-                    "name": "DQN",
-                    "policy_learner": DeepQLearning,
-                    "policy_learner_args": {
-                        "hidden_dims": [64, 64],
-                        "training_rounds": 20,
-                        "batch_size": 64,
-                    },
-                    "agent_args": {"device_id": -1},
-                    "exploration_module": EGreedyExploration,
-                    "exploration_module_args": {"epsilon": 0.1},
-                    "replay_buffer": FIFOOffPolicyReplayBuffer,
-                    "replay_buffer_args": {"capacity": 10000},
-                },
-                {
-                    "name": "PPO",
-                    "policy_learner": ProximalPolicyOptimization,
-                    "policy_learner_args": {
-                        "hidden_dims": [64, 64],
-                        "training_rounds": 50,
-                        "batch_size": 64,
-                        "epsilon": 0.1,
-                    },
-                    "agent_args": {"device_id": -1},
-                    "replay_buffer": OnPolicyEpisodicReplayBuffer,
-                    "replay_buffer_args": {"capacity": 10000},
-                },
-            ],
-        },
-        # {
-        #     "env_name": "Acrobot-v1",
-        #     "num_runs": 5,
-        #     "num_episodes": 500,
-        #     "print_every_x_episodes": 10,
-        #     "methods": [
-        #         {
-        #             "name": "DQN",
-        #             "policy_learner": DeepQLearning,
-        #             "policy_learner_args": {
-        #                 "hidden_dims": [64, 64],
-        #                 "training_rounds": 20,
-        #                 "batch_size": 64,
-        #             },
-        #             "agent_args": {"device_id": -1},
-        #             "exploration_module": EGreedyExploration,
-        #             "exploration_module_args": {"epsilon": 0.1},
-        #             "replay_buffer": FIFOOffPolicyReplayBuffer,
-        #             "replay_buffer_args": {"capacity": 10000},
-        #         },
-        #         {
-        #             "name": "PPO",
-        #             "policy_learner": ProximalPolicyOptimization,
-        #             "policy_learner_args": {
-        #                 "hidden_dims": [64, 64],
-        #                 "training_rounds": 50,
-        #                 "batch_size": 64,
-        #                 "epsilon": 0.1,
-        #             },
-        #             "agent_args": {"device_id": -1},
-        #             "replay_buffer": OnPolicyEpisodicReplayBuffer,
-        #             "replay_buffer_args": {"capacity": 10000},
-        #         },
-        #     ],
-        # },
-        # {
-        #     "env_name": "Pendulum-v1",
-        #     "num_runs": 5,
-        #     "num_episodes": 500,
-        #     "print_every_x_episodes": 10,
-        #     "methods": [
-        #         {
-        #             "name": "DDPG",
-        #             "policy_learner": DeepDeterministicPolicyGradient,
-        #             "policy_learner_args": {
-        #                 "hidden_dims": [400, 300],
-        #             },
-        #             "agent_args": {"device_id": -1},
-        #             "exploration_module": NormalDistributionExploration,
-        #             "exploration_module_args": {
-        #                 "mean": 0,
-        #                 "std_dev": 0.2,
-        #                 "max_action_value": 2,
-        #                 "min_action_value": -2,
-        #             },
-        #             "replay_buffer": FIFOOffPolicyReplayBuffer,
-        #             "replay_buffer_args": {"capacity": 50000},
-        #         },
-        #         {
-        #             "name": "TD3",
-        #             "policy_learner": TD3,
-        #             "policy_learner_args": {
-        #                 "hidden_dims": [400, 300],
-        #             },
-        #             "agent_args": {"device_id": -1},
-        #             "exploration_module": NormalDistributionExploration,
-        #             "exploration_module_args": {
-        #                 "mean": 0,
-        #                 "std_dev": 0.2,
-        #                 "max_action_value": 2,
-        #                 "min_action_value": -2,
-        #             },
-        #             "replay_buffer": FIFOOffPolicyReplayBuffer,
-        #             "replay_buffer_args": {"capacity": 50000},
-        #         },
-        #         {
-        #             "name": "ContinuousSAC",
-        #             "policy_learner": ContinuousSoftActorCritic,
-        #             "policy_learner_args": {
-        #                 "hidden_dims": [64, 64, 64],
-        #                 "training_rounds": 1,
-        #                 "batch_size": [256],
-        #                 "entropy_coef": 0.1,
-        #                 "actor_learning_rate": 0.0005,
-        #                 "critic_learning_rate": 0.0005,
-        #             },
-        #             "agent_args": {"device_id": -1},
-        #             "replay_buffer": FIFOOffPolicyReplayBuffer,
-        #             "replay_buffer_args": {"capacity": 50000},
-        #         },
-        #     ],
-        # },
-        # {
-        #     "env_name": "HalfCheetah-v4",
-        #     "num_runs": 5,
-        #     "num_episodes": 500,
-        #     "print_every_x_episodes": 10,
-        #     "methods": [
-        #         {
-        #             "name": "DDPG",
-        #             "policy_learner": DeepDeterministicPolicyGradient,
-        #             "policy_learner_args": {
-        #                 "hidden_dims": [256, 256],
-        #                 "critic_learning_rate": 1e-3,
-        #                 "actor_learning_rate": 1e-3,
-        #                 "training_rounds": 1,
-        #                 "batch_size": 256,
-        #                 "discount_factor": 0.99,
-        #             },
-        #             "agent_args": {"device_id": -1},
-        #             "exploration_module": NormalDistributionExploration,
-        #             "exploration_module_args": {
-        #                 "mean": 0,
-        #                 "std_dev": 0.1,
-        #                 "max_action_value": 1,
-        #                 "min_action_value": -1,
-        #             },
-        #             "replay_buffer": FIFOOffPolicyReplayBuffer,
-        #             "replay_buffer_args": {"capacity": 1000000},
-        #         },
-        #         {
-        #             "name": "TD3",
-        #             "policy_learner": TD3,
-        #             "policy_learner_args": {
-        #                 "hidden_dims": [256, 256],
-        #                 "critic_learning_rate": 1e-3,
-        #                 "actor_learning_rate": 1e-3,
-        #                 "training_rounds": 1,
-        #                 "batch_size": 256,
-        #                 "discount_factor": 0.99,
-        #                 "learning_action_noise_std": 0.2,
-        #             },
-        #             "agent_args": {"device_id": -1},
-        #             "exploration_module": NormalDistributionExploration,
-        #             "exploration_module_args": {
-        #                 "mean": 0,
-        #                 "std_dev": 0.1,
-        #                 "max_action_value": 1,
-        #                 "min_action_value": -1,
-        #             },
-        #             "replay_buffer": FIFOOffPolicyReplayBuffer,
-        #             "replay_buffer_args": {"capacity": 1000000},
-        #         },
-        #         {
-        #             "name": "ContinuousSAC",
-        #             "policy_learner": ContinuousSoftActorCritic,
-        #             "policy_learner_args": {
-        #                 "hidden_dims": [64, 64, 64],
-        #                 "training_rounds": 1,
-        #                 "batch_size": [256],
-        #                 "entropy_coef": 0.1,
-        #                 "actor_learning_rate": 0.0005,
-        #                 "critic_learning_rate": 0.0005,
-        #             },
-        #             "agent_args": {"device_id": -1},
-        #             "replay_buffer": FIFOOffPolicyReplayBuffer,
-        #             "replay_buffer_args": {"capacity": 50000},
-        #         },
-        #     ],
-        # },
-        # {
-        #     "env_name": "Ant-v4",
-        #     "num_runs": 5,
-        #     "num_episodes": 500,
-        #     "print_every_x_episodes": 10,
-        #     "methods": [
-        #         {
-        #             "name": "DDPG",
-        #             "policy_learner": DeepDeterministicPolicyGradient,
-        #             "policy_learner_args": {
-        #                 "hidden_dims": [256, 256],
-        #                 "critic_learning_rate": 1e-3,
-        #                 "actor_learning_rate": 1e-3,
-        #                 "training_rounds": 1,
-        #                 "batch_size": 256,
-        #                 "discount_factor": 0.99,
-        #             },
-        #             "agent_args": {"device_id": -1},
-        #             "exploration_module": NormalDistributionExploration,
-        #             "exploration_module_args": {
-        #                 "mean": 0,
-        #                 "std_dev": 0.1,
-        #                 "max_action_value": 1,
-        #                 "min_action_value": -1,
-        #             },
-        #             "replay_buffer": FIFOOffPolicyReplayBuffer,
-        #             "replay_buffer_args": {"capacity": 1000000},
-        #         },
-        #         {
-        #             "name": "TD3",
-        #             "policy_learner": TD3,
-        #             "policy_learner_args": {
-        #                 "hidden_dims": [256, 256],
-        #                 "critic_learning_rate": 1e-3,
-        #                 "actor_learning_rate": 1e-3,
-        #                 "training_rounds": 1,
-        #                 "batch_size": 256,
-        #                 "discount_factor": 0.99,
-        #                 "learning_action_noise_std": 0.2,
-        #             },
-        #             "agent_args": {"device_id": -1},
-        #             "exploration_module": NormalDistributionExploration,
-        #             "exploration_module_args": {
-        #                 "mean": 0,
-        #                 "std_dev": 0.1,
-        #                 "max_action_value": 1,
-        #                 "min_action_value": -1,
-        #             },
-        #             "replay_buffer": FIFOOffPolicyReplayBuffer,
-        #             "replay_buffer_args": {"capacity": 1000000},
-        #         },
-        #         {
-        #             "name": "ContinuousSAC",
-        #             "policy_learner": ContinuousSoftActorCritic,
-        #             "policy_learner_args": {
-        #                 "hidden_dims": [64, 64, 64],
-        #                 "training_rounds": 1,
-        #                 "batch_size": [256],
-        #                 "entropy_coef": 0.1,
-        #                 "actor_learning_rate": 0.0005,
-        #                 "critic_learning_rate": 0.0005,
-        #             },
-        #             "agent_args": {"device_id": -1},
-        #             "replay_buffer": FIFOOffPolicyReplayBuffer,
-        #             "replay_buffer_args": {"capacity": 50000},
-        #         },
-        #     ],
-        # },
+            "env_name": env_name,
+            "num_runs": num_runs,
+            "num_steps": num_steps,
+            "print_every_x_steps": print_every_x_steps,
+            "methods": methods,
+        }
+        for env_name in envs
     ]
     run(experiments)
     generate_plots(experiments)
