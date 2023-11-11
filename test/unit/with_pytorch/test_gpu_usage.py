@@ -14,6 +14,9 @@ from pearl.policy_learners.sequential_decision_making.ppo import (
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
 )
+from pearl.replay_buffers.sequential_decision_making.on_policy_episodic_replay_buffer import (
+    OnPolicyEpisodicReplayBuffer,
+)
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
@@ -59,10 +62,10 @@ class TestGPUUsage(unittest.TestCase):
                 batch_size=500,
                 epsilon=0.1,
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+            replay_buffer=OnPolicyEpisodicReplayBuffer(10000),
         )
 
-        online_learning(agent, env, number_of_episodes=10)
+        online_learning(agent, env, number_of_episodes=10, learn_after_episode=True)
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         if device.type == "cuda":
