@@ -23,8 +23,20 @@ from pearl.pearl_agent import PearlAgent
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
     online_learning_returns,
 )
-from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 from pearl.utils.scripts.benchmark_config import (
+    # all_partial_observable_continuous_control_envs,
+    # DDQN_method,
+    # mujoco_envs,
+    # all_continuous_control_envs,
+    # all_discrete_control_envs,
+    all_partial_observable_discrete_control_envs,
+    # all_safety_discrete_control_envs,
+    # all_sparse_reward_continuous_control_envs,
+    # all_sparse_reward_discrete_control_envs,
+    # classic_continuous_control_envs,
+    # mujoco_steps,
+    # ple_steps,
+    classic_control_steps,
     # DuelingDQN_method,
     # PPO_method,
     # QRDQN_method,
@@ -37,15 +49,8 @@ from pearl.utils.scripts.benchmark_config import (
     # CDQN_method,
     # CSAC_method,
     # DDPG_method,
-    # DDQN_method,
-    # mujoco_envs,
-    # all_continuous_control_envs,
-    all_discrete_control_envs,
-    # classic_continuous_control_envs,
-    # mujoco_steps,
-    # ple_steps,
-    classic_control_steps,
     DQN_method,
+    get_env,
     num_runs,
     print_every_x_steps,
 )
@@ -109,7 +114,7 @@ def evaluate_single(
     policy_learner = method["policy_learner"]
     policy_learner_args = method["policy_learner_args"]
     agent_args = method["agent_args"]
-    env = GymEnvironment(env_name)
+    env = get_env(env_name)
     if "exploration_module" in method and "exploration_module_args" in method:
         policy_learner_args["exploration_module"] = method["exploration_module"](
             **method["exploration_module_args"]
@@ -206,7 +211,7 @@ def generate_one_plot(experiment):
 
 if __name__ == "__main__":
     methods = [DQN_method]
-    envs = all_discrete_control_envs
+    envs = all_partial_observable_discrete_control_envs
     num_steps = classic_control_steps
     experiments = [
         {

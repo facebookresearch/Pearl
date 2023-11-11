@@ -25,15 +25,19 @@ class GymEnvironment(Environment):
     """
 
     # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, env_or_env_name, *args, **kwargs) -> None:
         """
-        Initializes the wrapper to be around a `gym.Env`.
+        Initializes the GymEnvironment wrapper for a `gym.Env`
+        or create a new `gym.Env` and wrap it.
         Args:
-            args: positional arguments to be passed on to Gym's environment.
-            kwargs: keyword arguments to be passed on to Gym's environment.
+            env_or_env_name: a gym.Env instance or a name of a gym.Env
         """
+        if type(env_or_env_name) is str:
+            env = gym.make(env_or_env_name, *args, **kwargs)
+        else:
+            env = env_or_env_name
         # pyre-fixme[4]: Attribute must be annotated.
-        self.env = gym.make(*args, **kwargs)
+        self.env = env
 
     @property
     # pyre-fixme[3]: Return type must be annotated.

@@ -1,3 +1,4 @@
+import gymnasium as gym
 from pearl.neural_networks.common.value_networks import (
     DuelingQValueNetwork,
     EnsembleQValueNetwork,
@@ -54,6 +55,19 @@ from pearl.replay_buffers.sequential_decision_making.on_policy_episodic_replay_b
 from pearl.safety_modules.risk_sensitive_safety_modules import (
     QuantileNetworkMeanVarianceSafetyModule,
 )
+from pearl.user_envs import (
+    AcrobotPartialObservableWrapper,
+    AcrobotSparseRewardWrapper,
+    CartPolePartialObservableWrapper,
+    MountainCarPartialObservableWrapper,
+    MountainCarSparseRewardWrapper,
+    PendulumPartialObservableWrapper,
+    PendulumSparseRewardWrapper,
+    PuckWorldPartialObservableWrapper,
+    PuckWorldSafetyWrapper,
+    PuckWorldSparseRewardWrapper,
+)
+from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 
 DQN_method = {
     "name": "DQN",
@@ -305,9 +319,80 @@ mujoco_envs = [
     "Hopper-v4",
     "Walker2d-v4",
 ]
+all_partial_observable_discrete_control_envs = [
+    "CartPole-PO-v0",
+    "Acrobot-PO-v1",
+    "MountainCar-PO-v0",
+    "PuckWorld-PLE-500-PO-v0",
+]
+all_partial_observable_continuous_control_envs = [
+    "Pendulum-PO-v1",
+]
+all_sparse_reward_discrete_control_envs = [
+    "Acrobot-SR-v1",
+    "MountainCar-SR-v0",
+    "PuckWorld-PLE-500-SR-v0",
+]
+all_sparse_reward_continuous_control_envs = [
+    "Pendulum-SR-v1",
+]
+all_safety_discrete_control_envs = [
+    "StochMDP-v0",
+    "PuckWorld-PLE-500-SF-v0",
+]
 
 mujoco_steps = 2000000
 classic_control_steps = 200000
 ple_steps = 2000000
 num_runs = 1
 print_every_x_steps = 1000
+
+
+def get_env(env_name: str) -> GymEnvironment:
+    """
+    attach a versatility wrapper to the environment
+    """
+    if env_name == "CartPole-PO-v0":
+        return GymEnvironment(
+            CartPolePartialObservableWrapper(
+                gym.make("CartPole-v0"), time_between_two_valid_obs=2
+            )
+        )
+    elif env_name == "Pendulum-PO-v1":
+        return GymEnvironment(
+            PendulumPartialObservableWrapper(
+                gym.make("Pendulum-v1"), time_between_two_valid_obs=2
+            )
+        )
+    elif env_name == "Acrobot-PO-v1":
+        return GymEnvironment(
+            AcrobotPartialObservableWrapper(
+                gym.make("Acrobot-v1"), time_between_two_valid_obs=2
+            )
+        )
+    elif env_name == "MountainCar-PO-v0":
+        return GymEnvironment(
+            MountainCarPartialObservableWrapper(
+                gym.make("MountainCar-v0"), time_between_two_valid_obs=2
+            )
+        )
+    elif env_name == "Acrobot-SR-v1":
+        return GymEnvironment(AcrobotSparseRewardWrapper(gym.make("Acrobot-v1")))
+    elif env_name == "Pendulum-SR-v1":
+        return GymEnvironment(PendulumSparseRewardWrapper(gym.make("Pendulum-v1")))
+    elif env_name == "MountainCar-SR-v0":
+        return GymEnvironment(
+            MountainCarSparseRewardWrapper(gym.make("MountainCar-v0"))
+        )
+    elif env_name == "PuckWorld-PLE-500-SR-v0":
+        return GymEnvironment(
+            PuckWorldSparseRewardWrapper(gym.make("PuckWorld-PLE-500-v0"))
+        )
+    elif env_name == "PuckWorld-PLE-500-SF-v0":
+        return GymEnvironment(PuckWorldSafetyWrapper(gym.make("PuckWorld-PLE-500-v0")))
+    elif env_name == "PuckWorld-PLE-500-PO-v0":
+        return GymEnvironment(
+            PuckWorldPartialObservableWrapper(gym.make("PuckWorld-PLE-500-v0"))
+        )
+    else:
+        return GymEnvironment(env_name)
