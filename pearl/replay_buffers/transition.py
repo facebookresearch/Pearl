@@ -67,6 +67,7 @@ class TransitionBatch:
     next_available_actions_mask: Optional[torch.Tensor] = None
     weight: Optional[torch.Tensor] = None
     cum_reward: Optional[torch.Tensor] = None
+    time_diff: Optional[torch.Tensor] = None
 
     def to(self: TB, device: torch.device) -> TB:
         # iterate over all fields
