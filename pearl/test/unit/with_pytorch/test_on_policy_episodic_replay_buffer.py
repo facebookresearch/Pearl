@@ -78,7 +78,7 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
 
         # validate actions
         actions = batch.action[order]
-        self.assertTrue(torch.equal(actions, torch.eye(self.action_size)))
+        self.assertTrue(torch.equal(actions, torch.arange(self.action_size)))
 
     def test_push_2_trajectories(self) -> None:
         replay_buffer = OnPolicyEpisodicReplayBuffer(self.capacity)
@@ -153,12 +153,14 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         # validate actions
         actions = batch.action[order]
         self.assertTrue(
-            torch.equal(actions[0 : self.trajectory_len], torch.eye(self.action_size))
+            torch.equal(
+                actions[0 : self.trajectory_len], torch.arange(self.action_size)
+            )
         )
         self.assertTrue(
             torch.equal(
                 actions[self.trajectory_len :],
-                torch.eye(self.action_size)[0:trajectory_len_2],
+                torch.arange(self.action_size)[0:trajectory_len_2],
             )
         )
 

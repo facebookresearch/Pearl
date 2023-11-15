@@ -4,6 +4,7 @@ import copy
 import unittest
 
 import torch
+import torch.nn.functional as F
 from pearl.neural_networks.common.utils import init_weights
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
     EGreedyExploration,
@@ -25,13 +26,15 @@ class TestDeepTDLearning(unittest.TestCase):
         self.batch_size = 24
         self.state_dim = 10
         self.action_dim = 3
-        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `range`.
-        self.action_space = DiscreteActionSpace(range(self.action_dim))
+        self.action_space = DiscreteActionSpace(
+            # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `Tensor`.
+            F.one_hot(torch.arange(self.action_dim), num_classes=self.action_dim)
+        )
         buffer = FIFOOffPolicyReplayBuffer(self.batch_size)
         for _ in range(self.batch_size):
             buffer.push(
                 torch.randn(self.state_dim),
-                torch.randint(self.action_dim, (1,)),
+                self.action_space.sample().squeeze(0),
                 # pyre-fixme[6]: For 3rd argument expected `float` but got `Tensor`.
                 torch.randint(1, (1,)),
                 torch.randn(self.state_dim),
@@ -65,6 +68,7 @@ class TestDeepTDLearning(unittest.TestCase):
             # 10 should be large enough to see difference.
             batch1 = copy.deepcopy(self.batch)
             batch2 = copy.deepcopy(self.batch)
+            print(batch1.next_available_actions.shape)
 
             double_dqn._Q.apply(init_weights)
             double_dqn._Q_target.apply(init_weights)

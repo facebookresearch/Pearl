@@ -2,6 +2,10 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
 
+from pearl.action_representation_modules.one_hot_action_representation_module import (
+    OneHotActionTensorRepresentationModule,
+)
+
 from pearl.neural_networks.common.value_networks import (
     DuelingQValueNetwork,
     TwoTowerQValueNetwork,
@@ -55,6 +59,9 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 training_rounds=20,
                 batch_size=1,
             ),
+            action_representation_module=OneHotActionTensorRepresentationModule(
+                max_actions=env.action_space.n
+            ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
         online_learning_to_png_graph(
@@ -71,6 +78,9 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 hidden_dims=[64, 64],
                 training_rounds=20,
                 is_conservative=True,
+            ),
+            action_representation_module=OneHotActionTensorRepresentationModule(
+                max_actions=env.action_space.n
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
@@ -94,6 +104,9 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 network_type=DuelingQValueNetwork,
                 batch_size=batch_size,
             ),
+            action_representation_module=OneHotActionTensorRepresentationModule(
+                max_actions=env.action_space.n
+            ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
         online_learning_to_png_graph(
@@ -115,6 +128,9 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 state_hidden_dims=[64],
                 action_hidden_dims=[64],
                 batch_size=1,
+            ),
+            action_representation_module=OneHotActionTensorRepresentationModule(
+                max_actions=env.action_space.n
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )

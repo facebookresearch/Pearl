@@ -142,5 +142,4 @@ class PolicyGradient(PolicyLearner):
             action_probs = self._actor(state_batch)
         else:
             action_probs = actor(state_batch)
-        # TODO action_batch is one-hot encoding vectors
         return torch.sum(action_probs * action_batch, dim=1, keepdim=True)

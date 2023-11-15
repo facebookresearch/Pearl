@@ -12,11 +12,13 @@ except ModuleNotFoundError:
 
 import numpy as np
 import torch
+from gymnasium.spaces import Box, Discrete  # noqa
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
 from pearl.api.environment import Environment
 from pearl.api.observation import Observation
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
 class GymEnvironment(Environment):
@@ -42,6 +44,8 @@ class GymEnvironment(Environment):
     @property
     # pyre-fixme[3]: Return type must be annotated.
     def action_space(self):
+        if isinstance(self.env.action_space, Discrete):
+            return DiscreteActionSpace(list(range(self.env.action_space.n)))
         return self.env.action_space
 
     @property

@@ -45,7 +45,7 @@ class DiscreteActionSpace(ActionSpace):
     def to_tensor(self):
         if self.action_dim == 0:
             return torch.zeros(self.n, 0)
-        return torch.Tensor(self.actions)
+        return torch.tensor(self.actions)
 
     def cat_state_tensor(self, subjective_state: torch.Tensor) -> torch.Tensor:
         """

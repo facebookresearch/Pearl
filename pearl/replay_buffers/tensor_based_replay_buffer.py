@@ -11,6 +11,7 @@ from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import Transition, TransitionBatch
 from pearl.utils.device import get_default_device
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
 class TensorBasedReplayBuffer(ReplayBuffer):
@@ -46,15 +47,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
     def _process_single_action(
         self, action: Action, action_space: ActionSpace
     ) -> torch.Tensor:
-        if self._is_action_continuous:
-            return torch.tensor(action, device=self._device).reshape(
-                1, -1
-            )  # (1 x action_dim)
-        return F.one_hot(
-            torch.tensor([action], device=self._device),
-            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
-            num_classes=action_space.n,
-        )  # (1 x action_dim)
+        return torch.tensor(action, device=self._device).unsqueeze(0)
 
     def _process_single_reward(self, reward: float) -> torch.Tensor:
         return torch.tensor([reward], device=self._device)
@@ -62,23 +55,37 @@ class TensorBasedReplayBuffer(ReplayBuffer):
     def _process_single_done(self, done: bool) -> torch.Tensor:
         return torch.tensor([done], device=self._device)  # (1,)
 
+    # This function is only used for discrete action space.
     def _create_action_tensor_and_mask(
         self, action_space: ActionSpace, available_actions: ActionSpace
     ) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
         if self._is_action_continuous:
-            return (None, None)  # continuous action does not have limited space
-        available_actions_tensor_with_padding = torch.zeros(
-            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
-            (1, action_space.n, action_space.n),
-            device=self._device,
-        )  # (1 x action_space_size x action_dim)
-        available_actions_tensor = F.one_hot(
-            torch.arange(0, available_actions.n, device=self._device),
-            num_classes=action_space.n,
-        )  # (1 x available_action_space_size x action_dim)
-        available_actions_tensor_with_padding[
-            0, : available_actions.n, :
-        ] = available_actions_tensor
+            return (None, None)
+
+        assert isinstance(action_space, DiscreteActionSpace)
+        assert isinstance(available_actions, DiscreteActionSpace)
+
+        if action_space.action_dim == 0:
+            available_actions_tensor_with_padding = torch.zeros(
+                (1, action_space.n),
+                device=self._device,
+                dtype=torch.long,
+            )  # (1 x action_space_size)
+            available_actions_tensor = torch.tensor(action_space.actions)
+            available_actions_tensor_with_padding[
+                0, : available_actions.n
+            ] = available_actions_tensor
+        else:
+            available_actions_tensor_with_padding = torch.zeros(
+                (1, action_space.n, action_space.action_dim),
+                device=self._device,
+                dtype=torch.float32,
+            )  # (1 x action_space_size x action_dim)
+            available_actions_tensor = torch.tensor(action_space.actions)
+            available_actions_tensor_with_padding[
+                0, : available_actions.n, :
+            ] = available_actions_tensor
+
         available_actions_mask = torch.zeros(
             (1, action_space.n), device=self._device
         )  # (1 x action_space_size)

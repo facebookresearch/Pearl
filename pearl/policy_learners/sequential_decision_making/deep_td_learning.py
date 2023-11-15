@@ -3,7 +3,6 @@ from abc import abstractmethod
 from typing import Any, Dict, Iterable, Optional, Type
 
 import torch
-import torch.nn.functional as F
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -27,6 +26,7 @@ from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
 
 from pearl.utils.functional_utils.learning.loss_fn_utils import compute_cql_loss
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 from torch import optim
 from torchrec.optim.keyed import CombinedOptimizer
 
@@ -75,6 +75,7 @@ class DeepTDLearning(PolicyLearner):
             on_policy=on_policy,
             is_action_continuous=False,
         )
+        assert isinstance(action_space, DiscreteActionSpace)
         self._action_space = action_space
         self._learning_rate = learning_rate
         self._discount_factor = discount_factor
@@ -119,9 +120,7 @@ class DeepTDLearning(PolicyLearner):
                 network_instance.state_dim == state_dim
             ), "state dimension doesn't match for policy learner and network"
             assert (
-                network_instance.action_dim
-                # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
-                == action_space.n
+                network_instance.action_dim == action_space.n
             ), "action dimension doesn't match for policy learner and network"
         else:
             assert hidden_dims is not None
@@ -161,17 +160,18 @@ class DeepTDLearning(PolicyLearner):
     ) -> Action:
         # TODO: Assumes subjective state is a torch tensor and gym action space.
         # Fix the available action space.
+        assert isinstance(available_action_space, DiscreteActionSpace)
+
         with torch.no_grad():
             states_repeated = torch.repeat_interleave(
                 subjective_state.unsqueeze(0),
-                # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
                 available_action_space.n,
                 dim=0,
             )
             # (action_space_size x state_dim)
 
-            actions = F.one_hot(torch.arange(0, available_action_space.n)).to(
-                subjective_state.device
+            actions = self._action_representation_module(
+                torch.tensor(available_action_space.actions)
             )
             # (action_space_size, action_dim)
 

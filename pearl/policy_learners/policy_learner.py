@@ -2,6 +2,12 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, TypeVar
 
 import torch
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
+from pearl.action_representation_modules.identity_action_representation_module import (
+    IdentityActionRepresentationModule,
+)
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -56,6 +62,11 @@ class PolicyLearner(torch.nn.Module, ABC):
             if "exploration_module" in options
             else NoExploration()
         )
+        self._action_representation_module: ActionRepresentationModule = (
+            options["action_representation_module"]
+            if "action_representation_module" in options
+            else IdentityActionRepresentationModule()
+        )
         self._training_rounds = training_rounds
         self._batch_size = batch_size
         self._training_steps = 0
@@ -80,6 +91,14 @@ class PolicyLearner(torch.nn.Module, ABC):
     # pyre-fixme[2]: Parameter must be annotated.
     def exploration_module(self, new_exploration_module) -> None:
         self._exploration_module = new_exploration_module
+
+    def get_action_representation_module(self) -> ActionRepresentationModule:
+        return self._action_representation_module
+
+    def set_action_representation_module(
+        self, value: ActionRepresentationModule
+    ) -> None:
+        self._action_representation_module = value
 
     def reset(self, action_space: ActionSpace) -> None:  # noqa: B027
         """Resets policy maker for a new episode. Default implementation does nothing."""
@@ -117,15 +136,38 @@ class PolicyLearner(torch.nn.Module, ABC):
         for _ in range(self._training_rounds):
             self._training_steps += 1
             batch = replay_buffer.sample(batch_size)
-            # pyre-fixme[6]: For 1st argument expected `TransitionBatch` but got
-            #  `Iterable[typing.Any]`.
-            single_report = self.learn_batch(batch)
+
+            single_report = {}
+            if isinstance(batch, TransitionBatch):
+                batch = self.preprocess_batch(batch)
+                single_report = self.learn_batch(batch)
+
             for k, v in single_report.items():
                 if k in report:
                     report[k].append(v)
                 else:
                     report[k] = [v]
         return report
+
+    def preprocess_batch(self, batch: TransitionBatch) -> TransitionBatch:
+        """
+        Processes a batch of transitions before passing it to learn_batch().
+        This function can be used to implement preprocessing steps such as
+        transform the actions.
+        """
+        batch.action = self._action_representation_module(batch.action)
+        if batch.next_action is not None:
+            batch.next_action = self._action_representation_module(batch.next_action)
+        if batch.curr_available_actions is not None:
+            batch.curr_available_actions = self._action_representation_module(
+                batch.curr_available_actions
+            )
+        if batch.next_available_actions is not None:
+            batch.next_available_actions = self._action_representation_module(
+                batch.next_available_actions
+            )
+
+        return batch
 
     @abstractmethod
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:

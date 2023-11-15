@@ -5,6 +5,9 @@
 import unittest
 
 import torch
+from pearl.action_representation_modules.one_hot_action_representation_module import (
+    OneHotActionTensorRepresentationModule,
+)
 from pearl.pearl_agent import PearlAgent
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
     EGreedyExploration,
@@ -31,6 +34,10 @@ class TestOfflineCQL(unittest.TestCase):
     # test to create and save offline data
     def test_create_offline_data_and_learn_cql(self) -> None:
         env = GymEnvironment("CartPole-v1")
+        action_representation_module = OneHotActionTensorRepresentationModule(
+            env.action_space.n
+        )
+
         onlineDQN_agent = PearlAgent(
             policy_learner=DeepQLearning(
                 state_dim=env.observation_space.shape[0],
@@ -39,6 +46,7 @@ class TestOfflineCQL(unittest.TestCase):
                 exploration_module=EGreedyExploration(0.5),
                 training_rounds=20,
             ),
+            action_representation_module=action_representation_module,
             replay_buffer=FIFOOffPolicyReplayBuffer(1000000),
         )
 
@@ -73,6 +81,7 @@ class TestOfflineCQL(unittest.TestCase):
                 conservative_alpha=8.0,
                 batch_size=128,
             ),
+            action_representation_module=action_representation_module,
             replay_buffer=offline_data_replay_buffer,
         )
 

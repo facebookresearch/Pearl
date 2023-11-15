@@ -3,6 +3,9 @@
 import unittest
 
 import torch
+from pearl.action_representation_modules.one_hot_action_representation_module import (
+    OneHotActionTensorRepresentationModule,
+)
 from pearl.pearl_agent import PearlAgent
 
 from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
@@ -38,6 +41,9 @@ class TestGPUUsage(unittest.TestCase):
                 training_rounds=20,
                 batch_size=1,
             ),
+            action_representation_module=OneHotActionTensorRepresentationModule(
+                max_actions=env.action_space.n
+            ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
 
@@ -61,6 +67,9 @@ class TestGPUUsage(unittest.TestCase):
                 training_rounds=20,
                 batch_size=500,
                 epsilon=0.1,
+            ),
+            action_representation_module=OneHotActionTensorRepresentationModule(
+                max_actions=env.action_space.n
             ),
             replay_buffer=OnPolicyEpisodicReplayBuffer(10000),
         )

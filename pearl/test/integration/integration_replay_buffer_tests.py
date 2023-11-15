@@ -3,6 +3,9 @@
 import unittest
 
 import torch
+from pearl.action_representation_modules.one_hot_action_representation_module import (
+    OneHotActionTensorRepresentationModule,
+)
 
 from pearl.pearl_agent import PearlAgent
 from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
@@ -60,6 +63,10 @@ class IntegrationReplayBufferTests(unittest.TestCase):
                 return 0
             return -1
 
+        action_representation_module = OneHotActionTensorRepresentationModule(
+            env.action_space.n
+        )
+
         agent = PearlAgent(
             policy_learner=DeepQLearning(
                 state_dim=4,
@@ -68,6 +75,7 @@ class IntegrationReplayBufferTests(unittest.TestCase):
                 training_rounds=10,
                 batch_size=500,
             ),
+            action_representation_module=action_representation_module,
             replay_buffer=HindsightExperienceReplayBuffer(
                 2_000_000, goal_dim=2, reward_fn=reward_fn, done_fn=done_fn
             ),

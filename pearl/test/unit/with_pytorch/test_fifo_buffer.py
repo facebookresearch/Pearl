@@ -4,7 +4,6 @@ import unittest
 
 import torch
 
-import torch.nn.functional as F
 from pearl.replay_buffers.sequential_decision_making.fifo_on_policy_replay_buffer import (
     FIFOOnPolicyReplayBuffer,
 )
@@ -69,9 +68,7 @@ class TestFifoBuffer(unittest.TestCase):
         self.assertTrue(
             torch.equal(
                 batch.action,
-                F.one_hot(
-                    torch.tensor([self.actions[0]]), num_classes=self.action_space.n
-                ),
+                torch.tensor([self.actions[0]]),
             )
         )
         self.assertTrue(torch.equal(batch.reward, torch.tensor([self.rewards[0]])))
@@ -88,9 +85,7 @@ class TestFifoBuffer(unittest.TestCase):
                 # pyre-fixme[6]: For 1st argument expected `Tensor` but got
                 #  `Optional[Tensor]`.
                 batch.next_action,
-                F.one_hot(
-                    torch.tensor([self.actions[1]]), num_classes=self.action_space.n
-                ),
+                torch.tensor([self.actions[1]]),
             )
         )
 

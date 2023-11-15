@@ -1,6 +1,12 @@
 from typing import Any, Dict, Optional
 
 import torch
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
+from pearl.action_representation_modules.identity_action_representation_module import (
+    IdentityActionRepresentationModule,
+)
 
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
@@ -41,6 +47,7 @@ class PearlAgent(Agent):
     default_risk_sensitive_safety_module_type = RiskNeutralSafetyModule
     default_history_summarization_module_type = IdentityHistorySummarizationModule
     default_replay_buffer_type = SingleTransitionReplayBuffer
+    default_action_representation_module_type = IdentityActionRepresentationModule
 
     # TODO: define a data structure that hosts the configs for a Pearl Agent
     def __init__(
@@ -49,6 +56,7 @@ class PearlAgent(Agent):
         safety_module: Optional[SafetyModule] = None,
         replay_buffer: Optional[ReplayBuffer] = None,
         history_summarization_module: Optional[HistorySummarizationModule] = None,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
         device_id: int = -1,
     ) -> None:
         """
@@ -95,6 +103,15 @@ class PearlAgent(Agent):
             PearlAgent.default_history_summarization_module_type()
             if history_summarization_module is None
             else history_summarization_module
+        )
+
+        self.action_representation_module: ActionRepresentationModule = (
+            PearlAgent.default_action_representation_module_type()
+            if action_representation_module is None
+            else action_representation_module
+        )
+        self.policy_learner.set_action_representation_module(
+            self.action_representation_module
         )
 
         # set here so replay_buffer and policy_learner are in sync
@@ -168,6 +185,7 @@ class PearlAgent(Agent):
         This API is often used in offline learning
         where users pass in a batch of data to train directly
         """
+        batch = self.policy_learner.preprocess_batch(batch)
         self.policy_learner.learn_batch(batch)
         self.safety_module.learn_batch(batch)
 
