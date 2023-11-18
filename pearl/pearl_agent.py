@@ -34,6 +34,7 @@ from pearl.safety_modules.risk_sensitive_safety_modules import RiskNeutralSafety
 from pearl.safety_modules.safety_module import SafetyModule
 from pearl.utils.compatibility_checks import pearl_agent_compatibility_check
 from pearl.utils.device import get_pearl_device
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 
 
 class PearlAgent(Agent):
@@ -140,6 +141,14 @@ class PearlAgent(Agent):
             if self.policy_learner.requires_tensors  # temporary fix before abstract interfaces
             else self._subjective_state
         )
+
+        if (
+            isinstance(self._action_space, DiscreteActionSpace)
+            and self.policy_learner.requires_tensors
+        ):
+            safe_action_space.actions = torch.as_tensor(safe_action_space.actions).to(
+                self.device
+            )
 
         self._latest_action = self.policy_learner.act(
             subjective_state_to_be_used, safe_action_space, exploit

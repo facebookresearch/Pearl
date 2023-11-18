@@ -18,5 +18,6 @@ class OneHotActionTensorRepresentationModule(ActionRepresentationModule):
         self.max_actions = max_actions
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        assert x.dtype == torch.long
-        return F.one_hot(x, num_classes=self.max_actions)  # (batch_size x action_dim)
+        return F.one_hot(
+            x.long(), num_classes=self.max_actions
+        )  # (batch_size x action_dim)

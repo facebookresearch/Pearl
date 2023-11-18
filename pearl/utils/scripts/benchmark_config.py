@@ -1,4 +1,7 @@
 import gymnasium as gym
+from pearl.action_representation_modules.one_hot_action_representation_module import (
+    OneHotActionTensorRepresentationModule,
+)
 from pearl.neural_networks.common.value_networks import (
     DuelingQValueNetwork,
     EnsembleQValueNetwork,
@@ -82,6 +85,8 @@ DQN_method = {
     "exploration_module_args": {"epsilon": 0.1},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
 }
 CDQN_method = {
     "name": "Conservative DQN",
@@ -97,6 +102,8 @@ CDQN_method = {
     "exploration_module_args": {"epsilon": 0.1},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
 }
 DDQN_method = {
     "name": "DoubleDQN",
@@ -111,6 +118,8 @@ DDQN_method = {
     "exploration_module_args": {"epsilon": 0.1},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
 }
 SARSA_method = {
     "name": "SARSA",
@@ -125,6 +134,8 @@ SARSA_method = {
     "exploration_module_args": {"epsilon": 0.1},
     "replay_buffer": FIFOOnPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
 }
 REINFORCE_method = {
     "name": "REINFORCE",
@@ -137,6 +148,8 @@ REINFORCE_method = {
     "agent_args": {"device_id": 0},
     "replay_buffer": OnPolicyEpisodicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
 }
 DuelingDQN_method = {
     "name": "DuelingDQN",
@@ -153,6 +166,8 @@ DuelingDQN_method = {
     "exploration_module_args": {"epsilon": 0.1},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
 }
 QRDQN_method = {
     "name": "QRDQN",
@@ -169,6 +184,8 @@ QRDQN_method = {
     "replay_buffer_args": {"capacity": 50000},
     "safety_module": QuantileNetworkMeanVarianceSafetyModule,
     "safety_module_args": {"variance_weighting_coefficient": 0.0},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
 }
 BootstrappedDQN_method = {
     "name": "BootstrappedDQN",
@@ -191,6 +208,8 @@ BootstrappedDQN_method = {
         "hidden_dims": [64, 64],
         "prior_scale": 0.0,
     },
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
 }
 PPO_method = {
     "name": "PPO",
@@ -204,6 +223,8 @@ PPO_method = {
     "agent_args": {"device_id": 1},
     "replay_buffer": OnPolicyEpisodicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
 }
 SAC_method = {
     "name": "SAC",
@@ -217,6 +238,8 @@ SAC_method = {
     "agent_args": {"device_id": 1},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
 }
 IQL_method = {
     "name": "IQL",
@@ -231,6 +254,8 @@ IQL_method = {
     "agent_args": {"device_id": 1},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
 }
 DDPG_method = {
     "name": "DDPG",

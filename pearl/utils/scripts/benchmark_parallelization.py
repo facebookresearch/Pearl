@@ -18,18 +18,20 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import torch.multiprocessing as mp
+from gymnasium.spaces import Discrete
 from pearl.pearl_agent import PearlAgent
 
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
     online_learning_returns,
 )
+from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
 from pearl.utils.scripts.benchmark_config import (
     # all_partial_observable_continuous_control_envs,
     # DDQN_method,
     # mujoco_envs,
     # all_continuous_control_envs,
-    # all_discrete_control_envs,
-    all_partial_observable_discrete_control_envs,
+    all_discrete_control_envs,
+    # all_partial_observable_discrete_control_envs,
     # all_safety_discrete_control_envs,
     # all_sparse_reward_continuous_control_envs,
     # all_sparse_reward_discrete_control_envs,
@@ -127,6 +129,21 @@ def evaluate_single(
         agent_args["safety_module"] = method["safety_module"](
             **method["safety_module_args"]
         )
+    if (
+        "action_representation_module" in method
+        and "action_representation_module_args" in method
+    ):
+        if (
+            method["action_representation_module"].__name__
+            == "OneHotActionTensorRepresentationModule"
+        ):
+            method["action_representation_module_args"][
+                "max_actions"
+            ] = env.action_space.n
+        agent_args["action_representation_module"] = method[
+            "action_representation_module"
+        ](**method["action_representation_module_args"])
+
     if method["name"] == "DuelingDQN":  # only for Dueling DQN
         assert "network_module" in method and "network_args" in method
         policy_learner_args["network_instance"] = method["network_module"](
@@ -143,7 +160,11 @@ def evaluate_single(
         )
     else:
         policy_learner_args["state_dim"] = env.observation_space.shape[0]
-    policy_learner_args["action_space"] = env.action_space
+
+    if isinstance(env.action_space, Discrete):
+        policy_learner_args["action_space"] = DiscreteActionSpace(env.action_space.n)
+    else:
+        policy_learner_args["action_space"] = env.action_space
     agent = PearlAgent(
         policy_learner=policy_learner(
             **policy_learner_args,
@@ -211,7 +232,7 @@ def generate_one_plot(experiment):
 
 if __name__ == "__main__":
     methods = [DQN_method]
-    envs = all_partial_observable_discrete_control_envs
+    envs = all_discrete_control_envs
     num_steps = classic_control_steps
     experiments = [
         {
