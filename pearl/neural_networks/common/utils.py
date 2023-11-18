@@ -156,14 +156,15 @@ def update_target_network(
     target_network: nn.Module, source_network: nn.Module, tau: float
 ) -> None:
     # Q_target = (1 - tao) * Q_target + tao*Q
-    target_net_state_dict = target_network.state_dict()
-    source_net_state_dict = source_network.state_dict()
-    for key in source_net_state_dict:
-        target_net_state_dict[key] = (
-            tau * source_net_state_dict[key] + (1 - tau) * target_net_state_dict[key]
-        )
-
-    target_network.load_state_dict(target_net_state_dict)
+    for target_param, source_param in zip(
+        target_network.parameters(), source_network.parameters()
+    ):
+        if target_param is source_param:
+            # skip soft-updating when the target network shares the parameter with
+            # the network being train.
+            continue
+        new_param = tau * source_param.data + (1.0 - tau) * target_param.data
+        target_param.data.copy_(new_param)
 
 
 def ensemble_forward(
