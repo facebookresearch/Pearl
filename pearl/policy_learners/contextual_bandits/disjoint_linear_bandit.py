@@ -19,8 +19,11 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.functional_utils.learning.action_utils import (
+    concatenate_actions_to_state,
+)
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 from torch import nn
 
 
@@ -38,6 +41,7 @@ class DisjointLinearBandit(ContextualBanditBase):
         l2_reg_lambda: float = 1.0,
         training_rounds: int = 100,
         batch_size: int = 128,
+        state_features_only: bool = False,
     ) -> None:
         warn(
             "DisjointLinearBandit will be deprecated. "
@@ -60,6 +64,7 @@ class DisjointLinearBandit(ContextualBanditBase):
         # create nn.ModuleList so self.to(device) will move modules along
         self._linear_regressions = nn.ModuleList(self._linear_regressions_list)
         self._discrete_action_space = action_space
+        self._state_features_only = state_features_only
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """
@@ -67,7 +72,6 @@ class DisjointLinearBandit(ContextualBanditBase):
         batch is action idx instead of action value
         Only discrete action problem will use DisjointLinearBandit
         """
-
         for action_idx, linear_regression in enumerate(self._linear_regressions):
             index = torch.nonzero(batch.action == action_idx, as_tuple=True)[0]
             if index.numel() == 0:
@@ -77,14 +81,17 @@ class DisjointLinearBandit(ContextualBanditBase):
                 dim=0,
                 index=index,
             )
-            # cat state with corresponding action tensor
-            expanded_action = (
-                torch.Tensor(self._discrete_action_space[action_idx])
-                .unsqueeze(0)
-                .expand(state.shape[0], -1)
-                .to(batch.device)
-            )
-            context = torch.cat([state, expanded_action], dim=1)
+            if self._state_features_only:
+                context = state
+            else:
+                # cat state with corresponding action tensor
+                expanded_action = (
+                    torch.Tensor(self._discrete_action_space[action_idx])
+                    .unsqueeze(0)
+                    .expand(state.shape[0], -1)
+                    .to(batch.device)
+                )
+                context = torch.cat([state, expanded_action], dim=1)
             reward = torch.index_select(
                 batch.reward,
                 dim=0,
@@ -114,16 +121,17 @@ class DisjointLinearBandit(ContextualBanditBase):
         action_space: DiscreteActionSpace,
         _exploit: bool = False,
     ) -> Action:
-        # TODO static discrete action space only,
-        # so here action_space should == self.discrete_action_space
-        feature = self._discrete_action_space.cat_state_tensor(
-            subjective_state=subjective_state
-        )  # batch_size, action_count, feature_size
+        # TODO static discrete action space only
+        feature = concatenate_actions_to_state(
+            subjective_state=subjective_state,
+            action_space=action_space,
+            state_features_only=self._state_features_only,
+        )
+        # (batch_size, action_count, feature_size)
 
         values = ensemble_forward(
             self._linear_regressions_list, feature, use_for_loop=True
         )
-
         return self._exploration_module.act(
             subjective_state=feature,
             action_space=action_space,

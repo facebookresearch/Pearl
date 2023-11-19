@@ -1,10 +1,12 @@
 from typing import Optional
 
 import torch
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
+from torch import Tensor
 
 
 def argmax_random_tie_breaks(
-    scores: torch.Tensor, mask: Optional[torch.Tensor] = None
+    scores: Tensor, mask: Optional[Tensor] = None
 ) -> torch.Tensor:
     """
     Given a 2D tensor of scores, return the indices of the max score for each row.
@@ -44,8 +46,8 @@ def argmax_random_tie_breaks(
 
 
 def get_model_actions(
-    scores: torch.Tensor,
-    mask: Optional[torch.Tensor] = None,
+    scores: Tensor,
+    mask: Optional[Tensor] = None,
     randomize_ties: bool = False,
 ) -> torch.Tensor:
     """
@@ -75,3 +77,46 @@ def get_model_actions(
                 torch.argmax(scores_masked, dim=1).get_data()
             )
     return model_actions
+
+
+def concatenate_actions_to_state(
+    subjective_state: Tensor,
+    action_space: DiscreteActionSpace,
+    state_features_only: bool = False,
+) -> Tensor:
+    """A helper function for concatenating all actions from a `DiscreteActionSpace`
+    to a state or batch of states. The actions must be Tensors.
+
+    Args:
+        subjective_state: A Tensor of shape (batch_size, state_dim) or (state_dim).
+        action_space: A `DiscreteActionSpace` object where each action is a Tensor.
+        state_features_only: If True, only expand the state dimension without
+            concatenating the actions.
+    Returns:
+        A Tensor of shape (batch_size, action_count, state_dim + action_dim).
+    """
+    state_dim = subjective_state.shape[-1]
+    # Reshape to (batch_size, state_dim)
+    subjective_state = subjective_state.view(-1, state_dim)
+    batch_size = subjective_state.shape[0]
+
+    action_dim = action_space.action_dim
+    action_count = action_space.n
+
+    # Expand to (batch_size, action_count, state_dim) and return if `state_features_only`
+    expanded_state = subjective_state.unsqueeze(1).repeat(1, action_count, 1)
+    if state_features_only:
+        return expanded_state
+
+    # Stack actions and expand to (batch_size, action_count, action_dim)
+    actions = torch.stack(action_space.actions).to(subjective_state.device)
+    expanded_action = actions.unsqueeze(0).repeat(batch_size, 1, 1)
+
+    # (batch_size, action_count, state_dim + action_dim)
+    new_feature = torch.cat([expanded_state, expanded_action], dim=2)
+    torch._assert(
+        new_feature.shape == (batch_size, action_count, state_dim + action_dim),
+        "The shape of the concatenated feature is wrong. Expected "
+        f"{(batch_size, action_count, state_dim + action_dim)}, got {new_feature.shape}",
+    )
+    return new_feature.to(subjective_state.device)

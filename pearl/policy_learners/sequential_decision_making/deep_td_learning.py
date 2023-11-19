@@ -26,7 +26,7 @@ from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
 
 from pearl.utils.functional_utils.learning.loss_fn_utils import compute_cql_loss
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 from torch import optim
 from torchrec.optim.keyed import CombinedOptimizer
 
@@ -42,9 +42,9 @@ class DeepTDLearning(PolicyLearner):
     def __init__(
         self,
         state_dim: int,
-        action_space: ActionSpace,
         exploration_module: ExplorationModule,
         on_policy: bool,
+        action_space: Optional[ActionSpace] = None,
         hidden_dims: Optional[Iterable[int]] = None,
         learning_rate: float = 0.001,
         discount_factor: float = 0.99,
@@ -75,7 +75,6 @@ class DeepTDLearning(PolicyLearner):
             on_policy=on_policy,
             is_action_continuous=False,
         )
-        assert isinstance(action_space, DiscreteActionSpace)
         self._action_space = action_space
         self._learning_rate = learning_rate
         self._discount_factor = discount_factor
@@ -90,12 +89,11 @@ class DeepTDLearning(PolicyLearner):
         # pyre-fixme[53]: Captured variable `state_hidden_dims` is not annotated.
         # pyre-fixme[53]: Captured variable `state_output_dim` is not annotated.
         # pyre-fixme[3]: Return type must be annotated.
-        def make_specified_network():
+        def make_specified_network(action_space: ActionSpace):
             if network_type == TwoTowerQValueNetwork:
                 # pyre-fixme[45]: Cannot instantiate abstract class `QValueNetwork`.
                 return network_type(
                     state_dim=state_dim,
-                    # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
                     action_dim=action_space.n,
                     hidden_dims=hidden_dims,
                     state_output_dim=state_output_dim,
@@ -114,17 +112,15 @@ class DeepTDLearning(PolicyLearner):
                 )
 
         if network_instance is not None:
-            # pyre-fixme[4]: Attribute must be annotated.
-            self._Q = network_instance
-            assert (
-                network_instance.state_dim == state_dim
-            ), "state dimension doesn't match for policy learner and network"
-            assert (
-                network_instance.action_dim == action_space.n
-            ), "action dimension doesn't match for policy learner and network"
+            self._Q: QValueNetwork = network_instance
         else:
             assert hidden_dims is not None
-            self._Q = make_specified_network()
+            if action_space is None:
+                raise ValueError(
+                    "Instantiating a `TwoTowerQValueNetwork` requires an action space."
+                )
+            assert isinstance(action_space, DiscreteActionSpace)
+            self._Q = make_specified_network(action_space=action_space)
 
         # pyre-fixme[4]: Attribute must be annotated.
         self._Q_target = copy.deepcopy(self._Q)
@@ -161,7 +157,6 @@ class DeepTDLearning(PolicyLearner):
         # TODO: Assumes subjective state is a torch tensor and gym action space.
         # Fix the available action space.
         assert isinstance(available_action_space, DiscreteActionSpace)
-
         with torch.no_grad():
             states_repeated = torch.repeat_interleave(
                 subjective_state.unsqueeze(0),
@@ -171,7 +166,7 @@ class DeepTDLearning(PolicyLearner):
             # (action_space_size x state_dim)
 
             actions = self._action_representation_module(
-                torch.tensor(available_action_space.actions)
+                available_action_space.actions_batch.to(states_repeated)
             )
             # (action_space_size, action_dim)
 
@@ -179,7 +174,7 @@ class DeepTDLearning(PolicyLearner):
             # this does a forward pass since all avaialble
             # actions are already stacked together
 
-            exploit_action = torch.argmax(q_values).view((-1)).item()
+            exploit_action = torch.argmax(q_values).view((-1))
 
         if exploit:
             return exploit_action
@@ -202,7 +197,8 @@ class DeepTDLearning(PolicyLearner):
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         state_batch = batch.state  # (batch_size x state_dim)
-        action_batch = batch.action  # (batch_size x action_dim)
+        action_batch = batch.action
+        # (batch_size x action_dim)
         reward_batch = batch.reward  # (batch_size)
         done_batch = batch.done  # (batch_size)
 
@@ -210,7 +206,6 @@ class DeepTDLearning(PolicyLearner):
         # sanity check they have same batch_size
         assert reward_batch.shape[0] == batch_size
         assert done_batch.shape[0] == batch_size
-
         state_action_values = self._Q.get_q_values(
             state_batch=state_batch,
             action_batch=action_batch,

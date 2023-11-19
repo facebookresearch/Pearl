@@ -13,7 +13,7 @@ from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
 from pearl.api.environment import Environment
 from pearl.api.observation import Observation
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class FixedNumberOfStepsEnvironment(Environment):
@@ -23,7 +23,9 @@ class FixedNumberOfStepsEnvironment(Environment):
         self.number_of_steps_so_far = 0
         # pyre-fixme[4]: Attribute must be annotated.
         self.number_of_steps = number_of_steps
-        self._action_space = DiscreteActionSpace([True, False])
+        self._action_space = DiscreteActionSpace(
+            [torch.tensor(True), torch.tensor(False)]
+        )
 
     def step(self, action: Action) -> Observation:
         self.number_of_steps_so_far += 1

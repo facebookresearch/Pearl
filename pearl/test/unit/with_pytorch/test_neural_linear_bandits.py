@@ -11,7 +11,7 @@ from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploratio
     UCBExploration,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class TestNeuralLinearBandits(unittest.TestCase):
@@ -53,17 +53,15 @@ class TestNeuralLinearBandits(unittest.TestCase):
             losses.append(policy_learner.learn_batch(batch)["mlp_loss"])
 
         self.assertGreater(1e-2, losses[-1])
-        # this is to ensure e2e run to get ucb score works
-        policy_learner.get_scores(torch.randn(batch_size, feature_dim))
         scores = policy_learner.get_scores(
             subjective_state=batch.state,
-            action_space=DiscreteActionSpace(batch.action.tolist()),
+            action_space=DiscreteActionSpace(actions=list(batch.action)),
         )
         # shape should be batch_size, action_count
         self.assertEqual(scores.shape, (batch.state.shape[0], batch.action.shape[0]))
 
         # TEST ACT API
-        action_space = DiscreteActionSpace(batch.action.tolist())
+        action_space = DiscreteActionSpace(actions=list(batch.action))
         # act on one state
         action = policy_learner.act(
             subjective_state=state[0], action_space=action_space

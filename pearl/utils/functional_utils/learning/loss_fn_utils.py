@@ -35,7 +35,6 @@ def compute_cql_loss(q_network, batch, batch_size) -> torch.Tensor:
     Note: the first term in computing the cql loss uses state action values for all actions for each state in the batch
     while the second term only uses (state, action) in the batch.
     """
-
     # Step 1
     state_repeated_batch = extend_state_feature_by_available_action_space(
         state_batch=batch.state,

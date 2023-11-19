@@ -25,7 +25,6 @@ class TestContextualBanditEnvironment(unittest.TestCase):
 
     def test_contextual_bandit_environment_reset(self) -> None:
         assert self.env.features_of_all_arms.shape == (
-            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
             self.env.action_space.n,
             self.env.arm_feature_vector_dim,
         )
@@ -33,6 +32,6 @@ class TestContextualBanditEnvironment(unittest.TestCase):
         assert observation.shape == torch.Size([self.env.observation_dim])
         assert action_space.n == self.number_of_actions
         if self.env.action_space.n > 0:
-            reward = self.env.get_reward(action=0)
+            reward = self.env.get_reward(action=torch.tensor(0))
             # pyre-fixme[16]: `Number` has no attribute `shape`.
             assert reward.shape == torch.Size([1])  # reward is scalar

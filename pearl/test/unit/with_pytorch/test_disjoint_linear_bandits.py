@@ -18,18 +18,19 @@ from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploratio
     DisjointUCBExploration,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class TestDisjointLinearBandits(unittest.TestCase):
     # pyre-fixme[3]: Return type must be annotated.
     def setUp(self):
-        action_space = DiscreteActionSpace(list(range(3)))
+        action_space = DiscreteActionSpace([torch.tensor([i]) for i in range(3)])
         policy_learner = DisjointLinearBandit(
             feature_dim=2,
             action_space=action_space,
             # UCB score == rewards
             exploration_module=DisjointUCBExploration(alpha=0),
+            state_features_only=True,
         )
         # y0 = x1  + x2
         # y1 = 2x1 + x2
@@ -46,7 +47,7 @@ class TestDisjointLinearBandits(unittest.TestCase):
                 ]
             ),
             action=torch.tensor(
-                [0, 0, 1, 1, 2, 2],
+                [[0], [0], [1], [1], [2], [2]],
             ),
             reward=torch.tensor([3.0, 4.0, 7.0, 7.0, 7.0, 13.8]),
             weight=torch.tensor([1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
@@ -73,9 +74,8 @@ class TestDisjointLinearBandits(unittest.TestCase):
             )
 
     def test_ucb_act(self) -> None:
-        policy_learner = copy.deepcopy(
-            self.policy_learner
-        )  # deep copy as we are going to change exploration module
+        # deep copy as we are going to change exploration module
+        policy_learner = copy.deepcopy(self.policy_learner)
         action_space = self.action_space
         batch = self.batch
 
@@ -109,7 +109,7 @@ class TestDisjointLinearBandits(unittest.TestCase):
                 ]
             ),
             action=torch.tensor(
-                [1, 2],
+                [[1], [2]],
             ),
             reward=torch.tensor([2.0, 3.0]),
             weight=torch.tensor([1.0, 1.0]),
@@ -124,9 +124,8 @@ class TestDisjointLinearBandits(unittest.TestCase):
         )
 
     def test_thompson_sampling_disjoint_act(self) -> None:
-        policy_learner = copy.deepcopy(
-            self.policy_learner
-        )  # deep copy as we are going to change exploration module
+        # deep copy as we are going to change exploration module
+        policy_learner = copy.deepcopy(self.policy_learner)
         policy_learner.exploration_module = ThompsonSamplingExplorationLinearDisjoint()
         action_space = self.action_space
         batch = self.batch
@@ -150,15 +149,15 @@ class TestDisjointLinearBandits(unittest.TestCase):
 
     def test_ucb_action_vector(self) -> None:
         """
-        This is to test discreate action space, but each action has a action vector
+        This is to test discrete action space, but each action has a action vector
         """
         state_dim = 5
         action_dim = 3
         action_count = 3
         batch_size = 10
-
-        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `Tensor`.
-        action_space = DiscreteActionSpace(torch.randn(action_count, action_dim))
+        action_space = DiscreteActionSpace(
+            actions=list(torch.randn(action_count, action_dim))
+        )
         policy_learner = DisjointLinearBandit(
             feature_dim=state_dim + action_dim,
             action_space=action_space,
@@ -167,7 +166,7 @@ class TestDisjointLinearBandits(unittest.TestCase):
         batch = TransitionBatch(
             state=torch.randn(batch_size, state_dim),
             action=torch.randint(
-                low=1, high=3, size=(batch_size,)
+                low=0, high=(action_count - 1), size=(batch_size, 1)
             ),  # this is action index
             reward=torch.randn(batch_size),
             weight=torch.ones(batch_size),
@@ -185,7 +184,7 @@ class TestDisjointLinearBandits(unittest.TestCase):
 class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
     def setUp(self) -> None:
         num_arms = 3
-        action_space = DiscreteActionSpace(list(range(num_arms)))
+        action_space = DiscreteActionSpace([torch.tensor([i]) for i in range(num_arms)])
         feature_dim = 2
         policy_learner = DisjointBanditContainer(
             feature_dim=feature_dim,
@@ -193,6 +192,7 @@ class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
                 LinearBandit(feature_dim=feature_dim) for _ in range(num_arms)
             ],
             exploration_module=DisjointUCBExploration(alpha=0),
+            state_features_only=True,
         )
         # y0 = x1  + x2
         # y1 = 2x1 + x2
@@ -209,7 +209,7 @@ class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
                 ]
             ),
             action=torch.tensor(
-                [0, 0, 1, 1, 2, 2],
+                [[0], [0], [1], [1], [2], [2]],
             ),
             reward=torch.tensor([3.0, 4.0, 7.0, 7.0, 7.0, 13.8]),
             weight=torch.tensor([1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
@@ -234,9 +234,8 @@ class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
             )
 
     def test_ucb_act(self) -> None:
-        policy_learner = copy.deepcopy(
-            self.policy_learner
-        )  # deep copy as we are going to change exploration module
+        # deep copy as we are going to change exploration module
+        policy_learner = copy.deepcopy(self.policy_learner)
         action_space = self.action_space
         batch = self.batch
 
@@ -271,7 +270,7 @@ class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
                 ]
             ),
             action=torch.tensor(
-                [1, 2],
+                [[1], [2]],
             ),
             reward=torch.tensor([2.0, 3.0]),
             weight=torch.tensor([1.0, 1.0]),
@@ -287,9 +286,8 @@ class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
         )
 
     def test_thompson_sampling_disjoint_act(self) -> None:
-        policy_learner = copy.deepcopy(
-            self.policy_learner
-        )  # deep copy as we are going to change exploration module
+        # deep copy as we are going to change exploration module
+        policy_learner = copy.deepcopy(self.policy_learner)
         policy_learner.exploration_module = ThompsonSamplingExplorationLinearDisjoint()
         action_space = self.action_space
         batch = self.batch
@@ -314,24 +312,27 @@ class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
 
     def test_ucb_action_vector(self) -> None:
         """
-        This is to test discreate action space, but each action has a action vector
+        This is to test discrete action space, but each action has a action vector
         """
         state_dim = 5
+        action_dim = 1
         action_count = 3
         batch_size = 10
-
-        action_space = DiscreteActionSpace(list(range(action_count)))
+        action_space = DiscreteActionSpace(
+            [torch.tensor([i]) for i in range(action_count)]
+        )
         policy_learner = DisjointBanditContainer(
-            feature_dim=state_dim,
+            feature_dim=state_dim + action_dim,
             arm_bandits=[
-                LinearBandit(feature_dim=state_dim) for _ in range(action_count)
+                LinearBandit(feature_dim=state_dim + action_dim)
+                for _ in range(action_count)
             ],
             exploration_module=DisjointUCBExploration(alpha=0.1),
         )
         batch = TransitionBatch(
             state=torch.randn(batch_size, state_dim),
             action=torch.randint(
-                low=0, high=(action_count - 1), size=(batch_size,)
+                low=0, high=(action_count - 1), size=(batch_size, 1)
             ),  # this is action index
             reward=torch.randn(batch_size),
             weight=torch.ones(batch_size),
@@ -346,9 +347,8 @@ class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
         self.assertEqual(action.shape, torch.Size([batch_size]))
 
     def test_get_scores_linear(self) -> None:
-        policy_learner = copy.deepcopy(
-            self.policy_learner
-        )  # deep copy as we are going to change exploration module
+        # deep copy as we are going to change exploration module
+        policy_learner = copy.deepcopy(self.policy_learner)
         alpha = 3.0
         policy_learner.exploration_module = DisjointUCBExploration(alpha=alpha)
         # action_space = self.action_space

@@ -2,10 +2,12 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
 
+import torch
+
 from pearl.policy_learners.sequential_decision_making.ppo import (
     ProximalPolicyOptimization,
 )
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class TestPPO(unittest.TestCase):
@@ -17,9 +19,7 @@ class TestPPO(unittest.TestCase):
         """
         policy_learner = ProximalPolicyOptimization(
             16,
-            # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got
-            #  `range`.
-            DiscreteActionSpace(range(3)),
+            DiscreteActionSpace(actions=[torch.tensor(i) for i in range(3)]),
             [64, 64],
             training_rounds=1,
             batch_size=500,
@@ -41,9 +41,7 @@ class TestPPO(unittest.TestCase):
         """
         policy_learner = ProximalPolicyOptimization(
             16,
-            # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got
-            #  `range`.
-            DiscreteActionSpace(range(3)),
+            DiscreteActionSpace(actions=[torch.tensor(i) for i in range(3)]),
             [64, 64],
             training_rounds=10,
             batch_size=500,

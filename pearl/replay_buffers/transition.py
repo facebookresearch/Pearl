@@ -2,10 +2,7 @@ import dataclasses
 from dataclasses import dataclass
 from typing import Optional, TypeVar
 
-import numpy as np
-
 import torch
-
 from torch import Tensor
 
 

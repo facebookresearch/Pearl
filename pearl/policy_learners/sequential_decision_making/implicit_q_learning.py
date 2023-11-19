@@ -99,7 +99,6 @@ class ImplicitQLearning(PolicyGradient):
         self._actor = actor_network_type(
             input_dim=state_dim,
             hidden_dims=hidden_dims,
-            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
             output_dim=action_space.n,
         )
         self._actor.apply(init_weights)

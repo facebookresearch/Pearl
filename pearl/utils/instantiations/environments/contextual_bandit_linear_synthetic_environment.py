@@ -69,7 +69,6 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
     # pyre-fixme[3]: Return type must be annotated.
     def _generate_features_of_all_arms(self):
         features_of_all_arms = torch.rand(
-            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
             self.action_space.n,
             self.arm_feature_vector_dim,
         )  # features of each arm. (num of action, num of features)
@@ -102,7 +101,8 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         """
         Given action, environment will return the reward associated of this action
         """
-        context = self._get_context_for_arm(action)
+        # TODO: This assumes the action is an int tensor.
+        context = self._get_context_for_arm(int(action.item()))
         reward = self._compute_reward_from_context(context)
         # pyre-fixme[7]: Expected `Number` but got `Tensor`.
         return reward
@@ -114,7 +114,6 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         """
         rewards = [
             self._compute_reward_from_context(self._get_context_for_arm(i))
-            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
             for i in range(self._action_space.n)
         ]
         # pyre-fixme[6]: For 1st argument expected
@@ -124,7 +123,6 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         return max(rewards) - rewards[action]
 
     def _get_context_for_arm(self, action: int) -> torch.Tensor:
-        # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
         assert action in range(self._action_space.n)  # action is index in action_space
         # pyre-fixme[16]: `ContextualBanditLinearSyntheticEnvironment` has no
         #  attribute `_observation`.

@@ -51,7 +51,7 @@ class DeepExploration(ExplorationModule):
         representation: Optional[torch.nn.Module] = None,
     ) -> Action:
         states_repeated = torch.repeat_interleave(
-            subjective_state.unsqueeze(0), action_space.n, dim=0  # pyre-ignore
+            subjective_state.unsqueeze(0), action_space.n, dim=0
         )
         # (action_space_size x state_dim)
 
@@ -65,7 +65,7 @@ class DeepExploration(ExplorationModule):
             # this does a forward pass since all available
             # actions are already stacked together
 
-        return torch.argmax(q_values).view((-1)).item()
+        return torch.argmax(q_values).view((-1))
 
     def reset(self) -> None:  # noqa: B027
         # sample a new epistemic index (i.e., a Q-network) at the beginning of a

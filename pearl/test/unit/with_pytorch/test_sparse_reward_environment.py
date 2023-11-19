@@ -2,6 +2,8 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
 
+import torch
+
 from pearl.utils.instantiations.environments.sparse_reward_environment import (
     DiscreteSparseRewardEnvironment,
 )
@@ -24,35 +26,35 @@ class TestSparseRewardEnvironment(unittest.TestCase):
         self.assertLess(goal_y, 100)
 
         # Test position change
-        result = env.step(0)
+        result = env.step(torch.tensor(0))
         self.assertEqual(result.observation.agent_position[0], x + 1)
         self.assertEqual(result.observation.agent_position[1], y)
         x = x + 1
-        result = env.step(1)
+        result = env.step(torch.tensor(1))
         self.assertEqual(result.observation.agent_position[0], x)
         self.assertEqual(result.observation.agent_position[1], y + 1)
         y = y + 1
-        result = env.step(2)
+        result = env.step(torch.tensor(2))
         self.assertEqual(result.observation.agent_position[0], x - 1)
         self.assertEqual(result.observation.agent_position[1], y)
         x = x - 1
-        result = env.step(3)
+        result = env.step(torch.tensor(3))
         self.assertEqual(result.observation.agent_position[0], x)
         self.assertEqual(result.observation.agent_position[1], y - 1)
 
         # Test win reward and terminate
         env._agent_position = (goal_x, goal_y - 1)
-        result = env.step(1)
+        result = env.step(torch.tensor(1))
         self.assertEqual(result.reward, 0)
         self.assertTrue(result.terminated)
         # Test not win reward and not terminate
         env._agent_position = (goal_x - 10, goal_y - 10)
-        result = env.step(1)
+        result = env.step(torch.tensor(1))
         self.assertEqual(result.reward, -1)
         self.assertFalse(result.terminated)
         # Test not win reward and terminate
         env._agent_position = (goal_x - 10, goal_y - 10)
         env._step_count = env._max_episode_duration
-        result = env.step(1)
+        result = env.step(torch.tensor(1))
         self.assertEqual(result.reward, -1)
         self.assertTrue(result.terminated)

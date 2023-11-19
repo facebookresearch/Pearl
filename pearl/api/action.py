@@ -1,4 +1,5 @@
-from typing import Any
+from torch import Tensor
 
-# pyre-fixme[33]: Aliased annotation cannot be `Any`.
-Action = Any
+# Action is expected to be a 1-dim Tensor of shape `(d,)`, where `d` is the
+# is the dimensionality of the action.
+Action = Tensor

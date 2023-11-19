@@ -16,16 +16,18 @@ from pearl.neural_networks.optimizers.keyed_optimizer_wrapper import (
 )
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
+    DEFAULT_ACTION_SPACE,
 )
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.functional_utils.learning.action_utils import (
+    concatenate_actions_to_state,
+)
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 from torch import optim
 from torchrec.optim.keyed import CombinedOptimizer
-
-DEFAULT_ACTION_SPACE = DiscreteActionSpace([0])
 
 
 class NeuralBandit(ContextualBanditBase):
@@ -44,8 +46,8 @@ class NeuralBandit(ContextualBanditBase):
         learning_rate: float = 0.001,
         # TODO define optimizer config to use by all deep algorithms
         use_keyed_optimizer: bool = False,
-        # pyre-fixme[2]: Parameter must be annotated.
-        **kwargs,
+        state_features_only: bool = False,
+        **kwargs: Dict[str, Any]
     ) -> None:
         super(NeuralBandit, self).__init__(
             feature_dim=feature_dim,
@@ -63,6 +65,7 @@ class NeuralBandit(ContextualBanditBase):
         self._optimizer = optim.AdamW(
             self._deep_represent_layers.parameters(), lr=learning_rate, amsgrad=True
         )
+        self._state_features_only = state_features_only
         if use_keyed_optimizer:
             optims = [
                 (
@@ -81,7 +84,10 @@ class NeuralBandit(ContextualBanditBase):
             self._optimizer = CombinedOptimizer(optims)
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
-        input_features = torch.cat([batch.state, batch.action], dim=1)
+        if self._state_features_only:
+            input_features = batch.state
+        else:
+            input_features = torch.cat([batch.state, batch.action], dim=1)
 
         # forward pass
         current_values = self._deep_represent_layers(input_features)
@@ -113,12 +119,12 @@ class NeuralBandit(ContextualBanditBase):
             action index chosen given state and action vectors
         """
         # It doesnt make sense to call act if we are not working with action vector
-        # pyre-fixme[16]: `ActionSpace` has no attribute `action_dim`.
-        assert action_space.action_dim > 0
-        # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
         action_count = action_space.n
-        # pyre-fixme[16]: `ActionSpace` has no attribute `cat_state_tensor`.
-        new_feature = action_space.cat_state_tensor(subjective_state)
+        new_feature = concatenate_actions_to_state(
+            subjective_state=subjective_state,
+            action_space=action_space,  # pyre-ignore[6]
+            state_features_only=self._state_features_only,
+        )
         values = self._deep_represent_layers(new_feature).squeeze()
         # batch_size * action_count
         assert values.numel() == new_feature.shape[0] * action_count
@@ -138,19 +144,22 @@ class NeuralBandit(ContextualBanditBase):
         """
         Args:
             subjective_state: tensor for state
-            action_space: basically a list of action features, when it is none, view subjective_state as feature
+            action_space: basically a list of action features, when it is none, view
+                subjective_state as feature
         Return:
             return mlp value with shape (batch_size, action_count)
         """
-        feature = action_space.cat_state_tensor(subjective_state)
+        feature = concatenate_actions_to_state(
+            subjective_state=subjective_state,
+            action_space=action_space,
+            state_features_only=self._state_features_only,
+        )
         batch_size = feature.shape[0]
         feature_dim = feature.shape[-1]
-        feature = feature.reshape(
-            -1, feature_dim
-        )  # dim: [batch_size * num_arms, feature_dim]
-        return (
-            self._deep_represent_layers(feature).reshape(batch_size, -1).squeeze()
-        )  # dim: [batch_size, num_arms] or [batch_size]
+        # dim: [batch_size * num_arms, feature_dim]
+        feature = feature.reshape(-1, feature_dim)
+        # dim: [batch_size, num_arms] or [batch_size]
+        return self._deep_represent_layers(feature).reshape(batch_size, -1).squeeze()
 
     @property
     def optimizer(self) -> torch.optim.Optimizer:

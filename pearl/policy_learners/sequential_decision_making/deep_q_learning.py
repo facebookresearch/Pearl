@@ -49,12 +49,10 @@ class DeepQLearning(DeepTDLearning):
             next_avail_actions,
             next_avail_actions_mask,
         ) = self._prepare_next_state_action_batch(batch)
-
         next_state_action_values = self._Q_target.get_q_values(
             next_state, next_avail_actions
-        ).view(
-            batch_size, -1
-        )  # (batch_size x action_space_size)
+        ).view(batch_size, -1)
+        # (batch_size x action_space_size)
 
         # Make sure that unavailable actions' Q values are assigned to -inf
         next_state_action_values[next_avail_actions_mask] = -float("inf")
@@ -74,7 +72,7 @@ class DeepQLearning(DeepTDLearning):
         next_available_actions_mask_batch = batch.next_available_actions_mask
         # (batch_size x action_space_size)
 
-        number_of_actions = self._action_space.n  # pyre-ignore
+        number_of_actions = self._action_space.n  # pyre-ignore[16]
         next_state_batch_repeated = torch.repeat_interleave(
             next_state_batch.unsqueeze(1), number_of_actions, dim=1
         )  # (batch_size x action_space_size x state_dim)

@@ -8,7 +8,7 @@ from pearl.policy_learners.exploration_modules.contextual_bandits.squarecb_explo
     SquareCBExploration,
 )
 
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 # The value function learning part is exactly the same as in DisjointLinUCB.
 

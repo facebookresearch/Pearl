@@ -38,13 +38,9 @@ def action_scaling(
         scaled_action: centered and scaled input action vector, according to the action space
     """
     device = input_action.device
-    # pyre-fixme[16]: `ActionSpace` has no attribute `low`.
     low = torch.tensor(action_space.low).to(device)
-    # pyre-fixme[16]: `ActionSpace` has no attribute `high`.
     high = torch.tensor(action_space.high).to(device)
-
     centered_and_scaled_action = (((high - low) * (input_action + 1.0)) / 2) + low
-
     return centered_and_scaled_action
 
 
@@ -62,13 +58,9 @@ def noise_scaling(action_space: ActionSpace, input_noise: torch.Tensor) -> torch
         torch.Tensor: scaled input vector, according to the action space
     """
     device = input_noise.device
-    # pyre-fixme[16]: `ActionSpace` has no attribute `low`.
     low = torch.tensor(action_space.low).to(device)
-    # pyre-fixme[16]: `ActionSpace` has no attribute `high`.
     high = torch.tensor(action_space.high).to(device)
-
     scaled_noise = ((high - low) / 2) * input_noise
-
     return scaled_noise
 
 
@@ -173,7 +165,7 @@ class GaussianActorNetwork(nn.Module):
         # check this for multi-dimensional spaces
         self.register_buffer(
             "_action_bound",
-            torch.tensor((action_space.high - action_space.low) / 2),  # pyre-ignore
+            torch.tensor((action_space.high - action_space.low) / 2),
         )
 
         # preventing the actor network from learning a flat or a point mass distribution

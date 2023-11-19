@@ -11,7 +11,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
     ExplorationType,
 )
-from pearl.utils.functional_utils.learning.get_action import get_model_actions
+from pearl.utils.functional_utils.learning.action_utils import get_model_actions
 
 
 class ScoreExplorationBase(ExplorationModule):
@@ -30,7 +30,7 @@ class ScoreExplorationBase(ExplorationModule):
         action_space: ActionSpace,
         values: Optional[torch.Tensor] = None,
         action_availability_mask: Optional[torch.Tensor] = None,
-        exploit_action: Action = None,
+        exploit_action: Optional[Action] = None,
         representation: Optional[torch.nn.Module] = None,
     ) -> Action:
         """
@@ -63,7 +63,7 @@ class ScoreExplorationBase(ExplorationModule):
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
         values: torch.Tensor,
-        exploit_action: Action = None,
+        exploit_action: Optional[Action] = None,
         representation: Optional[torch.nn.Module] = None,
     ) -> Action:
         """

@@ -9,6 +9,7 @@ from pearl.history_summarization_modules.history_summarization_module import (
 )
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
+    DEFAULT_ACTION_SPACE,
 )
 from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
     ScoreExplorationBase,
@@ -17,10 +18,11 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.functional_utils.learning.action_utils import (
+    concatenate_actions_to_state,
+)
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
-
-DEFAULT_ACTION_SPACE = DiscreteActionSpace([0])
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class LinearBandit(ContextualBanditBase):
@@ -84,9 +86,10 @@ class LinearBandit(ContextualBanditBase):
         assert (
             self._exploration_module is not None
         ), "exploration module must be set to call act()"
-        assert available_action_space.action_dim > 0
         action_count = available_action_space.n
-        new_feature = available_action_space.cat_state_tensor(subjective_state)
+        new_feature = concatenate_actions_to_state(
+            subjective_state=subjective_state, action_space=available_action_space
+        )
         values = self.model(new_feature)  # (batch_size, action_count)
         assert values.shape == (new_feature.shape[0], action_count)
         return self._exploration_module.act(
@@ -110,7 +113,9 @@ class LinearBandit(ContextualBanditBase):
             Shape is (batch)
         """
         assert isinstance(self._exploration_module, ScoreExplorationBase)
-        feature = action_space.cat_state_tensor(subjective_state)
+        feature = concatenate_actions_to_state(
+            subjective_state=subjective_state, action_space=action_space
+        )
         return self._exploration_module.get_scores(
             subjective_state=feature,
             values=self.model(feature),

@@ -35,7 +35,7 @@ class TestOfflineCQL(unittest.TestCase):
     def test_create_offline_data_and_learn_cql(self) -> None:
         env = GymEnvironment("CartPole-v1")
         action_representation_module = OneHotActionTensorRepresentationModule(
-            env.action_space.n
+            max_actions=env.action_space.n
         )
 
         onlineDQN_agent = PearlAgent(

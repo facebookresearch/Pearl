@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 import torch
 
 from pearl.api.action import Action
+from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
@@ -23,10 +24,10 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.instantiations.action_spaces.action_spaces import (
-    ActionSpace,
-    DiscreteActionSpace,
+from pearl.utils.functional_utils.learning.action_utils import (
+    concatenate_actions_to_state,
 )
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 from torch import optim
 from torchrec.optim.keyed import CombinedOptimizer
 
@@ -46,6 +47,7 @@ class DisjointBanditContainer(ContextualBanditBase):
         exploration_module: ExplorationModule,
         training_rounds: int = 100,
         batch_size: int = 128,
+        state_features_only: bool = False,
     ) -> None:
         super(DisjointBanditContainer, self).__init__(
             feature_dim=feature_dim,
@@ -56,6 +58,7 @@ class DisjointBanditContainer(ContextualBanditBase):
         # Currently our disjoint LinUCB usecase only use LinearRegression
         self._arm_bandits: torch.nn.ModuleList = torch.nn.ModuleList(arm_bandits)
         self._n_arms: int = len(arm_bandits)
+        self._state_features_only = state_features_only
 
     @property
     def n_arms(self) -> int:
@@ -77,7 +80,8 @@ class DisjointBanditContainer(ContextualBanditBase):
         batches = []
         for arm in range(self.n_arms):
             # mask of observations for this arm
-            mask = batch.action == arm
+            # assume action indices
+            mask = batch.action[:, 0] == arm
             if batch.state.ndim == 2:
                 # shape: (batch_size, feature_size)
                 # same features for all arms
@@ -145,13 +149,13 @@ class DisjointBanditContainer(ContextualBanditBase):
         action_availability_mask: Optional[torch.Tensor] = None,
         exploit: bool = False,
     ) -> Action:
-        # pyre-fixme[16]: `ActionSpace` has no attribute `cat_state_tensor`.
-        feature = available_action_space.cat_state_tensor(
-            subjective_state=subjective_state
-        )  # batch_size, action_count, feature_size
-
+        # (batch_size, action_count, feature_size)
+        feature = concatenate_actions_to_state(
+            subjective_state=subjective_state,
+            action_space=available_action_space,  # pyre-ignore[6]
+            state_features_only=self._state_features_only,
+        )
         values = ensemble_forward(self.models, feature, use_for_loop=True)
-
         return self._exploration_module.act(
             subjective_state=feature,
             action_space=available_action_space,
@@ -171,9 +175,12 @@ class DisjointBanditContainer(ContextualBanditBase):
             Shape is (batch, num_arms) or (num_arms,)
         """
         assert isinstance(self._exploration_module, ScoreExplorationBase)
-        feature = action_space.cat_state_tensor(
-            subjective_state=subjective_state
-        )  # batch_size, action_count, feature_size
+        # batch_size, action_count, feature_size
+        feature = concatenate_actions_to_state(
+            subjective_state=subjective_state,
+            action_space=action_space,
+            state_features_only=self._state_features_only,
+        )
         return self._exploration_module.get_scores(
             subjective_state=feature,
             values=ensemble_forward(self.models, feature, use_for_loop=True),

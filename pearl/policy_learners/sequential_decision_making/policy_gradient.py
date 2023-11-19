@@ -78,7 +78,6 @@ class PolicyGradient(PolicyLearner):
         return self.network_type(
             input_dim=self.state_dim,
             hidden_dims=self.hidden_dims,
-            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
             output_dim=self.action_space.n,
         )
 
@@ -100,7 +99,7 @@ class PolicyGradient(PolicyLearner):
             action_probabilities = self._actor(subjective_state)
             # (action_space_size, 1)
 
-            exploit_action = torch.argmax(action_probabilities).view((-1)).item()
+            exploit_action = torch.argmax(action_probabilities).view((-1))
 
         if exploit:
             return exploit_action

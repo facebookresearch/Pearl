@@ -24,7 +24,7 @@ from pearl.pearl_agent import PearlAgent
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
     online_learning_returns,
 )
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 from pearl.utils.scripts.benchmark_config import (
     # all_partial_observable_continuous_control_envs,
     # DDQN_method,

@@ -18,6 +18,5 @@ class OneHotActionTensorRepresentationModule(ActionRepresentationModule):
         self.max_actions = max_actions
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return F.one_hot(
-            x.long(), num_classes=self.max_actions
-        )  # (batch_size x action_dim)
+        return F.one_hot(x.long(), num_classes=self.max_actions).squeeze(dim=-2)
+        # (batch_size x action_dim)

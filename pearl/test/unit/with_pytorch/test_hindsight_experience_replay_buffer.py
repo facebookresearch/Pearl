@@ -7,12 +7,11 @@ import torch
 from pearl.replay_buffers.sequential_decision_making.hindsight_experience_replay_buffer import (
     HindsightExperienceReplayBuffer,
 )
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class TestHindsightExperienceReplayBuffer(unittest.TestCase):
-    # pyre-fixme[3]: Return type must be annotated.
-    def test_basic(self):
+    def test_basic(self) -> None:
         """
         Test setup:
         - assume 2 x 2 box, step size is 1, 4 actions: up, down, left, right
@@ -27,16 +26,15 @@ class TestHindsightExperienceReplayBuffer(unittest.TestCase):
             torch.Tensor([1, 0]),
         ]
         goal = torch.Tensor([1, 1])
+        actions = [torch.tensor([i]) for i in range(len(states) - 1)]
         action_to_next_states = {
-            action: states[action + 1] for action in range(len(states) - 1)
+            action.item(): states[i + 1] for i, action in enumerate(actions)
         }
 
         # pyre-fixme[53]: Captured variable `action_to_next_states` is not annotated.
-        # pyre-fixme[3]: Return type must be annotated.
-        # pyre-fixme[2]: Parameter must be annotated.
-        def reward_fn(state, action):
+        def reward_fn(state: torch.Tensor, action: torch.Tensor) -> int:
             goal = state[-2:]
-            next_state = action_to_next_states[action]
+            next_state = action_to_next_states[action.item()]
             if torch.all(torch.eq(next_state, goal)):
                 return 0
             return -1
@@ -45,12 +43,13 @@ class TestHindsightExperienceReplayBuffer(unittest.TestCase):
             capacity=10, goal_dim=2, reward_fn=reward_fn
         )
 
-        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `range`.
-        action_space = DiscreteActionSpace(range(4))
+        action_space = DiscreteActionSpace(
+            actions=[torch.tensor([i]) for i in range(4)]
+        )
         for i in range(len(states) - 1):
             rb.push(
                 state=torch.cat([states[i], goal], dim=0),
-                action=i,
+                action=torch.tensor([i]),
                 reward=-1,
                 next_state=torch.cat([states[i + 1], goal], dim=0),
                 curr_available_actions=action_space,

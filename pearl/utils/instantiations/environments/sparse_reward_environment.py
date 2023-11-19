@@ -30,7 +30,7 @@ from pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
     SubjectiveState,
 )
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 # pyre-fixme[4]: Attribute annotation cannot be `Any`.
 # pyre-fixme[2]: Parameter annotation cannot be `Any`.
@@ -137,6 +137,7 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
     y +=  sin(360/N * n) * step_size
     """
 
+    # TODO: This environment mixes the concepts of action index and action feature. Fix.
     # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
@@ -158,11 +159,11 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
         self._action_count = action_count
         # pyre-fixme[4]: Attribute must be annotated.
         self._actions = [
-            # pyre-fixme[58]: `*` is not supported for operand types `Tuple[float,
-            #  float]` and `float`.
-            (
-                math.cos(2 * math.pi / self._action_count * i),
-                math.sin(2 * math.pi / self._action_count * i),
+            torch.tensor(
+                [
+                    math.cos(2 * math.pi / self._action_count * i),
+                    math.sin(2 * math.pi / self._action_count * i),
+                ]
             )
             * self._step_size
             for i in range(action_count)
@@ -170,12 +171,15 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
 
     def step(self, action: Action) -> ActionResult:
         assert action < self._action_count and action >= 0
-        return super(DiscreteSparseRewardEnvironment, self).step(self._actions[action])
+        return super(DiscreteSparseRewardEnvironment, self).step(
+            self._actions[int(action.item())]
+        )
 
     @property
     def action_space(self) -> DiscreteActionSpace:
-        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `range`.
-        return DiscreteActionSpace(range(self._action_count))
+        return DiscreteActionSpace(
+            actions=[torch.tensor([i]) for i in range(self._action_count)]
+        )
 
 
 class SparseRewardEnvSummarizationModule(HistorySummarizationModule):

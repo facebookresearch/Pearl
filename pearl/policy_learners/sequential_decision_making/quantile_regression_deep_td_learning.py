@@ -72,7 +72,6 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             #  `DistributionalQValueNetwork`.
             return network_type(
                 state_dim=state_dim,
-                # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
                 action_dim=action_space.n,
                 hidden_dims=hidden_dims,
                 num_quantiles=num_quantiles,
@@ -85,9 +84,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
                 network_instance.state_dim == state_dim
             ), "input state dimension doesn't match network state dimension for QuantileQValueNetwork"
             assert (
-                network_instance.action_dim
-                # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
-                == action_space.n
+                network_instance.action_dim == action_space.n
             ), "input action dimension doesn't match network action dimension for QuantileQValueNetwork"
         else:
             assert hidden_dims is not None
@@ -113,7 +110,6 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         with torch.no_grad():
             states_repeated = torch.repeat_interleave(
                 subjective_state.unsqueeze(0),
-                # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
                 available_action_space.n,
                 dim=0,
             )  # (action_space_size x state_dim)
@@ -128,7 +124,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             q_values = self.safety_module.get_q_values_under_risk_metric(
                 states_repeated, actions, self._Q
             )
-            exploit_action = torch.argmax(q_values).view((-1)).item()
+            exploit_action = torch.argmax(q_values).view((-1))
 
         if exploit:
             return exploit_action

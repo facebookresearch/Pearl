@@ -166,7 +166,6 @@ class PolicyLearner(torch.nn.Module, ABC):
             batch.next_available_actions = self._action_representation_module(
                 batch.next_available_actions
             )
-
         return batch
 
     @abstractmethod

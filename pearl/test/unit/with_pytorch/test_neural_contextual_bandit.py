@@ -9,7 +9,7 @@ from pearl.policy_learners.exploration_modules.common.no_exploration import (
 )
 from pearl.replay_buffers.transition import TransitionBatch
 
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class TestNeuralContextualBandit(unittest.TestCase):
@@ -40,25 +40,15 @@ class TestNeuralContextualBandit(unittest.TestCase):
 
         self.assertGreater(1e-2, losses[-1])
 
-        # TEST get scores
-        self.assertTrue(
-            torch.allclose(
-                batch.reward,
-                policy_learner.get_scores(
-                    torch.cat([batch.state, batch.action], dim=1)
-                ),
-                atol=0.1,
-            )
-        )
         scores = policy_learner.get_scores(
             subjective_state=batch.state,
-            action_space=DiscreteActionSpace(batch.action.tolist()),
+            action_space=DiscreteActionSpace(actions=list(batch.action)),
         )
         # shape should be batch_size, action_count
         self.assertEqual(scores.shape, (batch.state.shape[0], batch.action.shape[0]))
 
         # TEST ACT
-        action_space = DiscreteActionSpace(batch.action.tolist())
+        action_space = DiscreteActionSpace(actions=list(batch.action))
         actions = policy_learner.act(
             subjective_state=batch.state, action_space=action_space
         )

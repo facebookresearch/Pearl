@@ -7,7 +7,7 @@ from pearl.api.state import SubjectiveState
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class PropensityExploration(ExplorationModule):
@@ -28,6 +28,6 @@ class PropensityExploration(ExplorationModule):
         values: Optional[torch.Tensor] = None,
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,
-        exploit_action: Action = None,
+        exploit_action: Optional[Action] = None,
     ) -> Action:
         return torch.distributions.Categorical(values).sample().item()

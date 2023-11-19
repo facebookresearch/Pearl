@@ -35,7 +35,7 @@ class ExplorationModule(ABC):
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
         values: Optional[torch.Tensor] = None,
-        exploit_action: Action = None,
+        exploit_action: Optional[Action] = None,
         action_availability_mask: Optional[torch.Tensor] = None,
         representation: Optional[torch.nn.Module] = None,
     ) -> Action:

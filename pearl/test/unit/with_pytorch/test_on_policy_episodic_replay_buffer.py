@@ -9,7 +9,7 @@ from pearl.replay_buffers.sequential_decision_making.on_policy_episodic_replay_b
 )
 from pearl.replay_buffers.transition import TransitionBatch
 
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
@@ -22,8 +22,9 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         self.returns = [15.0, 11.0, 5.0]  # list of returns
         self.trajectory_len = len(self.rewards)
         self.action_size = 3
-        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `range`.
-        self.action_space = DiscreteActionSpace(range(self.action_size))
+        self.action_space = DiscreteActionSpace(
+            actions=[torch.tensor(i) for i in range(self.action_size)]
+        )
 
     def test_push_incomplete_trajectory(self) -> None:
         # test that the buffer is empty and can't be sampled from until 1st complete trajectory is added

@@ -82,7 +82,6 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
             # pyre-fixme[16]: `Optional` has no attribute `unsqueeze`.
             # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
             next_state_batch.unsqueeze(1),
-            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
             self._action_space.n,
             dim=1,
         )  # shape: (batch_size x action_space_size x state_dim)

@@ -8,7 +8,7 @@ from pearl.replay_buffers.sequential_decision_making.fifo_on_policy_replay_buffe
     FIFOOnPolicyReplayBuffer,
 )
 
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class TestFifoBuffer(unittest.TestCase):
@@ -23,8 +23,9 @@ class TestFifoBuffer(unittest.TestCase):
             self.batch_size,
         )
         self.next_states = torch.rand(self.batch_size, state_dim)
-        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `range`.
-        self.action_space = DiscreteActionSpace(range(action_dim))
+        self.action_space = DiscreteActionSpace(
+            actions=[torch.tensor(i) for i in range(action_dim)]
+        )
         self.curr_available_actions = self.action_space
         self.next_available_actions = self.action_space
         self.done = torch.randint(2, (self.batch_size,))

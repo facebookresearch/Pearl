@@ -13,7 +13,7 @@ from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploratio
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class TestLinearBandits(unittest.TestCase):
@@ -70,22 +70,9 @@ class TestLinearBandits(unittest.TestCase):
         self.policy_learner.exploration_module = UCBExploration(alpha=0)
         batch = self.batch
 
-        # query scores by feature vector directly
-        ucb_scores = self.policy_learner.get_scores(
-            subjective_state=torch.cat([batch.state, batch.action], dim=1)
-        )
-        self.assertTrue(
-            torch.allclose(
-                ucb_scores,
-                batch.reward,
-                atol=1e-4,
-            )
-        )
-        self.assertEqual(ucb_scores.shape, batch.reward.shape)
-
         ucb_scores = self.policy_learner.get_scores(
             subjective_state=batch.state,
-            action_space=DiscreteActionSpace(batch.action.tolist()),
+            action_space=DiscreteActionSpace(actions=list(batch.action)),
         )
         self.assertEqual(
             ucb_scores.shape, (batch.state.shape[0], batch.action.shape[0])
@@ -99,7 +86,7 @@ class TestLinearBandits(unittest.TestCase):
             self.policy_learner
         )  # deep copy as we are going to change exploration module
         batch = self.batch
-        action_space = DiscreteActionSpace(batch.action.tolist())
+        action_space = DiscreteActionSpace(actions=list(batch.action))
         # action 2 has feature vector as 3, 2, has highest sum
         self.assertEqual(policy_learner.act(batch.state[0], action_space), 2)
         # test with batch state
@@ -163,10 +150,6 @@ class TestLinearBandits(unittest.TestCase):
 
         # test sigma of policy_learner (LinUCB)
         features = torch.cat([batch.state, batch.action], dim=1)
-        # input is (batch_size, 2)
-        # expect output is (batch_size,)
-        ucb_scores = policy_learner.get_scores(features)
-        self.assertEqual(ucb_scores.shape, batch.reward.shape)
         A = policy_learner.model._A
         A_inv = torch.linalg.inv(A)
         features_with_ones = LinearRegression.append_ones(features)
@@ -194,7 +177,7 @@ class TestLinearBandits(unittest.TestCase):
 
         policy_learner.exploration_module = ThompsonSamplingExplorationLinear()
         batch = self.batch
-        action_space = DiscreteActionSpace(batch.action.tolist())
+        action_space = DiscreteActionSpace(actions=list(batch.action))
 
         # test with batch state
         selected_actions = policy_learner.act(batch.state, action_space)
@@ -202,7 +185,7 @@ class TestLinearBandits(unittest.TestCase):
         self.assertTrue(selected_actions.shape[0] == batch.state.shape[0])
 
         self.assertTrue(
-            all([a in range(0, action_space.n) for a in selected_actions.tolist()])
+            all(a in range(0, action_space.n) for a in selected_actions.tolist())
         )
 
     def test_linear_efficient_thompson_sampling_act(self) -> None:
@@ -217,7 +200,7 @@ class TestLinearBandits(unittest.TestCase):
             enable_efficient_sampling=True
         )
         batch = self.batch
-        action_space = DiscreteActionSpace(batch.action.tolist())
+        action_space = DiscreteActionSpace(actions=list(batch.action))
 
         # test with batch state
         selected_actions = policy_learner.act(batch.state, action_space)
@@ -225,5 +208,5 @@ class TestLinearBandits(unittest.TestCase):
         self.assertTrue(selected_actions.shape[0] == batch.state.shape[0])
 
         self.assertTrue(
-            all([a in range(0, action_space.n) for a in selected_actions.tolist()])
+            all(a in range(0, action_space.n) for a in selected_actions.tolist())
         )

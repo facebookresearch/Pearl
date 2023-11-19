@@ -4,7 +4,9 @@ import copy
 import unittest
 
 import torch
-import torch.nn.functional as F
+from pearl.action_representation_modules.one_hot_action_representation_module import (
+    OneHotActionTensorRepresentationModule,
+)
 from pearl.neural_networks.common.utils import init_weights
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
     EGreedyExploration,
@@ -17,7 +19,7 @@ from pearl.policy_learners.sequential_decision_making.double_dqn import DoubleDQ
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
 )
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class TestDeepTDLearning(unittest.TestCase):
@@ -25,16 +27,18 @@ class TestDeepTDLearning(unittest.TestCase):
     def setUp(self):
         self.batch_size = 24
         self.state_dim = 10
-        self.action_dim = 3
+        self.action_count = 3
         self.action_space = DiscreteActionSpace(
-            # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `Tensor`.
-            F.one_hot(torch.arange(self.action_dim), num_classes=self.action_dim)
+            actions=list(torch.arange(self.action_count).view(-1, 1))
+        )
+        self.action_representation_module = OneHotActionTensorRepresentationModule(
+            max_actions=3
         )
         buffer = FIFOOffPolicyReplayBuffer(self.batch_size)
         for _ in range(self.batch_size):
             buffer.push(
                 torch.randn(self.state_dim),
-                self.action_space.sample().squeeze(0),
+                self.action_space.sample(),
                 # pyre-fixme[6]: For 3rd argument expected `float` but got `Tensor`.
                 torch.randint(1, (1,)),
                 torch.randn(self.state_dim),
@@ -57,19 +61,19 @@ class TestDeepTDLearning(unittest.TestCase):
             hidden_dims=[3],
             training_rounds=1,
         )
+        double_dqn.set_action_representation_module(self.action_representation_module)
         dqn = DeepQLearning(
             state_dim=self.state_dim,
             action_space=self.action_space,
             hidden_dims=[3],
             training_rounds=1,
         )
+        dqn.set_action_representation_module(self.action_representation_module)
         differ = False
         for _ in range(10):
             # 10 should be large enough to see difference.
-            batch1 = copy.deepcopy(self.batch)
-            batch2 = copy.deepcopy(self.batch)
-            print(batch1.next_available_actions.shape)
-
+            batch1 = double_dqn.preprocess_batch(copy.deepcopy(self.batch))
+            batch2 = dqn.preprocess_batch(copy.deepcopy(self.batch))
             double_dqn._Q.apply(init_weights)
             double_dqn._Q_target.apply(init_weights)
             double_value = double_dqn._get_next_state_values(batch1, self.batch_size)
@@ -91,6 +95,8 @@ class TestDeepTDLearning(unittest.TestCase):
             training_rounds=1,
             exploration_module=EGreedyExploration(0.05),
         )
-        sa_value = sarsa._get_next_state_values(self.batch, self.batch_size)
-
+        sarsa.set_action_representation_module(self.action_representation_module)
+        sa_value = sarsa._get_next_state_values(
+            batch=sarsa.preprocess_batch(self.batch), batch_size=self.batch_size
+        )
         self.assertEqual(sa_value.shape, (self.batch_size,))

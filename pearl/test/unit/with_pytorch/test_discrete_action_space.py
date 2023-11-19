@@ -4,23 +4,13 @@ import unittest
 
 import torch
 
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class TestDiscreteActionSpace(unittest.TestCase):
-    def test_cat_state_tensor(self) -> None:
-        # action_count = 3
-        action_space = DiscreteActionSpace([[1, 2], [3, 4], [5, 6]])
-        # batch_size = 1 feature_size = 1+2 = 3
-        new_tensor = action_space.cat_state_tensor(
-            torch.Tensor([1])
-        )  # (batch_size, action_count, feature_size)
-        self.assertEqual(new_tensor.tolist(), [[[1, 1, 2], [1, 3, 4], [1, 5, 6]]])
-        # batch_size = 2 feature_size = 1+2 = 3
-        new_tensor = action_space.cat_state_tensor(
-            torch.Tensor([[1], [2]])
-        )  # (batch_size, action_count, feature_size)
-        self.assertEqual(
-            new_tensor.tolist(),
-            [[[1, 1, 2], [1, 3, 4], [1, 5, 6]], [[2, 1, 2], [2, 3, 4], [2, 5, 6]]],
-        )
+    def test_iter(self) -> None:
+        # 5 actions with dimention as 4
+        actions = [torch.randn(4) for _ in range(5)]
+        action_space = DiscreteActionSpace(actions=actions)
+        for i, action in enumerate(action_space):
+            self.assertTrue(torch.equal(actions[i], action))

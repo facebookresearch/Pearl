@@ -8,7 +8,7 @@ from pearl.api.state import SubjectiveState
 from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
     ScoreExplorationBase,
 )
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 from torch.distributions.categorical import Categorical
 
 
@@ -43,7 +43,7 @@ class SquareCBExploration(ScoreExplorationBase):
         action_space: DiscreteActionSpace,
         values: torch.Tensor,
         representation: Optional[torch.nn.Module] = None,
-        exploit_action: Action = None,
+        exploit_action: Optional[Action] = None,
         action_availability_mask: Optional[torch.Tensor] = None,
     ) -> Action:
         """
@@ -82,7 +82,7 @@ class SquareCBExploration(ScoreExplorationBase):
         subjective_state: SubjectiveState,
         action_space: DiscreteActionSpace,
         values: torch.Tensor,
-        exploit_action: Action = None,
+        exploit_action: Optional[Action] = None,
         representation: Optional[torch.nn.Module] = None,
     ) -> Action:
         return values.view(-1, action_space.n)

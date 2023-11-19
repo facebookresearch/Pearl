@@ -1,13 +1,13 @@
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 import torch
 
 from pearl.api.action import Action
+from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
 from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
     ScoreExplorationBase,
 )
-from pearl.utils.instantiations.action_spaces.action_spaces import ActionSpace
 
 
 # TODO: Assumes discrete gym action space
@@ -44,7 +44,7 @@ class UCBExploration(ScoreExplorationBase):
         values: torch.Tensor,
         action_space: ActionSpace,
         representation: Optional[torch.nn.Module] = None,
-        exploit_action: Action = None,
+        exploit_action: Optional[Action] = None,
     ) -> torch.Tensor:
         """
         Args:
@@ -59,7 +59,6 @@ class UCBExploration(ScoreExplorationBase):
         Returns:
             return shape(action_count)
         """
-        # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
         action_count = action_space.n
         values = values.view(-1, action_count)  # (batch_size, action_count)
         sigma = self.sigma(
@@ -125,7 +124,6 @@ class VanillaUCBExploration(UCBExploration):
         action_space: ActionSpace,
         representation: Optional[torch.nn.Module] = None,
     ) -> torch.Tensor:
-        # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
         exploration_bonus = torch.zeros((action_space.n))  # (action_space_size)
         # pyre-fixme[16]: `ActionSpace` has no attribute `actions`.
         for action in action_space.actions:
@@ -146,7 +144,7 @@ class VanillaUCBExploration(UCBExploration):
         values: torch.Tensor,
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,
-        exploit_action: Action = None,
+        exploit_action: Optional[Action] = None,
     ) -> Action:
         selected_action = super().act(
             subjective_state,

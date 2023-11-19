@@ -34,7 +34,7 @@ from pearl.safety_modules.risk_sensitive_safety_modules import RiskNeutralSafety
 from pearl.safety_modules.safety_module import SafetyModule
 from pearl.utils.compatibility_checks import pearl_agent_compatibility_check
 from pearl.utils.device import get_pearl_device
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class PearlAgent(Agent):
@@ -126,7 +126,7 @@ class PearlAgent(Agent):
             self.policy_learner, self.safety_module, self.replay_buffer
         )
         self._subjective_state: SubjectiveState = None
-        self._latest_action: Action = None
+        self._latest_action: Optional[Action] = None
         self._action_space: Optional[ActionSpace] = None
 
         self.policy_learner.to(self.device)
@@ -146,10 +146,8 @@ class PearlAgent(Agent):
             isinstance(self._action_space, DiscreteActionSpace)
             and self.policy_learner.requires_tensors
         ):
-            safe_action_space.actions = torch.as_tensor(safe_action_space.actions).to(
-                self.device
-            )
-
+            for a in safe_action_space.actions:
+                a.to(self.device)
         self._latest_action = self.policy_learner.act(
             subjective_state_to_be_used, safe_action_space, exploit
         )

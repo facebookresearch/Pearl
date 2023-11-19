@@ -23,7 +23,7 @@ class DeepSARSA(DeepTDLearning):
     def __init__(
         self,
         state_dim: int,
-        action_space: ActionSpace,
+        action_space: Optional[ActionSpace] = None,
         exploration_module: Optional[ExplorationModule] = None,
         # pyre-fixme[2]: Parameter must be annotated.
         **kwargs,

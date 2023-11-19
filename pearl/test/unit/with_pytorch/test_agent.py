@@ -2,6 +2,7 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
 
+import torch
 from pearl.action_representation_modules.one_hot_action_representation_module import (
     OneHotActionTensorRepresentationModule,
 )
@@ -25,6 +26,9 @@ from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploratio
 from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,
 )
+from pearl.policy_learners.sequential_decision_making.tabular_q_learning import (
+    TabularQLearning,
+)
 from pearl.replay_buffers.contextual_bandits.discrete_contextual_bandit_replay_buffer import (
     DiscreteContextualBanditReplayBuffer,
 )
@@ -32,14 +36,22 @@ from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buff
     FIFOOffPolicyReplayBuffer,
 )
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
+    episode_return,
+    online_learning,
     online_learning_to_png_graph,
 )
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 from pearl.utils.instantiations.environments.contextual_bandit_linear_synthetic_environment import (
     ContextualBanditLinearSyntheticEnvironment,
 )
+from pearl.utils.instantiations.environments.environments import (
+    FixedNumberOfStepsEnvironment,
+)
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
+from pearl.utils.instantiations.environments.reward_is_equal_to_ten_times_action_contextual_bandit_environment import (
+    RewardIsEqualToTenTimesActionContextualBanditEnvironment,
+)
 
 
 class TestAgentWithPyTorch(unittest.TestCase):
@@ -140,15 +152,17 @@ class TestAgentWithPyTorch(unittest.TestCase):
 
     def test_with_linear_contextual(self) -> None:
         """
-        This is an integration test for ContextualBandit with ContextualBanditLinearSyntheticEnvironment
+        This is an integration test for ContextualBandit with
+        ContextualBanditLinearSyntheticEnvironment.
         """
-        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `range`.
-        action_space = DiscreteActionSpace(range(3))
-        feature_dim = 3
+        action_space = DiscreteActionSpace(
+            actions=[torch.tensor([a]) for a in range(3)]
+        )
+        observation_dim = 3
 
         agent = PearlAgent(
             policy_learner=DisjointLinearBandit(
-                feature_dim=feature_dim,
+                feature_dim=observation_dim + 1,
                 action_space=action_space,
                 exploration_module=DisjointUCBExploration(alpha=0.1),
                 batch_size=1,
@@ -157,7 +171,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
         )
         env = ContextualBanditLinearSyntheticEnvironment(
             action_space=action_space,
-            observation_dim=feature_dim,
+            observation_dim=observation_dim,
         )
 
         regrets = []
@@ -182,13 +196,14 @@ class TestAgentWithPyTorch(unittest.TestCase):
         The parameter gamma should be set proportionally to sqrt{A T / d}
         (see https://arxiv.org/pdf/2002.04926.pdf and discussion after Theorem 1)
         """
-        # pyre-fixme[6]: For 1st argument expected `List[typing.Any]` but got `range`.
-        action_space = DiscreteActionSpace(range(3))
-        feature_dim = 3
+        action_space = DiscreteActionSpace(
+            actions=[torch.tensor([a]) for a in range(3)]
+        )
+        observation_dim = 3
 
         agent = PearlAgent(
             policy_learner=SquareCB(
-                feature_dim=feature_dim,
+                feature_dim=observation_dim + 1,
                 action_space=action_space,
                 gamma=10,
                 batch_size=1,
@@ -197,7 +212,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
         )
         env = ContextualBanditLinearSyntheticEnvironment(
             action_space=action_space,
-            observation_dim=feature_dim,
+            observation_dim=observation_dim,
         )
 
         regrets = []
@@ -215,3 +230,43 @@ class TestAgentWithPyTorch(unittest.TestCase):
         # to test learning ability of linear contextual bandits we check
         # that the regret is decreasing over learning steps
         self.assertTrue(sum(regrets[10:]) >= sum(regrets[-10:]))
+
+    def test_online_rl(self) -> None:
+        env = FixedNumberOfStepsEnvironment(number_of_steps=100)
+        agent = PearlAgent(TabularQLearning())
+        online_learning(agent, env)
+
+    def test_tabular_q_learning_online_rl(self) -> None:
+        env = GymEnvironment("FrozenLake-v1", is_slippery=False)
+        agent = PearlAgent(policy_learner=TabularQLearning())
+
+        online_learning(agent, env, number_of_episodes=500)
+
+        for _ in range(100):  # Should always reach the goal
+            assert episode_return(agent, env, learn=False, exploit=True)[0] == 1.0
+
+    def test_contextual_bandit_with_tabular_q_learning_online_rl(self) -> None:
+        num_actions = 5
+        max_action = num_actions - 1
+        env = RewardIsEqualToTenTimesActionContextualBanditEnvironment(
+            action_space=DiscreteActionSpace(
+                actions=list(torch.arange(num_actions).view(-1, 1))
+            )
+        )
+        # Because a contextual bandit environment is simply a regular Environment
+        # with episodes lasting a single step, we can solve them with regular
+        # RL algorithms such as tabular Q-learning.
+        # This test ensures that is true (that even a non-CB method works with the CB environment).
+        # In practice, CB-specific algorithms will be used.
+        agent = PearlAgent(
+            policy_learner=TabularQLearning(exploration_rate=0.1, learning_rate=0.1)
+        )
+
+        online_learning(agent, env, number_of_episodes=10000)
+
+        # Should have learned to use action max_action with reward equal to max_action * 10
+        for _ in range(100):
+            assert (
+                episode_return(agent, env, learn=False, exploit=True)[0]
+                == max_action * 10
+            )

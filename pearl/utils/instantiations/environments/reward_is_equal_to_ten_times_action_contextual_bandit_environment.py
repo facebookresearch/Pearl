@@ -31,7 +31,7 @@ class RewardIsEqualToTenTimesActionContextualBanditEnvironment(
     def get_reward(self, action: Action) -> Value:
         # Here goes the code for computing the reward given an action on the current state
         # In this example, the reward is 10 times the digit representing the action.
-        return action * 10
+        return (action * 10).item()
 
     # pyre-fixme[3]: Return type must be annotated.
     def render(self):

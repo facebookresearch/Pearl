@@ -10,6 +10,9 @@ from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
+from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
+    DEFAULT_ACTION_SPACE,
+)
 from pearl.policy_learners.contextual_bandits.neural_bandit import NeuralBandit
 from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
     UCBExploration,
@@ -18,10 +21,11 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.functional_utils.learning.action_utils import (
+    concatenate_actions_to_state,
+)
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
-
-DEFAULT_ACTION_SPACE = DiscreteActionSpace([0])
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class NeuralLinearBandit(NeuralBandit):
@@ -39,6 +43,7 @@ class NeuralLinearBandit(NeuralBandit):
         batch_size: int = 128,
         learning_rate: float = 0.001,
         l2_reg_lambda_linear: float = 1.0,
+        state_features_only: bool = False,
         # pyre-fixme[2]: Parameter must be annotated.
         **kwargs,
     ) -> None:
@@ -52,6 +57,7 @@ class NeuralLinearBandit(NeuralBandit):
             training_rounds=training_rounds,
             batch_size=batch_size,
             exploration_module=exploration_module,
+            state_features_only=state_features_only,
             **kwargs,
         )
         # TODO specify linear regression type when needed
@@ -63,7 +69,10 @@ class NeuralLinearBandit(NeuralBandit):
         self._linear_regression_dim = hidden_dims[-1]
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
-        input_features = torch.cat([batch.state, batch.action], dim=1)
+        if self._state_features_only:
+            input_features = batch.state
+        else:
+            input_features = torch.cat([batch.state, batch.action], dim=1)
 
         # forward pass
         mlp_output = self._deep_represent_layers(input_features)
@@ -96,18 +105,18 @@ class NeuralLinearBandit(NeuralBandit):
         exploit: bool = False,
     ) -> Action:
         # It doesnt make sense to call act if we are not working with action vector
-        # pyre-fixme[16]: `ActionSpace` has no attribute `action_dim`.
         assert action_space.action_dim > 0
-
-        # pyre-fixme[16]: `ActionSpace` has no attribute `cat_state_tensor`.
-        new_feature = action_space.cat_state_tensor(subjective_state)
+        new_feature = concatenate_actions_to_state(
+            subjective_state=subjective_state,
+            action_space=action_space,  # pyre-ignore[6]
+            state_features_only=self._state_features_only,
+        )
         mlp_values = self._deep_represent_layers(new_feature)
         # `_linear_regression` is not nn.Linear(). It is a customized linear layer
         # that can be updated by analytical method (matrix calculations) rather than gradient descent of torch optimizer.
         values = self._linear_regression(mlp_values)
 
         # batch_size * action_count
-        # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
         assert values.numel() == new_feature.shape[0] * action_space.n
 
         # subjective_state=mlp_values because uncertainty is only measure in the output linear layer
@@ -127,21 +136,23 @@ class NeuralLinearBandit(NeuralBandit):
     ) -> torch.Tensor:
         # TODO generalize for all kinds of exploration module
         assert isinstance(self._exploration_module, UCBExploration)
-        feature = action_space.cat_state_tensor(subjective_state)
+        feature = concatenate_actions_to_state(
+            subjective_state=subjective_state,
+            action_space=action_space,
+            state_features_only=self._state_features_only,
+        )
         batch_size = feature.shape[0]
         feature_dim = feature.shape[-1]
-        feature = feature.reshape(
-            -1, feature_dim
-        )  # dim: [batch_size * num_arms, feature_dim]
-        processed_feature = self._deep_represent_layers(
-            feature
-        )  # dim: [batch_size, num_arms, feature_dim]
+        # dim: [batch_size * num_arms, feature_dim]
+        feature = feature.reshape(-1, feature_dim)
+        # dim: [batch_size, num_arms, feature_dim]
+        processed_feature = self._deep_represent_layers(feature)
+        # dim: [batch_size * num_arms, 1]
         scores = self._exploration_module.get_scores(
             subjective_state=processed_feature,
             values=self._linear_regression(processed_feature),
             action_space=action_space,
             representation=self._linear_regression,
-        )  # dim: [batch_size * num_arms, 1]
-        return scores.reshape(
-            batch_size, -1
-        ).squeeze()  # dim: [batch_size, num_arms] or [batch_size]
+        )
+        # dim: [batch_size, num_arms] or [batch_size]
+        return scores.reshape(batch_size, -1).squeeze()

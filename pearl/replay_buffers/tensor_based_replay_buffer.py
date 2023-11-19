@@ -1,9 +1,9 @@
 import random
+
 from collections import deque
 from typing import List, Optional, Tuple
 
 import torch
-import torch.nn.functional as F
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -11,7 +11,7 @@ from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import Transition, TransitionBatch
 from pearl.utils.device import get_default_device
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class TensorBasedReplayBuffer(ReplayBuffer):
@@ -65,7 +65,8 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         assert isinstance(action_space, DiscreteActionSpace)
         assert isinstance(available_actions, DiscreteActionSpace)
 
-        if action_space.action_dim == 0:
+        # TODO: The following logic seems to be incorrect / buggy. Fix.
+        if action_space.action_dim == 0 or action_space.action_dim == 1:
             available_actions_tensor_with_padding = torch.zeros(
                 (1, action_space.n),
                 device=self._device,

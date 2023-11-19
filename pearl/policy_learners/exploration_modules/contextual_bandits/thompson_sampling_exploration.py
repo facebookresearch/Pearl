@@ -3,12 +3,12 @@ from typing import Any, Optional
 import torch
 
 from pearl.api.action import Action
+from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
 from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
     ScoreExplorationBase,
 )
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
-from pearl.utils.instantiations.action_spaces.action_spaces import ActionSpace
 
 
 # TODO: generalize for non-linear models
@@ -30,7 +30,7 @@ class ThompsonSamplingExplorationLinear(ScoreExplorationBase):
         action_space: ActionSpace,
         values: torch.Tensor,
         representation: Optional[torch.nn.Module] = None,
-        exploit_action: Action = None,
+        exploit_action: Optional[Action] = None,
     ) -> torch.Tensor:
         """
         Given the linear bandit model, sample its parameters, and multiplies with feature to get predicted score.
@@ -81,7 +81,7 @@ class ThompsonSamplingExplorationLinearDisjoint(ThompsonSamplingExplorationLinea
         values: torch.Tensor,
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,
-        exploit_action: Action = None,
+        exploit_action: Optional[Action] = None,
     ) -> torch.Tensor:
 
         # DisJoint Linear Bandits
@@ -101,5 +101,4 @@ class ThompsonSamplingExplorationLinearDisjoint(ThompsonSamplingExplorationLinea
             scores.append(score)
         scores = torch.stack(scores)
 
-        # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
         return scores.view(-1, action_space.n)

@@ -22,7 +22,7 @@ class NoExploration(ScoreExplorationBase):
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
         values: Optional[torch.Tensor] = None,
-        exploit_action: Action = None,
+        exploit_action: Optional[Action] = None,
         representation: Optional[torch.nn.Module] = None,
     ) -> Action:
         if exploit_action is not None:

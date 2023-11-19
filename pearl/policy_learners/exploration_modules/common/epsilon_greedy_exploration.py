@@ -24,14 +24,17 @@ class EGreedyExploration(UniformExplorationBase):
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
-        exploit_action: Action,
+        exploit_action: Optional[Action],
         values: Optional[torch.Tensor] = None,
         action_availability_mask: Optional[torch.Tensor] = None,
         representation: Optional[torch.nn.Module] = None,
     ) -> Action:
+        if exploit_action is None:
+            raise ValueError(
+                "exploit_action cannot be None for epsilon-greedy exploration"
+            )
         if action_availability_mask is not None:
             raise NotImplementedError("Action availability mask is not supported.")
         if random.random() < self.epsilon:
             return action_space.sample()
-
         return exploit_action

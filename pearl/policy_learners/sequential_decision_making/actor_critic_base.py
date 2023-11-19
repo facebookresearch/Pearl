@@ -28,7 +28,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 )
 from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 from torch import nn, optim
 
 
@@ -66,13 +66,11 @@ class OffPolicyActorCritic(PolicyLearner):
         )
 
         self._state_dim = state_dim
-        if (
-            type(action_space) == gym.spaces.discrete.Discrete
-            or type(action_space) == DiscreteActionSpace
+        if isinstance(action_space, gym.spaces.discrete.Discrete) or isinstance(
+            action_space, DiscreteActionSpace
         ):
-            # pyre-fixme[16]: `ActionSpace` has no attribute `shape`.
             self._action_dim: int = action_space.n
-        elif type(action_space) == gym.spaces.box.Box:
+        elif isinstance(action_space, gym.spaces.box.Box):
             self._action_dim = action_space.shape[0]
         else:
             raise NotImplementedError("Action space not implemented")

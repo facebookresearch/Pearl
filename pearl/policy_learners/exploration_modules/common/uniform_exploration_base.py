@@ -26,7 +26,7 @@ class UniformExplorationBase(ExplorationModule):
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
-        exploit_action: Action,
+        exploit_action: Optional[Action] = None,
         values: Optional[torch.Tensor] = None,
         action_availability_mask: Optional[torch.Tensor] = None,
         representation: Optional[torch.nn.Module] = None,

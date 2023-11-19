@@ -16,7 +16,7 @@ from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buff
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.online_learning import episode_return
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 FWDPROXY_PORT = 8082
 FWDPROXY_HOSTNAME = "https://fwdproxy"
@@ -75,15 +75,19 @@ def get_offline_data_in_buffer(url: str, size: int = 1000000) -> ReplayBuffer:
     for transition in raw_transitions_buffer:
         if transition["curr_available_actions"].__class__.__name__ == "Discrete":
             transition["curr_available_actions"] = DiscreteActionSpace(
-                list(range(transition["curr_available_actions"].n))
+                actions=list(
+                    torch.arange(transition["curr_available_actions"].n).view(-1, 1)
+                )
             )
         if transition["next_available_actions"].__class__.__name__ == "Discrete":
             transition["next_available_actions"] = DiscreteActionSpace(
-                list(range(transition["next_available_actions"].n))
+                actions=list(
+                    torch.arange(transition["next_available_actions"].n).view(-1, 1)
+                )
             )
         if transition["action_space"].__class__.__name__ == "Discrete":
             transition["action_space"] = DiscreteActionSpace(
-                list(range(transition["action_space"].n))
+                actions=list(torch.arange(transition["action_space"].n).view(-1, 1))
             )
 
         offline_data_replay_buffer.push(

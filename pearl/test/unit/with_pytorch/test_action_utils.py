@@ -1,7 +1,7 @@
 import unittest
 
 import torch
-from pearl.utils.functional_utils.learning.get_action import (
+from pearl.utils.functional_utils.learning.action_utils import (
     argmax_random_tie_breaks,
     get_model_actions,
 )

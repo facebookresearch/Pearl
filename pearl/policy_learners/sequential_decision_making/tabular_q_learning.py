@@ -1,6 +1,8 @@
 import random
 from typing import Any, Dict, Optional, Tuple
 
+import torch
+
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.reward import Value
@@ -14,7 +16,9 @@ from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
 
-#  TODO make package names and organization more consistent
+# TODO: make package names and organization more consistent
+# TODO: This class currently assumes action index, not generic DiscreteActionSpace.
+#   Need to fix this.
 
 
 class TabularQLearning(PolicyLearner):
@@ -47,7 +51,7 @@ class TabularQLearning(PolicyLearner):
         )
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
-        self.q_values: Dict[Tuple[SubjectiveState, Action], Value] = {}
+        self.q_values: Dict[Tuple[SubjectiveState, int], Value] = {}
         # pyre-fixme[4]: Attribute must be annotated.
         self.debug = debug
 
@@ -63,9 +67,8 @@ class TabularQLearning(PolicyLearner):
     ) -> Action:
         # Choose the action with the highest Q-value for the current state.
         q_values_for_state = {
-            action: self.q_values.get((subjective_state, action), 0)
-            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
-            for action in range(action_space.n)  # TODO: assumes Gym interface, fix it
+            action.item(): self.q_values.get((subjective_state, action.item()), 0)
+            for action in action_space  # pyre-ignore[16]
         }
         # pyre-fixme[6]: For 1st argument expected
         #  `Iterable[Variable[SupportsRichComparisonT (bound to
@@ -78,6 +81,7 @@ class TabularQLearning(PolicyLearner):
             if q_value == max_q_value
         ]
         exploit_action = random.choice(best_actions)
+        exploit_action = torch.tensor([exploit_action])
         if exploit:
             return exploit_action
 
@@ -106,14 +110,10 @@ class TabularQLearning(PolicyLearner):
             _next_available_actions,
             done,
         ) in replay_buffer.sample(1):
-
-            old_q_value = self.q_values.get((state, action), 0)
-
+            old_q_value = self.q_values.get((state, action.item()), 0)
             next_q_values = [
-                self.q_values.get((next_state, next_action), 0)
-                for next_action in range(
-                    self._action_space.n
-                )  # TODO: assumes Gym interface, fix it
+                self.q_values.get((next_state, next_action.item()), 0)
+                for next_action in self._action_space
             ]
 
             if done:
@@ -132,7 +132,7 @@ class TabularQLearning(PolicyLearner):
                 reward + next_state_value - old_q_value
             )
 
-            self.q_values[(state, action)] = new_q_value
+            self.q_values[(state, action.item())] = new_q_value
 
             if self.debug:
                 self.print_debug_information(state, action, reward, next_state, done)

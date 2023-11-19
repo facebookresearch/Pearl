@@ -1,6 +1,7 @@
 import logging
 from typing import Iterable
 
+
 try:
     import gymnasium as gym
 
@@ -18,7 +19,7 @@ from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
 from pearl.api.environment import Environment
 from pearl.api.observation import Observation
-from pearl.utils.instantiations.action_spaces.action_spaces import DiscreteActionSpace
+from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class GymEnvironment(Environment):
@@ -44,8 +45,11 @@ class GymEnvironment(Environment):
     @property
     # pyre-fixme[3]: Return type must be annotated.
     def action_space(self):
-        if isinstance(self.env.action_space, Discrete):
-            return DiscreteActionSpace(list(range(self.env.action_space.n)))
+        if isinstance(self.env.action_space, gym.spaces.Discrete):
+            start, n = self.env.action_space.start, self.env.action_space.n
+            return DiscreteActionSpace(
+                actions=list(torch.arange(start=start, end=start + n).view(-1, 1))
+            )
         return self.env.action_space
 
     @property
@@ -74,6 +78,8 @@ class GymEnvironment(Environment):
         effective_action = (
             action.numpy(force=True) if isinstance(action, torch.Tensor) else action
         )
+        if isinstance(self.env.action_space, gym.spaces.Discrete):
+            effective_action = int(np.squeeze(effective_action))
         reaction = self.env.step(effective_action)
         if len(reaction) == 4:
             # Older Gym versions still using 'done' as opposed to 'terminated' and 'truncated'
