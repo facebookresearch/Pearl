@@ -1,16 +1,26 @@
+from __future__ import annotations
+
 import logging
 from typing import Optional, Union
 
 import numpy as np
-
 import torch
-
-from gymnasium.spaces import Box
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.utils.instantiations.action_spaces.utils import reshape_to_1d_tensor
 from torch import Tensor
+
+try:
+    import gymnasium as gym
+    from gymnasium.spaces import Box
+
+    logging.info("Using 'gymnasium' package.")
+except ModuleNotFoundError:
+    import gym
+    from gym.spaces import Box
+
+    logging.warning("Using deprecated 'gym' package.")
 
 
 class BoxActionSpace(ActionSpace):
@@ -23,7 +33,7 @@ class BoxActionSpace(ActionSpace):
         self,
         low: Union[float, Tensor],
         high: Union[float, Tensor],
-        seed: Optional[int] = None,
+        seed: Optional[Union[int, np.random.Generator]] = None,
     ) -> None:
         """Contructs a `BoxActionSpace`.
 
@@ -85,3 +95,20 @@ class BoxActionSpace(ActionSpace):
     def shape(self) -> torch.Size:
         """Returns the shape of an element of the space."""
         return torch.Size(self._gym_space.shape)
+
+    @staticmethod
+    def from_gym(gym_space: gym.Space) -> BoxActionSpace:
+        """Constructs a `BoxActionSpace` given a Gymnasium `Box` space.
+
+        Args:
+            gym_space: A Gymnasium `Box` space.
+
+        Returns:
+            A `BoxActionSpace` with the same bounds and seed as `gym_space`.
+        """
+        assert isinstance(gym_space, Box)
+        return BoxActionSpace(
+            low=torch.from_numpy(gym_space.low),
+            high=torch.from_numpy(gym_space.high),
+            seed=gym_space._np_random,
+        )

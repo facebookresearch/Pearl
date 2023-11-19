@@ -1,13 +1,25 @@
+from __future__ import annotations
+
+import logging
+
 from typing import Iterator, List, Optional
 
 import torch
-
-from gymnasium.spaces import Discrete
-
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.utils.instantiations.action_spaces.utils import reshape_to_1d_tensor
 from torch import Tensor
+
+try:
+    import gymnasium as gym
+    from gymnasium.spaces import Discrete
+
+    logging.info("Using 'gymnasium' package.")
+except ModuleNotFoundError:
+    import gym
+    from gym.spaces import Discrete
+
+    logging.warning("Using deprecated 'gym' package.")
 
 
 class DiscreteActionSpace(ActionSpace):
@@ -92,3 +104,24 @@ class DiscreteActionSpace(ActionSpace):
 
     def __getitem__(self, index: int) -> Action:
         return self.actions[index]
+
+    @staticmethod
+    def from_gym(gym_space: gym.Space) -> DiscreteActionSpace:
+        """Constructs a `DiscreteActionSpace` given a Gymnasium `Discrete` space.
+        Convert from Gymnasium's action index set {start, start + n - 1} to a list
+        of action tensors:
+            [torch.tensor([start]), ..., torch.tensor([start + n - 1])],
+        in accordance to what is expected by `DiscreteActionSpace`.
+
+        Args:
+            gym_space: A Gymnasium `Discrete` space.
+
+        Returns:
+            A `DiscreteActionSpace` with the same number of actions as `gym_space`.
+        """
+        assert isinstance(gym_space, Discrete)
+        start, n = gym_space.start, gym_space.n
+        return DiscreteActionSpace(
+            actions=list(torch.arange(start=start, end=start + n).view(-1, 1)),
+            seed=gym_space._np_random,
+        )
