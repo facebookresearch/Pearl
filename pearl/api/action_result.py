@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict
+from typing import Any, Dict
 
 from pearl.api.observation import Observation
 
@@ -12,9 +12,7 @@ class ActionResult:
     reward: Reward
     terminated: bool
     truncated: bool
-    # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
-    #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting errors.
-    info: Dict
+    info: Dict[str, Any]
 
     @property
     def done(self) -> bool:

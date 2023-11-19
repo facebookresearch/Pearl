@@ -35,7 +35,7 @@ class TestGPUUsage(unittest.TestCase):
         env = GymEnvironment("CartPole-v1")
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                state_dim=env.observation_space.shape[0],
+                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
@@ -61,7 +61,7 @@ class TestGPUUsage(unittest.TestCase):
 
         agent = PearlAgent(
             policy_learner=ProximalPolicyOptimization(
-                state_dim=env.observation_space.shape[0],
+                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,

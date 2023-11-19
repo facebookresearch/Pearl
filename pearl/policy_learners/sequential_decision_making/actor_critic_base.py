@@ -2,6 +2,8 @@
 from abc import abstractmethod
 from typing import Any, Dict, Iterable, Type
 
+from pearl.utils.instantiations.action_spaces.box import BoxActionSpace
+
 try:
     import gymnasium as gym
 except ModuleNotFoundError:
@@ -66,19 +68,20 @@ class OffPolicyActorCritic(PolicyLearner):
         )
 
         self._state_dim = state_dim
-        if isinstance(action_space, gym.spaces.discrete.Discrete) or isinstance(
-            action_space, DiscreteActionSpace
+        if isinstance(
+            action_space, (gym.spaces.discrete.Discrete, DiscreteActionSpace)
         ):
+            # TODO: This assumes OneHotActionRepresentation
             self._action_dim: int = action_space.n
-        elif isinstance(action_space, gym.spaces.box.Box):
-            self._action_dim = action_space.shape[0]
+        elif isinstance(action_space, (gym.spaces.box.Box, BoxActionSpace)):
+            self._action_dim = action_space.action_dim
         else:
             raise NotImplementedError("Action space not implemented")
         self.is_action_continuous = is_action_continuous
         self._exploration_module = exploration_module
 
         # actor network takes state as input and outputs an action vector
-        self._actor: nn.Module = actor_network_type(  # pyre-ignore
+        self._actor: nn.Module = actor_network_type(
             input_dim=state_dim,
             hidden_dims=hidden_dims,
             output_dim=self._action_dim,

@@ -109,7 +109,7 @@ class PearlDQN(Evaluation):
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                state_dim=env.observation_space.shape[0],
+                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
@@ -145,7 +145,7 @@ class PearlContinuousSAC(Evaluation):
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=ContinuousSoftActorCritic(
-                state_dim=env.observation_space.shape[0],
+                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
                 hidden_dims=[256, 256],
                 training_rounds=1,
@@ -184,7 +184,7 @@ class PearlPPO(Evaluation):
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=ProximalPolicyOptimization(
-                state_dim=env.observation_space.shape[0],
+                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=50,
@@ -222,7 +222,7 @@ class PearlDDPG(Evaluation):
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=DeepDeterministicPolicyGradient(
-                state_dim=env.observation_space.shape[0],
+                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
                 hidden_dims=[256, 256],
                 critic_learning_rate=3e-4,
@@ -262,7 +262,7 @@ class PearlTD3(Evaluation):
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=TD3(
-                state_dim=env.observation_space.shape[0],
+                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
                 hidden_dims=[256, 256],
                 critic_learning_rate=3e-4,

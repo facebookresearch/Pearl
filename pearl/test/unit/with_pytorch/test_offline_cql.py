@@ -40,7 +40,7 @@ class TestOfflineCQL(unittest.TestCase):
 
         onlineDQN_agent = PearlAgent(
             policy_learner=DeepQLearning(
-                state_dim=env.observation_space.shape[0],
+                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 exploration_module=EGreedyExploration(0.5),

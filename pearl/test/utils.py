@@ -6,6 +6,7 @@ This file contains helpers for unittest creation
 
 import torch
 
+
 # for testing vanilla mlps
 def create_normal_pdf_training_data(
     input_dim: int,

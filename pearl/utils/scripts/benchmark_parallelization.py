@@ -18,13 +18,11 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import torch.multiprocessing as mp
-from gymnasium.spaces import Discrete
 from pearl.pearl_agent import PearlAgent
 
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
     online_learning_returns,
 )
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 from pearl.utils.scripts.benchmark_config import (
     # all_partial_observable_continuous_control_envs,
     # DDQN_method,
@@ -161,10 +159,7 @@ def evaluate_single(
     else:
         policy_learner_args["state_dim"] = env.observation_space.shape[0]
 
-    if isinstance(env.action_space, Discrete):
-        policy_learner_args["action_space"] = DiscreteActionSpace(env.action_space.n)
-    else:
-        policy_learner_args["action_space"] = env.action_space
+    policy_learner_args["action_space"] = env.action_space
     agent = PearlAgent(
         policy_learner=policy_learner(
             **policy_learner_args,

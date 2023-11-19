@@ -79,7 +79,7 @@ class IntegrationTests(unittest.TestCase):
         env = GymEnvironment("CartPole-v1")
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                env.observation_space.shape[0],
+                env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
@@ -143,7 +143,7 @@ class IntegrationTests(unittest.TestCase):
         env = GymEnvironment("CartPole-v1")
         agent = PearlAgent(
             policy_learner=DoubleDQN(
-                env.observation_space.shape[0],
+                env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
@@ -173,7 +173,7 @@ class IntegrationTests(unittest.TestCase):
         env = GymEnvironment("CartPole-v1")
         agent = PearlAgent(
             policy_learner=DeepSARSA(
-                env.observation_space.shape[0],
+                env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
@@ -202,7 +202,7 @@ class IntegrationTests(unittest.TestCase):
         env = GymEnvironment("CartPole-v1")
         agent = PearlAgent(
             policy_learner=PolicyGradient(
-                env.observation_space.shape[0],
+                env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 env.action_space,
                 [64, 64],
                 batch_size=500,
@@ -230,7 +230,7 @@ class IntegrationTests(unittest.TestCase):
     ) -> None:
         env = GymEnvironment("CartPole-v1")
         q_network = DuelingQValueNetwork(
-            state_dim=env.observation_space.shape[0],
+            state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
             action_dim=env.action_space.n,
             hidden_dims=[64],
             output_dim=1,
@@ -267,7 +267,7 @@ class IntegrationTests(unittest.TestCase):
         env = GymEnvironment("CartPole-v1")
         agent = PearlAgent(
             policy_learner=QuantileRegressionDeepQLearning(
-                env.observation_space.shape[0],
+                env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 env.action_space,
                 [64, 64, 64],
                 exploration_module=EGreedyExploration(0.10),
@@ -299,7 +299,7 @@ class IntegrationTests(unittest.TestCase):
         env = GymEnvironment("CartPole-v1")
         agent = PearlAgent(
             policy_learner=ProximalPolicyOptimization(
-                env.observation_space.shape[0],
+                env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 env.action_space,
                 [64, 64],
                 training_rounds=50,
@@ -330,7 +330,7 @@ class IntegrationTests(unittest.TestCase):
         env = GymEnvironment("CartPole-v1")
         agent = PearlAgent(
             policy_learner=SoftActorCritic(
-                state_dim=env.observation_space.shape[0],
+                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
                 hidden_dims=[64, 64, 64],
                 training_rounds=100,
@@ -365,7 +365,7 @@ class IntegrationTests(unittest.TestCase):
 
         agent = PearlAgent(
             policy_learner=ContinuousSoftActorCritic(
-                state_dim=env.observation_space.shape[0],
+                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=50,
@@ -398,7 +398,7 @@ class IntegrationTests(unittest.TestCase):
         env = GymEnvironment("CartPole-v1")
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                state_dim=env.observation_space.shape[0],
+                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
@@ -430,7 +430,7 @@ class IntegrationTests(unittest.TestCase):
         env = GymEnvironment("Pendulum-v1")
         agent = PearlAgent(
             policy_learner=DeepDeterministicPolicyGradient(
-                state_dim=env.observation_space.shape[0],
+                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
                 hidden_dims=[400, 300],
                 critic_learning_rate=1e-2,
@@ -467,7 +467,7 @@ class IntegrationTests(unittest.TestCase):
         env = GymEnvironment("Pendulum-v1")
         agent = PearlAgent(
             policy_learner=TD3(
-                state_dim=env.observation_space.shape[0],
+                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
                 hidden_dims=[400, 300],
                 critic_learning_rate=1e-2,
@@ -504,7 +504,7 @@ class IntegrationTests(unittest.TestCase):
         env = GymEnvironment("CartPole-v1")
         conservativeDQN_agent = PearlAgent(
             policy_learner=DeepQLearning(
-                state_dim=env.observation_space.shape[0],
+                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=100,
@@ -540,7 +540,7 @@ class IntegrationTests(unittest.TestCase):
         env = GymEnvironment("CartPole-v1")
         IQLAgent = PearlAgent(
             policy_learner=ImplicitQLearning(
-                state_dim=env.observation_space.shape[0],
+                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
                 hidden_dims=[64, 64, 64],
                 training_rounds=5,
