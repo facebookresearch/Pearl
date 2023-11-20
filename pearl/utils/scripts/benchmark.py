@@ -147,7 +147,8 @@ class PearlContinuousSAC(Evaluation):
             policy_learner=ContinuousSoftActorCritic(
                 state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
-                hidden_dims=[256, 256],
+                actor_hidden_dims=[256, 256],
+                critic_hidden_dims=[256, 256],
                 training_rounds=1,
                 batch_size=256,
                 entropy_coef=0.05,
@@ -186,7 +187,8 @@ class PearlPPO(Evaluation):
             policy_learner=ProximalPolicyOptimization(
                 state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
-                hidden_dims=[64, 64],
+                actor_hidden_dims=[64, 64],
+                critic_hidden_dims=[64, 64],
                 training_rounds=50,
                 batch_size=64,
                 epsilon=0.1,
@@ -224,7 +226,8 @@ class PearlDDPG(Evaluation):
             policy_learner=DeepDeterministicPolicyGradient(
                 state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
-                hidden_dims=[256, 256],
+                actor_hidden_dims=[256, 256],
+                critic_hidden_dims=[256, 256],
                 critic_learning_rate=3e-4,
                 actor_learning_rate=3e-4,
                 training_rounds=1,
@@ -264,7 +267,8 @@ class PearlTD3(Evaluation):
             policy_learner=TD3(
                 state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
-                hidden_dims=[256, 256],
+                actor_hidden_dims=[256, 256],
+                critic_hidden_dims=[256, 256],
                 critic_learning_rate=3e-4,
                 actor_learning_rate=3e-4,
                 training_rounds=1,

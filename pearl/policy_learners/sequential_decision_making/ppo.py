@@ -1,5 +1,5 @@
 import copy
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, Optional
 
 import torch
 
@@ -9,18 +9,21 @@ from pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetworkType,
     VanillaActorNetwork,
 )
+from pearl.policy_learners.exploration_modules.common.propensity_exploration import (
+    PropensityExploration,
+)
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
-from pearl.policy_learners.sequential_decision_making.policy_gradient import (
-    PolicyGradient,
+from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
+    ActorCriticBase,
+    single_critic_state_value_update,
 )
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
-from torch import optim
 
 
-class ProximalPolicyOptimization(PolicyGradient):
+class ProximalPolicyOptimization(ActorCriticBase):
     """
     paper: https://arxiv.org/pdf/1707.06347.pdf
     """
@@ -29,64 +32,51 @@ class ProximalPolicyOptimization(PolicyGradient):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        hidden_dims: Iterable[int],
-        # pyre-fixme[9]: exploration_module has type `ExplorationModule`; used as
-        #  `None`.
-        exploration_module: ExplorationModule = None,
-        learning_rate: float = 0.0001,
+        actor_hidden_dims: Iterable[int],
+        critic_hidden_dims: Optional[Iterable[int]],
+        actor_learning_rate: float = 1e-4,
+        critic_learning_rate: float = 1e-4,
+        exploration_module: Optional[ExplorationModule] = None,
+        actor_network_type: ActorNetworkType = VanillaActorNetwork,
+        # pyre-fixme
+        critic_network_type=VanillaValueNetwork,
+        discount_factor: float = 0.99,
         training_rounds: int = 100,
         batch_size: int = 128,
-        network_type: ActorNetworkType = VanillaActorNetwork,
         epsilon: float = 0.0,
-        critic_loss_scaling: float = 0.5,
         entropy_bonus_scaling: float = 0.01,
     ) -> None:
         super(ProximalPolicyOptimization, self).__init__(
-            exploration_module=exploration_module,
-            batch_size=batch_size,
-            action_space=action_space,
-            learning_rate=learning_rate,
-            network_type=network_type,
             state_dim=state_dim,
-            hidden_dims=hidden_dims,
+            action_space=action_space,
+            actor_hidden_dims=actor_hidden_dims,
+            critic_hidden_dims=critic_hidden_dims,
+            actor_learning_rate=actor_learning_rate,
+            critic_learning_rate=critic_learning_rate,
+            actor_network_type=actor_network_type,
+            critic_network_type=critic_network_type,
+            use_actor_target=False,
+            use_critic_target=False,
+            actor_soft_update_tau=0.0,  # not used
+            critic_soft_update_tau=0.0,  # not used
+            use_twin_critic=False,
+            exploration_module=exploration_module
+            if exploration_module is not None
+            else PropensityExploration(),
+            discount_factor=discount_factor,
+            training_rounds=training_rounds,
+            batch_size=batch_size,
+            is_action_continuous=False,
+            on_policy=True,
         )
         self._epsilon = epsilon
-        self._critic_loss_scaling = critic_loss_scaling
         self._entropy_bonus_scaling = entropy_bonus_scaling
         # pyre-fixme[4]: Attribute must be annotated.
         self._actor_old = copy.deepcopy(self._actor)
-        self._training_rounds = training_rounds
-        # V(s)
-        # pyre-fixme[3]: Return type must be annotated.
-        def make_critic_network():
-            return VanillaValueNetwork(
-                input_dim=state_dim,
-                # pyre-fixme[6]: For 2nd argument expected `Optional[List[int]]` but
-                #  got `Iterable[int]`.
-                hidden_dims=hidden_dims,
-                output_dim=1,
-            )
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._critic = make_critic_network()
-        self._optimizer = optim.AdamW(
-            [
-                {
-                    "params": self._actor.parameters(),
-                    "lr": learning_rate,
-                    "amsgrad": True,
-                },
-                {
-                    "params": self._critic.parameters(),
-                    "lr": learning_rate,
-                    "amsgrad": True,
-                },
-            ]
-        )
-
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """
-        Loss = actor loss + critic_loss_scaling * critic loss + entropy_bonus_scaling * entropy loss
+        Loss = actor loss + critic loss + entropy_bonus_scaling * entropy loss
         """
         vs = self._critic(batch.state)
         action_probs = self._get_action_prob(batch.state, batch.action)
@@ -108,26 +98,30 @@ class ProximalPolicyOptimization(PolicyGradient):
             # pyre-fixme
             advantage = batch.cum_reward - vs
 
-        # critic loss
-        criterion = torch.nn.MSELoss()
-        vs_loss = criterion(vs, batch.cum_reward)
-
         # entropy
         # Categorical is good for Cartpole Env where actions are discrete
         # TODO need to support continuous action
         entropy = torch.distributions.Categorical(action_probs.detach()).entropy()
         loss = (
             torch.sum(-torch.min(r_thelta * advantage, clip * advantage))
-            + self._critic_loss_scaling * vs_loss
             # pyre-fixme[6]: For 1st argument expected `Tensor` but got `float`.
             - torch.sum(self._entropy_bonus_scaling * entropy)
         )
 
-        self._optimizer.zero_grad()
+        self._actor_optimizer.zero_grad()
         loss.backward()
-        self._optimizer.step()
+        self._actor_optimizer.step()
 
-        return {"loss": loss.mean().item()}
+        return {"actor_loss": loss.mean().item()}
+
+    def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+        return single_critic_state_value_update(
+            state_batch=batch.state,
+            # pyre-fixme
+            expected_target_batch=batch.cum_reward,
+            optimizer=self._critic_optimizer,
+            critic=self._critic,
+        )
 
     def learn(self, replay_buffer: ReplayBuffer) -> Dict[str, Any]:
         super().learn(replay_buffer)

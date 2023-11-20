@@ -48,7 +48,7 @@ class TwinCritic(torch.nn.Module):
         self._critic_networks_combined = nn.ModuleList([self._critic_1, self._critic_2])
         self._critic_networks_combined.apply(init_fn)
 
-    def get_twin_critic_values(
+    def get_q_values(
         self,
         state_batch: torch.Tensor,
         action_batch: torch.Tensor,

@@ -1,11 +1,8 @@
-from typing import Any, Dict, Iterable, Type
+from typing import Any, Dict, Iterable, Optional, Type
 
 import torch
 from pearl.api.action_space import ActionSpace
-from pearl.neural_networks.common.utils import (
-    update_target_network,
-    update_target_networks,
-)
+from pearl.neural_networks.common.utils import update_target_network
 
 from pearl.neural_networks.common.value_networks import VanillaQValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
@@ -17,6 +14,10 @@ from pearl.neural_networks.sequential_decision_making.q_value_network import (
 )
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
+)
+from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
+    twin_critic_action_value_update,
+    update_critic_target_network,
 )
 from pearl.policy_learners.sequential_decision_making.ddpg import (
     DeepDeterministicPolicyGradient,
@@ -35,17 +36,18 @@ class TD3(DeepDeterministicPolicyGradient):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        hidden_dims: Iterable[int],
-        exploration_module: ExplorationModule,
-        critic_learning_rate: float = 1e-3,
+        actor_hidden_dims: Iterable[int],
+        critic_hidden_dims: Iterable[int],
+        exploration_module: Optional[ExplorationModule] = None,
         actor_learning_rate: float = 1e-3,
-        batch_size: int = 256,
+        critic_learning_rate: float = 1e-3,
         actor_network_type: ActorNetworkType = VanillaContinuousActorNetwork,
         critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
-        training_rounds: int = 1,
         actor_soft_update_tau: float = 0.005,
         critic_soft_update_tau: float = 0.005,
         discount_factor: float = 0.99,
+        training_rounds: int = 1,
+        batch_size: int = 256,
         actor_update_freq: int = 2,
         actor_update_noise: float = 0.2,
         actor_update_noise_clip: float = 0.5,
@@ -53,17 +55,18 @@ class TD3(DeepDeterministicPolicyGradient):
         super(TD3, self).__init__(
             state_dim=state_dim,
             action_space=action_space,
-            hidden_dims=hidden_dims,
             exploration_module=exploration_module,
-            critic_learning_rate=critic_learning_rate,
+            actor_hidden_dims=actor_hidden_dims,
+            critic_hidden_dims=critic_hidden_dims,
             actor_learning_rate=actor_learning_rate,
-            batch_size=batch_size,
+            critic_learning_rate=critic_learning_rate,
             actor_network_type=actor_network_type,
             critic_network_type=critic_network_type,
-            training_rounds=training_rounds,
             actor_soft_update_tau=actor_soft_update_tau,
             critic_soft_update_tau=critic_soft_update_tau,
             discount_factor=discount_factor,
+            training_rounds=training_rounds,
+            batch_size=batch_size,
         )
         self._action_space = action_space
         self._actor_update_freq = actor_update_freq
@@ -82,9 +85,10 @@ class TD3(DeepDeterministicPolicyGradient):
             self._actor_learn_batch(batch)
 
             # update targets of twin critics using soft updates
-            update_target_networks(
-                self._targets_of_twin_critics._critic_networks_combined,
-                self._twin_critics._critic_networks_combined,
+            update_critic_target_network(
+                self._critic_target,
+                self._critic,
+                self._use_twin_critic,
                 self._critic_soft_update_tau,
             )
             # update target of actor network using soft updates
@@ -123,9 +127,7 @@ class TD3(DeepDeterministicPolicyGradient):
             )  # shape (batch_size, action_dim)
 
             # sample q values of (next_state, next_action) from targets of twin critics
-            next_q1, next_q2 = self._targets_of_twin_critics.get_twin_critic_values(
-                # pyre-fixme[6]: For 1st argument expected `Tensor` but got
-                #  `Optional[Tensor]`.
+            next_q1, next_q2 = self._critic_target.get_q_values(
                 state_batch=batch.next_state,
                 action_batch=next_action,
             )  # shape (batch_size)
@@ -140,9 +142,12 @@ class TD3(DeepDeterministicPolicyGradient):
             ) + batch.reward  # (batch_size)
 
         # update twin critics towards bellman target
-        loss_critic_update = self.twin_critic_update(
+        loss_critic_update = twin_critic_action_value_update(
             state_batch=batch.state,
             action_batch=batch.action,
-            expected_target=expected_state_action_values,
+            expected_target_batch=expected_state_action_values,
+            optimizer=self._critic_optimizer,
+            # pyre-fixme
+            critic=self._critic,
         )
         return loss_critic_update

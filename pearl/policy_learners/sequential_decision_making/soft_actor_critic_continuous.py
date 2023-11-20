@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterable, Type
+from typing import Any, Dict, Iterable, Optional, Type
 
 import torch
 from pearl.api.action_space import ActionSpace
@@ -17,14 +17,14 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
-    OffPolicyActorCritic,
+    ActorCriticBase,
+    twin_critic_action_value_update,
 )
-
 from pearl.replay_buffers.transition import TransitionBatch
 from torch import optim
 
 
-class ContinuousSoftActorCritic(OffPolicyActorCritic):
+class ContinuousSoftActorCritic(ActorCriticBase):
     """
     Soft Actor Critic Policy Learner.
     """
@@ -33,36 +33,42 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        hidden_dims: Iterable[int],
-        # pyre-fixme[9]: exploration_module has type `ExplorationModule`; used as
-        #  `None`.
-        exploration_module: ExplorationModule = None,
-        critic_learning_rate: float = 0.0001,
-        actor_learning_rate: float = 0.0001,
-        discount_factor: float = 0.99,
-        training_rounds: int = 100,
-        batch_size: int = 128,
-        entropy_coef: float = 0.2,
-        entropy_autotune: bool = True,
-        critic_soft_update_tau: float = 0.005,
+        actor_hidden_dims: Iterable[int],
+        critic_hidden_dims: Iterable[int],
+        actor_learning_rate: float = 1e-3,
+        critic_learning_rate: float = 1e-3,
         actor_network_type: ActorNetworkType = GaussianActorNetwork,
         critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
+        critic_soft_update_tau: float = 0.005,
+        exploration_module: Optional[ExplorationModule] = None,
+        discount_factor: float = 0.99,
+        training_rounds: int = 100,
+        batch_size: int = 256,
+        entropy_coef: float = 0.2,
+        entropy_autotune: bool = True,
     ) -> None:
         super(ContinuousSoftActorCritic, self).__init__(
             state_dim=state_dim,
             action_space=action_space,
-            hidden_dims=hidden_dims,
-            critic_learning_rate=critic_learning_rate,
+            actor_hidden_dims=actor_hidden_dims,
+            critic_hidden_dims=critic_hidden_dims,
             actor_learning_rate=actor_learning_rate,
+            critic_learning_rate=critic_learning_rate,
+            actor_network_type=actor_network_type,
+            critic_network_type=critic_network_type,
+            use_actor_target=False,
+            use_critic_target=True,
+            actor_soft_update_tau=0.0,
+            critic_soft_update_tau=critic_soft_update_tau,
+            use_twin_critic=True,
             exploration_module=exploration_module
             if exploration_module is not None
             else NoExploration(),
             discount_factor=discount_factor,
             training_rounds=training_rounds,
-            critic_soft_update_tau=critic_soft_update_tau,
+            batch_size=batch_size,
             is_action_continuous=True,
-            actor_network_type=actor_network_type,
-            critic_network_type=critic_network_type,
+            on_policy=False,
         )
 
         self._entropy_autotune = entropy_autotune
@@ -82,8 +88,6 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
         else:
             self.register_buffer("_entropy_coef", torch.tensor(entropy_coef))
 
-        self._rounds = 0
-
     def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
         reward_batch = batch.reward  # shape: (batch_size)
@@ -98,10 +102,13 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
         else:
             raise AssertionError("done_batch should not be None")
 
-        loss_critic_update = self.twin_critic_update(
+        loss_critic_update = twin_critic_action_value_update(
             state_batch=batch.state,
             action_batch=batch.action,
-            expected_target=expected_state_action_values,
+            expected_target_batch=expected_state_action_values,
+            optimizer=self._critic_optimizer,
+            # pyre-fixme
+            critic=self._critic,
         )
 
         return loss_critic_update
@@ -117,9 +124,7 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
             next_action_batch_log_prob,
         ) = self._actor.sample_action(next_state_batch, get_log_prob=True)
 
-        next_q1, next_q2 = self._targets_of_twin_critics.get_twin_critic_values(
-            # pyre-fixme[6]: For 1st argument expected `Tensor` but got
-            #  `Optional[Tensor]`.
+        next_q1, next_q2 = self._critic_target.get_q_values(
             state_batch=next_state_batch,
             action_batch=next_action_batch,
         )
@@ -148,7 +153,7 @@ class ContinuousSoftActorCritic(OffPolicyActorCritic):
             action_batch_log_prob,
         ) = self._actor.sample_action(state_batch, get_log_prob=True)
 
-        q1, q2 = self._twin_critics.get_twin_critic_values(
+        q1, q2 = self._critic.get_q_values(
             state_batch=state_batch, action_batch=action_batch
         )  # shape: (batch_size, 1)
 

@@ -24,24 +24,11 @@ from pearl.utils.functional_utils.train_and_eval.online_learning import (
     online_learning_returns,
 )
 from pearl.utils.scripts.benchmark_config import (
-    # all_partial_observable_continuous_control_envs,
-    # DDQN_method,
-    # mujoco_envs,
-    # all_continuous_control_envs,
-    all_discrete_control_envs,
-    # all_partial_observable_discrete_control_envs,
-    # all_safety_discrete_control_envs,
-    # all_sparse_reward_continuous_control_envs,
-    # all_sparse_reward_discrete_control_envs,
-    # classic_continuous_control_envs,
-    # mujoco_steps,
+    # all_ac_discrete_control_methods,
+    # all_continuous_control_methods,
     # ple_steps,
     classic_control_steps,
-    # DuelingDQN_method,
-    # PPO_method,
-    # QRDQN_method,
-    # REINFORCE_method,
-    # SAC_method,
+    get_env,
     # SARSA_method,
     # TD3_method,
     # all_discrete_control_methods,
@@ -49,10 +36,26 @@ from pearl.utils.scripts.benchmark_config import (
     # CDQN_method,
     # CSAC_method,
     # DDPG_method,
-    DQN_method,
-    get_env,
+    # DQN_method,
+    IQL_method,
+    # all_partial_observable_continuous_control_envs,
+    # DDQN_method,
+    # mujoco_envs,
+    # all_continuous_control_envs,
+    # all_discrete_control_envs,
+    # all_partial_observable_discrete_control_envs,
+    # all_safety_discrete_control_envs,
+    # all_sparse_reward_continuous_control_envs,
+    # all_sparse_reward_discrete_control_envs,
+    # classic_continuous_control_envs,
+    # mujoco_steps,
     num_runs,
+    # DuelingDQN_method,
+    PPO_method,
     print_every_x_steps,
+    # QRDQN_method,
+    REINFORCE_method,
+    SAC_method,
 )
 
 warnings.filterwarnings("ignore")
@@ -226,8 +229,9 @@ def generate_one_plot(experiment):
 
 
 if __name__ == "__main__":
-    methods = [DQN_method]
-    envs = all_discrete_control_envs
+    methods = [IQL_method]
+    envs = ["CartPole-v0"]
+    # envs = ["CartPole-v0"]
     num_steps = classic_control_steps
     experiments = [
         {

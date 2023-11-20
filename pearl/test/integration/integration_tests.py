@@ -11,10 +11,12 @@ from pearl.pearl_agent import PearlAgent
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
     EGreedyExploration,
 )
+from pearl.policy_learners.exploration_modules.common.no_exploration import (
+    NoExploration,
+)
 from pearl.policy_learners.exploration_modules.common.normal_distribution_exploration import (
     NormalDistributionExploration,
 )
-
 from pearl.policy_learners.sequential_decision_making.ddpg import (
     DeepDeterministicPolicyGradient,
 )
@@ -27,15 +29,13 @@ from pearl.policy_learners.sequential_decision_making.double_dqn import DoubleDQ
 from pearl.policy_learners.sequential_decision_making.implicit_q_learning import (
     ImplicitQLearning,
 )
-from pearl.policy_learners.sequential_decision_making.policy_gradient import (
-    PolicyGradient,
-)
 from pearl.policy_learners.sequential_decision_making.ppo import (
     ProximalPolicyOptimization,
 )
 from pearl.policy_learners.sequential_decision_making.quantile_regression_deep_q_learning import (
     QuantileRegressionDeepQLearning,
 )
+from pearl.policy_learners.sequential_decision_making.reinforce import REINFORCE
 from pearl.policy_learners.sequential_decision_making.soft_actor_critic import (
     SoftActorCritic,
 )
@@ -195,17 +195,18 @@ class IntegrationTests(unittest.TestCase):
             )
         )
 
-    def test_pg(self) -> None:
+    def test_reinforce(self) -> None:
         """
-        This test is checking if Policy Gradient will eventually get to 500 return for CartPole-v1
+        This test is checking if REINFORCE will eventually get to 500 return for CartPole-v1
         """
         env = GymEnvironment("CartPole-v1")
         agent = PearlAgent(
-            policy_learner=PolicyGradient(
+            policy_learner=REINFORCE(
                 env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 env.action_space,
-                [64, 64],
-                batch_size=500,
+                actor_hidden_dims=[64, 64],
+                critic_hidden_dims=[64, 64],
+                training_rounds=1,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
                 max_actions=env.action_space.n
@@ -301,7 +302,8 @@ class IntegrationTests(unittest.TestCase):
             policy_learner=ProximalPolicyOptimization(
                 env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 env.action_space,
-                [64, 64],
+                actor_hidden_dims=[64, 64],
+                critic_hidden_dims=[64, 64],
                 training_rounds=50,
                 batch_size=64,
                 epsilon=0.1,
@@ -332,7 +334,8 @@ class IntegrationTests(unittest.TestCase):
             policy_learner=SoftActorCritic(
                 state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
-                hidden_dims=[64, 64, 64],
+                actor_hidden_dims=[64, 64, 64],
+                critic_hidden_dims=[64, 64, 64],
                 training_rounds=100,
                 batch_size=100,
                 entropy_coef=0.1,
@@ -367,7 +370,8 @@ class IntegrationTests(unittest.TestCase):
             policy_learner=ContinuousSoftActorCritic(
                 state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
-                hidden_dims=[64, 64],
+                actor_hidden_dims=[64, 64],
+                critic_hidden_dims=[64, 64],
                 training_rounds=50,
                 batch_size=100,
                 entropy_coef=0.1,
@@ -432,7 +436,8 @@ class IntegrationTests(unittest.TestCase):
             policy_learner=DeepDeterministicPolicyGradient(
                 state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
-                hidden_dims=[400, 300],
+                actor_hidden_dims=[400, 300],
+                critic_hidden_dims=[400, 300],
                 critic_learning_rate=1e-2,
                 actor_learning_rate=1e-3,
                 training_rounds=5,
@@ -469,7 +474,8 @@ class IntegrationTests(unittest.TestCase):
             policy_learner=TD3(
                 state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
-                hidden_dims=[400, 300],
+                actor_hidden_dims=[400, 300],
+                critic_hidden_dims=[400, 300],
                 critic_learning_rate=1e-2,
                 actor_learning_rate=1e-3,
                 training_rounds=5,
@@ -542,11 +548,15 @@ class IntegrationTests(unittest.TestCase):
             policy_learner=ImplicitQLearning(
                 state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
-                hidden_dims=[64, 64, 64],
-                training_rounds=5,
-                batch_size=128,
-                expectile=0.50,
-                temperature_advantage_weighted_regression=0.75,
+                exploration_module=NoExploration(),
+                actor_hidden_dims=[64, 64],
+                critic_hidden_dims=[64, 64],
+                state_value_critic_hidden_dims=[64, 64],
+                training_rounds=1,
+                batch_size=32,
+                expectile=0.70,
+                temperature_advantage_weighted_regression=3.0,
+                critic_soft_update_tau=0.005,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
                 max_actions=env.action_space.n

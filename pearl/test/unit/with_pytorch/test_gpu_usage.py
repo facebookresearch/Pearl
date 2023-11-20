@@ -63,7 +63,8 @@ class TestGPUUsage(unittest.TestCase):
             policy_learner=ProximalPolicyOptimization(
                 state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
                 action_space=env.action_space,
-                hidden_dims=[64, 64],
+                actor_hidden_dims=[64, 64],
+                critic_hidden_dims=[64, 64],
                 training_rounds=20,
                 batch_size=500,
                 epsilon=0.1,

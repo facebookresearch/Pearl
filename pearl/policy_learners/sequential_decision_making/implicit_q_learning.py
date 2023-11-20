@@ -1,11 +1,10 @@
-from typing import Any, Dict, Iterable, Type
+from typing import Any, Dict, Iterable, Optional, Type
 
 import torch
 
-# from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 
-from pearl.neural_networks.common.utils import init_weights, update_target_networks
+from pearl.neural_networks.common.utils import update_target_networks
 
 from pearl.neural_networks.common.value_networks import (
     QValueNetwork,
@@ -16,23 +15,23 @@ from pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetworkType,
     VanillaActorNetwork,
 )
-
-# from pearl.api.state import SubjectiveState
-from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.policy_learners.exploration_modules.common.no_exploration import (
     NoExploration,
 )
-from pearl.policy_learners.sequential_decision_making.policy_gradient import (
-    PolicyGradient,
+
+from pearl.policy_learners.exploration_modules.exploration_module import (
+    ExplorationModule,
 )
+from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
+    ActorCriticBase,
+    twin_critic_action_value_update,
+)
+
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.functional_utils.learning.nn_learning_utils import (
-    optimize_twin_critics_towards_target,
-)
 from torch import optim
 
 
-class ImplicitQLearning(PolicyGradient):
+class ImplicitQLearning(ActorCriticBase):
     """
     Implementation of Implicit Q learning, an offline RL algorithm: https://arxiv.org/pdf/2110.06169.pdf.
     Author implementation in Jax: https://github.com/ikostrikov/implicit_q_learning
@@ -59,97 +58,64 @@ class ImplicitQLearning(PolicyGradient):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        hidden_dims: Iterable[int],
-        critic_learning_rate: float = 1e-3,
+        actor_hidden_dims: Iterable[int],
+        critic_hidden_dims: Iterable[int],
+        state_value_critic_hidden_dims: Iterable[int],
+        exploration_module: Optional[ExplorationModule] = None,
+        state_value_learning_rate: float = 1e-3,
         actor_learning_rate: float = 1e-3,
-        value_learning_rate: float = 1e-3,
-        batch_size: int = 128,
+        critic_learning_rate: float = 1e-3,
         actor_network_type: ActorNetworkType = VanillaActorNetwork,
         critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
-        training_rounds: int = 5,
-        expectile: float = 0.8,
+        # pyre-fixme
+        state_value_network_type=VanillaValueNetwork,
         critic_soft_update_tau: float = 0.05,
         discount_factor: float = 0.99,
+        training_rounds: int = 5,
+        batch_size: int = 128,
+        expectile: float = 0.5,
         temperature_advantage_weighted_regression: float = 0.5,
+        advantage_clamp: float = 100.0,
     ) -> None:
 
         super(ImplicitQLearning, self).__init__(
             state_dim=state_dim,
             action_space=action_space,
-            hidden_dims=hidden_dims,
-            exploration_module=NoExploration(),  # since IQL is an offline learning method, exploration is not required
-            learning_rate=actor_learning_rate,
+            actor_hidden_dims=actor_hidden_dims,
+            critic_hidden_dims=critic_hidden_dims,
+            actor_learning_rate=actor_learning_rate,
+            critic_learning_rate=critic_learning_rate,
+            actor_network_type=actor_network_type,
+            critic_network_type=critic_network_type,
+            use_actor_target=False,
+            use_critic_target=True,
+            actor_soft_update_tau=0.0,  # not used
+            critic_soft_update_tau=critic_soft_update_tau,
+            use_twin_critic=True,
+            exploration_module=exploration_module
+            if exploration_module is not None
+            else NoExploration(),
             discount_factor=discount_factor,
+            training_rounds=training_rounds,
             batch_size=batch_size,
-            network_type=actor_network_type,
+            is_action_continuous=False,
             on_policy=False,
         )
 
         self._expectile = expectile
-        self._discount_factor = discount_factor
-        self._critic_soft_update_tau = critic_soft_update_tau
-        self._training_rounds = training_rounds
         self._temperature_advantage_weighted_regression = (
             temperature_advantage_weighted_regression
         )
-
-        # a single actor network
-        # pyre-fixme[4]: Attribute must be annotated.
-        # pyre-fixme[28]: Unexpected keyword argument `input_dim`.
-        self._actor = actor_network_type(
+        self._advantage_clamp = advantage_clamp
+        # iql uses both q and v approximators
+        # pyre-fixme
+        self._value_network = state_value_network_type(
             input_dim=state_dim,
-            hidden_dims=hidden_dims,
-            output_dim=action_space.n,
-        )
-        self._actor.apply(init_weights)
-        self._actor_optimizer = optim.AdamW(
-            self._actor.parameters(), lr=actor_learning_rate, amsgrad=True
-        )  # actor network's optimizer
-
-        # twin critic: using two separate critic networks to reduce overestimation bias
-        # optimizers of two critics are alredy initialized in TwinCritic
-        self._twin_critics = TwinCritic(
-            state_dim=state_dim,
-            action_dim=action_space.n,
-            hidden_dims=hidden_dims,
-            network_type=critic_network_type,
-            init_fn=init_weights,
-        )
-
-        # targets of twin critics
-        self._targets_of_twin_critics = TwinCritic(
-            state_dim=state_dim,
-            action_dim=action_space.n,
-            hidden_dims=hidden_dims,
-            network_type=critic_network_type,
-            init_fn=init_weights,
-        )
-
-        self._critic_optimizer = optim.AdamW(
-            self._twin_critics.parameters(),
-            lr=critic_learning_rate,
-            amsgrad=True,
-        )
-
-        # for twin critic and corresponding target, there is a temptation to use deepcopy or clone instead.
-        # this can however create problems in distibuted computing or because of shared buffers (when using batch norm for example)
-        # params of targets of twin critics initialized to params of twin critics (tau is set to 1)
-        update_target_networks(
-            self._twin_critics._critic_networks_combined,
-            self._targets_of_twin_critics._critic_networks_combined,
-            tau=1,
-        )
-
-        # value network
-        self._value_network = VanillaValueNetwork(
-            input_dim=state_dim,
-            # pyre-fixme[6]: For 2nd argument expected `Optional[List[int]]` but got
-            #  `Iterable[int]`.
-            hidden_dims=hidden_dims,
+            hidden_dims=state_value_critic_hidden_dims,
             output_dim=1,
         )
         self._value_network_optimizer = optim.AdamW(
-            self._value_network.parameters(), lr=value_learning_rate, amsgrad=True
+            self._value_network.parameters(), lr=state_value_learning_rate, amsgrad=True
         )
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
@@ -160,8 +126,8 @@ class ImplicitQLearning(PolicyGradient):
 
         # update critic and target Twin networks;
         update_target_networks(
-            self._twin_critics._critic_networks_combined,
-            self._targets_of_twin_critics._critic_networks_combined,
+            self._critic_target._critic_networks_combined,
+            self._critic._critic_networks_combined,
             self._critic_soft_update_tau,
         )
 
@@ -176,20 +142,20 @@ class ImplicitQLearning(PolicyGradient):
         performs policy extraction using advantage weighted regression
         """
         with torch.no_grad():
-            q1, q2 = self._targets_of_twin_critics.get_twin_critic_values(
-                batch.state, batch.action
-            )
-            # target_q = torch.minimum(q1, q2)  # clipped double q-learning for dealing with overestimation bias
+            q1, q2 = self._critic_target.get_q_values(batch.state, batch.action)
+            # clipped double q-learning for dealing with overestimation bias
+            # target_q = torch.minimum(q1, q2)
             random_index = torch.randint(0, 2, (1,)).item()
             target_q = (
                 q1 if random_index == 0 else q2
             )  # random ensemble distillation, an alternative to clipped double q-learning
 
-            value_batch = self._value_network(batch.state)
+            value_batch = self._value_network(batch.state).view(-1)
             advantage = torch.exp(
                 (target_q - value_batch)
                 * self._temperature_advantage_weighted_regression
             )
+            advantage = torch.clamp(advantage, max=self._advantage_clamp)
 
         action_probabilities = self._actor(
             batch.state
@@ -212,40 +178,43 @@ class ImplicitQLearning(PolicyGradient):
     def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         with torch.no_grad():
             # sample values of next states
-            values_next_states = self._value_network(
-                batch.next_state
-            )  # To do: add interface to vanilla value networks like vanilla q value networks using the 'get' function
+            values_next_states = self._value_network(batch.next_state).view(
+                -1
+            )  # shape: (batch_size)
+            # To do: add interface to vanilla value networks
+            # like vanilla q value networks using the 'get' function
 
             # compute targets for batch of (state, action, next_state)
             target = (
                 values_next_states * self._discount_factor * (1 - batch.done.float())
             ) + batch.reward  # shape: (batch_size);  target y = r + gamma * V(s')
-
         # update twin critics towards target
-        loss_critic_update = optimize_twin_critics_towards_target(
-            twin_critic=self._twin_critics,
-            optimizer=self._critic_optimizer,
+        loss_critic_update = twin_critic_action_value_update(
             state_batch=batch.state,
             action_batch=batch.action,
-            expected_target=target,
+            expected_target_batch=target,
+            optimizer=self._critic_optimizer,
+            # pyre-fixme
+            critic=self._critic,
         )
         return loss_critic_update
 
     def _value_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
         with torch.no_grad():
-            q1, q2 = self._targets_of_twin_critics.get_twin_critic_values(
-                batch.state, batch.action
-            )
-            # target_q = torch.minimum(q1, q2)  # clipped double q-learning for dealing with overestimation bias
+            q1, q2 = self._critic_target.get_q_values(batch.state, batch.action)
+            # clipped double q-learning for dealing with overestimation bias
+            # target_q = torch.minimum(q1, q2)
             random_index = torch.randint(0, 2, (1,)).item()
             target_q = (
                 q1 if random_index == 0 else q2
             )  # random ensemble distillation, an alternative to clipped double q-learning
 
-        value_batch = self._value_network(
-            batch.state
+        value_batch = self._value_network(batch.state).view(
+            -1
         )  # note the change in loss function from a mean square loss to an expectile loss
+        # print(value_batch)
+        # print(target_q)
         loss_value_network = self._expectile_loss(target_q - value_batch).mean()
         self._value_network_optimizer.zero_grad()
         loss_value_network.backward()
@@ -258,7 +227,8 @@ class ImplicitQLearning(PolicyGradient):
     # pyre-fixme[2]: Parameter must be annotated.
     def _expectile_loss(self, input_loss):
         """
-        Expectile loss applies an asymmetric weight to the input loss function parameterized by self._expectile.
+        Expectile loss applies an asymmetric weight
+        to the input loss function parameterized by self._expectile.
         """
         weight = torch.where(input_loss > 0, self._expectile, (1 - self._expectile))
         return weight * (input_loss**2)

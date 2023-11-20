@@ -20,13 +20,16 @@ class TestPPO(unittest.TestCase):
         policy_learner = ProximalPolicyOptimization(
             16,
             DiscreteActionSpace(actions=[torch.tensor(i) for i in range(3)]),
-            [64, 64],
+            actor_hidden_dims=[64, 64],
+            critic_hidden_dims=[64, 64],
             training_rounds=1,
             batch_size=500,
             epsilon=0.1,
         )
         optimizer_params_count = sum(
-            len(group["params"]) for group in policy_learner._optimizer.param_groups
+            len(group["params"])
+            for group in policy_learner._actor_optimizer.param_groups
+            + policy_learner._critic_optimizer.param_groups
         )
         model_params_count = sum([1 for _ in policy_learner._actor.parameters()]) + sum(
             [1 for _ in policy_learner._critic.parameters()]
@@ -42,7 +45,8 @@ class TestPPO(unittest.TestCase):
         policy_learner = ProximalPolicyOptimization(
             16,
             DiscreteActionSpace(actions=[torch.tensor(i) for i in range(3)]),
-            [64, 64],
+            actor_hidden_dims=[64, 64],
+            critic_hidden_dims=[64, 64],
             training_rounds=10,
             batch_size=500,
             epsilon=0.1,

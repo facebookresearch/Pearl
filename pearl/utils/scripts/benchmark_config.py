@@ -5,12 +5,22 @@ from pearl.action_representation_modules.one_hot_action_representation_module im
 from pearl.neural_networks.common.value_networks import (
     DuelingQValueNetwork,
     EnsembleQValueNetwork,
+    VanillaQValueNetwork,
+    VanillaValueNetwork,
+)
+from pearl.neural_networks.sequential_decision_making.actor_networks import (
+    GaussianActorNetwork,
+    VanillaActorNetwork,
+    VanillaContinuousActorNetwork,
 )
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (  # noqa E501
     EGreedyExploration,
 )
 from pearl.policy_learners.exploration_modules.common.normal_distribution_exploration import (  # noqa E501
     NormalDistributionExploration,
+)
+from pearl.policy_learners.exploration_modules.common.propensity_exploration import (
+    PropensityExploration,
 )
 from pearl.policy_learners.sequential_decision_making.bootstrapped_dqn import (
     BootstrappedDQN,
@@ -27,15 +37,13 @@ from pearl.policy_learners.sequential_decision_making.double_dqn import DoubleDQ
 from pearl.policy_learners.sequential_decision_making.implicit_q_learning import (
     ImplicitQLearning,
 )
-from pearl.policy_learners.sequential_decision_making.policy_gradient import (
-    PolicyGradient,
-)
 from pearl.policy_learners.sequential_decision_making.ppo import (
     ProximalPolicyOptimization,
 )
 from pearl.policy_learners.sequential_decision_making.quantile_regression_deep_q_learning import (  # noqa E501
     QuantileRegressionDeepQLearning,
 )
+from pearl.policy_learners.sequential_decision_making.reinforce import REINFORCE
 from pearl.policy_learners.sequential_decision_making.soft_actor_critic import (
     SoftActorCritic,
 )
@@ -139,11 +147,11 @@ SARSA_method = {
 }
 REINFORCE_method = {
     "name": "REINFORCE",
-    "policy_learner": PolicyGradient,
+    "policy_learner": REINFORCE,
     "policy_learner_args": {
-        "hidden_dims": [64, 64],
-        # "training_rounds": 20,  # only update at the end of each episode
-        "batch_size": 32,
+        "actor_hidden_dims": [64, 64],
+        "critic_hidden_dims": [64, 64],
+        "training_rounds": 1,
     },
     "agent_args": {"device_id": 0},
     "replay_buffer": OnPolicyEpisodicReplayBuffer,
@@ -215,12 +223,13 @@ PPO_method = {
     "name": "PPO",
     "policy_learner": ProximalPolicyOptimization,
     "policy_learner_args": {
-        "hidden_dims": [64, 64],
-        "training_rounds": 20,
+        "actor_hidden_dims": [64, 64],
+        "critic_hidden_dims": [64, 64],
+        "training_rounds": 50,
         "batch_size": 32,
         "epsilon": 0.1,
     },
-    "agent_args": {"device_id": 1},
+    "agent_args": {"device_id": 0},
     "replay_buffer": OnPolicyEpisodicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
@@ -230,7 +239,8 @@ SAC_method = {
     "name": "SAC",
     "policy_learner": SoftActorCritic,
     "policy_learner_args": {
-        "hidden_dims": [64, 64],
+        "actor_hidden_dims": [64, 64],
+        "critic_hidden_dims": [64, 64],
         "training_rounds": 1,
         "batch_size": 32,
         "entropy_coef": 0.1,
@@ -245,13 +255,26 @@ IQL_method = {
     "name": "IQL",
     "policy_learner": ImplicitQLearning,
     "policy_learner_args": {
-        "hidden_dims": [64, 64],
+        "actor_hidden_dims": [64, 64],
+        "critic_hidden_dims": [64, 64],
+        "state_value_critic_hidden_dims": [64, 64],
         "training_rounds": 1,
         "batch_size": 32,
-        "expectile": 0.5,
-        "temperature_advantage_weighted_regression": 0.75,
+        "expectile": 0.7,
+        "critic_soft_update_tau": 0.005,
+        "advantage_clamp": 100.0,
+        "temperature_advantage_weighted_regression": 3.0,
+        "state_value_learning_rate": 1e-3,
+        "actor_learning_rate": 1e-3,
+        "critic_learning_rate": 1e-3,
+        "actor_network_type": VanillaActorNetwork,
+        "critic_network_type": VanillaQValueNetwork,
+        "state_value_network_type": VanillaValueNetwork,
+        "discount_factor": 0.99,
     },
     "agent_args": {"device_id": 1},
+    "exploration_module": PropensityExploration,
+    "exploration_module_args": {},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
@@ -261,15 +284,23 @@ DDPG_method = {
     "name": "DDPG",
     "policy_learner": DeepDeterministicPolicyGradient,
     "policy_learner_args": {
-        "hidden_dims": [256, 256],
+        "actor_hidden_dims": [256, 256],
+        "critic_hidden_dims": [256, 256],
         "training_rounds": 1,
         "batch_size": 256,
+        "actor_network_type": VanillaContinuousActorNetwork,
+        "critic_network_type": VanillaQValueNetwork,
+        "actor_soft_update_tau": 0.005,
+        "critic_soft_update_tau": 0.05,
+        "actor_learning_rate": 1e-3,
+        "critic_learning_rate": 3e-4,
+        "discount_factor": 0.99,
     },
     "agent_args": {"device_id": 0},
     "exploration_module": NormalDistributionExploration,
     "exploration_module_args": {
         "mean": 0,
-        "std_dev": 0.2,
+        "std_dev": 0.1,
     },
     "replay_buffer": FIFOOffPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 100000},
@@ -278,15 +309,26 @@ TD3_method = {
     "name": "TD3",
     "policy_learner": TD3,
     "policy_learner_args": {
-        "hidden_dims": [256, 256],
+        "actor_hidden_dims": [256, 256],
+        "critic_hidden_dims": [256, 256],
         "training_rounds": 1,
         "batch_size": 256,
+        "actor_network_type": VanillaContinuousActorNetwork,
+        "critic_network_type": VanillaQValueNetwork,
+        "actor_soft_update_tau": 0.005,
+        "critic_soft_update_tau": 0.05,
+        "actor_learning_rate": 1e-3,
+        "critic_learning_rate": 3e-4,
+        "discount_factor": 0.99,
+        "actor_update_freq": 2,
+        "actor_update_noise": 0.2,
+        "actor_update_noise_clip": 0.5,
     },
     "agent_args": {"device_id": 1},
     "exploration_module": NormalDistributionExploration,
     "exploration_module_args": {
         "mean": 0,
-        "std_dev": 0.2,
+        "std_dev": 0.1,
     },
     "replay_buffer": FIFOOffPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 100000},
@@ -295,10 +337,18 @@ CSAC_method = {
     "name": "ContinuousSAC",
     "policy_learner": ContinuousSoftActorCritic,
     "policy_learner_args": {
-        "hidden_dims": [256, 256],
+        "actor_hidden_dims": [256, 256],
+        "critic_hidden_dims": [256, 256],
         "training_rounds": 1,
         "batch_size": 256,
-        "entropy_coef": 0.1,
+        "entropy_autotune": True,
+        "entropy_coef": 0.05,
+        "critic_soft_update_tau": 0.05,
+        "actor_learning_rate": 3e-4,
+        "critic_learning_rate": 1e-3,
+        "actor_network_type": GaussianActorNetwork,
+        "critic_network_type": VanillaQValueNetwork,
+        "discount_factor": 0.99,
     },
     "agent_args": {"device_id": 0},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
@@ -315,6 +365,12 @@ all_discrete_control_methods = [
     BootstrappedDQN_method,
     PPO_method,
     SAC_method,
+]
+all_ac_discrete_control_methods = [
+    REINFORCE_method,
+    PPO_method,
+    SAC_method,
+    IQL_method,
 ]
 all_continuous_control_methods = [
     DDPG_method,
@@ -367,9 +423,9 @@ all_safety_discrete_control_envs = [
 ]
 
 mujoco_steps = 2000000
-classic_control_steps = 200000
+classic_control_steps = 100000
 ple_steps = 2000000
-num_runs = 1
+num_runs = 5
 print_every_x_steps = 1000
 
 
