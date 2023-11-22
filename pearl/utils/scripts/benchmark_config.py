@@ -2,6 +2,9 @@ import gymnasium as gym
 from pearl.action_representation_modules.one_hot_action_representation_module import (
     OneHotActionTensorRepresentationModule,
 )
+from pearl.history_summarization_modules.lstm_history_summarization_module import (
+    LSTMHistorySummarizationModule,
+)
 from pearl.neural_networks.common.value_networks import (
     DuelingQValueNetwork,
     EnsembleQValueNetwork,
@@ -95,6 +98,25 @@ DQN_method = {
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
+}
+
+DQN_LSTM_method = {
+    "name": "LSTMDQN",
+    "policy_learner": DeepQLearning,
+    "policy_learner_args": {
+        "hidden_dims": [64, 64],
+        "training_rounds": 1,
+        "batch_size": 32,
+    },
+    "agent_args": {"device_id": 0},
+    "exploration_module": EGreedyExploration,
+    "exploration_module_args": {"epsilon": 0.1},
+    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
+    "history_summarization_module": LSTMHistorySummarizationModule,
+    "history_summarization_module_args": {"hidden_dim": 8},
 }
 CDQN_method = {
     "name": "Conservative DQN",
@@ -402,9 +424,9 @@ mujoco_envs = [
 ]
 all_partial_observable_discrete_control_envs = [
     "CartPole-PO-v0",
-    "Acrobot-PO-v1",
-    "MountainCar-PO-v0",
-    "PuckWorld-PLE-500-PO-v0",
+    # "Acrobot-PO-v1",
+    # "MountainCar-PO-v0",
+    # "PuckWorld-PLE-500-PO-v0",
 ]
 all_partial_observable_continuous_control_envs = [
     "Pendulum-PO-v1",

@@ -22,7 +22,6 @@ from pearl.utils.functional_utils.train_and_eval.online_learning import (
 )
 from pearl.utils.instantiations.environments.sparse_reward_environment import (
     DiscreteSparseRewardEnvironment,
-    SparseRewardEnvSummarizationModule,
 )
 
 
@@ -79,7 +78,6 @@ class IntegrationReplayBufferTests(unittest.TestCase):
             replay_buffer=HindsightExperienceReplayBuffer(
                 2_000_000, goal_dim=2, reward_fn=reward_fn, done_fn=done_fn
             ),
-            history_summarization_module=SparseRewardEnvSummarizationModule(),
         )
         # precollect data
         for _ in range(500):

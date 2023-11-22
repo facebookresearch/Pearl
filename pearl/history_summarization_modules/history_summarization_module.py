@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+import torch
 import torch.nn as nn
 
 from pearl.api.action import Action
@@ -24,7 +25,7 @@ class HistorySummarizationModule(ABC, nn.Module):
         pass
 
     @abstractmethod
-    def forward(self, x: History) -> SubjectiveState:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         pass
 
     @abstractmethod

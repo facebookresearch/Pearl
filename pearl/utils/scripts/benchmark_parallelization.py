@@ -24,11 +24,6 @@ from pearl.utils.functional_utils.train_and_eval.online_learning import (
     online_learning_returns,
 )
 from pearl.utils.scripts.benchmark_config import (
-    # all_ac_discrete_control_methods,
-    # all_continuous_control_methods,
-    # ple_steps,
-    classic_control_steps,
-    get_env,
     # SARSA_method,
     # TD3_method,
     # all_discrete_control_methods,
@@ -37,13 +32,19 @@ from pearl.utils.scripts.benchmark_config import (
     # CSAC_method,
     # DDPG_method,
     # DQN_method,
-    IQL_method,
+    # IQL_method,
     # all_partial_observable_continuous_control_envs,
     # DDQN_method,
     # mujoco_envs,
     # all_continuous_control_envs,
     # all_discrete_control_envs,
-    # all_partial_observable_discrete_control_envs,
+    all_partial_observable_discrete_control_envs,
+    classic_control_steps,
+    # all_ac_discrete_control_methods,
+    # all_continuous_control_methods,
+    # ple_steps,
+    DQN_LSTM_method,
+    get_env,
     # all_safety_discrete_control_envs,
     # all_sparse_reward_continuous_control_envs,
     # all_sparse_reward_discrete_control_envs,
@@ -51,11 +52,11 @@ from pearl.utils.scripts.benchmark_config import (
     # mujoco_steps,
     num_runs,
     # DuelingDQN_method,
-    PPO_method,
+    # PPO_method,
     print_every_x_steps,
     # QRDQN_method,
-    REINFORCE_method,
-    SAC_method,
+    # REINFORCE_method,
+    # SAC_method,
 )
 
 warnings.filterwarnings("ignore")
@@ -118,6 +119,8 @@ def evaluate_single(
     policy_learner_args = method["policy_learner_args"]
     agent_args = method["agent_args"]
     env = get_env(env_name)
+    policy_learner_args["state_dim"] = env.observation_space.shape[0]
+
     if "exploration_module" in method and "exploration_module_args" in method:
         policy_learner_args["exploration_module"] = method["exploration_module"](
             **method["exploration_module_args"]
@@ -145,6 +148,35 @@ def evaluate_single(
             "action_representation_module"
         ](**method["action_representation_module_args"])
 
+    if (
+        "history_summarization_module" in method
+        and "history_summarization_module_args" in method
+    ):
+        if (
+            method["history_summarization_module"].__name__
+            == "StackHistorySummarizationModule"
+        ):
+            policy_learner_args["state_dim"] = (
+                env.observation_space.shape[0] + env.action_space.n
+            ) * method["history_summarization_module_args"]["history_length"]
+        elif (
+            method["history_summarization_module"].__name__
+            == "LSTMHistorySummarizationModule"
+        ):
+            method["history_summarization_module_args"][
+                "observation_dim"
+            ] = env.observation_space.shape[0]
+            method["history_summarization_module_args"][
+                "action_dim"
+            ] = env.action_space.n
+            policy_learner_args["state_dim"] = method[
+                "history_summarization_module_args"
+            ]["hidden_dim"]
+
+        agent_args["history_summarization_module"] = method[
+            "history_summarization_module"
+        ](**method["history_summarization_module_args"])
+
     if method["name"] == "DuelingDQN":  # only for Dueling DQN
         assert "network_module" in method and "network_args" in method
         policy_learner_args["network_instance"] = method["network_module"](
@@ -159,8 +191,6 @@ def evaluate_single(
             action_dim=env.action_space.n,
             **method["network_args"],
         )
-    else:
-        policy_learner_args["state_dim"] = env.observation_space.shape[0]
 
     policy_learner_args["action_space"] = env.action_space
     agent = PearlAgent(
@@ -229,8 +259,8 @@ def generate_one_plot(experiment):
 
 
 if __name__ == "__main__":
-    methods = [IQL_method]
-    envs = ["CartPole-v0"]
+    methods = [DQN_LSTM_method]
+    envs = all_partial_observable_discrete_control_envs
     # envs = ["CartPole-v0"]
     num_steps = classic_control_steps
     experiments = [

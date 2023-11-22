@@ -19,6 +19,12 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from pearl.action_representation_modules.one_hot_action_representation_module import (
+    OneHotActionTensorRepresentationModule,
+)
+from pearl.history_summarization_modules.lstm_history_summarization_module import (
+    LSTMHistorySummarizationModule,
+)
 from pearl.pearl_agent import PearlAgent
 from pearl.policy_learners.exploration_modules.common.normal_distribution_exploration import (  # noqa E501
     NormalDistributionExploration,
@@ -114,6 +120,52 @@ class PearlDQN(Evaluation):
                 hidden_dims=[64, 64],
                 training_rounds=20,
             ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
+            device_id=self.device_id,
+        )
+        returns = online_learning_returns(
+            agent,
+            env,
+            number_of_episodes=number_of_episodes,
+            learn_after_episode=True,
+            print_every_x_episodes=1,
+        )
+        return returns
+
+
+class PearlLSTMDQN(Evaluation):
+    def __init__(
+        self,
+        gym_environment_name: str,
+        device_id: int,
+        # pyre-fixme[2]: Parameter must be annotated.
+        *args,
+        # pyre-fixme[2]: Parameter must be annotated.
+        **kwargs,
+    ) -> None:
+        super(PearlDQN, self).__init__(gym_environment_name, device_id, *args, **kwargs)
+
+    def evaluate(self, seed: int) -> Iterable[Number]:
+        env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
+        hidden_dim = 8
+
+        action_representation_module = OneHotActionTensorRepresentationModule(
+            max_actions=env.action_space.n
+        )
+        history_summarization_module = LSTMHistorySummarizationModule(
+            observation_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+            action_dim=env.action_space.n,
+            hidden_dim=hidden_dim,
+        )
+        agent = PearlAgent(
+            policy_learner=DeepQLearning(
+                state_dim=hidden_dim,
+                action_space=env.action_space,
+                hidden_dims=[64, 64],
+                training_rounds=20,
+            ),
+            action_representation_module=action_representation_module,
+            history_summarization_module=history_summarization_module,
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
             device_id=self.device_id,
         )

@@ -12,7 +12,11 @@ from pearl.action_representation_modules.identity_action_representation_module i
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
+    HistorySummarizationModule,
     SubjectiveState,
+)
+from pearl.history_summarization_modules.identity_history_summarization_module import (
+    IdentityHistorySummarizationModule,
 )
 from pearl.neural_networks.optimizers.keyed_optimizer_wrapper import NoOpOptimizer
 from pearl.policy_learners.exploration_modules.common.no_exploration import (
@@ -67,6 +71,11 @@ class PolicyLearner(torch.nn.Module, ABC):
             if "action_representation_module" in options
             else IdentityActionRepresentationModule()
         )
+        self._history_summarization_module: HistorySummarizationModule = (
+            options["history_summarization_module"]
+            if "history_summarization_module" in options
+            else IdentityHistorySummarizationModule()
+        )
         self._training_rounds = training_rounds
         self._batch_size = batch_size
         self._training_steps = 0
@@ -94,6 +103,11 @@ class PolicyLearner(torch.nn.Module, ABC):
 
     def get_action_representation_module(self) -> ActionRepresentationModule:
         return self._action_representation_module
+
+    def set_history_summarization_module(
+        self, value: HistorySummarizationModule
+    ) -> None:
+        self._history_summarization_module = value
 
     def set_action_representation_module(
         self, value: ActionRepresentationModule
@@ -155,6 +169,10 @@ class PolicyLearner(torch.nn.Module, ABC):
         This function can be used to implement preprocessing steps such as
         transform the actions.
         """
+        batch.state = self._history_summarization_module(batch.state)
+        with torch.no_grad():
+            batch.next_state = self._history_summarization_module(batch.next_state)
+
         batch.action = self._action_representation_module(batch.action)
         if batch.next_action is not None:
             batch.next_action = self._action_representation_module(batch.next_action)

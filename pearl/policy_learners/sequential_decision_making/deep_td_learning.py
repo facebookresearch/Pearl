@@ -7,6 +7,9 @@ import torch
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
+from pearl.history_summarization_modules.history_summarization_module import (
+    HistorySummarizationModule,
+)
 from pearl.neural_networks.common.utils import update_target_network
 
 from pearl.neural_networks.common.value_networks import (
@@ -144,6 +147,12 @@ class DeepTDLearning(PolicyLearner):
             #  KeyedOptimizer], KeyedOptimizer]]` but got `List[Tuple[str,
             #  KeyedOptimizerWrapper]]`.
             self._optimizer = CombinedOptimizer(optims)
+
+    def set_history_summarization_module(
+        self, value: HistorySummarizationModule
+    ) -> None:
+        self._optimizer.add_param_group({"params": value.parameters()})
+        self._history_summarization_module = value
 
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space

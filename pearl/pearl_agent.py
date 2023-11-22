@@ -115,6 +115,10 @@ class PearlAgent(Agent):
             self.action_representation_module
         )
 
+        self.policy_learner.set_history_summarization_module(
+            self.history_summarization_module
+        )
+
         # set here so replay_buffer and policy_learner are in sync
         self.replay_buffer.is_action_continuous = (
             self.policy_learner.is_action_continuous
@@ -130,6 +134,7 @@ class PearlAgent(Agent):
         self._action_space: Optional[ActionSpace] = None
 
         self.policy_learner.to(self.device)
+        self.history_summarization_module.to(self.device)
 
     def act(self, exploit: bool = False) -> Action:
         safe_action_space = self.safety_module.filter_action(self._subjective_state)
@@ -198,14 +203,30 @@ class PearlAgent(Agent):
 
     def reset(self, observation: Observation, action_space: ActionSpace) -> None:
         self.history_summarization_module.reset()
+        self.history_summarization_module.to(self.device)
+        self._latest_action = None
         self._subjective_state = self._update_subjective_state(observation)
         self._action_space = action_space
         self.safety_module.reset(action_space)
         self.policy_learner.reset(action_space)
 
     def _update_subjective_state(self, observation: Observation) -> SubjectiveState:
+        if observation is None:
+            return
+
+        latest_action_representation = None
+        if self._latest_action is not None:
+            latest_action_representation = self.action_representation_module(
+                torch.as_tensor(self._latest_action).unsqueeze(0).to(self.device)
+            )
+        observation_to_be_used = (
+            torch.as_tensor(observation).to(self.device)
+            if self.policy_learner.requires_tensors  # temporary fix before abstract interfaces
+            else observation
+        )
+
         return self.history_summarization_module.summarize_history(
-            observation, self._latest_action
+            observation_to_be_used, latest_action_representation
         )
 
     def __str__(self) -> str:

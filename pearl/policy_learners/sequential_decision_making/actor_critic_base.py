@@ -15,6 +15,9 @@ from pearl.api.action import Action
 
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
+from pearl.history_summarization_modules.history_summarization_module import (
+    HistorySummarizationModule,
+)
 from pearl.neural_networks.common.utils import (
     init_weights,
     update_target_network,
@@ -155,6 +158,14 @@ class ActorCriticBase(PolicyLearner):
 
         self._discount_factor = discount_factor
 
+    def set_history_summarization_module(
+        self, value: HistorySummarizationModule
+    ) -> None:
+        self._actor_optimizer.add_param_group({"params": value.parameters()})
+        if self._use_critic:
+            self._critic_optimizer.add_param_group({"params": value.parameters()})
+        self._history_summarization_module = value
+
     def act(
         self,
         subjective_state: SubjectiveState,
@@ -173,7 +184,7 @@ class ActorCriticBase(PolicyLearner):
             else:
                 action_probabilities = self._actor(subjective_state)
                 # (action_space_size, 1)
-                exploit_action = torch.argmax(action_probabilities).view((-1)).item()
+                exploit_action = torch.argmax(action_probabilities).view((-1))
 
         # Step 2: return exploit action if no exploration,
         # else pass through the exploration module

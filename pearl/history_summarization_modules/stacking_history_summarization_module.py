@@ -18,9 +18,9 @@ class StackingHistorySummarizationModule(HistorySummarizationModule):
         self.history_length = history_length
         self.observation_dim = observation_dim
         self.action_dim = action_dim
-        self.default_action: torch.Tensor = torch.zeros((1, action_dim))
-        self.history: torch.Tensor = torch.zeros(
-            (history_length, action_dim + observation_dim)
+        self.register_buffer("default_action", torch.zeros((1, action_dim)))
+        self.register_buffer(
+            "history", torch.zeros((history_length, action_dim + observation_dim))
         )
 
     def summarize_history(
@@ -30,7 +30,7 @@ class StackingHistorySummarizationModule(HistorySummarizationModule):
             action = self.default_action
 
         assert observation.shape[-1] + action.shape[-1] == self.history.shape[-1]
-        observation_action_pair = torch.cat((action, observation), dim=-1)
+        observation_action_pair = torch.cat((action, observation), dim=-1).detach()
         self.history = torch.cat(
             [
                 self.history[1:, :],
@@ -49,6 +49,7 @@ class StackingHistorySummarizationModule(HistorySummarizationModule):
         return x
 
     def reset(self) -> None:
-        self.history = torch.zeros(
-            (self.history_length, self.action_dim + self.observation_dim)
+        self.register_buffer(
+            "history",
+            torch.zeros((self.history_length, self.action_dim + self.observation_dim)),
         )

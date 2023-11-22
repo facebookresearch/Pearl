@@ -1,6 +1,7 @@
 import torch
 
 from pearl.api.action import Action
+from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
 
 from pearl.api.observation import Observation

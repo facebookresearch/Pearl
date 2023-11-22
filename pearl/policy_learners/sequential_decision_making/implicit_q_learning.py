@@ -3,7 +3,9 @@ from typing import Any, Dict, Iterable, Optional, Type
 import torch
 
 from pearl.api.action_space import ActionSpace
-
+from pearl.history_summarization_modules.history_summarization_module import (
+    HistorySummarizationModule,
+)
 from pearl.neural_networks.common.utils import update_target_networks
 
 from pearl.neural_networks.common.value_networks import (
@@ -117,6 +119,14 @@ class ImplicitQLearning(ActorCriticBase):
         self._value_network_optimizer = optim.AdamW(
             self._value_network.parameters(), lr=state_value_learning_rate, amsgrad=True
         )
+
+    def set_history_summarization_module(
+        self, value: HistorySummarizationModule
+    ) -> None:
+        self._actor_optimizer.add_param_group({"params": value.parameters()})
+        self._critic_optimizer.add_param_group({"params": value.parameters()})
+        self._value_network_optimizer.add_param_group({"params": value.parameters()})
+        self._history_summarization_module = value
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 

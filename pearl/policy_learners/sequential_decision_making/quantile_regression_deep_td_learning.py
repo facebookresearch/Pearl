@@ -8,6 +8,9 @@ import torch.nn.functional as F
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
+from pearl.history_summarization_modules.history_summarization_module import (
+    HistorySummarizationModule,
+)
 from pearl.neural_networks.common.utils import update_target_network
 from pearl.neural_networks.common.value_networks import QuantileQValueNetwork
 from pearl.neural_networks.sequential_decision_making.q_value_network import (
@@ -95,6 +98,12 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         self._optimizer = optim.AdamW(
             self._Q.parameters(), lr=learning_rate, amsgrad=True
         )
+
+    def set_history_summarization_module(
+        self, value: HistorySummarizationModule
+    ) -> None:
+        self._optimizer.add_param_group({"params": value.parameters()})
+        self._history_summarization_module = value
 
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space

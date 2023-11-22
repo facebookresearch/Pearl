@@ -18,29 +18,29 @@ class TestSparseRewardEnvironment(unittest.TestCase):
         # Test reset
         observation, action_space = env.reset()
         self.assertEqual(4, action_space.n)
-        x, y = observation.agent_position
+        x, y = env._agent_position
         self.assertLess(x, 100)
         self.assertLess(y, 100)
-        goal_x, goal_y = observation.goal
+        goal_x, goal_y = env._goal
         self.assertLess(goal_x, 100)
         self.assertLess(goal_y, 100)
 
         # Test position change
         result = env.step(torch.tensor(0))
-        self.assertEqual(result.observation.agent_position[0], x + 1)
-        self.assertEqual(result.observation.agent_position[1], y)
+        self.assertEqual(env._agent_position[0], x + 1)
+        self.assertEqual(env._agent_position[1], y)
         x = x + 1
         result = env.step(torch.tensor(1))
-        self.assertEqual(result.observation.agent_position[0], x)
-        self.assertEqual(result.observation.agent_position[1], y + 1)
+        self.assertEqual(env._agent_position[0], x)
+        self.assertEqual(env._agent_position[1], y + 1)
         y = y + 1
         result = env.step(torch.tensor(2))
-        self.assertEqual(result.observation.agent_position[0], x - 1)
-        self.assertEqual(result.observation.agent_position[1], y)
+        self.assertEqual(env._agent_position[0], x - 1)
+        self.assertEqual(env._agent_position[1], y)
         x = x - 1
         result = env.step(torch.tensor(3))
-        self.assertEqual(result.observation.agent_position[0], x)
-        self.assertEqual(result.observation.agent_position[1], y - 1)
+        self.assertEqual(env._agent_position[0], x)
+        self.assertEqual(env._agent_position[1], y - 1)
 
         # Test win reward and terminate
         env._agent_position = (goal_x, goal_y - 1)

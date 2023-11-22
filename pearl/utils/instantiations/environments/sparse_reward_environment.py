@@ -70,9 +70,7 @@ class SparseRewardEnvironment(Environment):
         self._goal = (random.uniform(0, self._length), random.uniform(0, self._height))
         self._step_count = 0
         return (
-            SparseRewardEnvironmentObservation(
-                agent_position=self._agent_position, goal=self._goal
-            ),
+            torch.tensor(list(self._agent_position) + list(self._goal)),
             self.action_space,
         )
 
@@ -112,9 +110,7 @@ class ContinuousSparseRewardEnvironment(SparseRewardEnvironment):
         self._step_count += 1
         terminated = has_win or self._step_count >= self._max_episode_duration
         return ActionResult(
-            observation=SparseRewardEnvironmentObservation(
-                agent_position=self._agent_position, goal=self._goal
-            ),
+            observation=torch.tensor(list(self._agent_position) + list(self._goal)),
             reward=0 if has_win else -1,
             terminated=terminated,
             truncated=False,
@@ -180,33 +176,3 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
         return DiscreteActionSpace(
             actions=[torch.tensor([i]) for i in range(self._action_count)]
         )
-
-
-class SparseRewardEnvSummarizationModule(HistorySummarizationModule):
-    """
-    A history summarization module that is used for sparse reward game environment
-    """
-
-    def __init__(self) -> None:
-        self.subjective_state: torch.Tensor = torch.zeros((0,))
-        pass
-
-    def summarize_history(
-        self,
-        observation: SparseRewardEnvironmentObservation,
-        action: Action,
-    ) -> SubjectiveState:
-        # for this game, state is a cat between agent position and goal position
-        self.subjective_state = torch.Tensor(
-            list(observation.agent_position) + list(observation.goal)
-        )
-        return self.subjective_state
-
-    def get_history(self) -> History:
-        return self.subjective_state
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return x
-
-    def reset(self) -> None:
-        self.subjective_state = torch.zeros((0,))
