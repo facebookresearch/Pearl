@@ -154,7 +154,7 @@ class PearlAgent(Agent):
             for a in safe_action_space.actions:
                 a.to(self.device)
         self._latest_action = self.policy_learner.act(
-            subjective_state_to_be_used, safe_action_space, exploit
+            subjective_state_to_be_used, safe_action_space, exploit=exploit
         )
         return self._latest_action
 

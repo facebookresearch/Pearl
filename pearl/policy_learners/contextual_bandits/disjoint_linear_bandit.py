@@ -119,7 +119,7 @@ class DisjointLinearBandit(ContextualBanditBase):
         self,
         subjective_state: SubjectiveState,
         action_space: DiscreteActionSpace,
-        _exploit: bool = False,
+        exploit: bool = False,
     ) -> Action:
         # TODO static discrete action space only
         feature = concatenate_actions_to_state(
