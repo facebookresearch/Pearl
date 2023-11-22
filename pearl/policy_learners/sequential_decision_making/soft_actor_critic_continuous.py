@@ -72,11 +72,12 @@ class ContinuousSoftActorCritic(ActorCriticBase):
         )
 
         self._entropy_autotune = entropy_autotune
+        print(f"Entropy autotune: {entropy_autotune}")
         if entropy_autotune:
             # initialize the entropy coefficient to 0
-            self.register_buffer(
+            self.register_parameter(
                 "_log_entropy",
-                torch.zeros(1, requires_grad=True),
+                torch.nn.Parameter(torch.zeros(1, requires_grad=True)),
             )
             self._entropy_optimizer = optim.AdamW(  # pyre-ignore
                 [self._log_entropy], lr=critic_learning_rate, amsgrad=True
@@ -87,6 +88,30 @@ class ContinuousSoftActorCritic(ActorCriticBase):
             )
         else:
             self.register_buffer("_entropy_coef", torch.tensor(entropy_coef))
+
+    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+        actor_critic_loss = super().learn_batch(batch)
+        state_batch = batch.state  # shape: (batch_size x state_dim)
+
+        if self._entropy_autotune:
+            with torch.no_grad():
+                _, action_batch_log_prob = self._actor.sample_action(
+                    state_batch, get_log_prob=True
+                )
+
+            entropy_optimizer_loss = (
+                -torch.exp(self._log_entropy)
+                * (action_batch_log_prob + self._target_entropy)
+            ).mean()
+
+            self._entropy_optimizer.zero_grad()
+            entropy_optimizer_loss.backward()
+            self._entropy_optimizer.step()
+
+            self._entropy_coef = torch.exp(self._log_entropy).detach()
+            {**actor_critic_loss, **{"entropy_coef": entropy_optimizer_loss}}
+
+        return actor_critic_loss
 
     def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
@@ -168,22 +193,5 @@ class ContinuousSoftActorCritic(ActorCriticBase):
         self._actor_optimizer.zero_grad()
         actor_loss.backward()
         self._actor_optimizer.step()
-
-        if self._entropy_autotune:
-            with torch.no_grad():
-                _, action_batch_log_prob = self._actor.sample_action(
-                    state_batch, get_log_prob=True
-                )
-
-            entropy_optimizer_loss = (
-                -torch.exp(self._log_entropy)
-                * (action_batch_log_prob + self._target_entropy)
-            ).mean()
-
-            self._entropy_optimizer.zero_grad()
-            entropy_optimizer_loss.backward()
-            self._entropy_optimizer.step()
-
-            self._entropy_coef = torch.exp(self._log_entropy).detach()
 
         return {"actor_loss": actor_loss.item()}
