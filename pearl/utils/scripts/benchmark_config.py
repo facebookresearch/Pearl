@@ -73,6 +73,7 @@ from pearl.user_envs import (
     AcrobotPartialObservableWrapper,
     AcrobotSparseRewardWrapper,
     CartPolePartialObservableWrapper,
+    GymAvgTorqueWrapper,
     MountainCarPartialObservableWrapper,
     MountainCarSparseRewardWrapper,
     PendulumPartialObservableWrapper,
@@ -497,5 +498,8 @@ def get_env(env_name: str) -> GymEnvironment:
         return GymEnvironment(
             PuckWorldPartialObservableWrapper(gym.make("PuckWorld-PLE-500-v0"))
         )
+    elif env_name[-7:] == "_w_cost":
+        env_name = env_name[:-7]
+        return GymEnvironment(GymAvgTorqueWrapper(gym.make(env_name)))
     else:
         return GymEnvironment(env_name)

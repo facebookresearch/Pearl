@@ -549,7 +549,7 @@ def main(device_id: int = -1) -> None:
             # PearlDQN("Acrobot-v1", device_id=device_id),
             # PearlPPO("Acrobot-v1", device_id=device_id),
             # PearlDDPG("Pendulum-v1", device_id=device_id),
-            PearlTD3("Pendulum-v1", device_id=device_id),
+            PearlTD3("Pendulum-v1_w_cost", device_id=device_id),
             # MuJoCo environments -- require MuJoCo to be installed.
             # PearlDDPG("HalfCheetah-v4"),
             # PearlDDPG("Ant-v4"),

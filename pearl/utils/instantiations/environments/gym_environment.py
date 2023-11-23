@@ -113,16 +113,25 @@ class GymEnvironment(Environment):
             raise ValueError(
                 f"Unexpected action result from Gym (expected 4 or 5 elements): {gym_action_result}"
             )
+        if "cost" in info.keys():
+            cost = info["cost"]
+        else:
+            cost = None
+
         if isinstance(observation, np.ndarray):
             observation = observation.astype(np.float32)
         if isinstance(reward, np.float64):
             reward = reward.astype(np.float32)
+        if isinstance(cost, np.float64):
+            cost = cost.astype(np.float32)
+
         return ActionResult(
             observation=observation,
             reward=reward,
             terminated=terminated,
             truncated=truncated,
             info=info,
+            cost=cost,
         )
 
     # pyre-fixme[3]: Return type must be annotated.
