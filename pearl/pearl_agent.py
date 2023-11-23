@@ -156,6 +156,7 @@ class PearlAgent(Agent):
         self._latest_action = self.policy_learner.act(
             subjective_state_to_be_used, safe_action_space, exploit=exploit
         )
+
         return self._latest_action
 
     def observe(
