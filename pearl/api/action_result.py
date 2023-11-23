@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from pearl.api.observation import Observation
 
@@ -13,6 +13,7 @@ class ActionResult:
     terminated: bool
     truncated: bool
     info: Dict[str, Any]
+    cost: Optional[Reward] = None
 
     @property
     def done(self) -> bool:

@@ -1,15 +1,19 @@
+from typing import Optional
+
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
-
 from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
 from pearl.replay_buffers.transition import Transition
 
 
 class FIFOOffPolicyReplayBuffer(TensorBasedReplayBuffer):
-    def __init__(self, capacity: int) -> None:
+    def __init__(self, capacity: int, has_cost_available: bool = False) -> None:
         super(FIFOOffPolicyReplayBuffer, self).__init__(
-            capacity=capacity, has_next_state=True, has_next_action=False
+            capacity=capacity,
+            has_next_state=True,
+            has_next_action=False,
+            has_cost_available=has_cost_available,
         )
 
     # TODO: add helper to convert subjective state into tensors
@@ -25,8 +29,8 @@ class FIFOOffPolicyReplayBuffer(TensorBasedReplayBuffer):
         next_available_actions: ActionSpace,
         action_space: ActionSpace,
         done: bool,
+        cost: Optional[float] = None,
     ) -> None:
-
         (
             curr_available_actions_tensor_with_padding,
             curr_available_actions_mask,
@@ -47,5 +51,6 @@ class FIFOOffPolicyReplayBuffer(TensorBasedReplayBuffer):
                 next_available_actions=next_available_actions_tensor_with_padding,
                 next_available_actions_mask=next_available_actions_mask,
                 done=self._process_single_done(done),
+                cost=self._process_single_cost(cost),
             ).to(self.device)
         )

@@ -109,6 +109,7 @@ class TabularQLearning(PolicyLearner):
             _curr_available_actions,
             _next_available_actions,
             done,
+            _cost,
         ) in replay_buffer.sample(1):
             old_q_value = self.q_values.get((state, action.item()), 0)
             next_q_values = [

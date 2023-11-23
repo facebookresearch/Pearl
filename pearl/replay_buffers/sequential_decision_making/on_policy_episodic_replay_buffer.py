@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
@@ -32,6 +34,7 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
         next_available_actions: ActionSpace,
         action_space: ActionSpace,
         done: bool,
+        cost: Optional[float] = None,
     ) -> None:
         (
             curr_available_actions_tensor_with_padding,

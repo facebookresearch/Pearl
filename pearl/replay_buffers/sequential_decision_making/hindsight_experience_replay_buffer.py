@@ -1,4 +1,4 @@
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -56,6 +56,7 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
         next_available_actions: ActionSpace,
         action_space: ActionSpace,
         done: bool,
+        cost: Optional[float] = None,
     ) -> None:
         # assuming state and goal are all list, so we could use + to cat
         super(HindsightExperienceReplayBuffer, self).push(
@@ -68,6 +69,7 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
             next_available_actions,
             action_space,
             done,
+            cost,
         )
         self._trajectory.append(
             (
@@ -78,6 +80,7 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
                 next_available_actions,
                 action_space,
                 done,
+                cost,
             )
         )
         if done:
@@ -90,6 +93,7 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
                 next_available_actions,
                 action_space,
                 done,
+                cost,
             ) in self._trajectory:
                 # replace current_goal with additional_goal
                 state[-self._goal_dim :] = additional_goal
@@ -103,5 +107,6 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
                     next_available_actions,
                     action_space,
                     done if self._done_fn is None else self._done_fn(state, action),
+                    cost,
                 )
             self._trajectory = []

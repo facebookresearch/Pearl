@@ -1,4 +1,5 @@
 import random
+from typing import Optional
 
 import torch
 
@@ -38,6 +39,7 @@ class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
         next_available_actions: ActionSpace,
         action_space: ActionSpace,
         done: bool,
+        cost: Optional[float] = None,
     ) -> None:
         # signature of push is the same as others, in order to match codes in PearlAgent
         # TODO add curr_available_actions and curr_available_actions_mask if needed in the future

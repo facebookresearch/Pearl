@@ -178,6 +178,7 @@ class PearlAgent(Agent):
             self._action_space,  # next_available_actions
             self._action_space,  # action_space
             action_result.done,
+            action_result.cost,
         )
 
         self._subjective_state = new_subjective_state

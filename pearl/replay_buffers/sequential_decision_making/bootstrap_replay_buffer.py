@@ -1,4 +1,5 @@
 import random
+from typing import Optional
 
 import torch
 from pearl.api.action import Action
@@ -55,6 +56,7 @@ class BootstrapReplayBuffer(FIFOOffPolicyReplayBuffer):
         next_available_actions: ActionSpace,
         action_space: ActionSpace,
         done: bool,
+        cost: Optional[float] = None,
     ) -> None:
         # sample the bootstrap mask from Bernoulli(p) on each push
         probs = torch.tensor(self.p).repeat(1, self.ensemble_size)
@@ -79,6 +81,7 @@ class BootstrapReplayBuffer(FIFOOffPolicyReplayBuffer):
                 next_available_actions=next_available_actions_tensor_with_padding,
                 next_available_actions_mask=next_available_actions_mask,
                 done=self._process_single_done(done),
+                cost=self._process_single_cost(cost),
                 bootstrap_mask=bootstrap_mask,
             )
         )
@@ -96,6 +99,7 @@ class BootstrapReplayBuffer(FIFOOffPolicyReplayBuffer):
             has_next_action=self._has_next_action,
             is_action_continuous=self.is_action_continuous,
             has_next_available_actions=self._has_next_available_actions,
+            has_cost_available=self._has_cost_available,
         )
         bootstrap_mask_batch = torch.cat([x.bootstrap_mask for x in samples])
         return TransitionWithBootstrapMaskBatch(

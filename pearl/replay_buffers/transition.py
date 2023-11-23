@@ -27,6 +27,7 @@ class Transition:
     next_available_actions_mask: Optional[torch.Tensor] = None
     weight: Optional[torch.Tensor] = None
     cum_reward: Optional[torch.Tensor] = None
+    cost: Optional[torch.Tensor] = None
 
     def to(self: T, device: torch.device) -> T:
         # iterate over all fields, move to correct device
@@ -65,6 +66,7 @@ class TransitionBatch:
     weight: Optional[torch.Tensor] = None
     cum_reward: Optional[torch.Tensor] = None
     time_diff: Optional[torch.Tensor] = None
+    cost: Optional[torch.Tensor] = None
 
     def to(self: TB, device: torch.device) -> TB:
         # iterate over all fields
@@ -134,4 +136,5 @@ def filter_batch_by_bootstrap_mask(
         next_available_actions_mask=_filter_tensor(batch.next_available_actions_mask),
         weight=_filter_tensor(batch.weight),
         cum_reward=_filter_tensor(batch.cum_reward),
+        cost=_filter_tensor(batch.cost),
     ).to(batch.device)
