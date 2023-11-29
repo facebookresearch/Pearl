@@ -78,16 +78,21 @@ class ProximalPolicyOptimization(ActorCriticBase):
         """
         Loss = actor loss + critic loss + entropy_bonus_scaling * entropy loss
         """
-        vs = self._critic(batch.state)
-        action_probs = self._get_action_prob(batch.state, batch.action)
+        # TODO: change the output shape of value networks
+        vs = self._critic(batch.state).view(-1)  # shape (batch_size)
+        action_probs = self._actor.get_action_prob(
+            batch.state, batch.action
+        )  # shape (batch_size)
+
         # actor loss
         with torch.no_grad():
-            action_probs_old = self._get_action_prob(
-                batch.state, batch.action, self._actor_old
-            )
-        r_thelta = torch.div(action_probs, action_probs_old)
-
-        clip = torch.clamp(r_thelta, min=1.0 - self._epsilon, max=1.0 + self._epsilon)
+            action_probs_old = self._actor_old.get_action_prob(
+                batch.state, batch.action
+            )  # shape (batch_size)
+        r_thelta = torch.div(action_probs, action_probs_old)  # shape (batch_size)
+        clip = torch.clamp(
+            r_thelta, min=1.0 - self._epsilon, max=1.0 + self._epsilon
+        )  # shape (batch_size)
 
         # advantage estimator, in paper:
         # A = sum(lambda^t*gamma^t*TD_error), while TD_error = reward + gamma * V(s+1) - V(s)
@@ -96,12 +101,13 @@ class ProximalPolicyOptimization(ActorCriticBase):
         # TODO support lambda and gamma
         with torch.no_grad():
             # pyre-fixme
-            advantage = batch.cum_reward - vs
+            advantage = batch.cum_reward - vs  # shape (batch_size)
 
         # entropy
         # Categorical is good for Cartpole Env where actions are discrete
         # TODO need to support continuous action
         entropy = torch.distributions.Categorical(action_probs.detach()).entropy()
+
         loss = (
             torch.sum(-torch.min(r_thelta * advantage, clip * advantage))
             # pyre-fixme[6]: For 1st argument expected `Tensor` but got `float`.

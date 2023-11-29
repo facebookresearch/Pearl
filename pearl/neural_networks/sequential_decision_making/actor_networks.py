@@ -72,6 +72,16 @@ class VanillaActorNetwork(nn.Module):
         output_dim: int,
         action_space: Optional[ActionSpace] = None,
     ) -> None:
+        """A Vanilla Actor Network is meant to be used with discrete action spaces.
+           For an input state (batch of states), it outputs a probability distribution over
+           all the actions.
+
+        Args:
+            input_dim: input state dimension (or dim of the state representation)
+            hidden_dims: list of hidden layer dimensions
+            output_dim: number of actions (action_space.n when used with the DiscreteActionSpace
+                        class)
+        """
         super(VanillaActorNetwork, self).__init__()
         self._model: nn.Module = mlp_block(
             input_dim=input_dim,
@@ -82,6 +92,27 @@ class VanillaActorNetwork(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self._model(x)
+
+    def get_action_prob(
+        self,
+        state_batch: torch.Tensor,
+        action_batch: torch.Tensor,
+    ) -> torch.Tensor:
+        """
+        Gets probabilities of different actions from a discrete actor network.
+        Assumes that the input batch of actions is one-hot encoded
+            (generalize it later).
+
+        Args:
+            state_batch: batch of states with shape (batch_size, input_dim)
+            action_batch: batch of actions with shape (batch_size, output_dim)
+        Returns:
+            action_probs: probabilities of each action in the batch with shape (batch_size)
+        """
+        all_action_probs = self.forward(state_batch)  # shape: (batch_size, output_dim)
+        action_probs = torch.sum(all_action_probs * action_batch, dim=1, keepdim=True)
+
+        return action_probs.view(-1)
 
 
 class VanillaContinuousActorNetwork(nn.Module):

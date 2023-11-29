@@ -76,10 +76,12 @@ class REINFORCE(ActorCriticBase):
             batch.state
         )  # (batch_size x state_dim) note that here batch_size = episode length
         return_batch = batch.cum_reward  # (batch_size)
-        policy_propensities = self._get_action_prob(batch.state, batch.action)
+        policy_propensities = self._actor.get_action_prob(
+            batch.state, batch.action
+        )  # shape (batch_size)
         negative_log_probs = -torch.log(policy_propensities + 1e-8)
         if self._use_critic:
-            v = self._critic(state_batch)  # (batch_size)
+            v = self._critic(state_batch).view(-1)  # (batch_size)
             # pyre-fixme
             loss = torch.sum(negative_log_probs * (return_batch - v.detach()))
         else:

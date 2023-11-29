@@ -47,7 +47,7 @@ from pearl.utils.scripts.benchmark_config import (
     num_runs,
     num_runs,
     # DuelingDQN_method,
-    # PPO_method,
+    PPO_method,
     print_every_x_steps,
     print_every_x_steps,
     # all_partial_observable_continuous_control_envs,

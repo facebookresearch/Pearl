@@ -220,20 +220,6 @@ class ActorCriticBase(PolicyLearner):
             )
         return {}
 
-    def _get_action_prob(
-        self,
-        state_batch: torch.Tensor,
-        action_batch: torch.Tensor,
-        # pyre-fixme[2]: Parameter must be annotated.
-        actor=None,
-    ) -> torch.Tensor:
-        if actor is None:
-            action_probs = self._actor(state_batch)
-        else:
-            action_probs = actor(state_batch)
-        # TODO action_batch is one-hot encoding vectors
-        return torch.sum(action_probs * action_batch, dim=1, keepdim=True)
-
     @abstractmethod
     def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         pass
