@@ -48,6 +48,8 @@ from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buff
 from pearl.replay_buffers.sequential_decision_making.on_policy_episodic_replay_buffer import (  # noqa E501
     OnPolicyEpisodicReplayBuffer,
 )
+
+from pearl.user_envs.wrappers.gym_avg_torque_cost import GymAvgTorqueWrapper
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
     online_learning_returns,
@@ -314,7 +316,15 @@ class PearlTD3(Evaluation):
         super(PearlTD3, self).__init__(gym_environment_name, device_id, *args, **kwargs)
 
     def evaluate(self, seed: int) -> Iterable[Number]:
-        env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
+        has_cost_available = False
+        if self.gym_environment_name[:3] == "wc_":
+            has_cost_available = True
+            self.gym_environment_name = self.gym_environment_name[3:]
+            env = GymEnvironment(
+                GymAvgTorqueWrapper(gym.make(self.gym_environment_name))
+            )
+        else:
+            env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=TD3(
                 state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
@@ -332,6 +342,9 @@ class PearlTD3(Evaluation):
             replay_buffer=FIFOOffPolicyReplayBuffer(50000),
             device_id=self.device_id,
         )
+        # Enable saving cost in replay buffer if cost is available
+        agent.replay_buffer._has_cost_available = has_cost_available
+
         returns = online_learning_returns(
             agent,
             env,
@@ -549,7 +562,7 @@ def main(device_id: int = -1) -> None:
             # PearlDQN("Acrobot-v1", device_id=device_id),
             # PearlPPO("Acrobot-v1", device_id=device_id),
             # PearlDDPG("Pendulum-v1", device_id=device_id),
-            PearlTD3("Pendulum-v1_w_cost", device_id=device_id),
+            PearlTD3("wc_Pendulum-v1", device_id=device_id),
             # MuJoCo environments -- require MuJoCo to be installed.
             # PearlDDPG("HalfCheetah-v4"),
             # PearlDDPG("Ant-v4"),

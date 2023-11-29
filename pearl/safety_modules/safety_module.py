@@ -4,6 +4,7 @@ from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
@@ -19,7 +20,7 @@ class SafetyModule(ABC):
         pass
 
     @abstractmethod
-    def learn(self, replay_buffer: ReplayBuffer) -> None:
+    def learn(self, replay_buffer: ReplayBuffer, policy_learner: PolicyLearner) -> None:
         pass
 
     @abstractmethod

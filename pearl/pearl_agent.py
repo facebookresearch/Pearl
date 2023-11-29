@@ -187,7 +187,7 @@ class PearlAgent(Agent):
     # pyre-fixme[15]: `learn` overrides method defined in `Agent` inconsistently.
     def learn(self) -> Dict[str, Any]:
         report = self.policy_learner.learn(self.replay_buffer)
-        self.safety_module.learn(self.replay_buffer)
+        self.safety_module.learn(self.replay_buffer, self.policy_learner)
 
         if self.policy_learner.on_policy:
             self.replay_buffer.clear()

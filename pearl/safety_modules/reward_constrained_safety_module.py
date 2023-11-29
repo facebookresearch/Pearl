@@ -1,3 +1,5 @@
+# (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
@@ -8,13 +10,13 @@ from pearl.replay_buffers.transition import TransitionBatch
 from pearl.safety_modules.safety_module import SafetyModule
 
 
-class IdentitySafetyModule(SafetyModule):
+class RewardConstrainedSafetyModule(SafetyModule):
     """
-    A safety module that does not restrict action spaces.
+    Placeholder: to be implemented
     """
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, **options) -> None:
+    def __init__(self) -> None:
+        super(RewardConstrainedSafetyModule, self).__init__()
         # pyre-fixme[4]: Attribute must be annotated.
         self._action_space = None
 

@@ -92,7 +92,7 @@ DQN_method = {
         "training_rounds": 1,
         "batch_size": 32,
     },
-    "agent_args": {"device_id": 0},
+    "agent_args": {"device_id": 1},
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
@@ -356,6 +356,23 @@ TD3_method = {
     "replay_buffer": FIFOOffPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 100000},
 }
+RCTD3_method = {
+    "name": "TD3",
+    "policy_learner": TD3,
+    "policy_learner_args": {
+        "hidden_dims": [256, 256],
+        "training_rounds": 1,
+        "batch_size": 256,
+    },
+    "agent_args": {"device_id": 1},
+    "exploration_module": NormalDistributionExploration,
+    "exploration_module_args": {
+        "mean": 0,
+        "std_dev": 0.2,
+    },
+    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer_args": {"capacity": 100000, "has_cost_available": True},
+}
 CSAC_method = {
     "name": "ContinuousSAC",
     "policy_learner": ContinuousSoftActorCritic,
@@ -412,6 +429,14 @@ all_continuous_control_envs = [
     "Ant-v4",
     "Hopper-v4",
     "Walker2d-v4",
+]
+all_continuous_control_w_cost_envs = [
+    "MountainCarContinuous-v0_w_cost",
+    "Pendulum-v1_w_cost",
+    "HalfCheetah-v4_w_cost",
+    "Ant-v4_w_cost",
+    "Hopper-v4_w_cost",
+    "Walker2d-v4_w_cost",
 ]
 classic_continuous_control_envs = [
     "MountainCarContinuous-v0",

@@ -10,6 +10,7 @@ from pearl.neural_networks.common.value_networks import QuantileQValueNetwork
 from pearl.neural_networks.sequential_decision_making.q_value_network import (
     DistributionalQValueNetwork,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.safety_modules.safety_module import SafetyModule
@@ -33,7 +34,7 @@ class RiskSensitiveSafetyModule(SafetyModule):
     def filter_action(self, subjective_state: SubjectiveState) -> ActionSpace:
         return self._action_space
 
-    def learn(self, replay_buffer: ReplayBuffer) -> None:
+    def learn(self, replay_buffer: ReplayBuffer, policy_learner: PolicyLearner) -> None:
         pass
 
     def learn_batch(self, batch: TransitionBatch) -> None:

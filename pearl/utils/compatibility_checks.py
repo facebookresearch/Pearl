@@ -1,11 +1,13 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
-from typing import Type
-
 from pearl.policy_learners.policy_learner import (
     DistributionalPolicyLearner,
     PolicyLearner,
 )
+from pearl.policy_learners.sequential_decision_making.td3 import RCTD3
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
+from pearl.safety_modules.reward_constrained_safety_module import (
+    RewardConstrainedSafetyModule,
+)
 from pearl.safety_modules.risk_sensitive_safety_modules import RiskSensitiveSafetyModule
 from pearl.safety_modules.safety_module import SafetyModule
 
@@ -22,4 +24,10 @@ def pearl_agent_compatibility_check(
         if not isinstance(safety_module, RiskSensitiveSafetyModule):
             raise TypeError(
                 "A distributional policy learner requires a risk-sensitive safety module."
+            )
+
+    if isinstance(safety_module, RewardConstrainedSafetyModule):
+        if not isinstance(policy_learner, RCTD3):
+            raise TypeError(
+                "An Reward Constrained Policy Optimization safety module requires RCTD3 policy learner."
             )

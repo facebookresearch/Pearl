@@ -151,3 +151,49 @@ class TD3(DeepDeterministicPolicyGradient):
             critic=self._critic,
         )
         return loss_critic_update
+
+
+class RCTD3(TD3):
+    """
+    Placeholder for future implementation of RCTD3
+    """
+
+    def __init__(
+        self,
+        state_dim: int,
+        action_space: ActionSpace,
+        actor_hidden_dims: Iterable[int],
+        critic_hidden_dims: Iterable[int],
+        exploration_module: Optional[ExplorationModule] = None,
+        actor_learning_rate: float = 1e-3,
+        critic_learning_rate: float = 1e-3,
+        actor_network_type: ActorNetworkType = VanillaContinuousActorNetwork,
+        critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
+        actor_soft_update_tau: float = 0.005,
+        critic_soft_update_tau: float = 0.005,
+        discount_factor: float = 0.99,
+        training_rounds: int = 1,
+        batch_size: int = 256,
+        actor_update_freq: int = 2,
+        actor_update_noise: float = 0.2,
+        actor_update_noise_clip: float = 0.5,
+    ) -> None:
+        super(RCTD3, self).__init__(
+            state_dim=state_dim,
+            action_space=action_space,
+            actor_hidden_dims=actor_hidden_dims,
+            critic_hidden_dims=critic_hidden_dims,
+            exploration_module=exploration_module,
+            actor_learning_rate=actor_learning_rate,
+            critic_learning_rate=critic_learning_rate,
+            actor_network_type=actor_network_type,
+            critic_network_type=critic_network_type,
+            actor_soft_update_tau=actor_soft_update_tau,
+            critic_soft_update_tau=critic_soft_update_tau,
+            discount_factor=discount_factor,
+            training_rounds=training_rounds,
+            batch_size=batch_size,
+            actor_update_freq=actor_update_freq,
+            actor_update_noise=actor_update_noise,
+            actor_update_noise_clip=actor_update_noise_clip,
+        )
