@@ -7,7 +7,7 @@ import torch
 from pearl.replay_buffers.sequential_decision_making.hindsight_experience_replay_buffer import (
     HindsightExperienceReplayBuffer,
 )
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class TestHindsightExperienceReplayBuffer(unittest.TestCase):

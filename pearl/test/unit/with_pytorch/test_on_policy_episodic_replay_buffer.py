@@ -8,8 +8,7 @@ from pearl.replay_buffers.sequential_decision_making.on_policy_episodic_replay_b
     OnPolicyEpisodicReplayBuffer,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):

@@ -8,6 +8,7 @@ from pearl.api.state import SubjectiveState
 from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
     ScoreExplorationBase,
 )
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 # TODO: Assumes discrete gym action space
@@ -59,6 +60,7 @@ class UCBExploration(ScoreExplorationBase):
         Returns:
             return shape(action_count)
         """
+        assert isinstance(action_space, DiscreteActionSpace)
         action_count = action_space.n
         values = values.view(-1, action_count)  # (batch_size, action_count)
         sigma = self.sigma(
@@ -124,8 +126,8 @@ class VanillaUCBExploration(UCBExploration):
         action_space: ActionSpace,
         representation: Optional[torch.nn.Module] = None,
     ) -> torch.Tensor:
+        assert isinstance(action_space, DiscreteActionSpace)
         exploration_bonus = torch.zeros((action_space.n))  # (action_space_size)
-        # pyre-fixme[16]: `ActionSpace` has no attribute `actions`.
         for action in action_space.actions:
             if action not in self.action_execution_count:
                 self.action_execution_count[action] = 1

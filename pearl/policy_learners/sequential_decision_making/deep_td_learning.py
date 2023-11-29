@@ -29,7 +29,7 @@ from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
 
 from pearl.utils.functional_utils.learning.loss_fn_utils import compute_cql_loss
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import optim
 from torchrec.optim.keyed import CombinedOptimizer
 
@@ -93,6 +93,7 @@ class DeepTDLearning(PolicyLearner):
         # pyre-fixme[53]: Captured variable `state_output_dim` is not annotated.
         # pyre-fixme[3]: Return type must be annotated.
         def make_specified_network(action_space: ActionSpace):
+            assert isinstance(action_space, DiscreteActionSpace)
             if network_type == TwoTowerQValueNetwork:
                 # pyre-fixme[45]: Cannot instantiate abstract class `QValueNetwork`.
                 return network_type(
@@ -122,7 +123,6 @@ class DeepTDLearning(PolicyLearner):
                 raise ValueError(
                     "Instantiating a `TwoTowerQValueNetwork` requires an action space."
                 )
-            assert isinstance(action_space, DiscreteActionSpace)
             self._Q = make_specified_network(action_space=action_space)
 
         # pyre-fixme[4]: Attribute must be annotated.

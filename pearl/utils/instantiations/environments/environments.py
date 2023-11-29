@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+
 try:
     import gymnasium as gym
 except ModuleNotFoundError:
@@ -13,7 +15,6 @@ from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
 from pearl.api.environment import Environment
 from pearl.api.observation import Observation
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 
 class FixedNumberOfStepsEnvironment(Environment):

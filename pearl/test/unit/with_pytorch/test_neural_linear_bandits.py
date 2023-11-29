@@ -11,7 +11,7 @@ from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploratio
     UCBExploration,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class TestNeuralLinearBandits(unittest.TestCase):

@@ -7,8 +7,8 @@ import numpy as np
 import torch
 
 from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
-from pearl.utils.instantiations.action_spaces.utils import reshape_to_1d_tensor
+from pearl.api.space import Space
+from pearl.utils.instantiations.spaces.utils import reshape_to_1d_tensor
 from torch import Tensor
 
 try:
@@ -23,11 +23,9 @@ except ModuleNotFoundError:
     logging.warning("Using deprecated 'gym' package.")
 
 
-class BoxActionSpace(ActionSpace):
-    """A continuous, box action space. This class is a wrapper around Gymnasium's
-    `Box` space, but uses PyTorch tensors instead of NumPy arrays. The elements of
-    this action space are assumed to be Tensors of shape `d`.
-    """
+class BoxSpace(Space):
+    """A continuous, box space. This class is a wrapper around Gymnasium's
+    `Box` space, but uses PyTorch tensors instead of NumPy arrays."""
 
     def __init__(
         self,
@@ -43,16 +41,8 @@ class BoxActionSpace(ActionSpace):
             seed: Random seed used to initialize the random number generator of the
                 underlying Gymnasium `Box` space.
         """
-        low = (
-            reshape_to_1d_tensor(low).numpy(force=True)
-            if isinstance(low, Tensor)
-            else np.array([low])
-        )
-        high = (
-            reshape_to_1d_tensor(high).numpy(force=True)
-            if isinstance(high, Tensor)
-            else np.array([high])
-        )
+        low = low.numpy(force=True) if isinstance(low, Tensor) else np.array([low])
+        high = high.numpy(force=True) if isinstance(high, Tensor) else np.array([high])
         self._gym_space = Box(low=low, high=high, seed=seed)
 
     @property
@@ -84,12 +74,12 @@ class BoxActionSpace(ActionSpace):
     @property
     def low(self) -> Tensor:
         """Returns the lower bound of the action space."""
-        return torch.from_numpy(self._gym_space.low)
+        return reshape_to_1d_tensor(torch.from_numpy(self._gym_space.low))
 
     @property
     def high(self) -> Tensor:
         """Returns the upper bound of the action space."""
-        return torch.from_numpy(self._gym_space.high)
+        return reshape_to_1d_tensor(torch.from_numpy(self._gym_space.high))
 
     @property
     def shape(self) -> torch.Size:
@@ -97,8 +87,8 @@ class BoxActionSpace(ActionSpace):
         return torch.Size(self._gym_space.shape)
 
     @staticmethod
-    def from_gym(gym_space: gym.Space) -> BoxActionSpace:
-        """Constructs a `BoxActionSpace` given a Gymnasium `Box` space.
+    def from_gym(gym_space: gym.Space) -> BoxSpace:
+        """Constructs a `BoxSpace` given a Gymnasium `Box` space.
 
         Args:
             gym_space: A Gymnasium `Box` space.
@@ -107,7 +97,7 @@ class BoxActionSpace(ActionSpace):
             A `BoxActionSpace` with the same bounds and seed as `gym_space`.
         """
         assert isinstance(gym_space, Box)
-        return BoxActionSpace(
+        return BoxSpace(
             low=torch.from_numpy(gym_space.low),
             high=torch.from_numpy(gym_space.high),
             seed=gym_space._np_random,

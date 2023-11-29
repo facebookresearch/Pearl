@@ -54,7 +54,7 @@ def main():
 
     agent = PearlAgent(
         policy_learner=DeepQLearning(
-            env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+            env.observation_space.shape[0],
             env.action_space,
             # pyre-fixme[6]: For 3rd argument expected `float` but got `List[int]`.
             [64, 64],

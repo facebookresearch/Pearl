@@ -9,6 +9,7 @@ from pearl.neural_networks.common.value_networks import EnsembleQValueNetwork
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch.nn import functional as F
 
 
@@ -50,6 +51,7 @@ class DeepExploration(ExplorationModule):
         action_availability_mask: Optional[torch.Tensor] = None,
         representation: Optional[torch.nn.Module] = None,
     ) -> Action:
+        assert isinstance(action_space, DiscreteActionSpace)
         states_repeated = torch.repeat_interleave(
             subjective_state.unsqueeze(0), action_space.n, dim=0
         )

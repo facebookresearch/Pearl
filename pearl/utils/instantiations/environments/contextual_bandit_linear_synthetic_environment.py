@@ -12,10 +12,10 @@ from pearl.api.action_space import ActionSpace
 
 from pearl.api.observation import Observation
 from pearl.api.reward import Value
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 from pearl.utils.instantiations.environments.contextual_bandit_environment import (
     ContextualBanditEnvironment,
 )
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
@@ -47,7 +47,8 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
             reward_noise_sigma (float): the standard deviation of the noise added to the reward
             simple_linear_mapping (bool): if True, reward is simply the sum of the arm features (debugging purposes)
         """
-        self._action_space = action_space
+        assert isinstance(action_space, DiscreteActionSpace)
+        self._action_space: DiscreteActionSpace = action_space
         self.observation_dim = observation_dim
         self._arm_feature_vector_dim = arm_feature_vector_dim
         self.reward_noise_sigma = reward_noise_sigma
@@ -77,7 +78,7 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
     # pyre-fixme[3]: Return type must be annotated.
     def _generate_features_of_all_arms(self):
         features_of_all_arms = torch.rand(
-            self.action_space.n,
+            self._action_space.n,
             self.arm_feature_vector_dim,
         )  # features of each arm. (num of action, num of features)
         return features_of_all_arms

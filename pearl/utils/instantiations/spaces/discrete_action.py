@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import logging
 
-from typing import Iterator, List, Optional
+from typing import List, Optional
 
 import torch
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
-from pearl.utils.instantiations.action_spaces.utils import reshape_to_1d_tensor
+from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
+from pearl.utils.instantiations.spaces.utils import reshape_to_1d_tensor
 from torch import Tensor
 
 try:
@@ -22,8 +23,10 @@ except ModuleNotFoundError:
     logging.warning("Using deprecated 'gym' package.")
 
 
-class DiscreteActionSpace(ActionSpace):
-    """A discrete action space containing finitely many `Action` objects.
+class DiscreteActionSpace(DiscreteSpace, ActionSpace):
+    """A discrete space containing finitely many `Action` objects. This is a
+    special case of a `DiscreteSpace` that performs some shape checking to make
+    sure that each action is a Tensor of shape `(d,)`.
 
     This class makes use of the `Discrete` space from Gymnasium, but uses an
     arbitrary list of `Action` objects instead of a range of integers.
@@ -39,19 +42,16 @@ class DiscreteActionSpace(ActionSpace):
             seed: Random seed used to initialize the random number generator of the
                 underlying Gym `Discrete` space.
         """
-        if len(actions) == 0:
-            raise ValueError("`DiscreteActionSpace` requires at least one action.")
-        self._set_validated_actions(actions=actions)  # sets self.actions
-        self._gym_space = Discrete(n=len(actions), seed=seed, start=0)
+        super(DiscreteActionSpace, self).__init__(elements=actions, seed=seed)
 
-    def _set_validated_actions(self, actions: List[Action]) -> None:
+    def _set_validated_elements(self, elements: List[Tensor]) -> None:
         """Creates the set of actions after validating that a action is a Tensor of
         shape `d` and all actions have the same shape."""
         # Allow scalar or (1, d) Tensors, but reshape them to (d,).
         # Use the first action's shape to compute the expected shape.
         validated_actions = []
-        expected_shape = reshape_to_1d_tensor(actions[0]).shape
-        for action in actions:
+        expected_shape = reshape_to_1d_tensor(elements[0]).shape
+        for action in elements:
             action = reshape_to_1d_tensor(action)
             if action.shape != expected_shape:
                 raise ValueError(
@@ -59,22 +59,12 @@ class DiscreteActionSpace(ActionSpace):
                     f"but got {action.shape}."
                 )
             validated_actions.append(action)
-        self.actions = validated_actions
+        self.elements = validated_actions
 
     @property
-    def n(self) -> int:
-        """Returns the number of actions in this action space."""
-        return self._gym_space.n
-
-    @property
-    def is_continuous(self) -> bool:
-        """Checks whether this is a continuous action space."""
-        return False
-
-    @property
-    def action_dim(self) -> int:
-        """Returns the dimensionality of an `Action` element from this space."""
-        return self.actions[0].shape[0]
+    def actions(self) -> List[Action]:
+        """Returns the list of possible `Action` objects."""
+        return self.elements
 
     @property
     def actions_batch(self) -> Tensor:
@@ -82,28 +72,10 @@ class DiscreteActionSpace(ActionSpace):
         `Action` object from this action space."""
         return torch.stack(self.actions, dim=0)
 
-    def sample(self, mask: Optional[Tensor] = None) -> Action:
-        """Sample an action uniformly at random from this action space.
-
-        Args:
-            mask: An optional Tensor of shape `n` specifying the set of available
-                actions, where `1` represents valid actions and `0` invalid actions.
-                This mask is passed to Gymnasium's `Discrete.sample` method. If no
-                actions are available, `self.actions[0]` is returned.
-
-        Returns:
-            A randomly sampled (available) action.
-        """
-        mask_np = mask.numpy().astype(int) if mask is not None else None
-        action_idx = self._gym_space.sample(mask=mask_np)
-        return self.actions[action_idx]
-
-    def __iter__(self) -> Iterator[Action]:
-        for action in self.actions:
-            yield action
-
-    def __getitem__(self, index: int) -> Action:
-        return self.actions[index]
+    @property
+    def action_dim(self) -> int:
+        """Returns the dimensionality of an `Action` element from this space."""
+        return self.shape[0]
 
     @staticmethod
     def from_gym(gym_space: gym.Space) -> DiscreteActionSpace:

@@ -15,6 +15,7 @@ import torch.nn as nn
 
 from pearl.api.action_space import ActionSpace
 from pearl.neural_networks.common.utils import mlp_block
+from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 
 from torch import Tensor
 from torch.distributions import Normal
@@ -37,9 +38,10 @@ def action_scaling(
     Returns:
         scaled_action: centered and scaled input action vector, according to the action space
     """
+    assert isinstance(action_space, BoxActionSpace)
     device = input_action.device
-    low = torch.tensor(action_space.low).to(device)
-    high = torch.tensor(action_space.high).to(device)
+    low = action_space.low.to(device)
+    high = action_space.high.to(device)
     centered_and_scaled_action = (((high - low) * (input_action + 1.0)) / 2) + low
     return centered_and_scaled_action
 
@@ -57,6 +59,7 @@ def noise_scaling(action_space: ActionSpace, input_noise: torch.Tensor) -> torch
     Returns:
         torch.Tensor: scaled input vector, according to the action space
     """
+    assert isinstance(action_space, BoxActionSpace)
     device = input_noise.device
     low = torch.tensor(action_space.low).to(device)
     high = torch.tensor(action_space.high).to(device)
@@ -152,7 +155,6 @@ class VanillaContinuousActorNetwork(nn.Module):
         """
         normalized_action = self._model(x)
         action = action_scaling(self._action_space, normalized_action)
-
         return action
 
 
@@ -194,6 +196,7 @@ class GaussianActorNetwork(nn.Module):
         self.fc_std = torch.nn.Linear(hidden_dims[-1], output_dim)
         self._action_space = action_space
         # check this for multi-dimensional spaces
+        assert isinstance(action_space, BoxActionSpace)
         self.register_buffer(
             "_action_bound",
             torch.tensor((action_space.high - action_space.low) / 2),
@@ -215,7 +218,6 @@ class GaussianActorNetwork(nn.Module):
         log_std = self._log_std_min + 0.5 * (self._log_std_max - self._log_std_min) * (
             log_std + 1
         )
-
         return mean, log_std
 
     def sample_action(
@@ -223,10 +225,13 @@ class GaussianActorNetwork(nn.Module):
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """
         Sample an action from the actor network.
+
         Args:
-            x: input state
+            state_batch: A tensor of states.  # TODO: Enforce batch shape?
+            get_log_prob: If True, also return the log probability of the sampled actions.
+
         Returns:
-            action: sampled action, scaled to the action space bounds
+            action: Sampled action, scaled to the action space bounds.
         """
         epsilon = 1e-6
         mean, log_std = self.forward(state_batch)

@@ -8,7 +8,7 @@ from pearl.api.state import SubjectiveState
 from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
     ScoreExplorationBase,
 )
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch.distributions.categorical import Categorical
 
 

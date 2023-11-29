@@ -33,6 +33,7 @@ from pearl.utils.instantiations.environments.cb_benchmark_config import (
 from pearl.utils.instantiations.environments.contextual_bandit_linear_synthetic_environment import (
     SLCBEnvironment,
 )
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 def online_evaluation(
@@ -69,6 +70,7 @@ def train_via_uniform_data(
     """
     for _ in range(T):
         observation, action_space = env.reset()
+        assert isinstance(action_space, DiscreteActionSpace)
         agent.reset(observation, action_space)
         # take random action and add to the replay buffer
         coin_flip = random.choice([0, 1, 2, 3])

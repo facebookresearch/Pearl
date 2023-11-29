@@ -27,6 +27,7 @@ from pearl.utils.functional_utils.train_and_eval.offline_learning_and_evaluation
     offline_learning,
 )
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class TestOfflineCQL(unittest.TestCase):
@@ -34,13 +35,14 @@ class TestOfflineCQL(unittest.TestCase):
     # test to create and save offline data
     def test_create_offline_data_and_learn_cql(self) -> None:
         env = GymEnvironment("CartPole-v1")
+        assert isinstance(env.action_space, DiscreteActionSpace)
         action_representation_module = OneHotActionTensorRepresentationModule(
             max_actions=env.action_space.n
         )
 
         onlineDQN_agent = PearlAgent(
             policy_learner=DeepQLearning(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 exploration_module=EGreedyExploration(0.5),

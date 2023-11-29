@@ -6,6 +6,8 @@ from abc import ABC, abstractmethod
 from numbers import Number
 from typing import Dict, Iterable, List
 
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+
 try:
     import gymnasium as gym
 except ModuleNotFoundError:
@@ -117,7 +119,7 @@ class PearlDQN(Evaluation):
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
@@ -150,13 +152,14 @@ class PearlLSTMDQN(Evaluation):
     def evaluate(self, seed: int) -> Iterable[Number]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         hidden_dim = 8
-
+        action_space = env.action_space
+        assert isinstance(action_space, DiscreteActionSpace)
         action_representation_module = OneHotActionTensorRepresentationModule(
-            max_actions=env.action_space.n
+            max_actions=action_space.n
         )
         history_summarization_module = LSTMHistorySummarizationModule(
-            observation_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
-            action_dim=env.action_space.n,
+            observation_dim=env.observation_space.shape[0],
+            action_dim=action_space.n,
             hidden_dim=hidden_dim,
         )
         agent = PearlAgent(
@@ -199,7 +202,7 @@ class PearlContinuousSAC(Evaluation):
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=ContinuousSoftActorCritic(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 actor_hidden_dims=[256, 256],
                 critic_hidden_dims=[256, 256],
@@ -239,7 +242,7 @@ class PearlPPO(Evaluation):
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=ProximalPolicyOptimization(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 actor_hidden_dims=[64, 64],
                 critic_hidden_dims=[64, 64],
@@ -278,7 +281,7 @@ class PearlDDPG(Evaluation):
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=DeepDeterministicPolicyGradient(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 actor_hidden_dims=[256, 256],
                 critic_hidden_dims=[256, 256],
@@ -327,7 +330,7 @@ class PearlTD3(Evaluation):
             env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=TD3(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 actor_hidden_dims=[256, 256],
                 critic_hidden_dims=[256, 256],

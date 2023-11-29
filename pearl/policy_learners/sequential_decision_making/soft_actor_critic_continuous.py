@@ -84,7 +84,7 @@ class ContinuousSoftActorCritic(ActorCriticBase):
             )
             self.register_buffer("_entropy_coef", torch.exp(self._log_entropy).detach())
             self.register_buffer(
-                "_target_entropy", -torch.tensor(action_space.shape[0])  # pyre-ignore
+                "_target_entropy", -torch.tensor(action_space.shape[0])
             )
         else:
             self.register_buffer("_entropy_coef", torch.tensor(entropy_coef))

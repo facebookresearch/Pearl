@@ -30,7 +30,7 @@ from pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
     SubjectiveState,
 )
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 # pyre-fixme[4]: Attribute annotation cannot be `Any`.
 # pyre-fixme[2]: Parameter annotation cannot be `Any`.

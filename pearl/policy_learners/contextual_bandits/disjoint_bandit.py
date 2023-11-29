@@ -27,7 +27,7 @@ from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.action_utils import (
     concatenate_actions_to_state,
 )
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import optim
 from torchrec.optim.keyed import CombinedOptimizer
 
@@ -149,10 +149,11 @@ class DisjointBanditContainer(ContextualBanditBase):
         action_availability_mask: Optional[torch.Tensor] = None,
         exploit: bool = False,
     ) -> Action:
+        assert isinstance(available_action_space, DiscreteActionSpace)
         # (batch_size, action_count, feature_size)
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
-            action_space=available_action_space,  # pyre-ignore[6]
+            action_space=available_action_space,
             state_features_only=self._state_features_only,
         )
         values = ensemble_forward(self.models, feature, use_for_loop=True)

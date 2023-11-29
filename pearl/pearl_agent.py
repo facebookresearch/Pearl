@@ -34,7 +34,7 @@ from pearl.safety_modules.risk_sensitive_safety_modules import RiskNeutralSafety
 from pearl.safety_modules.safety_module import SafetyModule
 from pearl.utils.compatibility_checks import pearl_agent_compatibility_check
 from pearl.utils.device import get_pearl_device
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class PearlAgent(Agent):
@@ -84,7 +84,7 @@ class PearlAgent(Agent):
             if safety_module is not None
             else (
                 PearlAgent.default_risk_sensitive_safety_module_type()
-                if isinstance(self.policy_learner, (DistributionalPolicyLearner))
+                if isinstance(self.policy_learner, DistributionalPolicyLearner)
                 else PearlAgent.default_safety_module_type()
             )
         )
@@ -129,17 +129,15 @@ class PearlAgent(Agent):
         pearl_agent_compatibility_check(
             self.policy_learner, self.safety_module, self.replay_buffer
         )
-        self._subjective_state: SubjectiveState = None
+        self._subjective_state: Optional[SubjectiveState] = None
         self._latest_action: Optional[Action] = None
         self._action_space: Optional[ActionSpace] = None
-
         self.policy_learner.to(self.device)
         self.history_summarization_module.to(self.device)
 
     def act(self, exploit: bool = False) -> Action:
         safe_action_space = self.safety_module.filter_action(self._subjective_state)
-
-        # PolicyLearner requires all tensor inputs to be alredy on the correct device
+        # PolicyLearner requires all tensor inputs to be already on the correct device
         # before being passed to it.
         subjective_state_to_be_used = (
             torch.as_tensor(self._subjective_state).to(self.device)
@@ -153,8 +151,10 @@ class PearlAgent(Agent):
         ):
             for a in safe_action_space.actions:
                 a.to(self.device)
+
+        # TODO: how to handle None state?
         self._latest_action = self.policy_learner.act(
-            subjective_state_to_be_used, safe_action_space, exploit=exploit
+            subjective_state_to_be_used, safe_action_space, exploit=exploit  # pyre-ignore[6]
         )
 
         return self._latest_action
@@ -212,9 +212,11 @@ class PearlAgent(Agent):
         self.safety_module.reset(action_space)
         self.policy_learner.reset(action_space)
 
-    def _update_subjective_state(self, observation: Observation) -> SubjectiveState:
+    def _update_subjective_state(
+        self, observation: Observation
+    ) -> Optional[SubjectiveState]:
         if observation is None:
-            return
+            return None
 
         latest_action_representation = None
         if self._latest_action is not None:

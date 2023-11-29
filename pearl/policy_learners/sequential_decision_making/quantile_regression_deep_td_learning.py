@@ -28,6 +28,7 @@ from pearl.safety_modules.risk_sensitive_safety_modules import (  # noqa
 from pearl.utils.functional_utils.learning.loss_fn_utils import (
     compute_elementwise_huber_loss,
 )
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import optim
 
 # TODO: Only support discrete action space problems for now and assumes Gym action space.
@@ -55,6 +56,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         ] = QuantileQValueNetwork,  # C51 might use a different network type; add that later
         network_instance: Optional[QuantileQValueNetwork] = None,
     ) -> None:
+        assert isinstance(action_space, DiscreteActionSpace)
         super(QuantileRegressionDeepTDLearning, self).__init__(
             training_rounds=training_rounds,
             batch_size=batch_size,
@@ -75,7 +77,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             #  `DistributionalQValueNetwork`.
             return network_type(
                 state_dim=state_dim,
-                action_dim=action_space.n,
+                action_dim=action_space.n,  # pyre-ignore[16]
                 hidden_dims=hidden_dims,
                 num_quantiles=num_quantiles,
             )
@@ -114,7 +116,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         available_action_space: ActionSpace,
         exploit: bool = False,
     ) -> Action:
-        # TODO: Assumes gym action space.
+        assert isinstance(available_action_space, DiscreteActionSpace)
         # Fix the available action space.
         with torch.no_grad():
             states_repeated = torch.repeat_interleave(

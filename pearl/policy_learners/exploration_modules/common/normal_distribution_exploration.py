@@ -14,6 +14,7 @@ from pearl.neural_networks.sequential_decision_making.actor_networks import (
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 
 
 class NormalDistributionExploration(ExplorationModule):
@@ -35,12 +36,12 @@ class NormalDistributionExploration(ExplorationModule):
         self,
         exploit_action: Action,
         action_space: ActionSpace,
-        subjective_state: SubjectiveState = None,
+        subjective_state: Optional[SubjectiveState] = None,
         values: Optional[torch.Tensor] = None,
         representation: Optional[torch.nn.Module] = None,
     ) -> Action:
+        assert isinstance(action_space, BoxActionSpace)
         device = exploit_action.device
-
         # checks that the exploit action is feasible in the available action space
         low = torch.tensor(action_space.low).to(device)
         high = torch.tensor(action_space.high).to(device)

@@ -38,7 +38,6 @@ from pearl.utils.functional_utils.train_and_eval.online_learning import (
     online_learning,
     online_learning_to_png_graph,
 )
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 
 from pearl.utils.instantiations.environments.contextual_bandit_linear_synthetic_environment import (
     ContextualBanditLinearSyntheticEnvironment,
@@ -50,6 +49,7 @@ from pearl.utils.instantiations.environments.gym_environment import GymEnvironme
 from pearl.utils.instantiations.environments.reward_is_equal_to_ten_times_action_contextual_bandit_environment import (
     RewardIsEqualToTenTimesActionContextualBanditEnvironment,
 )
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class TestAgentWithPyTorch(unittest.TestCase):
@@ -61,16 +61,19 @@ class TestAgentWithPyTorch(unittest.TestCase):
     def test_deep_td_learning_online_rl_sanity_check(self) -> None:
         # make sure E2E is fine
         env = GymEnvironment("CartPole-v1")
+
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
                 batch_size=1,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
@@ -81,16 +84,19 @@ class TestAgentWithPyTorch(unittest.TestCase):
     def test_conservative_deep_td_learning_online_rl_sanity_check(self) -> None:
         # make sure E2E is fine for cql loss
         env = GymEnvironment("CartPole-v1")
+
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
                 is_conservative=True,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
@@ -105,9 +111,13 @@ class TestAgentWithPyTorch(unittest.TestCase):
     ) -> None:
         # make sure E2E is fine
         env = GymEnvironment("CartPole-v1")
+        print(env.observation_space)
+        print(env.observation_space.shape)
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                env.observation_space.shape[0],
                 env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
@@ -115,7 +125,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 batch_size=batch_size,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
@@ -126,9 +136,12 @@ class TestAgentWithPyTorch(unittest.TestCase):
     def test_deep_td_learning_online_rl_two_tower_network(self) -> None:
         # make sure E2E is fine
         env = GymEnvironment("CartPole-v1")
+
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
@@ -140,7 +153,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 batch_size=1,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )

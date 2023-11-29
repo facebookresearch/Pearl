@@ -9,6 +9,7 @@ from pearl.policy_learners.exploration_modules.common.score_exploration_base imp
     ScoreExplorationBase,
 )
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 # TODO: generalize for non-linear models
@@ -38,13 +39,11 @@ class ThompsonSamplingExplorationLinear(ScoreExplorationBase):
         assert representation is not None
         batch_size = subjective_state.shape[0]
         if self._enable_efficient_sampling:
-            expected_reward = representation(
-                subjective_state
-            )  # batch_size, action_count, 1
+            expected_reward = representation(subjective_state)
+            # batch_size, action_count, 1
             assert expected_reward.shape == subjective_state.shape[:-1]
-            sigma = representation.calculate_sigma(
-                subjective_state
-            )  # batch_size, action_count, 1
+            sigma = representation.calculate_sigma(subjective_state)
+            # batch_size, action_count, 1
             assert sigma.shape == subjective_state.shape[:-1]
             scores = torch.normal(mean=expected_reward, std=sigma)
         else:
@@ -83,7 +82,7 @@ class ThompsonSamplingExplorationLinearDisjoint(ThompsonSamplingExplorationLinea
         representation: Any = None,
         exploit_action: Optional[Action] = None,
     ) -> torch.Tensor:
-
+        assert isinstance(action_space, DiscreteActionSpace)
         # DisJoint Linear Bandits
         # The representation is a list for different actions.
         scores = []
@@ -100,5 +99,4 @@ class ThompsonSamplingExplorationLinearDisjoint(ThompsonSamplingExplorationLinea
             )
             scores.append(score)
         scores = torch.stack(scores)
-
         return scores.view(-1, action_space.n)

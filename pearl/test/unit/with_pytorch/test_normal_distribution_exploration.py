@@ -8,6 +8,7 @@ from gym.spaces import Box  # noqa
 from pearl.policy_learners.exploration_modules.common.normal_distribution_exploration import (
     NormalDistributionExploration,
 )
+from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 
 
 class TestNormalDistributionExploration(unittest.TestCase):
@@ -15,18 +16,16 @@ class TestNormalDistributionExploration(unittest.TestCase):
     This is to test NormalDistributionExploration class.
     """
 
-    # TODO: add for asymmetric action bounds
     def test_multi_dimensional_action_space(self) -> None:
-        low, high = -4, 4
-        action_space = Box(low=low, high=high, shape=(3,))
+        low, high = torch.tensor([-4, -0.4, -0.04]), torch.tensor([4, 0.4, 0.04])
+        action_space = BoxActionSpace(low=low, high=high)
         exploration_module = NormalDistributionExploration(
             mean=0,
             std_dev=1,
         )
-        exploit_action = torch.tensor([0.5, 0.6, 0.7])
-        # TODO: type of action_space should not be Box but ActionSpace
+        exploit_action = torch.tensor([0.5, 0.3, 0.01])
         action = exploration_module.act(
-            exploit_action=exploit_action, action_space=action_space  # pyre-ignore
+            exploit_action=exploit_action, action_space=action_space
         )
         self.assertTrue(torch.all(action <= high))
         self.assertTrue(torch.all(action >= low))

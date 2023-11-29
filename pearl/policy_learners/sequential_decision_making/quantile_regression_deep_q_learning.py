@@ -16,6 +16,7 @@ from pearl.policy_learners.sequential_decision_making.quantile_regression_deep_t
     QuantileRegressionDeepTDLearning,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
@@ -43,6 +44,7 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
         target_update_freq: int = 10,
         soft_update_tau: float = 0.05,
     ) -> None:
+        assert isinstance(action_space, DiscreteActionSpace)
         super(QuantileRegressionDeepQLearning, self).__init__(
             state_dim=state_dim,
             action_space=action_space,
@@ -82,7 +84,7 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
             # pyre-fixme[16]: `Optional` has no attribute `unsqueeze`.
             # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
             next_state_batch.unsqueeze(1),
-            self._action_space.n,
+            self._action_space.n,  # pyre-ignore[16]
             dim=1,
         )  # shape: (batch_size x action_space_size x state_dim)
 

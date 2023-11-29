@@ -30,6 +30,7 @@ from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
 )
 
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import optim
 
 
@@ -79,7 +80,7 @@ class ImplicitQLearning(ActorCriticBase):
         temperature_advantage_weighted_regression: float = 0.5,
         advantage_clamp: float = 100.0,
     ) -> None:
-
+        assert isinstance(action_space, DiscreteActionSpace)
         super(ImplicitQLearning, self).__init__(
             state_dim=state_dim,
             action_space=action_space,

@@ -23,6 +23,8 @@ from pearl.replay_buffers.sequential_decision_making.on_policy_episodic_replay_b
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
+from pearl.utils.instantiations.spaces.box import BoxSpace
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class TestGPUUsage(unittest.TestCase):
@@ -33,16 +35,19 @@ class TestGPUUsage(unittest.TestCase):
 
     def test_td_based_gpu_usage(self) -> None:
         env = GymEnvironment("CartPole-v1")
+
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
                 batch_size=1,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
@@ -59,9 +64,11 @@ class TestGPUUsage(unittest.TestCase):
     def test_pg_based_gpu_usage(self) -> None:
         env = GymEnvironment("CartPole-v1")
 
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=ProximalPolicyOptimization(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 actor_hidden_dims=[64, 64],
                 critic_hidden_dims=[64, 64],
@@ -70,7 +77,7 @@ class TestGPUUsage(unittest.TestCase):
                 epsilon=0.1,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             replay_buffer=OnPolicyEpisodicReplayBuffer(10000),
         )

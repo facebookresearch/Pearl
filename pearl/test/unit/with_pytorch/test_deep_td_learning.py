@@ -19,7 +19,7 @@ from pearl.policy_learners.sequential_decision_making.double_dqn import DoubleDQ
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
 )
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class TestDeepTDLearning(unittest.TestCase):

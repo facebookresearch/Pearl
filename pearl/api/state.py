@@ -1,4 +1,3 @@
-from typing import Any
+from torch import Tensor
 
-# pyre-fixme[33]: Aliased annotation cannot be `Any`.
-SubjectiveState = Any
+SubjectiveState = Tensor

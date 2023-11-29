@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Iterable, Tuple, Union
+from typing import Any, Dict, Iterable, Tuple, Union
 
 import numpy as np
 from pearl.api.action import Action
@@ -7,8 +7,11 @@ from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
 from pearl.api.environment import Environment
 from pearl.api.observation import Observation
-from pearl.utils.instantiations.action_spaces.box import BoxActionSpace
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
+from pearl.api.space import Space
+from pearl.utils.instantiations.spaces.box import BoxSpace
+from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
+from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import Tensor
 
 try:
@@ -32,6 +35,11 @@ def tensor_to_numpy(x: Tensor) -> np.ndarray:
 GYM_TO_PEARL_ACTION_SPACE = {
     "Discrete": DiscreteActionSpace,
     "Box": BoxActionSpace
+    # Add more here as needed
+}
+GYM_TO_PEARL_OBSERVATION_SPACE = {
+    "Discrete": DiscreteSpace,
+    "Box": BoxSpace,
     # Add more here as needed
 }
 PEARL_TO_GYM_ACTION = {
@@ -59,8 +67,13 @@ class GymEnvironment(Environment):
         else:
             env = env_or_env_name
         self.env: gym.Env = env
-        self._action_space: ActionSpace = _get_pearl_action_space(
-            gym_space_name=self.gym_space_name, gym_env=self.env
+        self._action_space: ActionSpace = _get_pearl_space(
+            gym_space=self.env.action_space,
+            gym_to_pearl_map=GYM_TO_PEARL_ACTION_SPACE,
+        )
+        self._observation_space: Space = _get_pearl_space(
+            gym_space=self.env.observation_space,
+            gym_to_pearl_map=GYM_TO_PEARL_OBSERVATION_SPACE,
         )
 
     @property
@@ -69,13 +82,8 @@ class GymEnvironment(Environment):
         return self._action_space
 
     @property
-    def gym_space_name(self) -> str:
-        """Returns the name of the underlying gym action space."""
-        return self.env.action_space.__class__.__name__
-
-    @property
-    def observation_space(self) -> gym.Space:
-        return self.env.observation_space
+    def observation_space(self) -> Space:
+        return self._observation_space
 
     def reset(self) -> Tuple[Observation, ActionSpace]:
         """Resets the environment and returns the initial observation and
@@ -97,7 +105,7 @@ class GymEnvironment(Environment):
         `ActionResult` object containing the next observation, reward, and done flag."""
         # Convert action to the format expected by Gymnasium
         effective_action = _get_gym_action(
-            pearl_action=action, gym_space_name=self.gym_space_name
+            pearl_action=action, gym_space=self.env.action_space
         )
         # Take a step in the environment and receive an action result
         gym_action_result = self.env.step(effective_action)
@@ -146,10 +154,11 @@ class GymEnvironment(Environment):
 
 
 def _get_gym_action(
-    pearl_action: Action, gym_space_name: str
+    pearl_action: Action, gym_space: gym.Space
 ) -> Union[int, np.ndarray]:
     """A helper function to convert a Pearl `Action` to an action compatible with
-    the Gym environment specified by `gym_space_name`."""
+    the Gym action space `gym_space`."""
+    gym_space_name = gym_space.__class__.__name__
     try:
         pearl_to_gym_action_transform = PEARL_TO_GYM_ACTION[gym_space_name]
     except KeyError:
@@ -159,12 +168,15 @@ def _get_gym_action(
     return pearl_to_gym_action_transform(pearl_action)
 
 
-def _get_pearl_action_space(gym_space_name: str, gym_env: gym.Env) -> ActionSpace:
+def _get_pearl_space(
+    gym_space: gym.Space, gym_to_pearl_map: Dict[str, Any]
+) -> ActionSpace:
     """Returns the Pearl action space for this environment."""
+    gym_space_name = gym_space.__class__.__name__
     try:
-        pearl_action_space_cls = GYM_TO_PEARL_ACTION_SPACE[gym_space_name]
+        pearl_action_space_cls = gym_to_pearl_map[gym_space_name]
     except KeyError:
         raise NotImplementedError(
             f"The Gym space '{gym_space_name}' is not yet supported in Pearl."
         )
-    return pearl_action_space_cls.from_gym(gym_env.action_space)
+    return pearl_action_space_cls.from_gym(gym_space)

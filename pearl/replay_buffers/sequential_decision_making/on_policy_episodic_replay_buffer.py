@@ -29,7 +29,7 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
         state: SubjectiveState,
         action: Action,
         reward: float,
-        next_state: SubjectiveState,
+        next_state: Optional[SubjectiveState],
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,
         action_space: ActionSpace,

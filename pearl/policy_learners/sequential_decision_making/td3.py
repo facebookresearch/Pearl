@@ -23,6 +23,7 @@ from pearl.policy_learners.sequential_decision_making.ddpg import (
     DeepDeterministicPolicyGradient,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 
 
 class TD3(DeepDeterministicPolicyGradient):
@@ -52,6 +53,7 @@ class TD3(DeepDeterministicPolicyGradient):
         actor_update_noise: float = 0.2,
         actor_update_noise_clip: float = 0.5,
     ) -> None:
+        assert isinstance(action_space, BoxActionSpace)
         super(TD3, self).__init__(
             state_dim=state_dim,
             action_space=action_space,
@@ -68,7 +70,7 @@ class TD3(DeepDeterministicPolicyGradient):
             training_rounds=training_rounds,
             batch_size=batch_size,
         )
-        self._action_space = action_space
+        self._action_space: BoxActionSpace = action_space
         self._actor_update_freq = actor_update_freq
         self._actor_update_noise = actor_update_noise
         self._actor_update_noise_clip = actor_update_noise_clip

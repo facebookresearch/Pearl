@@ -22,7 +22,7 @@ from pearl.utils.functional_utils.learning.action_utils import (
     concatenate_actions_to_state,
 )
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class LinearBandit(ContextualBanditBase):

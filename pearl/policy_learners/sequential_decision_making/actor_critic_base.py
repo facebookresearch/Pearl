@@ -2,7 +2,9 @@
 from abc import abstractmethod
 from typing import Any, Dict, Iterable, Optional
 
-from pearl.utils.instantiations.action_spaces.box import BoxActionSpace
+from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
+
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 try:
     import gymnasium as gym
@@ -37,7 +39,6 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 )
 from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
 from torch import nn, optim
 
 

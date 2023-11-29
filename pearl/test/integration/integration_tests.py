@@ -65,6 +65,8 @@ from pearl.utils.functional_utils.train_and_eval.online_learning import (
 )
 
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
+from pearl.utils.instantiations.spaces.box import BoxSpace
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class IntegrationTests(unittest.TestCase):
@@ -77,15 +79,18 @@ class IntegrationTests(unittest.TestCase):
         This test is checking if DQN will eventually get to 500 return for CartPole-v1
         """
         env = GymEnvironment("CartPole-v1")
+
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                env.observation_space.shape[0],
                 env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
         )
@@ -141,15 +146,18 @@ class IntegrationTests(unittest.TestCase):
         This test is checking if double DQN will eventually get to 500 return for CartPole-v1
         """
         env = GymEnvironment("CartPole-v1")
+
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=DoubleDQN(
-                env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                env.observation_space.shape[0],
                 env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
         )
@@ -171,15 +179,17 @@ class IntegrationTests(unittest.TestCase):
         Also use network instance to specify Q network
         """
         env = GymEnvironment("CartPole-v1")
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=DeepSARSA(
-                env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                env.observation_space.shape[0],
                 env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             replay_buffer=FIFOOnPolicyReplayBuffer(10_000),
         )
@@ -200,16 +210,18 @@ class IntegrationTests(unittest.TestCase):
         This test is checking if REINFORCE will eventually get to 500 return for CartPole-v1
         """
         env = GymEnvironment("CartPole-v1")
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=REINFORCE(
-                env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                env.observation_space.shape[0],
                 env.action_space,
                 actor_hidden_dims=[64, 64],
                 critic_hidden_dims=[64, 64],
                 training_rounds=1,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             replay_buffer=OnPolicyEpisodicReplayBuffer(10_000),
         )
@@ -230,9 +242,11 @@ class IntegrationTests(unittest.TestCase):
         batch_size: int = 128,
     ) -> None:
         env = GymEnvironment("CartPole-v1")
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         q_network = DuelingQValueNetwork(
-            state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
-            action_dim=env.action_space.n,
+            state_dim=env.observation_space.shape[0],
+            action_dim=num_actions,
             hidden_dims=[64],
             output_dim=1,
         )
@@ -245,7 +259,7 @@ class IntegrationTests(unittest.TestCase):
                 batch_size=batch_size,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
         )
@@ -266,9 +280,11 @@ class IntegrationTests(unittest.TestCase):
         This test is checking if quantile regression based DQN will eventually get to 500 return for CartPole-v1
         """
         env = GymEnvironment("CartPole-v1")
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=QuantileRegressionDeepQLearning(
-                env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                env.observation_space.shape[0],
                 env.action_space,
                 [64, 64, 64],
                 exploration_module=EGreedyExploration(0.10),
@@ -276,7 +292,7 @@ class IntegrationTests(unittest.TestCase):
                 training_rounds=20,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             safety_module=QuantileNetworkMeanVarianceSafetyModule(0.2),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
@@ -298,9 +314,11 @@ class IntegrationTests(unittest.TestCase):
         This test is checking if PPO using cumulated returns will eventually get to 500 return for CartPole-v1
         """
         env = GymEnvironment("CartPole-v1")
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=ProximalPolicyOptimization(
-                env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                env.observation_space.shape[0],
                 env.action_space,
                 actor_hidden_dims=[64, 64],
                 critic_hidden_dims=[64, 64],
@@ -309,7 +327,7 @@ class IntegrationTests(unittest.TestCase):
                 epsilon=0.1,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             replay_buffer=OnPolicyEpisodicReplayBuffer(10_000),
         )
@@ -330,9 +348,11 @@ class IntegrationTests(unittest.TestCase):
         This test is checking if SAC will eventually get to 500 return for CartPole-v1
         """
         env = GymEnvironment("CartPole-v1")
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=SoftActorCritic(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 actor_hidden_dims=[64, 64, 64],
                 critic_hidden_dims=[64, 64, 64],
@@ -343,7 +363,7 @@ class IntegrationTests(unittest.TestCase):
                 critic_learning_rate=0.0003,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(50000),
         )
@@ -368,7 +388,7 @@ class IntegrationTests(unittest.TestCase):
 
         agent = PearlAgent(
             policy_learner=ContinuousSoftActorCritic(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 actor_hidden_dims=[64, 64],
                 critic_hidden_dims=[64, 64],
@@ -398,18 +418,19 @@ class IntegrationTests(unittest.TestCase):
         when training online. This is a dummy test for basic sanity check as we don't expect to use conservative losses
         with online training.
         """
-
         env = GymEnvironment("CartPole-v1")
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
                 is_conservative=True,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
         )
@@ -434,7 +455,7 @@ class IntegrationTests(unittest.TestCase):
         env = GymEnvironment("Pendulum-v1")
         agent = PearlAgent(
             policy_learner=DeepDeterministicPolicyGradient(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 actor_hidden_dims=[400, 300],
                 critic_hidden_dims=[400, 300],
@@ -472,7 +493,7 @@ class IntegrationTests(unittest.TestCase):
         env = GymEnvironment("Pendulum-v1")
         agent = PearlAgent(
             policy_learner=TD3(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 actor_hidden_dims=[400, 300],
                 critic_hidden_dims=[400, 300],
@@ -508,9 +529,11 @@ class IntegrationTests(unittest.TestCase):
         """
         set_seed(100)
         env = GymEnvironment("CartPole-v1")
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         conservativeDQN_agent = PearlAgent(
             policy_learner=DeepQLearning(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=100,
@@ -519,7 +542,7 @@ class IntegrationTests(unittest.TestCase):
                 batch_size=128,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
@@ -544,9 +567,11 @@ class IntegrationTests(unittest.TestCase):
         """
         set_seed(100)
         env = GymEnvironment("CartPole-v1")
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
         IQLAgent = PearlAgent(
             policy_learner=ImplicitQLearning(
-                state_dim=env.observation_space.shape[0],  # pyre-ignore[16] (assumes Box)
+                state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 exploration_module=NoExploration(),
                 actor_hidden_dims=[64, 64],
@@ -559,7 +584,7 @@ class IntegrationTests(unittest.TestCase):
                 critic_soft_update_tau=0.005,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=env.action_space.n
+                max_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(200000),
         )

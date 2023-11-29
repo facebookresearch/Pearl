@@ -1,7 +1,7 @@
 from typing import Optional
 
 import torch
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import Tensor
 
 

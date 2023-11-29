@@ -5,8 +5,8 @@ from typing import Any, Dict, List, Optional
 import torch
 
 from pearl.api.action import Action
-
 from pearl.api.action_space import ActionSpace
+
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
@@ -25,7 +25,7 @@ from pearl.utils.functional_utils.learning.action_utils import (
     concatenate_actions_to_state,
 )
 from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
-from pearl.utils.instantiations.action_spaces.discrete import DiscreteActionSpace
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class NeuralLinearBandit(NeuralBandit):
@@ -105,10 +105,11 @@ class NeuralLinearBandit(NeuralBandit):
         exploit: bool = False,
     ) -> Action:
         # It doesnt make sense to call act if we are not working with action vector
+        assert isinstance(action_space, DiscreteActionSpace)
         assert action_space.action_dim > 0
         new_feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
-            action_space=action_space,  # pyre-ignore[6]
+            action_space=action_space,
             state_features_only=self._state_features_only,
         )
         mlp_values = self._deep_represent_layers(new_feature)
