@@ -99,7 +99,7 @@ class BootstrapReplayBuffer(FIFOOffPolicyReplayBuffer):
             has_next_action=self._has_next_action,
             is_action_continuous=self.is_action_continuous,
             has_next_available_actions=self._has_next_available_actions,
-            has_cost_available=self._has_cost_available,
+            has_cost_available=self.has_cost_available,
         )
         bootstrap_mask_batch = torch.cat([x.bootstrap_mask for x in samples])
         return TransitionWithBootstrapMaskBatch(

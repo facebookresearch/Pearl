@@ -30,7 +30,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         self._has_next_state = has_next_state
         self._has_next_action = has_next_action
         self._has_next_available_actions = has_next_available_actions
-        self._has_cost_available = has_cost_available
+        self.has_cost_available = has_cost_available
         self._device: torch.device = get_default_device()
 
     @property
@@ -131,7 +131,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
             has_next_action=self._has_next_action,
             is_action_continuous=self._is_action_continuous,
             has_next_available_actions=self._has_next_available_actions,
-            has_cost_available=self._has_cost_available,
+            has_cost_available=self.has_cost_available,
         )
 
     def __len__(self) -> int:

@@ -344,7 +344,7 @@ class PearlTD3(Evaluation):
             device_id=self.device_id,
         )
         # Enable saving cost in replay buffer if cost is available
-        agent.replay_buffer._has_cost_available = has_cost_available
+        agent.replay_buffer.has_cost_available = has_cost_available
 
         info = online_learning(
             agent,
