@@ -1,7 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Optional
 
 import torch
+from pearl.api.action import Action
+from pearl.api.action_space import ActionSpace
+from pearl.api.reward import Reward
+from pearl.api.state import SubjectiveState
 
 
 class ReplayBuffer(ABC):
@@ -21,7 +25,18 @@ class ReplayBuffer(ABC):
         pass
 
     @abstractmethod
-    def push(self, *args: Any) -> None:
+    def push(
+        self,
+        state: SubjectiveState,
+        action: Action,
+        reward: Reward,
+        next_state: SubjectiveState,
+        curr_available_actions: ActionSpace,
+        next_available_actions: ActionSpace,
+        action_space: ActionSpace,
+        done: bool,
+        cost: Optional[float] = None,
+    ) -> None:
         """Saves a transition."""
         pass
 

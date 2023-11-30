@@ -174,10 +174,14 @@ class PearlAgent(Agent):
         # TODO: define each push with a uuid
         # TODO: currently assumes the same action space across all steps
         # need to modify ActionResults
+        assert self._latest_action is not None
+        assert self._action_space is not None
         self.replay_buffer.push(
+            # pyre-fixme[6]: this can be removed when tabular Q learning test uses tensors
             current_history,
             self._latest_action,
             action_result.reward,
+            # pyre-fixme[6]: this can be removed when tabular Q learning test uses tensors
             new_history,
             self._action_space,  # curr_available_actions
             self._action_space,  # next_available_actions

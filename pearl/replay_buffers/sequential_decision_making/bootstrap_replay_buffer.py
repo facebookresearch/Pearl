@@ -4,6 +4,7 @@ from typing import Optional
 import torch
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
+from pearl.api.reward import Reward
 from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (  # noqa E501
     FIFOOffPolicyReplayBuffer,
@@ -50,7 +51,7 @@ class BootstrapReplayBuffer(FIFOOffPolicyReplayBuffer):
         self,
         state: SubjectiveState,
         action: Action,
-        reward: float,
+        reward: Reward,
         next_state: SubjectiveState,
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,

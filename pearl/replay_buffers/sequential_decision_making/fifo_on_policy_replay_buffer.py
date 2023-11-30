@@ -4,6 +4,7 @@ import torch
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
+from pearl.api.reward import Reward
 from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
 from pearl.replay_buffers.transition import Transition
@@ -15,15 +16,13 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
         # this is used to delay push SARS
         # wait for next action is available and then final push
         # this is designed for single transition for now
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.cache = None
+        self.cache: Optional[Transition] = None
 
-    # pyre-fixme[14]: `push` overrides method defined in `ReplayBuffer` inconsistently.
     def push(
         self,
         state: SubjectiveState,
         action: Action,
-        reward: float,
+        reward: Reward,
         next_state: SubjectiveState,
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,
@@ -44,11 +43,15 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
         current_state = self._process_single_state(state)
         current_action = self._process_single_action(action, action_space)
 
-        find_match = self.cache is not None and torch.equal(
-            self.cache.next_state, current_state
-        )
+        if self.cache is not None:
+            assert self.cache.next_state is not None
+            find_match = torch.equal(self.cache.next_state, current_state)
+        else:
+            find_match = False
+
         if find_match:
             # push a complete SARSA into memory
+            assert self.cache is not None
             self.memory.append(
                 Transition(
                     state=self.cache.state,

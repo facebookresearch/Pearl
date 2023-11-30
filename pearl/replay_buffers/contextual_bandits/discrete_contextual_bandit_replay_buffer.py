@@ -5,6 +5,7 @@ import torch
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
+from pearl.api.reward import Reward
 from pearl.api.state import SubjectiveState
 
 from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
@@ -29,12 +30,11 @@ class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
             has_next_available_actions=False,
         )
 
-    # pyre-fixme[14]: `push` overrides method defined in `ReplayBuffer` inconsistently.
     def push(
         self,
         state: SubjectiveState,
         action: Action,
-        reward: float,
+        reward: Reward,
         next_state: SubjectiveState,
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,

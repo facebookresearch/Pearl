@@ -1,6 +1,10 @@
-from typing import Any, Iterable
+from typing import Any, Iterable, Optional
 
 import torch
+from pearl.api.action import Action
+from pearl.api.action_space import ActionSpace
+from pearl.api.reward import Reward
+from pearl.api.state import SubjectiveState
 
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 
@@ -19,9 +23,29 @@ class SingleTransitionReplayBuffer(ReplayBuffer):
     def device(self, new_device: torch.device) -> None:
         pass
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def push(self, *args) -> None:
-        self._transition = args
+    def push(
+        self,
+        state: SubjectiveState,
+        action: Action,
+        reward: Reward,
+        next_state: SubjectiveState,
+        curr_available_actions: ActionSpace,
+        next_available_actions: ActionSpace,
+        action_space: ActionSpace,
+        done: bool,
+        cost: Optional[float] = None,
+    ) -> None:
+        self._transition = (
+            state,
+            action,
+            reward,
+            next_state,
+            curr_available_actions,
+            next_available_actions,
+            action_space,
+            done,
+            cost,
+        )
 
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def sample(self, batch_size: int) -> Iterable[Any]:

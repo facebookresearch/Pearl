@@ -7,6 +7,7 @@ import torch
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
+from pearl.api.reward import Reward
 from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import Transition, TransitionBatch
@@ -51,7 +52,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
     ) -> torch.Tensor:
         return torch.tensor(action, device=self._device).unsqueeze(0)
 
-    def _process_single_reward(self, reward: float) -> torch.Tensor:
+    def _process_single_reward(self, reward: Reward) -> torch.Tensor:
         return torch.tensor([reward], device=self._device)
 
     def _process_single_cost(self, cost: Optional[float]) -> Optional[torch.Tensor]:

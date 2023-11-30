@@ -2,6 +2,7 @@ from typing import Optional
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
+from pearl.api.reward import Reward
 from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
 from pearl.replay_buffers.transition import Transition
@@ -18,12 +19,11 @@ class FIFOOffPolicyReplayBuffer(TensorBasedReplayBuffer):
 
     # TODO: add helper to convert subjective state into tensors
     # TODO: assumes action space is gym action space with one-hot encoding
-    # pyre-fixme[14]: `push` overrides method defined in `ReplayBuffer` inconsistently.
     def push(
         self,
         state: SubjectiveState,
         action: Action,
-        reward: float,
+        reward: Reward,
         next_state: SubjectiveState,
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,

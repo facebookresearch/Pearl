@@ -13,7 +13,7 @@ class ActionResult:
     terminated: bool
     truncated: bool
     info: Dict[str, Any]
-    cost: Optional[Reward] = None
+    cost: Optional[float] = None
 
     @property
     def done(self) -> bool:

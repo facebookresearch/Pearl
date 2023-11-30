@@ -37,15 +37,14 @@ class TestDeepTDLearning(unittest.TestCase):
         buffer = FIFOOffPolicyReplayBuffer(self.batch_size)
         for _ in range(self.batch_size):
             buffer.push(
-                torch.randn(self.state_dim),
-                self.action_space.sample(),
-                # pyre-fixme[6]: For 3rd argument expected `float` but got `Tensor`.
-                torch.randint(1, (1,)),
-                torch.randn(self.state_dim),
-                self.action_space,
-                self.action_space,
-                self.action_space,
-                False,
+                state=torch.randn(self.state_dim),
+                action=self.action_space.sample(),
+                reward=torch.randint(1, (1,)),
+                next_state=torch.randn(self.state_dim),
+                curr_available_actions=self.action_space,
+                next_available_actions=self.action_space,
+                action_space=self.action_space,
+                done=False,
             )
         self.batch = buffer.sample(self.batch_size)
         self.batch.next_action = self.batch.action
