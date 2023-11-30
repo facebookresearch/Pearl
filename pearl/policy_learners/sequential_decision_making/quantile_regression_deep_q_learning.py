@@ -1,5 +1,5 @@
 # import copy
-from typing import Iterable, Optional
+from typing import List, Optional
 
 import torch
 
@@ -34,7 +34,7 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        hidden_dims: Optional[Iterable[int]] = None,
+        hidden_dims: Optional[List[int]] = None,
         num_quantiles: int = 10,
         exploration_module: Optional[ExplorationModule] = None,
         on_policy: bool = False,
@@ -67,11 +67,8 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
     # QR-DQN is based on QuantileRegressionDeepTDLearning class.
     @torch.no_grad()
     def _get_next_state_quantiles(
-        self,
-        batch: TransitionBatch,
-        batch_size: int
-        # pyre-fixme[11]: Annotation `tensor` is not defined as a type.
-    ) -> torch.tensor:
+        self, batch: TransitionBatch, batch_size: int
+    ) -> torch.Tensor:
         next_state_batch = batch.next_state  # (batch_size x state_dim)
         next_available_actions_batch = (
             batch.next_available_actions
@@ -81,9 +78,9 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
             batch.next_available_actions_mask
         )  # shape: (batch_size x action_space_size)
 
+        assert next_state_batch is not None
+        assert isinstance(self._action_space, DiscreteActionSpace)
         next_state_batch_repeated = torch.repeat_interleave(
-            # pyre-fixme[16]: `Optional` has no attribute `unsqueeze`.
-            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
             next_state_batch.unsqueeze(1),
             self._action_space.n,  # pyre-ignore[16]
             dim=1,
@@ -93,6 +90,7 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
         Step 1: get quantiles for all possible actions in the batch
             - output shape: (batch_size x action_space_size x num_quantiles)
         """
+        assert next_available_actions_batch is not None
         next_state_action_quantiles = self._Q_target.get_q_value_distribution(
             next_state_batch_repeated, next_available_actions_batch
         )
@@ -119,7 +117,8 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
             - as the shape of next_state_action_quantiles is
               (batch_size x action_space_size x num_quantiles),
               and the shape of greedy_action_idx is (batch_size x 1),
-            - we need to expand the shape of greedy_action_idx along the last dimension for broadcasting
+            - we need to expand the shape of greedy_action_idx along the last dimension for
+              broadcasting
         """
         quantiles_greedy_action = torch.gather(
             input=next_state_action_quantiles,

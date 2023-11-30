@@ -132,14 +132,11 @@ class PolicyLearner(torch.nn.Module, ABC):
             replay_buffer: buffer instance which learn is reading from
 
         Returns:
-            A dictionary which includes useful metric to return to upperlevel for different purpose eg debugging
+            A dictionary which includes useful metrics
         """
         batch_size = self._batch_size if not self.on_policy else len(replay_buffer)
 
         if len(replay_buffer) < batch_size or len(replay_buffer) == 0:
-            # logging.warning(
-            #     f"Batch size is {batch_size} and replay buffer size is {len(replay_buffer)}; we don't have enough data to learn."
-            # )
             return {}
 
         report = {}
@@ -189,7 +186,7 @@ class PolicyLearner(torch.nn.Module, ABC):
             batch: batch of data that agent is learning from
 
         Returns:
-            A dictionary which includes useful metric to return to upperlevel for different purpose eg debugging
+            A dictionary which includes useful metrics
         """
         raise NotImplementedError("learn_batch is not implemented")
 

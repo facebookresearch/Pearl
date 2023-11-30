@@ -1,6 +1,6 @@
 import copy
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 import torch
 import torch.nn.functional as F
@@ -13,9 +13,6 @@ from pearl.history_summarization_modules.history_summarization_module import (
 )
 from pearl.neural_networks.common.utils import update_target_network
 from pearl.neural_networks.common.value_networks import QuantileQValueNetwork
-from pearl.neural_networks.sequential_decision_making.q_value_network import (
-    DistributionalQValueNetwork,
-)
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
@@ -23,7 +20,6 @@ from pearl.policy_learners.policy_learner import DistributionalPolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.safety_modules.risk_sensitive_safety_modules import (  # noqa
     RiskNeutralSafetyModule,  # noqa
-    RiskSensitiveSafetyModule,
 )
 from pearl.utils.functional_utils.learning.loss_fn_utils import (
     compute_elementwise_huber_loss,
@@ -44,7 +40,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         action_space: ActionSpace,
         on_policy: bool,
         exploration_module: ExplorationModule,
-        hidden_dims: Optional[Iterable[int]] = None,
+        hidden_dims: Optional[List[int]] = None,
         num_quantiles: int = 10,
         learning_rate: float = 5 * 0.0001,
         discount_factor: float = 0.99,
@@ -53,7 +49,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         target_update_freq: int = 10,
         soft_update_tau: float = 0.05,  # typical value for soft update
         network_type: Type[
-            DistributionalQValueNetwork
+            QuantileQValueNetwork
         ] = QuantileQValueNetwork,  # C51 might use a different network type; add that later
         network_instance: Optional[QuantileQValueNetwork] = None,
     ) -> None:
@@ -66,16 +62,17 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             is_action_continuous=False,
         )
 
+        if hidden_dims is None:
+            hidden_dims = []
+
         self._action_space = action_space
         self._discount_factor = discount_factor
         self._target_update_freq = target_update_freq
         self._soft_update_tau = soft_update_tau
         self._num_quantiles = num_quantiles
 
-        # pyre-fixme[3]: Return type must be annotated.
-        def make_specified_network():
-            # pyre-fixme[45]: Cannot instantiate abstract class
-            #  `DistributionalQValueNetwork`.
+        def make_specified_network() -> QuantileQValueNetwork:
+            assert hidden_dims is not None
             return network_type(
                 state_dim=state_dim,
                 action_dim=action_space.n,  # pyre-ignore[16]
@@ -84,8 +81,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             )
 
         if network_instance is not None:
-            # pyre-fixme[4]: Attribute must be annotated.
-            self._Q = network_instance
+            self._Q: QuantileQValueNetwork = network_instance
             assert network_instance.state_dim == state_dim, (
                 "input state dimension doesn't match network "
                 "state dimension for QuantileQValueNetwork"
@@ -96,10 +92,9 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             )
         else:
             assert hidden_dims is not None
-            self._Q = make_specified_network()
+            self._Q: QuantileQValueNetwork = make_specified_network()
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._Q_target = copy.deepcopy(self._Q)
+        self._Q_target: QuantileQValueNetwork = copy.deepcopy(self._Q)
         self._optimizer = optim.AdamW(
             self._Q.parameters(), lr=learning_rate, amsgrad=True
         )
@@ -153,11 +148,8 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
     # QR DQN, QR SAC and QR SARSA will implement this differently
     @abstractmethod
     def _get_next_state_quantiles(
-        self,
-        batch: TransitionBatch,
-        batch_size: int
-        # pyre-fixme[11]: Annotation `tensor` is not defined as a type.
-    ) -> torch.tensor:
+        self, batch: TransitionBatch, batch_size: int
+    ) -> torch.Tensor:
         pass
 
     # learn quantiles of q value distribution using distribution temporal

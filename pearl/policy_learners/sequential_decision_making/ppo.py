@@ -4,7 +4,10 @@ from typing import Any, Dict, Iterable, Optional, Type
 import torch
 
 from pearl.api.action_space import ActionSpace
-from pearl.neural_networks.common.value_networks import VanillaValueNetwork
+from pearl.neural_networks.common.value_networks import (
+    ValueNetwork,
+    VanillaValueNetwork,
+)
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetwork,
     VanillaActorNetwork,
@@ -21,6 +24,7 @@ from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
 )
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
+from torch import nn
 
 
 class ProximalPolicyOptimization(ActorCriticBase):
@@ -38,8 +42,7 @@ class ProximalPolicyOptimization(ActorCriticBase):
         critic_learning_rate: float = 1e-4,
         exploration_module: Optional[ExplorationModule] = None,
         actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
-        # pyre-fixme
-        critic_network_type=VanillaValueNetwork,
+        critic_network_type: Type[ValueNetwork] = VanillaValueNetwork,
         discount_factor: float = 0.99,
         training_rounds: int = 100,
         batch_size: int = 128,
@@ -54,6 +57,9 @@ class ProximalPolicyOptimization(ActorCriticBase):
             actor_learning_rate=actor_learning_rate,
             critic_learning_rate=critic_learning_rate,
             actor_network_type=actor_network_type,
+            # pyre-fixme: super class expects a QValueNetwork here,
+            # but this class apparently requires a ValueNetwork
+            # (replacing the type and default value to QValueNetworks break tests)
             critic_network_type=critic_network_type,
             use_actor_target=False,
             use_critic_target=False,
@@ -71,18 +77,16 @@ class ProximalPolicyOptimization(ActorCriticBase):
         )
         self._epsilon = epsilon
         self._entropy_bonus_scaling = entropy_bonus_scaling
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._actor_old = copy.deepcopy(self._actor)
+        self._actor_old: nn.Module = copy.deepcopy(self._actor)
 
     def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """
         Loss = actor loss + critic loss + entropy_bonus_scaling * entropy loss
         """
         # TODO: change the output shape of value networks
-        vs = self._critic(batch.state).view(-1)  # shape (batch_size)
-        action_probs = self._actor.get_action_prob(
-            batch.state, batch.action
-        )  # shape (batch_size)
+        vs: torch.Tensor = self._critic(batch.state).view(-1)  # shape (batch_size)
+        action_probs = self._actor.get_action_prob(batch.state, batch.action)
+        # shape (batch_size)
 
         # actor loss
         with torch.no_grad():
@@ -100,20 +104,17 @@ class ProximalPolicyOptimization(ActorCriticBase):
         # A = sum(TD_error) = return - V(s)
         # TODO support lambda and gamma
         with torch.no_grad():
-            # pyre-fixme
             advantage = batch.cum_reward - vs  # shape (batch_size)
 
         # entropy
         # Categorical is good for Cartpole Env where actions are discrete
         # TODO need to support continuous action
-        entropy = torch.distributions.Categorical(action_probs.detach()).entropy()
-
-        loss = (
-            torch.sum(-torch.min(r_thelta * advantage, clip * advantage))
-            # pyre-fixme[6]: For 1st argument expected `Tensor` but got `float`.
-            - torch.sum(self._entropy_bonus_scaling * entropy)
-        )
-
+        entropy: torch.Tensor = torch.distributions.Categorical(
+            action_probs.detach()
+        ).entropy()
+        loss = torch.sum(
+            -torch.min(r_thelta * advantage, clip * advantage)
+        ) - torch.sum(self._entropy_bonus_scaling * entropy)
         self._actor_optimizer.zero_grad()
         loss.backward()
         self._actor_optimizer.step()
@@ -121,17 +122,16 @@ class ProximalPolicyOptimization(ActorCriticBase):
         return {"actor_loss": loss.mean().item()}
 
     def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+        assert batch.cum_reward is not None
         return single_critic_state_value_update(
             state_batch=batch.state,
-            # pyre-fixme
             expected_target_batch=batch.cum_reward,
             optimizer=self._critic_optimizer,
             critic=self._critic,
         )
 
     def learn(self, replay_buffer: ReplayBuffer) -> Dict[str, Any]:
-        super().learn(replay_buffer)
+        result = super().learn(replay_buffer)
         # update old actor with latest actor for next round
-        # pyre-fixme[7]: Expected `Dict[str, typing.Any]` but got implicit return
-        #  value of `None`.
         self._actor_old.load_state_dict(self._actor.state_dict())
+        return result
