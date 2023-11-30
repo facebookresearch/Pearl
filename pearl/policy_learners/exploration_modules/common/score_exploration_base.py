@@ -18,7 +18,7 @@ from pearl.utils.tensor_like import assert_is_tensor_like
 class ScoreExplorationBase(ExplorationModule):
     """
     Value exploration base module.
-    Specific exploration modules need to implement `get_scores`.
+    Specific exploration module subclasses need to implement `get_scores`.
     Actions with highest scores will be chosen.
     """
 

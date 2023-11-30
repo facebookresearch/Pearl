@@ -44,8 +44,7 @@ class NeuralLinearBandit(NeuralBandit):
         learning_rate: float = 0.001,
         l2_reg_lambda_linear: float = 1.0,
         state_features_only: bool = False,
-        # pyre-fixme[2]: Parameter must be annotated.
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         assert (
             len(hidden_dims) >= 1
@@ -65,8 +64,7 @@ class NeuralLinearBandit(NeuralBandit):
             feature_dim=hidden_dims[-1],
             l2_reg_lambda=l2_reg_lambda_linear,
         )
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._linear_regression_dim = hidden_dims[-1]
+        self._linear_regression_dim: int = hidden_dims[-1]
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         if self._state_features_only:
@@ -88,12 +86,11 @@ class NeuralLinearBandit(NeuralBandit):
         loss.backward()
         self._optimizer.step()
         # Optimize linear regression
+        batch_weight = batch.weight
         self._linear_regression.learn_batch(
             mlp_output.detach(),
             expected_values,
-            # pyre-fixme[6]: For 3rd argument expected `Tensor` but got
-            #  `Optional[Tensor]`.
-            batch.weight,
+            batch_weight,
         )
         return {"mlp_loss": loss.item(), "current_values": current_values.mean().item()}
 

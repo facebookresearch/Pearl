@@ -18,8 +18,7 @@ class UniformExplorationBase(ExplorationModule):
     """
 
     def __init__(self) -> None:
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.exploration_type = ExplorationType.UNIFORM
+        self.exploration_type: ExplorationType = ExplorationType.UNIFORM
 
     @abstractmethod
     def act(

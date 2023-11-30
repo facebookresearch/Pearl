@@ -32,15 +32,17 @@ class NormalDistributionExploration(ExplorationModule):
         self._mean = mean
         self._std_dev = std_dev
 
-    def act(  # pyre-ignore
+    def act(
         self,
-        exploit_action: Action,
         action_space: ActionSpace,
         subjective_state: Optional[SubjectiveState] = None,
         values: Optional[torch.Tensor] = None,
+        exploit_action: Optional[Action] = None,
+        action_availability_mask: Optional[torch.Tensor] = None,
         representation: Optional[torch.nn.Module] = None,
     ) -> Action:
         assert isinstance(action_space, BoxActionSpace)
+        assert exploit_action is not None
         device = exploit_action.device
         # checks that the exploit action is feasible in the available action space
         low = torch.tensor(action_space.low).to(device)

@@ -13,7 +13,7 @@ fbcode/reagent/models/linear_regression.py
 """
 
 import logging
-from typing import Tuple
+from typing import Optional, Tuple
 
 import torch
 from pearl.utils.device import is_distribution_enabled
@@ -103,7 +103,7 @@ class LinearRegression(nn.Module):
         return inv_A
 
     def _validate_train_inputs(
-        self, x: torch.Tensor, y: torch.Tensor, weight: torch.Tensor
+        self, x: torch.Tensor, y: torch.Tensor, weight: Optional[torch.Tensor]
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         batch_size = x.shape[0]
         if weight is None:
@@ -122,7 +122,7 @@ class LinearRegression(nn.Module):
         return x, y, weight
 
     def learn_batch(
-        self, x: torch.Tensor, y: torch.Tensor, weight: torch.Tensor
+        self, x: torch.Tensor, y: torch.Tensor, weight: Optional[torch.Tensor]
     ) -> None:
         """
         A <- A + x*x.t

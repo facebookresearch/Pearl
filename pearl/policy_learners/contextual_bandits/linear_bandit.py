@@ -56,11 +56,10 @@ class LinearBandit(ContextualBanditBase):
         b <- b + r*x
         """
         x = torch.cat([batch.state, batch.action], dim=1)
+        assert batch.weight is not None
         self.model.learn_batch(
             x=x,
             y=batch.reward,
-            # pyre-fixme[6]: For 3rd argument expected `Tensor` but got
-            #  `Optional[Tensor]`.
             weight=batch.weight,
         )
         current_values = self.model(x)

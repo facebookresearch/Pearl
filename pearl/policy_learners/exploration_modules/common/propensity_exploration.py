@@ -1,8 +1,9 @@
-from typing import Any, Optional
+from typing import Optional
 
 import torch
 
 from pearl.api.action import Action
+from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
@@ -19,15 +20,13 @@ class PropensityExploration(ExplorationModule):
         super(PropensityExploration, self).__init__()
 
     # TODO: We should make discrete action space itself iterable
-    # pyre-fixme[14]: `act` overrides method defined in `ValueExplorationBase`
-    #  inconsistently.
     def act(
         self,
         subjective_state: SubjectiveState,
-        action_space: DiscreteActionSpace,
+        action_space: ActionSpace,
         values: Optional[torch.Tensor] = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        representation: Any = None,
         exploit_action: Optional[Action] = None,
+        action_availability_mask: Optional[torch.Tensor] = None,
+        representation: Optional[torch.nn.Module] = None,
     ) -> Action:
         return torch.distributions.Categorical(values).sample().item()

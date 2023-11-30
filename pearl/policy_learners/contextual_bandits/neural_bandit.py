@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 
@@ -27,7 +27,7 @@ from pearl.utils.functional_utils.learning.action_utils import (
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import optim
-from torchrec.optim.keyed import CombinedOptimizer
+from torchrec.optim.keyed import CombinedOptimizer, KeyedOptimizer
 
 
 class NeuralBandit(ContextualBanditBase):
@@ -61,27 +61,40 @@ class NeuralBandit(ContextualBanditBase):
             output_dim=output_dim,
             **kwargs,
         )
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._optimizer = optim.AdamW(
+        self._optimizer: torch.optim.Optimizer = optim.AdamW(
             self._deep_represent_layers.parameters(), lr=learning_rate, amsgrad=True
         )
         self._state_features_only = state_features_only
         if use_keyed_optimizer:
-            optims = [
-                (
-                    "",
-                    KeyedOptimizerWrapper(
-                        models={"_deep_represent_layers.": self._deep_represent_layers},
-                        optimizer_cls=optim.AdamW,
-                        lr=learning_rate,
-                        amsgrad=True,
-                    ),
-                )
-            ]
-            # pyre-fixme[6]: For 1st argument expected `List[Union[Tuple[str,
-            #  KeyedOptimizer], KeyedOptimizer]]` but got `List[Tuple[str,
-            #  KeyedOptimizerWrapper]]`.
-            self._optimizer = CombinedOptimizer(optims)
+            self._optimizer = CombinedOptimizer(
+                [
+                    (
+                        "",
+                        KeyedOptimizerWrapper(
+                            models={
+                                "_deep_represent_layers.": self._deep_represent_layers
+                            },
+                            optimizer_cls=optim.AdamW,
+                            lr=learning_rate,
+                            amsgrad=True,
+                        ),
+                    )
+                ]
+            )
+            # Comment on subtle typing issue here:
+            # It actually matters to pass the list literal above to CombinedOptimizer
+            # directly as opposed to passing it through a variable.
+            # A variable would be typed as List[Tuple[str, KeyedOptimizerWrapper]],
+            # which is *not* a subtype of CombinedOptimizer's parameter type
+            # List[Union[KeyedOptimizer, Tuple[str, KeyedOptimizer]]].
+            # This is due to List[B] not being a subtype of List[A] even
+            # if B is a subtype of A, because passing a List[B] to a function
+            # expecting a List[A] could lead to adding an instance of A
+            # to the list that is not an instance of B, violating its
+            # typing constraints.
+            # By passing a literal, there is no way of accessing the list
+            # after the call, so even if an A-typed, non-B-typed object were added to the list,
+            # it wouldn't be available afterwards anyway.
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         if self._state_features_only:
@@ -102,8 +115,13 @@ class NeuralBandit(ContextualBanditBase):
         self._optimizer.step()
         return {"loss": loss.item()}
 
-    # pyre-fixme[14]: `act` overrides method defined in `ContextualBanditBase`
-    #  inconsistently.
+    # pyre-fixme[14]: inconsistent override
+    # Note that renaming `action_space` to `available_action_space`
+    # makes the Pyre error go away, but does not seem like a real solution
+    # since here `action_space` is not supposed to be the "available action space",
+    # but something rather to be combined with the availability mask.
+    # However, PolicyLeaner.act expects the action space to be the available
+    # action space, so there is an deep inconsistency to be resolved here.
     def act(
         self,
         subjective_state: SubjectiveState,
@@ -113,8 +131,8 @@ class NeuralBandit(ContextualBanditBase):
     ) -> Action:
         """
         Args:
-            subjective_state - state will be applied to different action vectors in action_space
-            action_space contains a list of action vector, currenly only support static space
+            subjective_state: state will be applied to different action vectors in action_space
+            action_space: contains a list of action vector, currenly only support static space
         Return:
             action index chosen given state and action vectors
         """

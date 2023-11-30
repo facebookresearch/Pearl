@@ -10,11 +10,14 @@ from pearl.history_summarization_modules.history_summarization_module import (
 from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
     ScoreExplorationBase,
 )
+from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
 
 
 class NoExploration(ScoreExplorationBase):
     """
     An exploration module that does not explore.
+    It implements a `get_score` function that assumes `values` is given
+    and simply returns the values for each action.
     """
 
     def get_scores(
@@ -27,5 +30,6 @@ class NoExploration(ScoreExplorationBase):
     ) -> Action:
         if exploit_action is not None:
             raise ValueError("exploit_action shouldn't be used. use `values` instead")
-        # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
+        assert isinstance(action_space, DiscreteSpace)
+        assert values is not None
         return values.view(-1, action_space.n)  # batch_size, action_count

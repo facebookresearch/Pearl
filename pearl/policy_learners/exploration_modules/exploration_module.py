@@ -26,7 +26,9 @@ class ExplorationModule(ABC):
     """
 
     def reset(self) -> None:  # noqa: B027
-        """Resets the internal state of the exploration module. Default implementation does nothing."""
+        """
+        Resets the internal state of the exploration module. Default implementation does nothing.
+        """
         pass
 
     @abstractmethod
