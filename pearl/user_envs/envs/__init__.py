@@ -1,1 +1,1 @@
-from .stoch_MDP import *  # noqa
+from .bandit import *  # noqa

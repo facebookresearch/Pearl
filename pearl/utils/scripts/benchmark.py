@@ -53,9 +53,7 @@ from pearl.replay_buffers.sequential_decision_making.on_policy_episodic_replay_b
 
 from pearl.user_envs.wrappers.gym_avg_torque_cost import GymAvgTorqueWrapper
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
-from pearl.utils.functional_utils.train_and_eval.online_learning import (
-    online_learning_returns,
-)
+from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 
 from tianshou.data import Collector, VectorReplayBuffer
@@ -127,14 +125,14 @@ class PearlDQN(Evaluation):
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
             device_id=self.device_id,
         )
-        returns = online_learning_returns(
+        info = online_learning(
             agent,
             env,
             number_of_episodes=number_of_episodes,
             learn_after_episode=True,
             print_every_x_episodes=1,
         )
-        return returns
+        return info["return"]
 
 
 class PearlLSTMDQN(Evaluation):
@@ -174,14 +172,14 @@ class PearlLSTMDQN(Evaluation):
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
             device_id=self.device_id,
         )
-        returns = online_learning_returns(
+        info = online_learning(
             agent,
             env,
             number_of_episodes=number_of_episodes,
             learn_after_episode=True,
             print_every_x_episodes=1,
         )
-        return returns
+        return info["return"]
 
 
 class PearlContinuousSAC(Evaluation):
@@ -216,14 +214,14 @@ class PearlContinuousSAC(Evaluation):
             replay_buffer=FIFOOffPolicyReplayBuffer(100000),
             device_id=self.device_id,
         )
-        returns = online_learning_returns(
+        info = online_learning(
             agent,
             env,
             number_of_episodes=number_of_episodes,
             learn_after_episode=False,
             print_every_x_episodes=1,
         )
-        return returns
+        return info["return"]
 
 
 class PearlPPO(Evaluation):
@@ -253,14 +251,14 @@ class PearlPPO(Evaluation):
             replay_buffer=OnPolicyEpisodicReplayBuffer(10_000),
             device_id=self.device_id,
         )
-        returns = online_learning_returns(
+        info = online_learning(
             agent,
             env,
             number_of_episodes=number_of_episodes,
             learn_after_episode=True,
             print_every_x_episodes=1,
         )
-        return returns
+        return info["return"]
 
 
 class PearlDDPG(Evaluation):
@@ -296,14 +294,14 @@ class PearlDDPG(Evaluation):
             replay_buffer=FIFOOffPolicyReplayBuffer(50000),
             device_id=self.device_id,
         )
-        returns = online_learning_returns(
+        info = online_learning(
             agent,
             env,
             number_of_episodes=number_of_episodes,
             learn_after_episode=True,
             print_every_x_episodes=1,
         )
-        return returns
+        return info["return"]
 
 
 class PearlTD3(Evaluation):
@@ -348,14 +346,14 @@ class PearlTD3(Evaluation):
         # Enable saving cost in replay buffer if cost is available
         agent.replay_buffer._has_cost_available = has_cost_available
 
-        returns = online_learning_returns(
+        info = online_learning(
             agent,
             env,
             number_of_episodes=number_of_episodes,
             learn_after_episode=True,
             print_every_x_episodes=1,
         )
-        return returns
+        return info["return"]
 
 
 def evaluate(evaluations: Iterable[Evaluation]) -> None:

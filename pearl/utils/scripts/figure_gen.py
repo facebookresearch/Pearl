@@ -23,9 +23,7 @@ from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buff
 from pearl.replay_buffers.sequential_decision_making.fifo_on_policy_replay_buffer import (
     FIFOOnPolicyReplayBuffer,
 )
-from pearl.utils.functional_utils.train_and_eval.online_learning import (
-    online_learning_returns,
-)
+from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 
 MA_WINDOW_SIZE = 100.0
@@ -62,14 +60,14 @@ def main():
         ),
         replay_buffer=FIFOOffPolicyReplayBuffer(10000),
     )
-    returns = online_learning_returns(
+    info = online_learning(
         agent,
         env,
         number_of_episodes=num_episodes,
         learn_after_episode=True,
     )
-    plt.plot(returns, label="vanilla dqn")
-    plt.plot(moving_average(returns), label="dqn_ma")
+    plt.plot(info["return"], label="vanilla dqn")
+    plt.plot(moving_average(info["return"]), label="dqn_ma")
     plt.xlabel("Episode")
     plt.ylabel("Return")
     agent = PearlAgent(
@@ -83,14 +81,14 @@ def main():
         ),
         replay_buffer=FIFOOnPolicyReplayBuffer(10000),
     )
-    returns = online_learning_returns(
+    info = online_learning(
         agent,
         env,
         number_of_episodes=num_episodes,
         learn_after_episode=True,
     )
-    plt.plot(returns, label="sarsa")
-    plt.plot(moving_average(returns), label="sarsa_ma")
+    plt.plot(info["return"], label="sarsa")
+    plt.plot(moving_average(info["return"]), label="sarsa_ma")
     plt.legend()
     plt.savefig("figure_gen.png")
 

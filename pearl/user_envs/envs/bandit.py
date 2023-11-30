@@ -9,7 +9,7 @@ except ModuleNotFoundError:
     print("gymnasium module is not found")
 
 
-class StochMDPEnv(gym.Env):
+class MeanVarBanditEnv(gym.Env):
     """environment to test if safe RL algorithms
     prefer a policy that achieves lower variance return"""
 
@@ -38,9 +38,9 @@ class StochMDPEnv(gym.Env):
     def step(self, action: int):
         reward = 0.0
         if action == 0:
-            reward = np.random.normal(loc=8.0, scale=1)
+            reward = np.random.normal(loc=6.0, scale=1)
         else:
             reward = np.random.normal(loc=10.0, scale=3)
         done = True
         observation = self.get_observation()
-        return observation, reward, done, False, {}
+        return observation, reward, done, False, {"risky_sa": int(action == 1)}

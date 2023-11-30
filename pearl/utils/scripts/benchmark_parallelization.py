@@ -20,23 +20,29 @@ import numpy as np
 import torch.multiprocessing as mp
 from pearl.pearl_agent import PearlAgent
 
-from pearl.utils.functional_utils.train_and_eval.online_learning import (
-    online_learning_returns,
-)
+from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 from pearl.utils.scripts.benchmark_config import (
-    all_continuous_control_w_cost_envs,
-    classic_control_steps,
-    # QRDQN_method,
-    # REINFORCE_method,
     # SAC_method,
-    # SARSA_method,
+    # IQL_method,
     # TD3_method,
-    # all_discrete_control_methods,
-    # BootstrappedDQN_method,
-    # CDQN_method,
     # CSAC_method,
     # DDPG_method,
-    DQN_method,
+    # all_discrete_control_methods,
+    # all_partial_observable_continuous_control_envs,
+    # mujoco_envs,
+    # all_continuous_control_w_cost_envs,
+    # BootstrappedDQN_ensemble_1_method,
+    # SARSA_method,
+    # BootstrappedDQN_method,
+    # all_continuous_control_envs,
+    # all_discrete_control_envs,
+    # all_partial_observable_discrete_control_envs,
+    classic_control_steps,
+    # DQN_LSTM_method,
+    # DQN_method,
+    # all_ac_discrete_control_methods,
+    # all_continuous_control_methods,
+    # ple_steps,
     get_env,
     # all_partial_observable_discrete_control_envs,
     # all_safety_discrete_control_envs,
@@ -45,17 +51,18 @@ from pearl.utils.scripts.benchmark_config import (
     # classic_continuous_control_envs,
     # mujoco_steps,
     num_runs,
-    num_runs,
-    # DuelingDQN_method,
-    PPO_method,
-    print_every_x_steps,
-    print_every_x_steps,
-    # all_partial_observable_continuous_control_envs,
     # DDQN_method,
+    # CDQN_method,
+    # REINFORCE_method,
+    # PPO_method,
+    print_every_x_steps,
+    # DuelingDQN_method,
+    QRDQN_method,
+    QRDQN_var_coeff_05_method,
+    QRDQN_var_coeff_2_method,
     # mujoco_envs,
     # all_continuous_control_envs,
     # all_discrete_control_envs,
-    TD3_method,
 )
 
 warnings.filterwarnings("ignore")
@@ -190,6 +197,7 @@ def evaluate_single(
             action_dim=env.action_space.n,
             **method["network_args"],
         )
+        del policy_learner_args["state_dim"]
 
     policy_learner_args["action_space"] = env.action_space
     agent = PearlAgent(
@@ -207,7 +215,7 @@ def evaluate_single(
     else:
         learn_after_episode = False
 
-    returns = online_learning_returns(
+    info = online_learning(
         agent,
         env,
         number_of_episodes=num_episodes,
@@ -218,48 +226,80 @@ def evaluate_single(
     )
     dir = f"outputs/{env_name}/{method_name}"
     os.makedirs(dir, exist_ok=True)
-    np.save(dir + f"/{run_idx}.npy", returns)
+    for key in info:
+        np.save(dir + f"/{run_idx}_{key}.npy", info[key])
 
 
-def generate_plots(experiments) -> None:
+def generate_plots(experiments, attributes) -> None:
     for e in experiments:
-        generate_one_plot(e)
+        generate_one_plot(e, attributes)
 
 
-def generate_one_plot(experiment):
+def generate_one_plot(experiment, attributes):
     """Generating learning curves for all tested methods in one environment."""
     env_name = experiment["env_name"]
     num_runs = experiment["num_runs"]
     methods = experiment["methods"]
-    for method in methods:
-        data = []
-        for run in range(num_runs):
-            try:
-                d = np.load(f"outputs/{env_name}/{method['name']}/{run}.npy")
-            except FileNotFoundError:
-                print(
-                    f"File not found for outputs/{env_name}/{method['name']}/{run}.npy"
+    for attr in attributes:
+        for method in methods:
+            data = []
+            for run in range(num_runs):
+                try:
+                    d = np.load(f"outputs/{env_name}/{method['name']}/{run}_{attr}.npy")
+                except FileNotFoundError:
+                    print(
+                        f"File not found for outputs/{env_name}/{method['name']}/{run}_{attr}.npy"
+                    )
+                    continue
+                data.append(d)
+            data = np.array(data)
+            mean = data.mean(axis=0)
+            std_error = data.std(axis=0) / np.sqrt(num_runs)
+            if (
+                "num_steps" in experiment
+            ):  # data points are recorded every num_steps/100 steps
+                steps_list = experiment["num_steps"] // 100 * np.arange(mean.shape[0])
+                plt.plot(steps_list, mean, label=method["name"])
+                plt.fill_between(
+                    steps_list, mean - std_error, mean + std_error, alpha=0.2
                 )
-                continue
-            data.append(d)
-        data = np.array(data)
-        mean = data.mean(axis=0)
-        std_error = data.std(axis=0) / np.sqrt(num_runs)
-        plt.plot(np.arange(mean.shape[0]), mean, label=method["name"])
-        plt.fill_between(
-            np.arange(mean.shape[0]), mean - std_error, mean + std_error, alpha=0.2
-        )
-    plt.title(env_name)
-    plt.xlabel("Episode")
-    plt.ylabel("Return")
-    plt.legend()
-    plt.savefig(f"outputs/{env_name}.png")
-    plt.close()
+            else:  # data points are recorded at the end of each episode
+                plt.plot(np.arange(mean.shape[0]), mean, label=method["name"])
+                plt.fill_between(
+                    np.arange(mean.shape[0]),
+                    mean - std_error,
+                    mean + std_error,
+                    alpha=0.2,
+                )
+        plt.title(env_name)
+        if "num_steps" in experiment:
+            plt.xlabel("Steps")
+        else:
+            plt.xlabel("Episodes")
+        plt.ylabel(attr)
+        plt.legend()
+        plt.savefig(f"outputs/{env_name}_{attr}.png")
+        plt.close()
 
 
 if __name__ == "__main__":
-    methods = [TD3_method]
-    envs = all_continuous_control_w_cost_envs
+    methods = [
+        # BootstrappedDQN_ensemble_1_method,
+        # DQN_method,
+        # DQN_LSTM_method,
+        # BootstrappedDQN_method,
+        QRDQN_method,
+        QRDQN_var_coeff_05_method,
+        QRDQN_var_coeff_2_method,
+    ]
+    envs = [
+        # "PuckWorld-PLE-500-v0",
+        # "PuckWorld-PLE-500-SR-v0",
+        # "PuckWorld-PLE-500-PO-v0",
+        # "PuckWorld-PLE-500-SF-v0",
+        "MeanVarBandit-v0",
+    ]
+    # envs = ["CartPole-v0"]
     num_steps = classic_control_steps
     experiments = [
         {
@@ -272,4 +312,4 @@ if __name__ == "__main__":
         for env_name in envs
     ]
     run(experiments)
-    generate_plots(experiments)
+    generate_plots(experiments, ["return", "risky_sa_ratio"])

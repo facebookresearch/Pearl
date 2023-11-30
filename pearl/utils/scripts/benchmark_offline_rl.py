@@ -37,7 +37,7 @@ from pearl.utils.functional_utils.train_and_eval.offline_learning_and_evaluation
     offline_evaluation,
     offline_learning,
 )
-from pearl.utils.functional_utils.train_and_eval.online_learning import episode_return
+from pearl.utils.functional_utils.train_and_eval.online_learning import run_episode
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 
 
@@ -82,13 +82,14 @@ def get_random_agent_returns(
         )
         random_agent_returns = []
         for i in range(evaluation_episodes):
-            g, _ = episode_return(
+            info, _ = run_episode(
                 agent=agent,
                 env=env,
                 learn=False,
                 exploit=True,
                 learn_after_episode=False,
             )
+            g = info["return"]
             print(f"episode {i}, return={g}")
             random_agent_returns.append(g)
 

@@ -17,7 +17,7 @@ from pearl.replay_buffers.sequential_decision_making.hindsight_experience_replay
 )
 
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
-    episode_return,
+    run_episode,
     target_return_is_reached,
 )
 from pearl.utils.instantiations.environments.sparse_reward_environment import (
@@ -81,7 +81,9 @@ class IntegrationReplayBufferTests(unittest.TestCase):
         )
         # precollect data
         for _ in range(500):
-            episode_return(agent, env, False, False, False)
+            run_episode(
+                agent, env, learn=False, exploit=False, learn_after_episode=False
+            )
 
         self.assertTrue(
             target_return_is_reached(

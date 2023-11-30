@@ -9,7 +9,7 @@ import torch
 from pearl.api.environment import Environment
 from pearl.pearl_agent import PearlAgent
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
-from pearl.utils.functional_utils.train_and_eval.online_learning import episode_return
+from pearl.utils.functional_utils.train_and_eval.online_learning import run_episode
 
 
 def create_offline_data(
@@ -104,13 +104,14 @@ def create_offline_data(
 
     evaluation_returns = []
     for i in range(evaluation_episodes):
-        g, _ = episode_return(
+        info, _ = run_episode(
             agent=agent,
             env=env,
             learn=False,
             exploit=True,
             learn_after_episode=False,
         )
+        g = info["return"]
         print(f"\repisode {i}, return={g}", end="")
         evaluation_returns.append(g)
 

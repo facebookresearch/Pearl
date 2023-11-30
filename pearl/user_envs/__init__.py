@@ -11,8 +11,8 @@ for game in ["Catcher", "FlappyBird", "Pixelcopter", "PuckWorld", "Pong"]:
 
 
 register(
-    id="StochMDP-v0",
-    entry_point="pearl.user_envs.envs:StochMDPEnv",
+    id="MeanVarBandit-v0",
+    entry_point="pearl.user_envs.envs:MeanVarBanditEnv",
 )
 
 register(

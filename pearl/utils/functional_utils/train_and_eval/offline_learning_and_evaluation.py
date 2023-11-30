@@ -24,7 +24,7 @@ from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buff
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
-from pearl.utils.functional_utils.train_and_eval.online_learning import episode_return
+from pearl.utils.functional_utils.train_and_eval.online_learning import run_episode
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 FWDPROXY_PORT = 8082
@@ -181,7 +181,7 @@ def offline_evaluation(
     returns_offline_agent = []
     total_steps = 0
     for i in range(number_of_episodes):
-        g, total_steps = episode_return(
+        info, total_steps = run_episode(
             agent=offline_agent,
             env=env,
             learn=learn,
@@ -190,7 +190,8 @@ def offline_evaluation(
             total_steps=total_steps,
         )
         if i % 1 == 0:
+            g = info["return"]
             print(f"\repisode {i}, return={g}", end="")
-        returns_offline_agent.append(g)
+        returns_offline_agent.append(info["return"])
 
     return returns_offline_agent

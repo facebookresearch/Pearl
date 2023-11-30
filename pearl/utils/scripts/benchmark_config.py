@@ -109,7 +109,7 @@ DQN_LSTM_method = {
         "training_rounds": 1,
         "batch_size": 32,
     },
-    "agent_args": {"device_id": 0},
+    "agent_args": {"device_id": 1},
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
@@ -201,7 +201,7 @@ DuelingDQN_method = {
     "action_representation_module_args": {},
 }
 QRDQN_method = {
-    "name": "QRDQN",
+    "name": "QRDQN var coeff = 0",
     "policy_learner": QuantileRegressionDeepQLearning,
     "policy_learner_args": {
         "hidden_dims": [64, 64],
@@ -218,8 +218,68 @@ QRDQN_method = {
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
 }
+QRDQN_var_coeff_05_method = {
+    "name": "QRDQN var coeff = 0.5",
+    "policy_learner": QuantileRegressionDeepQLearning,
+    "policy_learner_args": {
+        "hidden_dims": [64, 64],
+        "training_rounds": 1,
+        "batch_size": 32,
+    },
+    "agent_args": {"device_id": 1},
+    "exploration_module": EGreedyExploration,
+    "exploration_module_args": {"epsilon": 0.1},
+    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer_args": {"capacity": 50000},
+    "safety_module": QuantileNetworkMeanVarianceSafetyModule,
+    "safety_module_args": {"variance_weighting_coefficient": 0.5},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
+}
+QRDQN_var_coeff_2_method = {
+    "name": "QRDQN var coeff = 2",
+    "policy_learner": QuantileRegressionDeepQLearning,
+    "policy_learner_args": {
+        "hidden_dims": [64, 64],
+        "training_rounds": 1,
+        "batch_size": 32,
+    },
+    "agent_args": {"device_id": 1},
+    "exploration_module": EGreedyExploration,
+    "exploration_module_args": {"epsilon": 0.1},
+    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer_args": {"capacity": 50000},
+    "safety_module": QuantileNetworkMeanVarianceSafetyModule,
+    "safety_module_args": {"variance_weighting_coefficient": 2.0},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
+}
 BootstrappedDQN_method = {
     "name": "BootstrappedDQN",
+    "policy_learner": BootstrappedDQN,
+    "policy_learner_args": {
+        "training_rounds": 1,
+        "batch_size": 32,
+    },
+    "agent_args": {"device_id": 0},
+    "replay_buffer": BootstrapReplayBuffer,
+    "replay_buffer_args": {
+        "capacity": 50000,
+        "p": 1.0,
+        "ensemble_size": 10,
+    },
+    "network_module": EnsembleQValueNetwork,
+    "network_args": {
+        "ensemble_size": 10,
+        "output_dim": 1,
+        "hidden_dims": [64, 64],
+        "prior_scale": 0.0,
+    },
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
+}
+BootstrappedDQN_ensemble_1_method = {
+    "name": "BootstrappedDQN_ensemble_1",
     "policy_learner": BootstrappedDQN,
     "policy_learner_args": {
         "training_rounds": 1,
@@ -230,11 +290,11 @@ BootstrappedDQN_method = {
     "replay_buffer_args": {
         "capacity": 50000,
         "p": 1.0,
-        "ensemble_size": 10,
+        "ensemble_size": 1,
     },
     "network_module": EnsembleQValueNetwork,
     "network_args": {
-        "ensemble_size": 10,
+        "ensemble_size": 1,
         "output_dim": 1,
         "hidden_dims": [64, 64],
         "prior_scale": 0.0,
@@ -471,7 +531,7 @@ all_safety_discrete_control_envs = [
 ]
 
 mujoco_steps = 2000000
-classic_control_steps = 100000
+classic_control_steps = 10000
 ple_steps = 2000000
 num_runs = 5
 print_every_x_steps = 1000

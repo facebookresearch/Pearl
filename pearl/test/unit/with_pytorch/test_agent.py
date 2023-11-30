@@ -34,9 +34,9 @@ from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buff
     FIFOOffPolicyReplayBuffer,
 )
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
-    episode_return,
     online_learning,
     online_learning_to_png_graph,
+    run_episode,
 )
 
 from pearl.utils.instantiations.environments.contextual_bandit_linear_synthetic_environment import (
@@ -213,7 +213,9 @@ class TestAgentWithPyTorch(unittest.TestCase):
         online_learning(agent, env, number_of_episodes=500)
 
         for _ in range(100):  # Should always reach the goal
-            assert episode_return(agent, env, learn=False, exploit=True)[0] == 1.0
+            assert (
+                run_episode(agent, env, learn=False, exploit=True)[0]["return"] == 1.0
+            )
 
     def test_contextual_bandit_with_tabular_q_learning_online_rl(self) -> None:
         num_actions = 5
@@ -237,6 +239,6 @@ class TestAgentWithPyTorch(unittest.TestCase):
         # Should have learned to use action max_action with reward equal to max_action * 10
         for _ in range(100):
             assert (
-                episode_return(agent, env, learn=False, exploit=True)[0]
+                run_episode(agent, env, learn=False, exploit=True)[0]["return"]
                 == max_action * 10
             )
