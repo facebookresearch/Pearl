@@ -1,4 +1,4 @@
-from typing import Any, Callable, Optional
+from typing import Callable, List, Optional, Tuple
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -33,22 +33,31 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
              If this is not defined, then use done value from original trajectory.
     """
 
+    # TODO: improve unclear docstring
+
     def __init__(
         self,
         capacity: int,
         goal_dim: int,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        reward_fn: Callable[[Any, Any], float],
-        # pyre-fixme[9]: done_fn has type `(Any, Any) -> bool`; used as `None`.
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        done_fn: Callable[[Any, Any], bool] = None,
+        reward_fn: Callable[[SubjectiveState, Action], Reward],
+        done_fn: Optional[Callable[[SubjectiveState, Action], bool]] = None,
     ) -> None:
         super(HindsightExperienceReplayBuffer, self).__init__(capacity=capacity)
         self._goal_dim = goal_dim
         self._reward_fn = reward_fn
         self._done_fn = done_fn
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._trajectory = []  # a list of transition
+        self._trajectory: List[
+            Tuple[
+                SubjectiveState,
+                Action,
+                SubjectiveState,
+                ActionSpace,
+                ActionSpace,
+                ActionSpace,
+                bool,
+                Optional[float],
+            ]
+        ] = []
 
     def push(
         self,
@@ -101,6 +110,8 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
                 cost,
             ) in self._trajectory:
                 # replace current_goal with additional_goal
+                state = assert_is_tensor_like(state)
+                next_state = assert_is_tensor_like(next_state)
                 state[-self._goal_dim :] = additional_goal
                 next_state[-self._goal_dim :] = additional_goal
                 super(HindsightExperienceReplayBuffer, self).push(
