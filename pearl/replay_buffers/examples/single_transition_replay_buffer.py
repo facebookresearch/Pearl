@@ -1,4 +1,4 @@
-from typing import Any, Iterable, Optional
+from typing import List, Optional, Tuple
 
 import torch
 from pearl.api.action import Action
@@ -9,11 +9,24 @@ from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 
 
+# Preferred to define inside class but that is not working
+# See https://fb.workplace.com/groups/pyreqa/permalink/7039029492853489/
+SingleTransition = Tuple[
+    SubjectiveState,
+    Action,
+    Reward,
+    SubjectiveState,
+    ActionSpace,
+    ActionSpace,
+    ActionSpace,
+    bool,
+    Optional[float],
+]
+
+
 class SingleTransitionReplayBuffer(ReplayBuffer):
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, **options) -> None:
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._transition = None
+    def __init__(self) -> None:
+        self._transition: Optional[SingleTransition] = None
 
     @property
     def device(self) -> torch.device:
@@ -47,9 +60,11 @@ class SingleTransitionReplayBuffer(ReplayBuffer):
             cost,
         )
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def sample(self, batch_size: int) -> Iterable[Any]:
+    def sample(self, batch_size: int) -> List[SingleTransition]:
         assert batch_size == 1, "Only batch size 1 is supported"
+        assert (
+            self._transition is not None
+        ), "No transition in SingleTransitionReplayBuffer"
         return [self._transition]
 
     def clear(self) -> None:
