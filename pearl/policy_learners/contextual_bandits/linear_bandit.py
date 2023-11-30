@@ -115,6 +115,7 @@ class LinearBandit(ContextualBanditBase):
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state, action_space=action_space
         )
+        assert isinstance(self._exploration_module, ScoreExplorationBase)
         return self._exploration_module.get_scores(
             subjective_state=feature,
             values=self.model(feature),

@@ -3,8 +3,9 @@
 
 import warnings
 from abc import ABC, abstractmethod
-from numbers import Number
 from typing import Dict, Iterable, List
+
+from pearl.api.reward import Value
 
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
@@ -96,7 +97,7 @@ class Evaluation(ABC):
         self.kwargs = kwargs
 
     @abstractmethod
-    def evaluate(self, seed: int = 0) -> Iterable[Number]:
+    def evaluate(self, seed: int = 0) -> Iterable[Value]:
         """Runs evaluation and returns sequence of obtained returns during training"""
         pass
 
@@ -113,7 +114,7 @@ class PearlDQN(Evaluation):
     ) -> None:
         super(PearlDQN, self).__init__(gym_environment_name, device_id, *args, **kwargs)
 
-    def evaluate(self, seed: int) -> Iterable[Number]:
+    def evaluate(self, seed: int) -> Iterable[Value]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=DeepQLearning(
@@ -147,7 +148,7 @@ class PearlLSTMDQN(Evaluation):
     ) -> None:
         super(PearlDQN, self).__init__(gym_environment_name, device_id, *args, **kwargs)
 
-    def evaluate(self, seed: int) -> Iterable[Number]:
+    def evaluate(self, seed: int) -> Iterable[Value]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         hidden_dim = 8
         action_space = env.action_space
@@ -196,7 +197,7 @@ class PearlContinuousSAC(Evaluation):
             gym_environment_name, device_id, *args, **kwargs
         )
 
-    def evaluate(self, seed: int) -> Iterable[Number]:
+    def evaluate(self, seed: int) -> Iterable[Value]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=ContinuousSoftActorCritic(
@@ -236,7 +237,7 @@ class PearlPPO(Evaluation):
     ) -> None:
         super(PearlPPO, self).__init__(gym_environment_name, device_id, *args, **kwargs)
 
-    def evaluate(self, seed: int) -> Iterable[Number]:
+    def evaluate(self, seed: int) -> Iterable[Value]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=ProximalPolicyOptimization(
@@ -275,7 +276,7 @@ class PearlDDPG(Evaluation):
             gym_environment_name, device_id, *args, **kwargs
         )
 
-    def evaluate(self, seed: int) -> Iterable[Number]:
+    def evaluate(self, seed: int) -> Iterable[Value]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
         agent = PearlAgent(
             policy_learner=DeepDeterministicPolicyGradient(
@@ -316,7 +317,7 @@ class PearlTD3(Evaluation):
     ) -> None:
         super(PearlTD3, self).__init__(gym_environment_name, device_id, *args, **kwargs)
 
-    def evaluate(self, seed: int) -> Iterable[Number]:
+    def evaluate(self, seed: int) -> Iterable[Value]:
         has_cost_available = False
         if self.gym_environment_name[:3] == "wc_":
             has_cost_available = True

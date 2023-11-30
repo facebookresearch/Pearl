@@ -136,7 +136,7 @@ class DisjointLinearBandit(ContextualBanditBase):
             subjective_state=feature,
             action_space=action_space,
             values=values,
-            representation=self._linear_regressions_list,
+            representation=self._linear_regressions_list,  # pyre-fixme[6]: unexpected type
         )
 
     def get_scores(

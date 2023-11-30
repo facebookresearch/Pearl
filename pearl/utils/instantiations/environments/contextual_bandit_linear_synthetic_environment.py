@@ -20,14 +20,18 @@ from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpac
 
 class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
     """
-    A Contextual Bandit synthetic environment where the reward is linearly mapped from the context feature representation.
-    The purpose of this environment is to simulate the behavior of a Contextual Bandit where rewards are modeled linearly from the context features.
+    A Contextual Bandit synthetic environment where the reward is linearly mapped from the
+    context feature representation.
+    The purpose of this environment is to simulate the behavior of a Contextual Bandit
+    where rewards are modeled linearly from the context features.
 
     Following
 
-    Lihong Li, Wei Chu, John Langford, Robert E. Schapire (2010), "A Contextual-Bandit Approach to Personalized News Article Recommendation,"
+    Lihong Li, Wei Chu, John Langford, Robert E. Schapire (2010),
+    "A Contextual-Bandit Approach to Personalized News Article Recommendation,"
 
-    the context for an arm is the concatenation of the observation feature vector and the arm feature vevctor.
+    The context for an arm is the concatenation of the observation feature vector
+    and the arm feature vevctor.
     """
 
     # pyre-fixme[3]: Return type must be annotated.
@@ -43,9 +47,11 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         Args:
             action_space (ActionSpace): the environment's action space
             observation_dim (int): the number of dimensions in the observation feature vector
-            arm_feature_vector_dim (int): the number of dimensions in the feature representation of arms
+            arm_feature_vector_dim (int): the number of dimensions in the feature representation
+                                          of arms
             reward_noise_sigma (float): the standard deviation of the noise added to the reward
-            simple_linear_mapping (bool): if True, reward is simply the sum of the arm features (debugging purposes)
+            simple_linear_mapping (bool): if True, reward is simply the sum of the arm features
+                                          (debugging purposes)
         """
         assert isinstance(action_space, DiscreteActionSpace)
         self._action_space: DiscreteActionSpace = action_space
@@ -113,7 +119,6 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         # TODO: This assumes the action is an int tensor.
         context = self._get_context_for_arm(int(action.item()))
         reward = self._compute_reward_from_context(context)
-        # pyre-fixme[7]: Expected `Number` but got `Tensor`.
         return reward
 
     def get_regret(self, action: Action) -> Value:
@@ -142,9 +147,10 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         context: torch.Tensor,
     ) -> torch.Tensor:
         if self._simple_linear_mapping:
-            reward = torch.sum(context).unsqueeze(
-                dim=0
-            )  # assume the linear relationship between context and reward : r_k = ONES @ g(f_k). This is convenient for debugging algorithms when the algorithms are being developed.
+            reward = torch.sum(context).unsqueeze(dim=0)
+            # assume the linear relationship between context and reward :
+            # r_k = ONES @ g(f_k). This is convenient for debugging algorithms
+            # when the algorithms are being developed.
         else:
             reward = self._compute_reward_from_context_using_linear_mapping(context)
         return reward

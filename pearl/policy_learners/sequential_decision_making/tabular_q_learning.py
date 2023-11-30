@@ -153,9 +153,11 @@ class TabularQLearning(PolicyLearner):
         print("q-values:", self.q_values)
 
     def __str__(self) -> str:
+        exploration_module = self._exploration_module
+        assert isinstance(exploration_module, EGreedyExploration)
         items = [
             "α=" + str(self.learning_rate),
-            "ε=" + str(self._exploration_module.epsilon),
+            "ε=" + str(exploration_module.epsilon),
             "λ=" + str(self.discount_factor),
         ]
         return "Q-Learning" + (

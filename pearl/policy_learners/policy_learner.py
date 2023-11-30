@@ -8,7 +8,6 @@ from pearl.action_representation_modules.action_representation_module import (
 from pearl.action_representation_modules.identity_action_representation_module import (
     IdentityActionRepresentationModule,
 )
-
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
@@ -58,8 +57,8 @@ class PolicyLearner(torch.nn.Module, ABC):
         **options: Any,
     ) -> None:
         super(PolicyLearner, self).__init__()
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._exploration_module = (
+
+        self._exploration_module: ExplorationModule = (
             options["exploration_module"]
             if "exploration_module" in options
             else NoExploration()
@@ -95,8 +94,7 @@ class PolicyLearner(torch.nn.Module, ABC):
         return self._exploration_module
 
     @exploration_module.setter
-    # pyre-fixme[2]: Parameter must be annotated.
-    def exploration_module(self, new_exploration_module) -> None:
+    def exploration_module(self, new_exploration_module: ExplorationModule) -> None:
         self._exploration_module = new_exploration_module
 
     def get_action_representation_module(self) -> ActionRepresentationModule:
@@ -112,7 +110,7 @@ class PolicyLearner(torch.nn.Module, ABC):
     ) -> None:
         self._action_representation_module = value
 
-    def reset(self, action_space: ActionSpace) -> None:  # noqa: B027
+    def reset(self, action_space: ActionSpace) -> None:
         """Resets policy maker for a new episode. Default implementation does nothing."""
         pass
 
@@ -195,14 +193,14 @@ class PolicyLearner(torch.nn.Module, ABC):
         """
         raise NotImplementedError("learn_batch is not implemented")
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __str__(self):
+    def __str__(self) -> str:
         return self.__class__.__name__
 
 
 class DistributionalPolicyLearner(PolicyLearner):
     """
-    An abstract interface for distributional policy learners. Enforces the property of a risk sensitive safety module.
+    An abstract interface for distributional policy learners.
+    Enforces the property of a risk sensitive safety module.
     """
 
     def __init__(
@@ -211,8 +209,7 @@ class DistributionalPolicyLearner(PolicyLearner):
         is_action_continuous: bool,
         training_rounds: int = 100,
         batch_size: int = 1,
-        # pyre-fixme[2]: Parameter must be annotated.
-        **options,
+        **options: Any,
     ) -> None:
 
         super(DistributionalPolicyLearner, self).__init__(

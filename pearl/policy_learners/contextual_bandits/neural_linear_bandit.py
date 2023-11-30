@@ -139,7 +139,6 @@ class NeuralLinearBandit(NeuralBandit):
         action_space: DiscreteActionSpace = DEFAULT_ACTION_SPACE,
     ) -> torch.Tensor:
         # TODO generalize for all kinds of exploration module
-        assert isinstance(self._exploration_module, UCBExploration)
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
             action_space=action_space,
@@ -152,6 +151,7 @@ class NeuralLinearBandit(NeuralBandit):
         # dim: [batch_size, num_arms, feature_dim]
         processed_feature = self._deep_represent_layers(feature)
         # dim: [batch_size * num_arms, 1]
+        assert isinstance(self._exploration_module, UCBExploration)
         scores = self._exploration_module.get_scores(
             subjective_state=processed_feature,
             values=self._linear_regression(processed_feature),

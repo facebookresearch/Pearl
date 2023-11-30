@@ -163,6 +163,8 @@ class DisjointBanditContainer(ContextualBanditBase):
             subjective_state=feature,
             action_space=available_action_space,
             values=values,
+            # pyre-fixme[6]: In call `ExplorationModule.act`, for argument
+            # `representation`, expected `Optional[Module]` but got `List[Module]`.
             representation=self.models,
             action_availability_mask=action_availability_mask,
         )
@@ -177,7 +179,8 @@ class DisjointBanditContainer(ContextualBanditBase):
             UCB scores when exploration module is UCB
             Shape is (batch, num_arms) or (num_arms,)
         """
-        assert isinstance(self._exploration_module, ScoreExplorationBase)
+        exploration_module = self._exploration_module
+        assert isinstance(exploration_module, ScoreExplorationBase)
 
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
@@ -186,11 +189,11 @@ class DisjointBanditContainer(ContextualBanditBase):
         )
         # (batch_size, action_count, feature_size)
 
-        return self._exploration_module.get_scores(
+        return exploration_module.get_scores(
             subjective_state=feature,
             values=ensemble_forward(self.models, feature, use_for_loop=True),
             action_space=action_space,
-            representation=self.models,
+            representation=self.models,  # pyre-fixme[6]: unexpected type
         ).squeeze()
 
     @property

@@ -1,4 +1,2 @@
-from numbers import Number
-
-Value = Number
+Value = object
 Reward = Value

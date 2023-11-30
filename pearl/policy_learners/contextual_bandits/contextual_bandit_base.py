@@ -6,6 +6,7 @@ import torch
 from pearl.api.action import Action
 
 from pearl.api.action_space import ActionSpace
+from pearl.api.reward import Value
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
@@ -36,7 +37,7 @@ class ContextualBanditBase(PolicyLearner):
             batch_size=batch_size,
             exploration_module=exploration_module,
             on_policy=False,
-            is_action_continuous=False,  # TODO change this in children classes when we add CB for continuous
+            is_action_continuous=False,  # TODO change in subclasses when we add CB for continuous
         )
         self._feature_dim = feature_dim
 
@@ -59,11 +60,10 @@ class ContextualBanditBase(PolicyLearner):
         pass
 
     @abstractmethod
-    # pyre-fixme[3]: Return type must be annotated.
     def get_scores(
         self,
         subjective_state: SubjectiveState,
-    ):
+    ) -> Value:
         """
         Returns:
             Return scores trained by this contextual bandit algorithm
