@@ -28,9 +28,10 @@ class UCBExploration(ScoreExplorationBase):
     ) -> torch.Tensor:
         """
         Args:
-            subjective_state is the feature vector, if action feature and state feature needs to be concat
-                it should have been done at caller side, shape(batch_size, action_count, feature_dim) or (batch_size, feature_dim)
-            representation is one joint UCB-type model (e.g. LinUCB or Neural LinUCB)
+            subjective_state: feature vector (either state,
+            or state and action features after concatenation)
+            Shape should be either (batch_size, action_count, feature_dim) or
+            (batch_size, feature_dim).
         Returns:
             sigma with shape (batch_size, action_count) or (batch_size, 1)
         """

@@ -29,8 +29,7 @@ def mlp_block(
     last_activation: Optional[str] = None,
     dropout_ratio: float = 0.0,
     use_skip_connections: bool = False,
-    # pyre-fixme[2]: Parameter must be annotated.
-    **kwargs,
+    **kwargs,  # pyre-ignore
 ) -> nn.Module:
     """
     A simple MLP which can be reused to create more complex networks
@@ -46,8 +45,8 @@ def mlp_block(
     Returns:
         an nn.Sequential module consisting of mlp layers
     """
-    # pyre-fixme[58]: `+` is not supported for operand types `List[int]` and
-    #  `Optional[List[int]]`.
+    if hidden_dims is None:
+        hidden_dims = []
     dims = [input_dim] + hidden_dims + [output_dim]
     layers = []
     for i in range(len(dims) - 2):
@@ -70,7 +69,10 @@ def mlp_block(
                 single_layer_model = ResidualWrapper(single_layer_model)
             else:
                 logging.warn(
-                    f"Skip connections are enabled, but layer in_dim ({input_dim_current_layer}) != out_dim ({output_dim_current_layer}). Skip connection will not be added for this layer"
+                    "Skip connections are enabled, "
+                    f"but layer in_dim ({input_dim_current_layer}) != out_dim "
+                    f"({output_dim_current_layer})."
+                    "Skip connection will not be added for this layer"
                 )
         layers.append(single_layer_model)
 
@@ -83,12 +85,10 @@ def mlp_block(
         if dims[-2] == dims[-1]:
             last_layer_model = ResidualWrapper(last_layer_model)
         else:
-            # pyre-fixme[48]: Expression `logging.warn("Skip connections are
-            #  enabled, but layer in_dim ("f"{dims[-2]}"") != out_dim
-            #  ("f"{dims[-1]}""). Skip connection will not be added for this layer")`
-            #  has type `None` but must extend BaseException.
-            raise logging.warn(
-                f"Skip connections are enabled, but layer in_dim ({dims[-2]}) != out_dim ({dims[-1]}). Skip connection will not be added for this layer"
+            logging.warn(
+                "Skip connections are enabled, "
+                f"but layer in_dim ({dims[-2]}) != out_dim ({dims[-1]}). "
+                "Skip connection will not be added for this layer"
             )
     layers.append(last_layer_model)
     return nn.Sequential(*layers)
@@ -100,8 +100,7 @@ def conv_block(
     kernel_sizes: List[int],
     strides: List[int],
     paddings: List[int],
-    # pyre-fixme[2]: Parameter must be annotated.
-    use_batch_norm=False,
+    use_batch_norm: bool = False,
 ) -> nn.Module:
     """
     Reminder: torch.Conv2d layers expect inputs as (batch_size, in_channels, height, width)
@@ -134,12 +133,13 @@ def conv_block(
                 nn.BatchNorm2d(input_channels_count)
             )  # input to Batchnorm 2d is the number of input channels
         layers.append(nn.ReLU())
-        input_channels_count = out_channels  # number of input channels to next layer is number of output channels of previous layer
+        # number of input channels to next layer is number of output channels of previous layer:
+        input_channels_count = out_channels
 
     return nn.Sequential(*layers)
 
 
-## To do: the name of this function needs to be revised to xavier_init_weights
+# TODO: the name of this function needs to be revised to xavier_init_weights
 def init_weights(m: nn.Module) -> None:
     if isinstance(m, nn.Linear):
         nn.init.xavier_uniform_(m.weight)

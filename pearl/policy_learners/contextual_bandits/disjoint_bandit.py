@@ -156,6 +156,8 @@ class DisjointBanditContainer(ContextualBanditBase):
             action_space=available_action_space,
             state_features_only=self._state_features_only,
         )
+        # (batch_size, action_count, feature_size)
+
         values = ensemble_forward(self.models, feature, use_for_loop=True)
         return self._exploration_module.act(
             subjective_state=feature,
@@ -176,12 +178,14 @@ class DisjointBanditContainer(ContextualBanditBase):
             Shape is (batch, num_arms) or (num_arms,)
         """
         assert isinstance(self._exploration_module, ScoreExplorationBase)
-        # batch_size, action_count, feature_size
+
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
             action_space=action_space,
             state_features_only=self._state_features_only,
         )
+        # (batch_size, action_count, feature_size)
+
         return self._exploration_module.get_scores(
             subjective_state=feature,
             values=ensemble_forward(self.models, feature, use_for_loop=True),

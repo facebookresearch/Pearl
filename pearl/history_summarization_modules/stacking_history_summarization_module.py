@@ -1,9 +1,11 @@
-from typing import Optional
-
 import torch
+from pearl.api.action import Action
+from pearl.api.history import History
+from pearl.api.observation import Observation
 from pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
 )
+from pearl.utils.tensor_like import assert_is_tensor_like
 
 
 class StackingHistorySummarizationModule(HistorySummarizationModule):
@@ -24,11 +26,13 @@ class StackingHistorySummarizationModule(HistorySummarizationModule):
         )
 
     def summarize_history(
-        self, observation: torch.Tensor, action: Optional[torch.Tensor]
+        self, observation: Observation, action: Action
     ) -> torch.Tensor:
         if action is None:
             action = self.default_action
 
+        observation = assert_is_tensor_like(observation)
+        action = assert_is_tensor_like(action)
         assert observation.shape[-1] + action.shape[-1] == self.history.shape[-1]
         observation_action_pair = torch.cat((action, observation), dim=-1).detach()
         self.history = torch.cat(
@@ -45,7 +49,8 @@ class StackingHistorySummarizationModule(HistorySummarizationModule):
     def get_history(self) -> torch.Tensor:
         return self.history.view((-1))
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: History) -> torch.Tensor:
+        x = assert_is_tensor_like(x)
         return x
 
     def reset(self) -> None:

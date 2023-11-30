@@ -37,12 +37,10 @@ class VanillaValueNetwork(ValueNetwork):
         input_dim: int,
         hidden_dims: Optional[List[int]],
         output_dim: int = 1,
-        # pyre-fixme[2]: Parameter must be annotated.
-        **kwargs,
+        **kwargs,  # pyre-ignore
     ) -> None:
         super(VanillaValueNetwork, self).__init__()
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._model = mlp_block(
+        self._model: nn.Module = mlp_block(
             input_dim=input_dim,
             hidden_dims=hidden_dims,
             output_dim=output_dim,
@@ -78,7 +76,6 @@ class VanillaCNN(ValueNetwork):
         An nn.Sequential module consisting of a convolutional block followed by an mlp.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         input_width: int,
@@ -94,7 +91,7 @@ class VanillaCNN(ValueNetwork):
         use_batch_norm_conv: bool = False,
         use_batch_norm_fully_connected: bool = False,
         output_dim: int = 1,  # dimension of the final output
-    ):
+    ) -> None:
 
         assert (
             len(kernel_sizes)
@@ -112,17 +109,15 @@ class VanillaCNN(ValueNetwork):
         self._strides = strides
         self._paddings = paddings
         if hidden_dims_fully_connected is None:
-            # pyre-fixme[4]: Attribute must be annotated.
-            self._hidden_dims_fully_connected = []
+            self._hidden_dims_fully_connected: List[int] = []
         else:
-            self._hidden_dims_fully_connected = hidden_dims_fully_connected
+            self._hidden_dims_fully_connected: List[int] = hidden_dims_fully_connected
 
         self._use_batch_norm_conv = use_batch_norm_conv
         self._use_batch_norm_fully_connected = use_batch_norm_fully_connected
         self._output_dim = output_dim
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._model_cnn = conv_block(
+        self._model_cnn: nn.Module = conv_block(
             input_channels_count=self._input_channels,
             output_channels_list=self._output_channels,
             kernel_sizes=self._kernel_sizes,
@@ -131,10 +126,8 @@ class VanillaCNN(ValueNetwork):
             use_batch_norm=self._use_batch_norm_conv,
         )
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._mlp_input_dims = self.compute_output_dim_model_cnn()
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._model_fc = mlp_block(
+        self._mlp_input_dims: int = self.compute_output_dim_model_cnn()
+        self._model_fc: nn.Module = mlp_block(
             input_dim=self._mlp_input_dims,
             hidden_dims=self._hidden_dims_fully_connected,
             output_dim=self._output_dim,
@@ -162,7 +155,6 @@ class CNNQValueNetwork(VanillaCNN):
     A CNN version of state-action value (Q-value) network.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         input_width: int,
@@ -177,7 +169,7 @@ class CNNQValueNetwork(VanillaCNN):
         output_dim: int = 1,
         use_batch_norm_conv: bool = False,
         use_batch_norm_fully_connected: bool = False,
-    ):
+    ) -> None:
         super(CNNQValueNetwork, self).__init__(
             input_width=input_width,
             input_height=input_height,
@@ -192,10 +184,8 @@ class CNNQValueNetwork(VanillaCNN):
             output_dim=output_dim,
         )
         # we concatenate actions to state representations in the mlp block of the Q-value network
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._mlp_input_dims = self.compute_output_dim_model_cnn() + action_dim
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._model_fc = mlp_block(
+        self._mlp_input_dims: int = self.compute_output_dim_model_cnn() + action_dim
+        self._model_fc: nn.Module = mlp_block(
             input_dim=self._mlp_input_dims,
             hidden_dims=self._hidden_dims_fully_connected,
             output_dim=self._output_dim,
@@ -206,13 +196,12 @@ class CNNQValueNetwork(VanillaCNN):
     def forward(self, x: Tensor) -> Tensor:
         return self._model(x)
 
-    # pyre-fixme[3]: Return type must be annotated.
     def get_q_values(
         self,
         state_batch: Tensor,
         action_batch: Tensor,
         curr_available_actions_batch: Optional[Tensor] = None,
-    ):
+    ) -> Tensor:
         batch_size = state_batch.shape[0]
         state_representation_batch = self._model_cnn(state_batch)
         state_embedding_batch = torch.flatten(
@@ -236,27 +225,18 @@ class VanillaQValueNetwork(QValueNetwork):
     using the state-action pair as the input for the value network.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
-        # pyre-fixme[2]: Parameter must be annotated.
-        state_dim,
-        # pyre-fixme[2]: Parameter must be annotated.
-        action_dim,
-        # pyre-fixme[2]: Parameter must be annotated.
-        hidden_dims,
-        # pyre-fixme[2]: Parameter must be annotated.
-        output_dim,
-        # pyre-fixme[2]: Parameter must be annotated.
-        use_layer_norm=False,
-    ):
+        state_dim: int,
+        action_dim: int,
+        hidden_dims: List[int],
+        output_dim: int,
+        use_layer_norm: bool = False,
+    ) -> None:
         super(VanillaQValueNetwork, self).__init__()
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._state_dim = state_dim
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._action_dim = action_dim
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._model = mlp_block(
+        self._state_dim: int = state_dim
+        self._action_dim: int = action_dim
+        self._model: nn.Module = mlp_block(
             input_dim=state_dim + action_dim,
             hidden_dims=hidden_dims,
             output_dim=output_dim,
@@ -266,13 +246,12 @@ class VanillaQValueNetwork(QValueNetwork):
     def forward(self, x: Tensor) -> Tensor:
         return self._model(x)
 
-    # pyre-fixme[3]: Return type must be annotated.
     def get_q_values(
         self,
         state_batch: Tensor,
         action_batch: Tensor,
         curr_available_actions_batch: Optional[Tensor] = None,
-    ):
+    ) -> Tensor:
         x = torch.cat([state_batch, action_batch], dim=-1)
         return self.forward(x).view(-1)
 
@@ -287,50 +266,43 @@ class VanillaQValueNetwork(QValueNetwork):
 
 class QuantileQValueNetwork(DistributionalQValueNetwork):
     """
-    A quantile version of state-action value (Q-value) network. For each (state, action) input pairs,
+    A quantile version of state-action value (Q-value) network.
+    For each (state, action) input pairs,
     it returns theta(s,a), the locations of quantiles which parameterize the Q value distribution.
 
     See the parameterization in QR DQN paper: https://arxiv.org/pdf/1710.10044.pdf for more details.
 
     Assume N is the number of quantiles.
-    1) For this parameterization, the quantiles are fixed (1/N), while the quantile locations, theta(s,a), are learned.
-    2) The return distribution is represented as: Z(s, a) = (1/N) * sum_{i=1}^N theta_i (s,a), where (theta_1(s,a), .. , theta_N(s,a)),
+    1) For this parameterization, the quantiles are fixed (1/N),
+       while the quantile locations, theta(s,a), are learned.
+    2) The return distribution is represented as: Z(s, a) = (1/N) * sum_{i=1}^N theta_i (s,a),
+       where (theta_1(s,a), .. , theta_N(s,a)),
     which represent the quantile locations, are outouts of the QuantileQValueNetwork.
 
     Args:
         num_quantiles: the number of quantiles N, used to approximate the value distribution.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
-        # pyre-fixme[2]: Parameter must be annotated.
-        state_dim,
-        # pyre-fixme[2]: Parameter must be annotated.
-        action_dim,
-        # pyre-fixme[2]: Parameter must be annotated.
-        hidden_dims,
-        # pyre-fixme[2]: Parameter must be annotated.
-        num_quantiles,
-        # pyre-fixme[2]: Parameter must be annotated.
-        use_layer_norm=False,
-    ):
+        state_dim: int,
+        action_dim: int,
+        hidden_dims: List[int],
+        num_quantiles: int,
+        use_layer_norm: bool = False,
+    ) -> None:
         super(QuantileQValueNetwork, self).__init__()
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._model = mlp_block(
+        self._model: nn.Module = mlp_block(
             input_dim=state_dim + action_dim,
             hidden_dims=hidden_dims,
             output_dim=num_quantiles,
             use_layer_norm=use_layer_norm,
         )
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._state_dim = state_dim
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._action_dim = action_dim
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._num_quantiles = num_quantiles
+        self._state_dim: int = state_dim
+        self._action_dim: int = action_dim
+        self._num_quantiles: int = num_quantiles
         self.register_buffer(
             "_quantiles", torch.arange(0, self._num_quantiles + 1) / self._num_quantiles
         )
@@ -376,34 +348,28 @@ class QuantileQValueNetwork(DistributionalQValueNetwork):
 
 class DuelingQValueNetwork(QValueNetwork):
     """
-    Dueling architecture consists of state architecture, value architecture, and advantage architecture.
+    Dueling architecture consists of state architecture, value architecture,
+    and advantage architecture.
 
-    The archtecture is as follows:
+    The architecture is as follows:
     state --> state_arch -----> value_arch --> value(s)-----------------------\
-                                |                                                   ---> add --> Q(s,a)
-    action --------------concat-> advantage_arch --> advantage(s, a)--- -mean --/
+                                |                                              ---> add --> Q(s,a)
+    action ------------concat-> advantage_arch --> advantage(s, a)--- -mean --/
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
-        # pyre-fixme[2]: Parameter must be annotated.
-        state_dim,
-        # pyre-fixme[2]: Parameter must be annotated.
-        action_dim,
-        # pyre-fixme[2]: Parameter must be annotated.
-        hidden_dims,
-        # pyre-fixme[2]: Parameter must be annotated.
-        output_dim,
+        state_dim: int,
+        action_dim: int,
+        hidden_dims: List[int],
+        output_dim: int,
         value_hidden_dims: Optional[List[int]] = None,
         advantage_hidden_dims: Optional[List[int]] = None,
         state_hidden_dims: Optional[List[int]] = None,
-    ):
+    ) -> None:
         super(DuelingQValueNetwork, self).__init__()
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._state_dim = state_dim
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._action_dim = action_dim
+        self._state_dim: int = state_dim
+        self._action_dim: int = action_dim
 
         # state architecture
         self.state_arch = VanillaValueNetwork(
@@ -436,9 +402,7 @@ class DuelingQValueNetwork(QValueNetwork):
     def action_dim(self) -> int:
         return self._action_dim
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def forward(self, state, action):
+    def forward(self, state: Tensor, action: Tensor) -> Tensor:
         assert state.shape[-1] == self.state_dim
         assert action.shape[-1] == self.action_dim
 
@@ -461,13 +425,12 @@ class DuelingQValueNetwork(QValueNetwork):
         )  # -2 is dimension denoting number of actions
         return state_value + advantage - advantage_mean
 
-    # pyre-fixme[3]: Return type must be annotated.
     def get_q_values(
         self,
         state_batch: Tensor,
         action_batch: Tensor,
         curr_available_actions_batch: Optional[Tensor] = None,
-    ):
+    ) -> Tensor:
         """
         Args:
             batch of states: (batch_size, state_dim)
@@ -480,10 +443,13 @@ class DuelingQValueNetwork(QValueNetwork):
                in this case, the action batch will be the batch of all available actions
                doing a forward pass with mean subtraction is correct
 
-            b) when curr_available_actions_batch is not None, extend the state_batch tensor to include available actions
-               so, state_batch: (batch_size, state_dim) --> (batch_size, available_action_space_size, state_dim)
-               then, do a forward pass from Q network to calculate q-values for (state, all available actions)
-               then, choose q values for given (state, action) pair in the batch
+            b) when curr_available_actions_batch is not None,
+               extend the state_batch tensor to include available actions,
+               that is, state_batch: (batch_size, state_dim)
+               --> (batch_size, available_action_space_size, state_dim)
+               then, do a forward pass from Q network to calculate
+               q-values for (state, all available actions),
+               followed by q values for given (state, action) pair in the batch
 
         TODO: assumes a gym environment interface with fixed action space, change it with masking
         """
@@ -565,22 +531,18 @@ class TwoTowerNetwork(QValueNetwork):
         )
         self._interaction_features.xavier_init()
 
-    """ This is a horrible way to write this but I will leave it for refactoring which I plan to do next """
-
-    # pyre-fixme[3]: Return type must be annotated.
-    def forward(self, state_action: Tensor):
+    def forward(self, state_action: Tensor) -> Tensor:
         state = state_action[..., : self._state_input_dim]
         action = state_action[..., self._state_input_dim :]
         output = self.get_q_values(state_batch=state, action_batch=action)
         return output
 
-    # pyre-fixme[3]: Return type must be annotated.
     def get_q_values(
         self,
         state_batch: Tensor,
         action_batch: Tensor,
         curr_available_actions_batch: Optional[Tensor] = None,
-    ):
+    ) -> Tensor:
         state_batch_features = self._state_features.forward(state_batch)
         """ this might need to be done in tensor_based_replay_buffer """
         action_batch_features = self._action_features.forward(
@@ -609,22 +571,14 @@ extract state and/or action features.
 class TwoTowerQValueNetwork(TwoTowerNetwork):
     def __init__(
         self,
-        # pyre-fixme[2]: Parameter must be annotated.
-        state_dim,
-        # pyre-fixme[2]: Parameter must be annotated.
-        action_dim,
-        # pyre-fixme[2]: Parameter must be annotated.
-        hidden_dims,
-        # pyre-fixme[2]: Parameter must be annotated.
-        output_dim=1,
-        # pyre-fixme[2]: Parameter must be annotated.
-        state_output_dim=None,
-        # pyre-fixme[2]: Parameter must be annotated.
-        action_output_dim=None,
-        # pyre-fixme[2]: Parameter must be annotated.
-        state_hidden_dims=None,
-        # pyre-fixme[2]: Parameter must be annotated.
-        action_hidden_dims=None,
+        state_dim: int,
+        action_dim: int,
+        hidden_dims: List[int],
+        output_dim: int = 1,
+        state_output_dim: Optional[int] = None,
+        action_output_dim: Optional[int] = None,
+        state_hidden_dims: Optional[List[int]] = None,
+        action_hidden_dims: Optional[List[int]] = None,
     ) -> None:
 
         super().__init__(

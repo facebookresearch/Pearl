@@ -6,6 +6,7 @@ import torch
 
 from pearl.utils.instantiations.environments.sparse_reward_environment import (
     DiscreteSparseRewardEnvironment,
+    SparseRewardEnvironmentObservation,
 )
 
 
@@ -30,14 +31,17 @@ class TestSparseRewardEnvironment(unittest.TestCase):
         self.assertEqual(env._agent_position[0], x + 1)
         self.assertEqual(env._agent_position[1], y)
         x = x + 1
+
         result = env.step(torch.tensor(1))
         self.assertEqual(env._agent_position[0], x)
         self.assertEqual(env._agent_position[1], y + 1)
         y = y + 1
+
         result = env.step(torch.tensor(2))
         self.assertEqual(env._agent_position[0], x - 1)
         self.assertEqual(env._agent_position[1], y)
         x = x - 1
+
         result = env.step(torch.tensor(3))
         self.assertEqual(env._agent_position[0], x)
         self.assertEqual(env._agent_position[1], y - 1)

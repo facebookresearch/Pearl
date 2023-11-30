@@ -78,7 +78,8 @@ class LinearBandit(ContextualBanditBase):
         """
         Args:
             subjective_state: state will be applied to different action vectors in action_space
-            available_action_space: contains a list of action vectors, currenly only supports static space
+            available_action_space: contains a list of action vectors.
+                                    Currently, only static spaces are supported.
         Return:
             action index chosen given state and action vectors
         """
@@ -93,8 +94,6 @@ class LinearBandit(ContextualBanditBase):
         values = self.model(new_feature)  # (batch_size, action_count)
         assert values.shape == (new_feature.shape[0], action_count)
         return self._exploration_module.act(
-            # TODO we might want to name this new_feature
-            # so exploration module doesnt need to worry about broadcast state to different action vector
             subjective_state=new_feature,
             action_space=available_action_space,
             values=values,

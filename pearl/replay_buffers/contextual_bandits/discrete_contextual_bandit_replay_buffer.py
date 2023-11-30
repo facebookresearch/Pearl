@@ -9,6 +9,7 @@ from pearl.api.state import SubjectiveState
 
 from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
 from pearl.replay_buffers.transition import Transition, TransitionBatch
+from pearl.utils.tensor_like import assert_is_tensor_like
 
 
 class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
@@ -43,6 +44,7 @@ class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
     ) -> None:
         # signature of push is the same as others, in order to match codes in PearlAgent
         # TODO add curr_available_actions and curr_available_actions_mask if needed in the future
+        action = assert_is_tensor_like(action)
         self.memory.append(
             Transition(
                 state=self._process_single_state(state),

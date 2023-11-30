@@ -1,3 +1,4 @@
+import torch
 from pearl.api.action import Action
 from pearl.api.history import History
 from pearl.api.observation import Observation
@@ -20,12 +21,15 @@ class IdentityHistorySummarizationModule(HistorySummarizationModule):
         self, observation: Observation, action: Action
     ) -> SubjectiveState:
         self.history = observation
+        # pyre-fixme[7]: incompatible return type
+        # Due to currently incorrect assumption that SubjectiveState
+        # is always a Tensor (not the case for tabular Q-learning, for example)
         return observation
 
     def get_history(self) -> History:
         return self.history
 
-    def forward(self, x: History) -> SubjectiveState:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x
 
     def reset(self) -> None:

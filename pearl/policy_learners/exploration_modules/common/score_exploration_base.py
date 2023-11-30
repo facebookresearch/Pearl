@@ -12,12 +12,14 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationType,
 )
 from pearl.utils.functional_utils.learning.action_utils import get_model_actions
+from pearl.utils.tensor_like import assert_is_tensor_like
 
 
 class ScoreExplorationBase(ExplorationModule):
     """
     Value exploration base module.
-    Specific exploration modules need to implement `get_scores`. Actions with highest scores will be chosen.
+    Specific exploration modules need to implement `get_scores`.
+    Actions with highest scores will be chosen.
     """
 
     def __init__(self) -> None:
@@ -54,6 +56,7 @@ class ScoreExplorationBase(ExplorationModule):
             values=values,
             representation=representation,
         )  # shape: (batch_size, action_count)
+        scores = assert_is_tensor_like(scores)
         selected_action = get_model_actions(scores, action_availability_mask)
         return selected_action.squeeze()
 

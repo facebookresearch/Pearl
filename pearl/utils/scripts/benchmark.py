@@ -383,6 +383,7 @@ def collect_data(
         with open(
             dir_name + "returns_data_seed_" + str(seed) + ".pickle", "wb"
         ) as handle:
+            # @lint-ignore PYTHONPICKLEISBAD
             pickle.dump(
                 data_by_environment_and_method, handle, protocol=pickle.HIGHEST_PROTOCOL
             )

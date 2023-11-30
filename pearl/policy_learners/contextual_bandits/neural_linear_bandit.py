@@ -104,6 +104,7 @@ class NeuralLinearBandit(NeuralBandit):
         action_availability_mask: Optional[torch.Tensor] = None,
         exploit: bool = False,
     ) -> Action:
+        assert isinstance(action_space, DiscreteActionSpace)
         # It doesnt make sense to call act if we are not working with action vector
         assert isinstance(action_space, DiscreteActionSpace)
         assert action_space.action_dim > 0
@@ -113,8 +114,10 @@ class NeuralLinearBandit(NeuralBandit):
             state_features_only=self._state_features_only,
         )
         mlp_values = self._deep_represent_layers(new_feature)
-        # `_linear_regression` is not nn.Linear(). It is a customized linear layer
-        # that can be updated by analytical method (matrix calculations) rather than gradient descent of torch optimizer.
+        # `_linear_regression` is not nn.Linear().
+        # It is a customized linear layer
+        # that can be updated by analytical method (matrix calculations)
+        # rather than gradient descent of torch optimizer.
         values = self._linear_regression(mlp_values)
 
         # batch_size * action_count

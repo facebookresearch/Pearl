@@ -14,7 +14,6 @@ from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
 from pearl.api.environment import Environment
-from pearl.api.observation import Observation
 
 
 class FixedNumberOfStepsEnvironment(Environment):
@@ -28,7 +27,7 @@ class FixedNumberOfStepsEnvironment(Environment):
             [torch.tensor(True), torch.tensor(False)]
         )
 
-    def step(self, action: Action) -> Observation:
+    def step(self, action: Action) -> ActionResult:
         self.number_of_steps_so_far += 1
         return ActionResult(
             observation=self.number_of_steps_so_far,
@@ -57,8 +56,8 @@ class FixedNumberOfStepsEnvironment(Environment):
 
 class BoxObservationsEnvironmentBase(Environment, ABC):
     """
-    An environment adapter mapping a Discrete observation space into a Box observation space with dimension 1.
-
+    An environment adapter mapping a Discrete observation space into
+    a Box observation space with dimension 1.
     This is useful to use with agents expecting tensor observations.
     """
 
@@ -112,7 +111,8 @@ class BoxObservationsEnvironmentBase(Environment, ABC):
 
 class BoxObservationsFromDiscrete(BoxObservationsEnvironmentBase):
     """
-    An environment adapter mapping a Discrete observation space into a Box observation space with dimension 1.
+    An environment adapter mapping a Discrete observation space into
+    a Box observation space with dimension 1.
     The observations are tensors of length 1 containing the original observations.
 
     This is useful to use with agents expecting tensor observations.
@@ -138,7 +138,8 @@ class BoxObservationsFromDiscrete(BoxObservationsEnvironmentBase):
 
 class OneHotObservationsFromDiscrete(BoxObservationsEnvironmentBase):
     """
-    An environment adapter mapping a Discrete observation space into a Box observation space with dimension 1
+    An environment adapter mapping a Discrete observation space into
+    a Box observation space with dimension 1
     where the observation is a one-hot vector.
 
     This is useful to use with agents expecting tensor observations.

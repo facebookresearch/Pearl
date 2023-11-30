@@ -31,6 +31,7 @@ from pearl.utils.functional_utils.learning.loss_fn_utils import (
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import optim
 
+
 # TODO: Only support discrete action space problems for now and assumes Gym action space.
 class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
     """
@@ -85,12 +86,14 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         if network_instance is not None:
             # pyre-fixme[4]: Attribute must be annotated.
             self._Q = network_instance
-            assert (
-                network_instance.state_dim == state_dim
-            ), "input state dimension doesn't match network state dimension for QuantileQValueNetwork"
-            assert (
-                network_instance.action_dim == action_space.n
-            ), "input action dimension doesn't match network action dimension for QuantileQValueNetwork"
+            assert network_instance.state_dim == state_dim, (
+                "input state dimension doesn't match network "
+                "state dimension for QuantileQValueNetwork"
+            )
+            assert network_instance.action_dim == action_space.n, (
+                "input action dimension doesn't match network "
+                "action dimension for QuantileQValueNetwork"
+            )
         else:
             assert hidden_dims is not None
             self._Q = make_specified_network()
@@ -157,23 +160,28 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
     ) -> torch.tensor:
         pass
 
-    # learn quantiles of q value distribution using distribution temporal difference learning (specifically, quantile regression)
+    # learn quantiles of q value distribution using distribution temporal
+    # difference learning (specifically, quantile regression)
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """
         Assume N is the number of quantiles.
 
-        - This is the learning update for the quantile q value network which, for each (state, action) pair, computes the quantile locations
+        - This is the learning update for the quantile q value network which,
+        for each (state, action) pair, computes the quantile locations
         (theta_1(s,a), .. , theta_N(s,a)). The quantiles are fixed to be 1/N.
-        - The return distribution is represented as: Z(s, a) = (1/N) * sum_{i=1}^N theta_i (s,a), where (theta_1(s,a), .. , theta_N(s,a)),
+        - The return distribution is represented as: Z(s, a) = (1/N) * sum_{i=1}^N theta_i (s,a),
+        where (theta_1(s,a), .. , theta_N(s,a)),
         which represent the quantile locations, are outouts of the QuantileQValueNetwork.
         - Loss function:
-                sum_{i=1}^N E_{j} [ rho_{tau^*_i}( T theta_j(s',a*) - theta_i(s,a) ) ]     - Equation (1)
+                sum_{i=1}^N E_{j} [ rho_{tau^*_i}( T theta_j(s',a*) - theta_i(s,a) ) ] - Eq (1)
 
             - tau^*_i is the i-th quantile midpoint ((tau_i + tau_{i-1})/2),
             - T is the distributional Bellman operator,
             - rho_tau(.) is the asymmetric quantile huber loss function,
-            - theta_i and theta_j are outputs of the QuantileQValueNetwork, representing locations of quantiles,
-            - a* is the greedy action with respect to Q values (computed from the q value distribution under some risk metric)
+            - theta_i and theta_j are outputs of the QuantileQValueNetwork,
+              representing locations of quantiles,
+            - a* is the greedy action with respect to Q values (computed from the q value
+              distribution under some risk metric)
 
         See the parameterization in QR DQN paper: https://arxiv.org/pdf/1710.10044.pdf for details.
         """
@@ -181,16 +189,19 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         batch_size = batch.state.shape[0]
 
         """
-        Step 1: a forward pass through the quantile network which gives quantile locations, theta(s,a), for each (state, action) pair
+        Step 1: a forward pass through the quantile network which gives quantile locations,
+        theta(s,a), for each (state, action) pair
         """
-        # a forward pass through the quantile network which gives quantile locations for each (state, action) pair
+        # a forward pass through the quantile network which gives quantile locations
+        # for each (state, action) pair
         quantile_state_action_values = self._Q.get_q_value_distribution(
             state_batch=batch.state, action_batch=batch.action
         )  # shape: (batch_size, num_quantiles)
 
         """
         Step 2: compute Bellman target for each quantile location
-            - add a dimension to the reward and (1-done) vectors so they can be broadcasted with the next state quantiles
+            - add a dimension to the reward and (1-done) vectors so they
+              can be broadcasted with the next state quantiles
         """
 
         with torch.no_grad():
@@ -203,7 +214,8 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             )
 
         """
-        Step 3: pairwise distributional quantile loss: T theta_j(s',a*) - theta_i(s,a) for i,j in (1, .. , N)
+        Step 3: pairwise distributional quantile loss:
+        T theta_j(s',a*) - theta_i(s,a) for i,j in (1, .. , N)
             - output shape: (batch_size, N, N)
         """
         pairwise_quantile_loss = quantile_next_state_greedy_action_values.unsqueeze(

@@ -41,12 +41,13 @@ class EpistemicNeuralNetwork(ABC, nn.Module):
 
 class MLPWithPrior(nn.Module):
     """
-    MLP model with prior regularization. If used as a single model, this is equivalent to L2 regularization.
+    MLP model with prior regularization.
+    If used as a single model, this is equivalent to L2 regularization.
     Args:
-        input_dim: int. Input feature dimension.
-        hidden_dims: List[int]. Hidden layer dimensions.
-        output_dim: int. Output dimension.
-        scale: float. prior regularization scale.
+        input_dim (int): The dimension of the input features.
+        hidden_dims (List[int]): A list containing the dimensions of the hidden layers.
+        output_dim (int): The dimension of the output.
+        scale (float): The scale of the prior regularization.
     """
 
     def __init__(
@@ -57,10 +58,8 @@ class MLPWithPrior(nn.Module):
         scale: float = 1.0,
     ) -> None:
         super(MLPWithPrior, self).__init__()
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.base_net = mlp_block(input_dim, hidden_dims, output_dim)
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.prior_net = mlp_block(input_dim, hidden_dims, output_dim).eval()
+        self.base_net: nn.Module = mlp_block(input_dim, hidden_dims, output_dim)
+        self.prior_net: nn.Module = mlp_block(input_dim, hidden_dims, output_dim).eval()
         self.scale = scale
 
     def forward(self, x: Tensor) -> Tensor:

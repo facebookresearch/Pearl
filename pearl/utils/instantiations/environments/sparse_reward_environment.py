@@ -24,12 +24,6 @@ from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
 
 from pearl.api.environment import Environment
-from pearl.api.history import History
-
-from pearl.history_summarization_modules.history_summarization_module import (
-    HistorySummarizationModule,
-    SubjectiveState,
-)
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 # pyre-fixme[4]: Attribute annotation cannot be `Any`.

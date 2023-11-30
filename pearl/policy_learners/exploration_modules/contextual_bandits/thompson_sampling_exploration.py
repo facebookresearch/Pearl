@@ -34,7 +34,8 @@ class ThompsonSamplingExplorationLinear(ScoreExplorationBase):
         exploit_action: Optional[Action] = None,
     ) -> torch.Tensor:
         """
-        Given the linear bandit model, sample its parameters, and multiplies with feature to get predicted score.
+        Given the linear bandit model, sample its parameters,
+        and multiplies with feature to get predicted score.
         """
         assert representation is not None
         batch_size = subjective_state.shape[0]

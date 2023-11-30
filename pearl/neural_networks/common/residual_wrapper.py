@@ -13,8 +13,7 @@ class ResidualWrapper(nn.Module):
     model = torch.nn.Sequential(*layers)
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __init__(self, module: nn.Module):
+    def __init__(self, module: nn.Module) -> None:
         super().__init__()
         self.module = module
 

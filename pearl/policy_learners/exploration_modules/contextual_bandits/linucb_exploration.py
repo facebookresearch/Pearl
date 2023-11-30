@@ -6,6 +6,7 @@ from pearl.api.state import SubjectiveState
 from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
     UCBExploration,
 )
+from pearl.utils.tensor_like import assert_is_tensor_like
 
 
 class LinUCBExploration(UCBExploration):
@@ -21,9 +22,10 @@ class LinUCBExploration(UCBExploration):
     ) -> torch.Tensor:
         """
         Args:
-            subjective_state is the feature vector, if action feature and state feature needs to be concat
-                it should have been done at caller side, shape(batch_size, action_count, feature_dim) or (batch_size, feature_dim)
-            representation is one linear regression
+            subjective_state: feature vector (either state,
+            or state and action features after concatenation)
+            Shape should be either (batch_size, action_count, feature_dim) or
+            (batch_size, feature_dim).
         Returns:
             sigma with shape (batch_size, action_count) or (batch_size, 1)
         """
@@ -52,6 +54,7 @@ class DisjointLinUCBExploration(LinUCBExploration):
             representation: unlike LinUCBExploration, here it is a list for different actions
         """
         assert representation is not None
+        subjective_state = assert_is_tensor_like(subjective_state)
         sigma = []
         for i, linear_regression in enumerate(representation):
             sigma.append(

@@ -7,6 +7,7 @@ from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
 )
+from pearl.utils.tensor_like import assert_is_tensor_like
 
 
 class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
@@ -21,12 +22,14 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
     and replay the transitions again for new rewards and push
 
     capacity: size of the replay buffer
-    goal_dim: dimension of goal of the problem. as input to push API will be the final state representation
-              so, it is already a cat among eg position in sparse reward environment + goal
-              we could need this info in order to split alternative goal after episode terminates
+    goal_dim: dimension of goal of the problem.
+              Subjective state input to `push` method will be the final state representation
+              so we could need this info in order to split alternative goal after episode
+              terminates.
     reward_fn: is the F here: F(state+goal, action) = reward
-    done_fn: This is different from paper. Original paper doesnt have it. We need it for games which may end earlier
-              If this is not defined, then use done value from original trajectory.
+    done_fn: This is different from paper. Original paper doesn't have it.
+             We need it for games which may end earlier.
+             If this is not defined, then use done value from original trajectory.
     """
 
     def __init__(
@@ -58,6 +61,7 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
         done: bool,
         cost: Optional[float] = None,
     ) -> None:
+        next_state = assert_is_tensor_like(next_state)
         # assuming state and goal are all list, so we could use + to cat
         super(HindsightExperienceReplayBuffer, self).push(
             # input here already have state and goal cat together

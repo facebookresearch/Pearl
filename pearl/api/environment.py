@@ -40,6 +40,8 @@ class Environment(ABC):
         pass
 
     def close(self) -> None:  # noqa: B027
-        """Closes environment, taking care of any cleanup needed. Default
-        implementation does nothing."""
+        """
+        Closes environment, taking care of any cleanup needed.
+        Default implementation does nothing.
+        """
         pass

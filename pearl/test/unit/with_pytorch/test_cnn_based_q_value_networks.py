@@ -33,8 +33,8 @@ class TestCNNQValueNetworks(unittest.TestCase):
 
     def test_forward_pass(self) -> None:
         """
-        test to check if the get_q_values method returns a saclar for a batch of images (observations)
-        and a random batch of actions
+        test to check if the get_q_values method returns a scalar for a batch of
+        images (observations) and a random batch of actions
         """
         input_width = 28  # specifications for mnist dataset
         input_height = 28  # specifications for mnist dataset

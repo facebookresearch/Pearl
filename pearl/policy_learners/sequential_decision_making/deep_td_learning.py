@@ -163,7 +163,7 @@ class DeepTDLearning(PolicyLearner):
         available_action_space: ActionSpace,
         exploit: bool = False,
     ) -> Action:
-        # TODO: Assumes subjective state is a torch tensor and gym action space.
+        # TODO: Assumes gym action space.
         # Fix the available action space.
         assert isinstance(available_action_space, DiscreteActionSpace)
         with torch.no_grad():

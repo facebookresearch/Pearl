@@ -33,7 +33,6 @@ from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
 )
 
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import optim
 
 
