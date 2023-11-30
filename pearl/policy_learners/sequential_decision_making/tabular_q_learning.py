@@ -1,5 +1,5 @@
 import random
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple
 
 import torch
 
@@ -99,6 +99,12 @@ class TabularQLearning(PolicyLearner):
         self,
         replay_buffer: ReplayBuffer,
     ) -> Dict[str, Any]:
+        # We know the sampling result from SingleTransitionReplayBuffer
+        # is a list with a single tuple.
+        transitions = replay_buffer.sample(1)
+        assert isinstance(transitions, Iterable)
+        transition = next(iter(transitions))
+        assert isinstance(transition, Iterable)
         # We currently assume replay buffer only contains last transition (on-policy)
         (
             state,
@@ -110,7 +116,7 @@ class TabularQLearning(PolicyLearner):
             _next_available_actions,
             done,
             _cost,
-        ) = next(iter(replay_buffer.sample(1)))
+        ) = transition
         old_q_value = self.q_values.get((state, action.item()), 0)
         next_q_values = [
             self.q_values.get((next_state, next_action.item()), 0)

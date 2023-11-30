@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Iterable
+from typing import Any
 
 import torch
 
@@ -21,17 +21,12 @@ class ReplayBuffer(ABC):
         pass
 
     @abstractmethod
-    # pyre-fixme[2]: Parameter must be annotated.
-    def push(self, *args) -> None:
+    def push(self, *args: Any) -> None:
         """Saves a transition."""
         pass
 
-    # TODO: we need to redefine transitions as on-policy algorithms cannot use
-    # transitions to learn
     @abstractmethod
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def sample(self, batch_size) -> Iterable[Any]:
+    def sample(self, batch_size: int) -> object:
         pass
 
     @abstractmethod
@@ -43,8 +38,7 @@ class ReplayBuffer(ABC):
     def __len__(self) -> int:
         pass
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __str__(self):
+    def __str__(self) -> str:
         return self.__class__.__name__
 
     @property

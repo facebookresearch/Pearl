@@ -24,8 +24,7 @@ class SingleTransitionReplayBuffer(ReplayBuffer):
         self._transition = args
 
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def sample(self, batch_size) -> Iterable[Any]:
+    def sample(self, batch_size: int) -> Iterable[Any]:
         assert batch_size == 1, "Only batch size 1 is supported"
         return [self._transition]
 

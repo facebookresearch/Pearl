@@ -115,19 +115,28 @@ def filter_batch_by_bootstrap_mask(
     Returns:
         A filtered `TransitionBatch`.
     """
-    mask = batch.bootstrap_mask
+    mask: Optional[torch.Tensor] = batch.bootstrap_mask
 
-    # pyre-ignore[53]
     def _filter_tensor(x: Optional[torch.Tensor]) -> Optional[torch.Tensor]:
         if x is None or mask is None:
             return None
         return x[mask[:, z] == 1]
 
+    filtered_state = _filter_tensor(batch.state)
+    filtered_action = _filter_tensor(batch.action)
+    filtered_reward = _filter_tensor(batch.reward)
+    filtered_done = _filter_tensor(batch.done)
+
+    assert filtered_state is not None
+    assert filtered_action is not None
+    assert filtered_reward is not None
+    assert filtered_done is not None
+
     return TransitionBatch(
-        state=_filter_tensor(batch.state),  # pyre-ignore
-        action=_filter_tensor(batch.action),  # pyre-ignore
-        reward=_filter_tensor(batch.reward),  # pyre-ignore
-        done=_filter_tensor(batch.done),  # pyre-ignore
+        state=filtered_state,
+        action=filtered_action,
+        reward=filtered_reward,
+        done=filtered_done,
         next_state=_filter_tensor(batch.next_state),
         next_action=_filter_tensor(batch.next_action),
         curr_available_actions=_filter_tensor(batch.curr_available_actions),

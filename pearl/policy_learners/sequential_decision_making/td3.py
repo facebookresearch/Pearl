@@ -12,6 +12,7 @@ from pearl.neural_networks.sequential_decision_making.actor_networks import (
 from pearl.neural_networks.sequential_decision_making.q_value_network import (
     QValueNetwork,
 )
+from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
@@ -145,12 +146,12 @@ class TD3(DeepDeterministicPolicyGradient):
             ) + batch.reward  # (batch_size)
 
         # update twin critics towards bellman target
+        assert isinstance(self._critic, TwinCritic)
         loss_critic_update = twin_critic_action_value_update(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target_batch=expected_state_action_values,
             optimizer=self._critic_optimizer,
-            # pyre-fixme
             critic=self._critic,
         )
         return loss_critic_update

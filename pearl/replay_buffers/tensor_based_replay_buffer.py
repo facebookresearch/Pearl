@@ -1,7 +1,7 @@
 import random
 
 from collections import deque
-from typing import List, Optional, Tuple
+from typing import Deque, List, Optional, Tuple, Union
 
 import torch
 
@@ -25,8 +25,10 @@ class TensorBasedReplayBuffer(ReplayBuffer):
     ) -> None:
         super(TensorBasedReplayBuffer, self).__init__()
         self.capacity = capacity
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.memory = deque([], maxlen=capacity)
+        # TODO: we want a unifying transition type
+        self.memory: Deque[Union[Transition, TransitionBatch]] = deque(
+            [], maxlen=capacity
+        )
         self._has_next_state = has_next_state
         self._has_next_action = has_next_action
         self._has_next_available_actions = has_next_available_actions
@@ -100,8 +102,6 @@ class TensorBasedReplayBuffer(ReplayBuffer):
 
         return (available_actions_tensor_with_padding, available_actions_mask)
 
-    # pyre-fixme[15]: `sample` overrides method defined in `ReplayBuffer`
-    #  inconsistently.
     def sample(self, batch_size: int) -> TransitionBatch:
         """
         The shapes of input and output are:
@@ -149,9 +149,6 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         has_next_available_actions: bool,
         has_cost_available: bool,
     ) -> TransitionBatch:
-        # TODO[drjiang]: Will properly handle the None pyre errors in this function,
-        # in a subsequent diff. Errors are due to parts of the transition potentially
-        # being None.
         state_list = []
         action_list = []
         reward_list = []
