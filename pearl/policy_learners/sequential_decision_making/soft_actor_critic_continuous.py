@@ -21,6 +21,7 @@ from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     twin_critic_action_value_update,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.instantiations.spaces.box import BoxSpace
 from torch import optim
 
 
@@ -78,10 +79,11 @@ class ContinuousSoftActorCritic(ActorCriticBase):
                 "_log_entropy",
                 torch.nn.Parameter(torch.zeros(1, requires_grad=True)),
             )
-            self._entropy_optimizer = optim.AdamW(  # pyre-ignore
+            self._entropy_optimizer: torch.optim.Optimizer = optim.AdamW(
                 [self._log_entropy], lr=critic_learning_rate, amsgrad=True
             )
             self.register_buffer("_entropy_coef", torch.exp(self._log_entropy).detach())
+            assert isinstance(action_space, BoxSpace)
             self.register_buffer(
                 "_target_entropy", -torch.tensor(action_space.shape[0])
             )

@@ -1,11 +1,11 @@
 import random
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import torch
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
-from pearl.api.reward import Value
+from pearl.api.reward import Reward, Value
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
@@ -15,6 +15,7 @@ from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration
 from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
 
 # TODO: make package names and organization more consistent
 # TODO: This class currently assumes action index, not generic DiscreteActionSpace.
@@ -31,8 +32,7 @@ class TabularQLearning(PolicyLearner):
         learning_rate: float = 0.01,
         discount_factor: float = 0.9,
         exploration_rate: float = 0.01,
-        # pyre-fixme[2]: Parameter must be annotated.
-        debug=False,
+        debug: bool = False,
     ) -> None:
         """
         Initializes the tabular Q-learning policy learner.
@@ -53,28 +53,31 @@ class TabularQLearning(PolicyLearner):
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.q_values: Dict[Tuple[SubjectiveState, int], Value] = {}
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.debug = debug
+        self.debug: bool = debug
 
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space
 
-    # pyre-fixme[14]: `act` overrides method defined in `PolicyLearner` inconsistently.
     def act(
         self,
         subjective_state: SubjectiveState,
-        action_space: ActionSpace,
+        available_action_space: ActionSpace,
         exploit: bool = False,
     ) -> Action:
+        assert isinstance(available_action_space, DiscreteSpace)
+        # FIXME: this conversion should be eliminated once Action
+        # is no longer constrained to be a Tensor.
+        actions_as_ints: List[int] = [int(a.item()) for a in available_action_space]
         # Choose the action with the highest Q-value for the current state.
         q_values_for_state = {
-            action.item(): self.q_values.get((subjective_state, action.item()), 0)
-            for action in action_space  # pyre-ignore[16]
+            action: self.q_values.get((subjective_state, action), 0)
+            for action in actions_as_ints
         }
-        # pyre-fixme[6]: For 1st argument expected
         #  `Iterable[Variable[SupportsRichComparisonT (bound to
         #  Union[SupportsDunderGT[typing.Any], SupportsDunderLT[typing.Any]])]]` but
         #  got `dict_values[int, Number]`.
+        # Fixing this will require that Value is defined so it supports
+        # rich comparisons.
         max_q_value = max(q_values_for_state.values())
         best_actions = [
             action
@@ -88,20 +91,16 @@ class TabularQLearning(PolicyLearner):
 
         return self._exploration_module.act(
             subjective_state,
-            action_space,
+            available_action_space,
             exploit_action,
         )
 
-    # pyre-fixme[15]: `learn` overrides method defined in `PolicyLearner`
-    #  inconsistently.
     def learn(
         self,
         replay_buffer: ReplayBuffer,
-        _batch_size: Optional[int] = None,
-        on_policy: bool = False,
-    ) -> None:
+    ) -> Dict[str, Any]:
         # We currently assume replay buffer only contains last transition (on-policy)
-        for (
+        (
             state,
             action,
             reward,
@@ -111,40 +110,57 @@ class TabularQLearning(PolicyLearner):
             _next_available_actions,
             done,
             _cost,
-        ) in replay_buffer.sample(1):
-            old_q_value = self.q_values.get((state, action.item()), 0)
-            next_q_values = [
-                self.q_values.get((next_state, next_action.item()), 0)
-                for next_action in self._action_space
-            ]
+        ) = next(iter(replay_buffer.sample(1)))
+        old_q_value = self.q_values.get((state, action.item()), 0)
+        next_q_values = [
+            self.q_values.get((next_state, next_action.item()), 0)
+            for next_action in self._action_space
+        ]
 
-            if done:
-                next_state_value = 0
-            else:
-                # pyre-fixme[6]: For 1st argument expected
-                #  `Iterable[Variable[SupportsRichComparisonT (bound to
-                #  Union[SupportsDunderGT[typing.Any],
-                #  SupportsDunderLT[typing.Any]])]]` but got `List[Number]`.
-                max_next_q_value = max(next_q_values) if next_q_values else 0
-                next_state_value = self.discount_factor * max_next_q_value
+        if done:
+            next_state_value = 0
+        else:
+            # pyre-fixme[6]: For 1st argument expected
+            #  `Iterable[Variable[SupportsRichComparisonT (bound to
+            #  Union[SupportsDunderGT[typing.Any],
+            #  SupportsDunderLT[typing.Any]])]]` but got `List[Number]`.
+            max_next_q_value = max(next_q_values) if next_q_values else 0
+            next_state_value = self.discount_factor * max_next_q_value
 
-            # pyre-fixme[58]: `+` is not supported for operand types `Number` and
-            #  `float`.
-            new_q_value = old_q_value + self.learning_rate * (
-                reward + next_state_value - old_q_value
-            )
+        # pyre-fixme[58]: `+` is not supported for operand types `Number` and
+        #  `float`.
+        # FIXME: not finding a generic assertion that would fix this.
+        # assert isinstance(old_q_value, Union[torch.Tensor, int, float])
+        # does not work. Waiting for
+        # https://fb.workplace.com/groups/pyreqa/permalink/7035374043219034/
+        new_q_value = old_q_value + self.learning_rate * (
+            reward + next_state_value - old_q_value
+        )
 
-            self.q_values[(state, action.item())] = new_q_value
+        self.q_values[(state, action.item())] = new_q_value
 
-            if self.debug:
-                self.print_debug_information(state, action, reward, next_state, done)
+        if self.debug:
+            self.print_debug_information(state, action, reward, next_state, done)
+
+        return {
+            "state": state,
+            "action": action,
+            "reward": reward,
+            "next_state": next_state,
+            "done": done,
+        }
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         raise Exception("tabular_q_learning doesnt need learn_batch")
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def print_debug_information(self, state, action, reward, next_state, done):
+    def print_debug_information(
+        self,
+        state: SubjectiveState,
+        action: Action,
+        reward: Reward,
+        next_state: SubjectiveState,
+        done: bool,
+    ) -> None:
         print("state:", state)
         print("action:", action)
         print("reward:", reward)

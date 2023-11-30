@@ -1,5 +1,7 @@
 from typing import Any, Dict, Iterable, Optional, Type
 
+from pearl.neural_networks.common.value_networks import ValueNetwork
+
 from pearl.neural_networks.sequential_decision_making.actor_networks import ActorNetwork
 
 try:
@@ -42,8 +44,7 @@ class REINFORCE(ActorCriticBase):
         actor_learning_rate: float = 1e-4,
         critic_learning_rate: float = 1e-4,
         actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
-        # pyre-fixme
-        critic_network_type=VanillaValueNetwork,
+        critic_network_type: Type[ValueNetwork] = VanillaValueNetwork,
         exploration_module: Optional[ExplorationModule] = None,
         discount_factor: float = 0.99,
         training_rounds: int = 1,
@@ -56,6 +57,9 @@ class REINFORCE(ActorCriticBase):
             actor_learning_rate=actor_learning_rate,
             critic_learning_rate=critic_learning_rate,
             actor_network_type=actor_network_type,
+            # pyre-fixme: super class expects a QValueNetwork here,
+            # but this class apparently requires a ValueNetwork
+            # (replacing the type and default value to QValueNetworks break tests)
             critic_network_type=critic_network_type,
             use_actor_target=False,
             use_critic_target=False,
@@ -83,7 +87,7 @@ class REINFORCE(ActorCriticBase):
         negative_log_probs = -torch.log(policy_propensities + 1e-8)
         if self._use_critic:
             v = self._critic(state_batch).view(-1)  # (batch_size)
-            # pyre-fixme
+            assert return_batch is not None
             loss = torch.sum(negative_log_probs * (return_batch - v.detach()))
         else:
             loss = torch.sum(negative_log_probs * return_batch)
@@ -95,9 +99,9 @@ class REINFORCE(ActorCriticBase):
 
     def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         if self._use_critic:
+            assert batch.cum_reward is not None
             return single_critic_state_value_update(
                 state_batch=batch.state,
-                # pyre-fixme
                 expected_target_batch=batch.cum_reward,
                 optimizer=self._critic_optimizer,
                 critic=self._critic,

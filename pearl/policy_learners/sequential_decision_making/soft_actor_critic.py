@@ -12,6 +12,7 @@ from pearl.neural_networks.sequential_decision_making.actor_networks import (
 from pearl.neural_networks.sequential_decision_making.q_value_network import (
     QValueNetwork,
 )
+from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.policy_learners.exploration_modules.common.propensity_exploration import (
     PropensityExploration,
 )
@@ -103,20 +104,19 @@ class SoftActorCritic(ActorCriticBase):
             * (1 - done_batch.float())
         ) + reward_batch  # (batch_size), r + gamma * V(s)
 
+        assert isinstance(self._critic, TwinCritic)
         loss_critic_update = twin_critic_action_value_update(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target_batch=expected_state_action_values,
             optimizer=self._critic_optimizer,
-            # pyre-fixme
             critic=self._critic,
         )
 
         return loss_critic_update
 
     @torch.no_grad()
-    # pyre-fixme[11]: Annotation `tensor` is not defined as a type.
-    def _get_next_state_expected_values(self, batch: TransitionBatch) -> torch.tensor:
+    def _get_next_state_expected_values(self, batch: TransitionBatch) -> torch.Tensor:
         next_state_batch = batch.next_state  # (batch_size x state_dim)
         next_available_actions_batch = (
             batch.next_available_actions
@@ -124,8 +124,9 @@ class SoftActorCritic(ActorCriticBase):
         next_available_actions_mask_batch = (
             batch.next_available_actions_mask
         )  # (batch_size x action_space_size)
+
+        assert next_state_batch is not None
         next_state_batch_repeated = torch.repeat_interleave(
-            # pyre-fixme[16]: Optional type has no attribute `unsqueeze`.
             next_state_batch.unsqueeze(1),
             self._action_dim,
             dim=1,
