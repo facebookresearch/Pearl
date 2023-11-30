@@ -1,12 +1,11 @@
 from abc import abstractmethod
-from typing import Type
+from typing import Optional
 
 import torch
 from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
-from pearl.neural_networks.common.value_networks import QuantileQValueNetwork
 from pearl.neural_networks.sequential_decision_making.q_value_network import (
     DistributionalQValueNetwork,
 )
@@ -23,15 +22,16 @@ class RiskSensitiveSafetyModule(SafetyModule):
     Base class for different risk metrics, e.g. mean-variance, Value-at-risk (VaR) etc.
     """
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, **options) -> None:
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._action_space = None
+    def __init__(self) -> None:
+        self._action_space: Optional[ActionSpace] = None
 
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space
 
     def filter_action(self, subjective_state: SubjectiveState) -> ActionSpace:
+        assert (
+            self._action_space is not None
+        ), "filter_action cannot be called before reset"
         return self._action_space
 
     def learn(self, replay_buffer: ReplayBuffer, policy_learner: PolicyLearner) -> None:
@@ -44,8 +44,9 @@ class RiskSensitiveSafetyModule(SafetyModule):
     @abstractmethod
     def get_q_values_under_risk_metric(
         self,
-        batch: TransitionBatch,
-        q_value_distribution: Type[DistributionalQValueNetwork],
+        state_batch: Tensor,
+        action_batch: Tensor,
+        q_value_distribution_network: DistributionalQValueNetwork,
     ) -> torch.Tensor:
         pass
 
@@ -55,21 +56,17 @@ class RiskNeutralSafetyModule(RiskSensitiveSafetyModule):
     A safety module that computes q values as expectation of a q value distribution.
     """
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, **options) -> None:
+    def __init__(self) -> None:
         super(RiskNeutralSafetyModule, self).__init__()
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Safety module type {self.__class__.__name__}"
 
-    # pyre-fixme[14]: `get_q_values_under_risk_metric` overrides method defined in
-    #  `RiskSensitiveSafetyModule` inconsistently.
     def get_q_values_under_risk_metric(
         self,
         state_batch: Tensor,
         action_batch: Tensor,
-        q_value_distribution_network: Type[DistributionalQValueNetwork],
+        q_value_distribution_network: DistributionalQValueNetwork,
     ) -> torch.Tensor:
 
         """Returns Q(s, a), given s and a
@@ -82,10 +79,8 @@ class RiskNeutralSafetyModule(RiskSensitiveSafetyModule):
             Q-values of (state, action) pairs: (batch_size) under a risk neutral measure,
             that is, Q(s, a) = E[Z(s, a)]
         """
-        # pyre-fixme[20]: Argument `action_batch` expected.
         q_value_distribution = q_value_distribution_network.get_q_value_distribution(
-            state_batch,
-            action_batch,
+            state_batch, action_batch
         )
 
         return q_value_distribution.mean(dim=-1)
@@ -105,21 +100,15 @@ class QuantileNetworkMeanVarianceSafetyModule(RiskSensitiveSafetyModule):
         super(QuantileNetworkMeanVarianceSafetyModule, self).__init__()
         self._beta = variance_weighting_coefficient
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Safety module type {self.__class__.__name__}"
 
-    # pyre-fixme[14]: `get_q_values_under_risk_metric` overrides method defined in
-    #  `RiskSensitiveSafetyModule` inconsistently.
     def get_q_values_under_risk_metric(
         self,
         state_batch: Tensor,
         action_batch: Tensor,
-        q_value_distribution_network: Type[
-            DistributionalQValueNetwork
-        ] = QuantileQValueNetwork,
+        q_value_distribution_network: DistributionalQValueNetwork,
     ) -> torch.Tensor:
-        # pyre-fixme[20]: Argument `action_batch` expected.
         q_value_distribution = q_value_distribution_network.get_q_value_distribution(
             state_batch,
             action_batch,
