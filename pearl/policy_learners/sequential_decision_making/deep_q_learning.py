@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 import torch
 from pearl.api.action_space import ActionSpace
@@ -12,6 +12,7 @@ from pearl.policy_learners.sequential_decision_making.deep_td_learning import (
     DeepTDLearning,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class DeepQLearning(DeepTDLearning):
@@ -26,7 +27,7 @@ class DeepQLearning(DeepTDLearning):
         learning_rate: float = 0.001,
         exploration_module: Optional[ExplorationModule] = None,
         soft_update_tau: float = 1.0,  # no soft update
-        **kwargs,  # pyre-ignore[2]: Parameter must be annotated.
+        **kwargs: Any,
     ) -> None:
         super(DeepQLearning, self).__init__(
             exploration_module=exploration_module
@@ -46,16 +47,19 @@ class DeepQLearning(DeepTDLearning):
     ) -> torch.Tensor:
         (
             next_state,
-            next_avail_actions,
-            next_avail_actions_mask,
+            next_available_actions,
+            next_available_actions_mask,
         ) = self._prepare_next_state_action_batch(batch)
+
+        assert next_available_actions is not None
+
         next_state_action_values = self._Q_target.get_q_values(
-            next_state, next_avail_actions
+            next_state, next_available_actions
         ).view(batch_size, -1)
         # (batch_size x action_space_size)
 
         # Make sure that unavailable actions' Q values are assigned to -inf
-        next_state_action_values[next_avail_actions_mask] = -float("inf")
+        next_state_action_values[next_available_actions_mask] = -float("inf")
 
         # Torch.max(1) returns value, indices
         return next_state_action_values.max(1)[0]  # (batch_size)
@@ -72,7 +76,8 @@ class DeepQLearning(DeepTDLearning):
         next_available_actions_mask_batch = batch.next_available_actions_mask
         # (batch_size x action_space_size)
 
-        number_of_actions = self._action_space.n  # pyre-ignore[16]
+        assert isinstance(self._action_space, DiscreteActionSpace)
+        number_of_actions = self._action_space.n
         next_state_batch_repeated = torch.repeat_interleave(
             next_state_batch.unsqueeze(1), number_of_actions, dim=1
         )  # (batch_size x action_space_size x state_dim)

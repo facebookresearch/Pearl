@@ -20,6 +20,7 @@ from pearl.neural_networks.sequential_decision_making.actor_networks import (
     VanillaActorNetwork,
     VanillaContinuousActorNetwork,
 )
+from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.policy_learners.exploration_modules.common.no_exploration import (
     NoExploration,
 )
@@ -123,9 +124,8 @@ class ImplicitQLearning(ActorCriticBase):
             temperature_advantage_weighted_regression
         )
         self._advantage_clamp = advantage_clamp
-        # iql uses both q value (Q(s,a)) and value (V(s)) networks
-        # pyre-fixme
-        self._value_network = value_network_type(
+        # iql uses both q and v approximators
+        self._value_network: ValueNetwork = value_network_type(
             input_dim=state_dim,
             hidden_dims=value_critic_hidden_dims,
             output_dim=1,
@@ -244,13 +244,16 @@ class ImplicitQLearning(ActorCriticBase):
                 values_next_states * self._discount_factor * (1 - batch.done.float())
             ) + batch.reward  # shape: (batch_size)
 
+        assert isinstance(
+            self._critic, TwinCritic
+        ), "Critic in ImplicitQLearning should be TwinCritic"
+
         # update twin critics towards target
         loss_critic_update = twin_critic_action_value_update(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target_batch=target,
             optimizer=self._critic_optimizer,
-            # pyre-fixme
             critic=self._critic,
         )
         return loss_critic_update

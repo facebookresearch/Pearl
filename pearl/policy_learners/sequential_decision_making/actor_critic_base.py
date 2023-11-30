@@ -231,27 +231,27 @@ class ActorCriticBase(PolicyLearner):
         pass
 
 
-# pyre-fixme
 def make_critic(
     state_dim: int,
     hidden_dims: Optional[Iterable[int]],
     use_twin_critic: bool,
-    # pyre-fixme
-    network_type,
+    network_type: Type[QValueNetwork],
     action_dim: Optional[int] = None,
-):
+) -> nn.Module:
     if use_twin_critic:
+        assert action_dim is not None
+        assert hidden_dims is not None
         return TwinCritic(
             state_dim=state_dim,
-            # pyre-fixme
             action_dim=action_dim,
-            # pyre-fixme
             hidden_dims=hidden_dims,
             network_type=network_type,
             init_fn=init_weights,
         )
     else:
         if network_type == VanillaQValueNetwork:
+            # pyre-ignore[45]:
+            # Pyre does not know that `network_type` is asserted to be concrete
             return network_type(
                 state_dim=state_dim,
                 action_dim=action_dim,
@@ -259,6 +259,8 @@ def make_critic(
                 output_dim=1,
             )
         elif network_type == VanillaValueNetwork:
+            # pyre-ignore[45]:
+            # Pyre does not know that `network_type` is asserted to be concrete
             return network_type(
                 input_dim=state_dim, hidden_dims=hidden_dims, output_dim=1
             )
@@ -268,8 +270,9 @@ def make_critic(
             )
 
 
-# pyre-fixme
-def update_critic_target_network(target_network, network, use_twin_critic, tau):
+def update_critic_target_network(
+    target_network: nn.Module, network: nn.Module, use_twin_critic: bool, tau: float
+) -> None:
     if use_twin_critic:
         update_target_networks(
             target_network._critic_networks_combined,

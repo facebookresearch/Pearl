@@ -1,6 +1,6 @@
 import copy
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, Optional, Type
+from typing import Any, Dict, Iterable, List, Optional, Type
 
 import torch
 
@@ -58,18 +58,14 @@ class DeepTDLearning(PolicyLearner):
         is_conservative: bool = False,
         conservative_alpha: float = 2.0,
         network_type: Type[QValueNetwork] = VanillaQValueNetwork,
-        # pyre-fixme[2]: Parameter must be annotated.
-        state_output_dim=None,
-        # pyre-fixme[2]: Parameter must be annotated.
-        action_output_dim=None,
-        # pyre-fixme[2]: Parameter must be annotated.
-        state_hidden_dims=None,
-        # pyre-fixme[2]: Parameter must be annotated.
-        action_hidden_dims=None,
+        state_output_dim: Optional[int] = None,
+        action_output_dim: Optional[int] = None,
+        state_hidden_dims: Optional[List[int]] = None,
+        action_hidden_dims: Optional[List[int]] = None,
         network_instance: Optional[QValueNetwork] = None,
-        # TODO define optimizer config to use by all deep algorithms
+        # TODO define optimizer config to be used by all deep algorithms
         use_keyed_optimizer: bool = False,
-        **kwargs,  # pyre-ignore[2]: Parameter must be annotated.
+        **kwargs: Any,
     ) -> None:
         super(DeepTDLearning, self).__init__(
             training_rounds=training_rounds,
@@ -87,15 +83,11 @@ class DeepTDLearning(PolicyLearner):
         self._conservative_alpha = conservative_alpha
 
         # TODO: Assumes Gym interface, fix it.
-        # pyre-fixme[53]: Captured variable `action_hidden_dims` is not annotated.
-        # pyre-fixme[53]: Captured variable `action_output_dim` is not annotated.
-        # pyre-fixme[53]: Captured variable `state_hidden_dims` is not annotated.
-        # pyre-fixme[53]: Captured variable `state_output_dim` is not annotated.
-        # pyre-fixme[3]: Return type must be annotated.
-        def make_specified_network(action_space: ActionSpace):
+        def make_specified_network(action_space: ActionSpace) -> QValueNetwork:
             assert isinstance(action_space, DiscreteActionSpace)
             if network_type == TwoTowerQValueNetwork:
-                # pyre-fixme[45]: Cannot instantiate abstract class `QValueNetwork`.
+                # pyre-ignore[45]:
+                # Pyre does not know that `network_type` is asserted to be concrete
                 return network_type(
                     state_dim=state_dim,
                     action_dim=action_space.n,
@@ -107,7 +99,8 @@ class DeepTDLearning(PolicyLearner):
                     output_dim=1,
                 )
             else:
-                # pyre-fixme[45]: Cannot instantiate abstract class `QValueNetwork`.
+                # pyre-ignore[45]:
+                # Pyre does not know that `network_type` is asserted to be concrete
                 return network_type(
                     state_dim=state_dim,
                     action_dim=action_space.n,
@@ -125,28 +118,38 @@ class DeepTDLearning(PolicyLearner):
                 )
             self._Q = make_specified_network(action_space=action_space)
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._Q_target = copy.deepcopy(self._Q)
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._optimizer = optim.AdamW(
+        self._Q_target: QValueNetwork = copy.deepcopy(self._Q)
+        self._optimizer: torch.optim.Optimizer = optim.AdamW(
             self._Q.parameters(), lr=learning_rate, amsgrad=True
         )
         if use_keyed_optimizer:
-            optims = [
-                (
-                    "",
-                    KeyedOptimizerWrapper(
-                        models={"_Q.": self._Q},
-                        optimizer_cls=optim.AdamW,
-                        lr=learning_rate,
-                        amsgrad=True,
-                    ),
-                )
-            ]
-            # pyre-fixme[6]: For 1st argument expected `List[Union[Tuple[str,
-            #  KeyedOptimizer], KeyedOptimizer]]` but got `List[Tuple[str,
-            #  KeyedOptimizerWrapper]]`.
-            self._optimizer = CombinedOptimizer(optims)
+            self._optimizer = CombinedOptimizer(
+                [
+                    (
+                        "",
+                        KeyedOptimizerWrapper(
+                            models={"_Q.": self._Q},
+                            optimizer_cls=optim.AdamW,
+                            lr=learning_rate,
+                            amsgrad=True,
+                        ),
+                    )
+                ]
+            )
+            # Comment on subtle typing issue here:
+            # It actually matters to pass the list literal above to CombinedOptimizer
+            # directly as opposed to passing it through a variable.
+            # A variable would be typed as List[Tuple[str, KeyedOptimizerWrapper]],
+            # which is *not* a subtype of CombinedOptimizer's parameter type
+            # List[Union[KeyedOptimizer, Tuple[str, KeyedOptimizer]]].
+            # This is due to List[B] not being a subtype of List[A] even
+            # if B is a subtype of A, because passing a List[B] to a function
+            # expecting a List[A] could lead to adding an instance of A
+            # to the list that is not an instance of B, violating its
+            # typing constraints.
+            # By passing a literal, there is no way of accessing the list
+            # after the call, so even if an A-typed, non-B-typed object were added to the list,
+            # it wouldn't be available afterwards anyway.
 
     def set_history_summarization_module(
         self, value: HistorySummarizationModule
@@ -197,11 +200,8 @@ class DeepTDLearning(PolicyLearner):
 
     @abstractmethod
     def _get_next_state_values(
-        self,
-        batch: TransitionBatch,
-        batch_size: int
-        # pyre-fixme[11]: Annotation `tensor` is not defined as a type.
-    ) -> torch.tensor:
+        self, batch: TransitionBatch, batch_size: int
+    ) -> torch.Tensor:
         pass
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:

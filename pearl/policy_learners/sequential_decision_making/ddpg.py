@@ -11,6 +11,7 @@ from pearl.neural_networks.sequential_decision_making.actor_networks import (
 from pearl.neural_networks.sequential_decision_making.q_value_network import (
     QValueNetwork,
 )
+from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.policy_learners.exploration_modules.common.normal_distribution_exploration import (  # noqa E501
     NormalDistributionExploration,
 )
@@ -116,13 +117,14 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
                 next_q * self._discount_factor * (1 - batch.done.float())
             ) + batch.reward  # shape (batch_size)
 
+        assert isinstance(self._critic, TwinCritic), "DDPG requires TwinCritic critic"
+
         # update twin critics towards bellman target
         loss_critic_update = twin_critic_action_value_update(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target_batch=expected_state_action_values,
             optimizer=self._critic_optimizer,
-            # pyre-fixme
             critic=self._critic,
         )
 

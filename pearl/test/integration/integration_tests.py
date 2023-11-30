@@ -579,8 +579,8 @@ class IntegrationTests(unittest.TestCase):
 
     def test_iql_offline_training(self) -> None:
         """
-        This test is checking if Implicit Q Learning will eventually get to > 100 return
-        for CartPole-v1 when trained with offline data.
+        This test checks whether Implicit Q Learning will eventually get
+        to > 100 return for CartPole-v1 when trained with offline data.
         """
         set_seed(100)
         env = GymEnvironment("CartPole-v1")
@@ -607,7 +607,7 @@ class IntegrationTests(unittest.TestCase):
         )
 
         # specify path for offline data set
-        url = "https://raw.githubusercontent.com/jb3618columbia/offline_data/fbaccdd8d994479298c930d684ac49285f3cc901/offline_raw_transitions_dict_200k.pt"  # noqa E501
+        url = "https://raw.githubusercontent.com/jb3618columbia/offline_data/fbaccdd8d994479298c930d684ac49285f3cc901/offline_raw_transitions_dict_200k.pt"  # noqa: E501
 
         # get offline data from the specified path in a replay buffer
         is_action_continuous = False

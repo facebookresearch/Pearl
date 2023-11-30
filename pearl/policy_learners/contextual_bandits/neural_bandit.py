@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 import torch
 
@@ -27,7 +27,7 @@ from pearl.utils.functional_utils.learning.action_utils import (
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import optim
-from torchrec.optim.keyed import CombinedOptimizer, KeyedOptimizer
+from torchrec.optim.keyed import CombinedOptimizer
 
 
 class NeuralBandit(ContextualBanditBase):

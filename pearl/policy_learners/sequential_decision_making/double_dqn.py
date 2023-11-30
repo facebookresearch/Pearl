@@ -3,6 +3,7 @@ from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class DoubleDQN(DeepQLearning):
@@ -16,28 +17,30 @@ class DoubleDQN(DeepQLearning):
 
     @torch.no_grad()
     def _get_next_state_values(
-        self,
-        batch: TransitionBatch,
-        batch_size: int
-        # pyre-fixme[11]: Annotation `tensor` is not defined as a type.
-    ) -> torch.tensor:
+        self, batch: TransitionBatch, batch_size: int
+    ) -> torch.Tensor:
         next_state_batch = batch.next_state  # (batch_size x state_dim)
+        assert next_state_batch is not None
+
         next_available_actions_batch = batch.next_available_actions
+        assert next_available_actions_batch is not None
+
         # (batch_size x action_space_size x action_dim)
         next_available_actions_mask_batch = (
             batch.next_available_actions_mask
         )  # (batch_size x action_space_size)
 
+        assert isinstance(self._action_space, DiscreteActionSpace)
+        number_of_actions = self._action_space.n
+
         next_state_batch_repeated = torch.repeat_interleave(
-            # pyre-fixme[16]: Optional type has no attribute `unsqueeze`.
-            # pyre-fixme[16]: `ActionSpace` has no attribute `n`.
             next_state_batch.unsqueeze(1),
-            self._action_space.n,  # pyre-ignore[16]
+            number_of_actions,
             dim=1,
         )  # (batch_size x action_space_size x state_dim)
 
         next_state_action_values = self._Q.get_q_values(
-            next_state_batch_repeated, next_available_actions_batch  # pyre-ignore
+            next_state_batch_repeated, next_available_actions_batch
         ).view(
             (batch_size, -1)
         )  # (batch_size x action_space_size)
@@ -46,8 +49,8 @@ class DoubleDQN(DeepQLearning):
 
         # Torch.max(1) returns value, indices
         next_action_indices = next_state_action_values.max(1)[1]  # (batch_size)
-        next_action_batch = next_available_actions_batch[  # pyre-ignore
-            torch.arange(next_available_actions_batch.size(0)),  # pyre-ignore
+        next_action_batch = next_available_actions_batch[
+            torch.arange(next_available_actions_batch.size(0)),
             next_action_indices.squeeze(),
         ]
         return self._Q_target.get_q_values(next_state_batch, next_action_batch)
