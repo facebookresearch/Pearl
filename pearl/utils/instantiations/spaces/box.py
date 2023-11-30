@@ -84,7 +84,7 @@ class BoxSpace(Space):
     @property
     def shape(self) -> torch.Size:
         """Returns the shape of an element of the space."""
-        return torch.Size(self._gym_space.shape)
+        return self.low.shape
 
     @staticmethod
     def from_gym(gym_space: gym.Space) -> BoxSpace:

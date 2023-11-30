@@ -58,7 +58,7 @@ class BoxActionSpace(BoxSpace, ActionSpace):
     @property
     def action_dim(self) -> int:
         """Returns the dimensionality of an `Action` element from this space."""
-        return self.shape[0]
+        return self.shape[-1]
 
     @staticmethod
     def from_gym(gym_space: gym.Space) -> BoxActionSpace:
