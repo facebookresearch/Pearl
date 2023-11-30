@@ -53,13 +53,10 @@ class ImplicitQLearning(ActorCriticBase):
     2) This implementation uses twin critic (clipped double q learning) to reduce
     overestimation bias. See TwinCritic class for implementation details.
 
-    Args: two noteworthy arguments:
+    Args:
         expectile: a value between 0 and 1, for expectile regression
         temperature_advantage_weighted_regression: temperature parameter for advantage
-            weighted regression; used to extract policy from trained value and critic networks.
-        exploration module: optional exploration module is set to NoExploration by default
-            since iql is an offline rl algorithms. Users can set an exploration module for offline
-            to online transition.
+        weighted regression; used to extract policy from trained value and critic networks.
     """
 
     def __init__(
@@ -165,18 +162,30 @@ class ImplicitQLearning(ActorCriticBase):
             "critic_loss": critic_loss,
         }
 
+    def _value_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+
+        with torch.no_grad():
+            q1, q2 = self._critic_target.get_q_values(batch.state, batch.action)
+            # random ensemble distillation. TODO: clipped double q-learning
+            random_index = torch.randint(0, 2, (1,)).item()
+            target_q = q1 if random_index == 0 else q2  # shape: (batch_size)
+
+        value_batch = self._value_network(batch.state).view(-1)  # shape: (batch_size)
+
+        # note the change in loss function from a mean square loss to an expectile loss
+        loss_value_network = self._expectile_loss(target_q - value_batch).mean()
+        self._value_network_optimizer.zero_grad()
+        loss_value_network.backward()
+        self._value_network_optimizer.step()
+        return {"value_loss": loss_value_network.mean().item()}
+
     def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """
-        policy extraction using advantage weighted regression for deterministic/stochastic
-        actors.
+        Performs policy extraction using advantage weighted regression
         """
         with torch.no_grad():
             q1, q2 = self._critic_target.get_q_values(batch.state, batch.action)
-
-            # clipped double q-learning for dealing with overestimation bias
-            # target_q = torch.minimum(q1, q2)
-
-            # random ensemble distillation, an alternative to clipped double q-learning
+            # random ensemble distillation. TODO: clipped double q-learning
             random_index = torch.randint(0, 2, (1,)).item()
             target_q = q1 if random_index == 0 else q2  # shape: (batch_size)
 
@@ -234,10 +243,10 @@ class ImplicitQLearning(ActorCriticBase):
     def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         with torch.no_grad():
             # sample values of next states
-            values_next_states = self._value_network(batch.next_state).view(
-                -1
-            )  # shape: (batch_size)
-            # TODO: add interface to vanilla value networks
+            values_next_states = self._value_network(batch.next_state).view(-1)
+            # shape: (batch_size)
+
+            # To do: add interface to vanilla value networks
             # like vanilla q value networks using the 'get' function
 
             # compute targets for batch of (state, action, next_state): target y = r + gamma * V(s')
@@ -258,27 +267,6 @@ class ImplicitQLearning(ActorCriticBase):
             critic=self._critic,
         )
         return loss_critic_update
-
-    def _value_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
-
-        with torch.no_grad():
-            q1, q2 = self._critic_target.get_q_values(batch.state, batch.action)
-
-            # clipped double q-learning for dealing with overestimation bias
-            # target_q = torch.minimum(q1, q2)
-
-            # random ensemble distillation, an alternative to clipped double q-learning
-            random_index = torch.randint(0, 2, (1,)).item()
-            target_q = q1 if random_index == 0 else q2  # shape: (batch_size)
-
-        value_batch = self._value_network(batch.state).view(-1)  # shape: (batch_size)
-
-        # note the change in loss function from a mean square loss to an expectile loss
-        loss_value_network = self._expectile_loss(target_q - value_batch).mean()
-        self._value_network_optimizer.zero_grad()
-        loss_value_network.backward()
-        self._value_network_optimizer.step()
-        return {"value_loss": loss_value_network.mean().item()}
 
     # we do not expect this method to be reused in different algorithms, so it is defined here
     # To Do: add a utils method separately if needed in future for other algorithms to reuse
