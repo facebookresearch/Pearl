@@ -1,14 +1,9 @@
 """
 This module defines several types of actor neural networks.
-
-Constants:
-    ActorNetworkType: a type (and therefore a callable) getting state_dim, hidden_dims,
-    output_dim and instantiating a neural network to output an action probability given
-    a state.
 """
 
 
-from typing import Callable, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -67,7 +62,25 @@ def noise_scaling(action_space: ActionSpace, input_noise: torch.Tensor) -> torch
     return scaled_noise
 
 
-class VanillaActorNetwork(nn.Module):
+class ActorNetwork(nn.Module):
+    """
+    An interface for actor networks.
+    IMPORTANT: the __init__ method specifies parameters for type-checking purposes only.
+    It does NOT store them in attributes.
+    Dealing with these parameters is left to subclasses.
+    """
+
+    def __init__(
+        self,
+        input_dim: int,
+        hidden_dims: Optional[List[int]],
+        output_dim: int,
+        action_space: Optional[ActionSpace] = None,
+    ) -> None:
+        super(ActorNetwork, self).__init__()
+
+
+class VanillaActorNetwork(ActorNetwork):
     def __init__(
         self,
         input_dim: int,
@@ -85,7 +98,9 @@ class VanillaActorNetwork(nn.Module):
             output_dim: number of actions (action_space.n when used with the DiscreteActionSpace
                         class)
         """
-        super(VanillaActorNetwork, self).__init__()
+        super(VanillaActorNetwork, self).__init__(
+            input_dim, hidden_dims, output_dim, action_space
+        )
         self._model: nn.Module = mlp_block(
             input_dim=input_dim,
             hidden_dims=hidden_dims,
@@ -118,7 +133,7 @@ class VanillaActorNetwork(nn.Module):
         return action_probs.view(-1)
 
 
-class VanillaContinuousActorNetwork(nn.Module):
+class VanillaContinuousActorNetwork(ActorNetwork):
     """
     This is vanilla version of deterministic actor network
     Given input state, output an action vector
@@ -133,7 +148,9 @@ class VanillaContinuousActorNetwork(nn.Module):
         output_dim: int,
         action_space: ActionSpace,
     ) -> None:
-        super(VanillaContinuousActorNetwork, self).__init__()
+        super(VanillaContinuousActorNetwork, self).__init__(
+            input_dim, hidden_dims, output_dim, action_space
+        )
         self._model: nn.Module = mlp_block(
             input_dim=input_dim,
             hidden_dims=hidden_dims,
@@ -158,7 +175,7 @@ class VanillaContinuousActorNetwork(nn.Module):
         return action
 
 
-class GaussianActorNetwork(nn.Module):
+class GaussianActorNetwork(ActorNetwork):
     """
     A multivariate gaussian actor network: parameterize the policy (action distirbution)
     as a multivariate gaussian. Given input state, the network outputs a pair of
@@ -180,7 +197,9 @@ class GaussianActorNetwork(nn.Module):
         output_dim: int,
         action_space: ActionSpace,
     ) -> None:
-        super(GaussianActorNetwork, self).__init__()
+        super(GaussianActorNetwork, self).__init__(
+            input_dim, hidden_dims, output_dim, action_space
+        )
         if len(hidden_dims) < 1:
             raise ValueError(
                 "The hidden dims cannot be empty for a gaussian actor network."
@@ -297,6 +316,3 @@ class GaussianActorNetwork(nn.Module):
             log_prob = log_prob.sum(dim=1, keepdim=True)
 
         return log_prob
-
-
-ActorNetworkType = Callable[[int, List[int], int], nn.Module]

@@ -3,6 +3,7 @@ from abc import abstractmethod
 from typing import Any, Dict, Iterable, Optional, Type
 
 from pearl.neural_networks.common.value_networks import QValueNetwork
+from pearl.neural_networks.sequential_decision_making.actor_networks import ActorNetwork
 
 from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 
@@ -32,7 +33,6 @@ from pearl.neural_networks.common.value_networks import (
     VanillaValueNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
-    ActorNetworkType,
     VanillaActorNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
@@ -62,7 +62,7 @@ class ActorCriticBase(PolicyLearner):
         critic_hidden_dims: Optional[Iterable[int]],
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,
-        actor_network_type: ActorNetworkType = VanillaActorNetwork,
+        actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
         critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
         use_actor_target: bool = False,
         use_critic_target: bool = False,

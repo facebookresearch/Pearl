@@ -1,4 +1,6 @@
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Dict, Iterable, Optional, Type
+
+from pearl.neural_networks.sequential_decision_making.actor_networks import ActorNetwork
 
 try:
     import gymnasium as gym
@@ -9,7 +11,6 @@ import torch
 from pearl.api.action_space import ActionSpace
 from pearl.neural_networks.common.value_networks import VanillaValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
-    ActorNetworkType,
     VanillaActorNetwork,
 )
 from pearl.policy_learners.exploration_modules.common.propensity_exploration import (
@@ -40,7 +41,7 @@ class REINFORCE(ActorCriticBase):
         critic_hidden_dims: Optional[Iterable[int]],
         actor_learning_rate: float = 1e-4,
         critic_learning_rate: float = 1e-4,
-        actor_network_type: ActorNetworkType = VanillaActorNetwork,
+        actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
         # pyre-fixme
         critic_network_type=VanillaValueNetwork,
         exploration_module: Optional[ExplorationModule] = None,

@@ -5,7 +5,7 @@ from pearl.api.action_space import ActionSpace
 
 from pearl.neural_networks.common.value_networks import VanillaQValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
-    ActorNetworkType,
+    ActorNetwork,
     VanillaContinuousActorNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.q_value_network import (
@@ -40,7 +40,7 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
         exploration_module: Optional[ExplorationModule] = None,
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,
-        actor_network_type: ActorNetworkType = VanillaContinuousActorNetwork,
+        actor_network_type: Type[ActorNetwork] = VanillaContinuousActorNetwork,
         critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
         actor_soft_update_tau: float = 0.005,
         critic_soft_update_tau: float = 0.005,

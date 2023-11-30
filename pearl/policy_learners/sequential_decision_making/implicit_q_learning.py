@@ -15,7 +15,7 @@ from pearl.neural_networks.common.value_networks import (
     VanillaValueNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
-    ActorNetworkType,
+    ActorNetwork,
     GaussianActorNetwork,
     VanillaActorNetwork,
     VanillaContinuousActorNetwork,
@@ -70,7 +70,8 @@ class ImplicitQLearning(ActorCriticBase):
         critic_hidden_dims: Iterable[int],
         value_critic_hidden_dims: Iterable[int],
         exploration_module: Optional[ExplorationModule] = None,
-        actor_network_type: ActorNetworkType = VanillaActorNetwork,
+        state_value_learning_rate: float = 1e-3,
+        actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
         critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
         value_network_type: Type[ValueNetwork] = VanillaValueNetwork,
         value_critic_learning_rate: float = 1e-3,

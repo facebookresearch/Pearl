@@ -4,7 +4,7 @@ import torch
 from pearl.api.action_space import ActionSpace
 from pearl.neural_networks.common.value_networks import VanillaQValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
-    ActorNetworkType,
+    ActorNetwork,
     GaussianActorNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.q_value_network import (
@@ -37,7 +37,7 @@ class ContinuousSoftActorCritic(ActorCriticBase):
         critic_hidden_dims: Iterable[int],
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,
-        actor_network_type: ActorNetworkType = GaussianActorNetwork,
+        actor_network_type: Type[ActorNetwork] = GaussianActorNetwork,
         critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
         critic_soft_update_tau: float = 0.005,
         exploration_module: Optional[ExplorationModule] = None,

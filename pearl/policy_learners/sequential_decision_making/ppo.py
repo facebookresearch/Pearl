@@ -1,12 +1,12 @@
 import copy
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Dict, Iterable, Optional, Type
 
 import torch
 
 from pearl.api.action_space import ActionSpace
 from pearl.neural_networks.common.value_networks import VanillaValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
-    ActorNetworkType,
+    ActorNetwork,
     VanillaActorNetwork,
 )
 from pearl.policy_learners.exploration_modules.common.propensity_exploration import (
@@ -37,7 +37,7 @@ class ProximalPolicyOptimization(ActorCriticBase):
         actor_learning_rate: float = 1e-4,
         critic_learning_rate: float = 1e-4,
         exploration_module: Optional[ExplorationModule] = None,
-        actor_network_type: ActorNetworkType = VanillaActorNetwork,
+        actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
         # pyre-fixme
         critic_network_type=VanillaValueNetwork,
         discount_factor: float = 0.99,
