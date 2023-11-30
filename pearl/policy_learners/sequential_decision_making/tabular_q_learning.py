@@ -137,8 +137,7 @@ class TabularQLearning(PolicyLearner):
         #  `float`.
         # FIXME: not finding a generic assertion that would fix this.
         # assert isinstance(old_q_value, Union[torch.Tensor, int, float])
-        # does not work. Waiting for
-        # https://fb.workplace.com/groups/pyreqa/permalink/7035374043219034/
+        # does not work. Pending discussion.
         new_q_value = old_q_value + self.learning_rate * (
             reward + next_state_value - old_q_value
         )

@@ -9,8 +9,7 @@ from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 
 
-# Preferred to define inside class but that is not working
-# See https://fb.workplace.com/groups/pyreqa/permalink/7039029492853489/
+# Preferred to define inside class but that is not working. Pending discussion.
 SingleTransition = Tuple[
     SubjectiveState,
     Action,

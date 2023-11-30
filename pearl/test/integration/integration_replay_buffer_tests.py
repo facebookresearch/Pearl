@@ -6,6 +6,8 @@ import torch
 from pearl.action_representation_modules.one_hot_action_representation_module import (
     OneHotActionTensorRepresentationModule,
 )
+from pearl.api.action import Action
+from pearl.api.state import SubjectiveState
 
 from pearl.pearl_agent import PearlAgent
 from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
@@ -23,6 +25,7 @@ from pearl.utils.functional_utils.train_and_eval.online_learning import (
 from pearl.utils.instantiations.environments.sparse_reward_environment import (
     DiscreteSparseRewardEnvironment,
 )
+from pearl.utils.tensor_like import assert_is_tensor_like
 
 
 class IntegrationReplayBufferTests(unittest.TestCase):
@@ -35,7 +38,7 @@ class IntegrationReplayBufferTests(unittest.TestCase):
         This test is to ensure HER works for sparse reward environment
                 DQN is not able to solve this problem within 1000 episodes
         """
-        env = DiscreteSparseRewardEnvironment(
+        env: DiscreteSparseRewardEnvironment = DiscreteSparseRewardEnvironment(
             length=50,
             height=50,
             step_size=1,
@@ -44,19 +47,15 @@ class IntegrationReplayBufferTests(unittest.TestCase):
             reward_distance=1,
         )
 
-        # pyre-fixme[53]: Captured variable `env` is not annotated.
-        # pyre-fixme[3]: Return type must be annotated.
-        # pyre-fixme[2]: Parameter must be annotated.
-        def done_fn(state, action):
+        def done_fn(state: SubjectiveState, action: Action) -> bool:
+            state = assert_is_tensor_like(state)
             next_state = state[:2] + torch.Tensor(env._actions[action])
             goal = state[-2:]
             if torch.all(torch.eq(next_state, goal)):
                 return True
             return False
 
-        # pyre-fixme[3]: Return type must be annotated.
-        # pyre-fixme[2]: Parameter must be annotated.
-        def reward_fn(state, action):
+        def reward_fn(state: SubjectiveState, action: Action) -> int:
             done = done_fn(state, action)
             if done:
                 return 0
