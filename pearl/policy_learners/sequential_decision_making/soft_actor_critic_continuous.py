@@ -72,7 +72,6 @@ class ContinuousSoftActorCritic(ActorCriticBase):
         )
 
         self._entropy_autotune = entropy_autotune
-        print(f"Entropy autotune: {entropy_autotune}")
         if entropy_autotune:
             # initialize the entropy coefficient to 0
             self.register_parameter(

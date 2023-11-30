@@ -1,3 +1,4 @@
+import typing
 from typing import Any, Dict, Optional
 
 import torch
@@ -194,14 +195,16 @@ class PearlAgent(Agent):
 
         return report
 
-    def learn_batch(self, batch: TransitionBatch) -> None:
+    def learn_batch(self, batch: TransitionBatch) -> Dict[str, typing.Any]:
         """
         This API is often used in offline learning
         where users pass in a batch of data to train directly
         """
         batch = self.policy_learner.preprocess_batch(batch)
-        self.policy_learner.learn_batch(batch)
+        policy_learner_loss = self.policy_learner.learn_batch(batch)
         self.safety_module.learn_batch(batch)
+
+        return policy_learner_loss
 
     def reset(self, observation: Observation, action_space: ActionSpace) -> None:
         self.history_summarization_module.reset()

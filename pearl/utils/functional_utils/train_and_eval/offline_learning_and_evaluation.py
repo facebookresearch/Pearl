@@ -2,10 +2,19 @@ import io
 import logging
 import os
 import sys
+from typing import List, Optional
 
 import requests
 import torch
-from libfb.py.certpathpicker.cert_path_picker import get_client_credential_paths
+
+try:
+    from libfb.py.certpathpicker.cert_path_picker import get_client_credential_paths
+except ImportError:
+    print(
+        "Cert path picker failed to find FB proxy certificates. Downloading data from "
+        "a url directly won't work inside meta"
+    )
+
 from pearl.api.agent import Agent
 from pearl.api.environment import Environment
 from pearl.pearl_agent import PearlAgent
@@ -38,40 +47,55 @@ def is_file_readable(file_path):
     return os.path.isfile(file_path) and os.access(file_path, os.R_OK)
 
 
-def get_offline_data_in_buffer(url: str, size: int = 1000000) -> ReplayBuffer:
+def get_offline_data_in_buffer(
+    is_action_continuous: bool,
+    url: Optional[str] = None,
+    data_path: Optional[str] = None,
+    size: int = 1000000,
+) -> ReplayBuffer:
     """
     Fetches offline data from a url and returns a replay buffer which can be sampled
     to train the offline agent. For this implementation we use FIFOOffPolicyReplayBuffer.
 
-    Args:
-        url: from where offline data needs to be fetched from.
-
-        - Assumes the offline data is an iterable consisting of transition tuples
+    - Assumes the offline data is an iterable consisting of transition tuples
         (observation, action, reward, next_observation, curr_available_actions,
         next_available_actions, action_space_done) as dictionaries.
 
-        - Also assumes offline data is in a .pt file; reading from a
+    - Also assumes offline data is in a .pt file; reading from a
         csv file can also be added later.
+
+    Args:
+        is_action_continuous: whether the action space is continuous or discrete.
+            for continuous actions spaces, we need to set this flag; see 'push' method
+            in FIFOOffPolicyReplayBuffer class
+        url: from where offline data needs to be fetched from
+        data_path: local path to the offline data
+        size: size of the replay buffer
+
     Returns:
-        ReplayBuffer: a FIFOOffPolicyReplayBuffer containing offline data
-        of transition tuples.
+        ReplayBuffer: a FIFOOffPolicyReplayBuffer containing offline data of transition tuples.
     """
+    if url is not None:
+        thrift_cert, thrift_key = get_client_credential_paths()
+        if not is_file_readable(thrift_cert) or not is_file_readable(thrift_key):
+            raise RuntimeError("Missing key TLS cert settings.")
 
-    thrift_cert, thrift_key = get_client_credential_paths()
-    if not is_file_readable(thrift_cert) or not is_file_readable(thrift_key):
-        raise RuntimeError("Missing key TLS cert settings.")
+        fwdproxy_url = f"{FWDPROXY_HOSTNAME}:{FWDPROXY_PORT}"
+        proxies = {"http": fwdproxy_url, "https": fwdproxy_url}
+        client_cert = (thrift_cert, thrift_key)
 
-    fwdproxy_url = f"{FWDPROXY_HOSTNAME}:{FWDPROXY_PORT}"
-    proxies = {"http": fwdproxy_url, "https": fwdproxy_url}
-    client_cert = (thrift_cert, thrift_key)
-
-    offline_transitions_data = requests.get(
-        url, proxies=proxies, verify=FB_CA_BUNDLE, cert=client_cert
-    )
+        offline_transitions_data = requests.get(
+            url, proxies=proxies, verify=FB_CA_BUNDLE, cert=client_cert
+        )
+        stream = io.BytesIO(offline_transitions_data.content)  # implements seek()
+        raw_transitions_buffer = torch.load(stream)
+    else:
+        raw_transitions_buffer = torch.load(data_path)  # pyre-ignore
 
     offline_data_replay_buffer = FIFOOffPolicyReplayBuffer(size)
-    stream = io.BytesIO(offline_transitions_data.content)  # implements seek()
-    raw_transitions_buffer = torch.load(stream)
+    if is_action_continuous:
+        offline_data_replay_buffer._is_action_continuous = True
+
     for transition in raw_transitions_buffer:
         if transition["curr_available_actions"].__class__.__name__ == "Discrete":
             transition["curr_available_actions"] = DiscreteActionSpace(
@@ -105,16 +129,14 @@ def get_offline_data_in_buffer(url: str, size: int = 1000000) -> ReplayBuffer:
 
 
 def offline_learning(
-    url: str,
     offline_agent: PearlAgent,
-    # pyre-fixme[9]: data_buffer has type `ReplayBuffer`; used as `None`.
-    data_buffer: ReplayBuffer = None,
+    data_buffer: ReplayBuffer,
     training_epochs: int = 1000,
 ) -> None:
     """
-    Trains the offline agent using transition tuples from offline data
-    (provided in the data_buffer). Loads offline data from a url if
-    data_buffer not provided.
+    Trains the offline agent using transition tuples from offline data (provided in
+    the data_buffer). Must provide a replay buffer with transition tuples - please
+    use the method get_offline_data_in_buffer to create an offline data buffer.
 
     Args:
         offline agent: a conservative learning agent (CQL or IQL).
@@ -122,11 +144,9 @@ def offline_learning(
         training_epochs: number of training epochs for offline learning.
     """
     set_seed(100)
-    if data_buffer is None:
-        # load data from a url and store it in a FIFOOffPolicyReplayBuffer
-        data_buffer = get_offline_data_in_buffer(url)
-        data_buffer.device = offline_agent.device
-        print("data buffer loaded")
+
+    # move replay buffer to device of the offline agent
+    data_buffer.device = offline_agent.device
 
     # training loop
     for i in range(training_epochs):
@@ -137,12 +157,11 @@ def offline_learning(
             print("training epoch", i, "training loss", loss)
 
 
-# pyre-fixme[3]: Return type must be annotated.
 def offline_evaluation(
     offline_agent: Agent,
     env: Environment,
     number_of_episodes: int = 1000,
-):
+) -> List[float]:
     """
     Evaluates the performance of an offline trained agent.
 
@@ -170,7 +189,7 @@ def offline_evaluation(
             learn_after_episode=learn_after_episode,
             total_steps=total_steps,
         )
-        if i % 100 == 0:
+        if i % 1 == 0:
             print(f"\repisode {i}, return={g}", end="")
         returns_offline_agent.append(g)
 

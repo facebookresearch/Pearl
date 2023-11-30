@@ -57,6 +57,7 @@ from pearl.safety_modules.risk_sensitive_safety_modules import (
 )
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.offline_learning_and_evaluation import (
+    get_offline_data_in_buffer,
     offline_evaluation,
     offline_learning,
 )
@@ -550,20 +551,34 @@ class IntegrationTests(unittest.TestCase):
         # specify path for offline data set
         url = "https://raw.githubusercontent.com/jb3618columbia/offline_data/ee11452e5c6116d12cd3c1cab25aff39ad7d6ebf/offline_raw_transitions_dict_50k.pt"
 
+        # get offline data from the specified path in a replay buffer
+        is_action_continuous = False
+        print(f"Loading offline data from {url}")
+        offline_data_replay_buffer = get_offline_data_in_buffer(
+            is_action_continuous, url
+        )
+
         # train conservative agent with offline data
-        offline_learning(url, offline_agent=conservativeDQN_agent, training_epochs=2000)
+        print("offline data in replay buffer; start offline training")
+        offline_learning(
+            offline_agent=conservativeDQN_agent,
+            data_buffer=offline_data_replay_buffer,
+            training_epochs=2000,
+        )
 
         # offline evaluation
         conservativeDQN_agent_returns = offline_evaluation(
-            offline_agent=conservativeDQN_agent, env=env
+            offline_agent=conservativeDQN_agent,
+            env=env,
+            number_of_episodes=500,
         )
 
         self.assertTrue(max(conservativeDQN_agent_returns) > 50)
 
     def test_iql_offline_training(self) -> None:
         """
-        This test is checking if Implicit Q Learning will eventually get to > 100 return for CartPole-v1
-        when trained with offline data.
+        This test is checking if Implicit Q Learning will eventually get to > 100 return
+        for CartPole-v1 when trained with offline data.
         """
         set_seed(100)
         env = GymEnvironment("CartPole-v1")
@@ -576,7 +591,7 @@ class IntegrationTests(unittest.TestCase):
                 exploration_module=NoExploration(),
                 actor_hidden_dims=[64, 64],
                 critic_hidden_dims=[64, 64],
-                state_value_critic_hidden_dims=[64, 64],
+                value_critic_hidden_dims=[64, 64],
                 training_rounds=1,
                 batch_size=32,
                 expectile=0.70,
@@ -592,10 +607,23 @@ class IntegrationTests(unittest.TestCase):
         # specify path for offline data set
         url = "https://raw.githubusercontent.com/jb3618columbia/offline_data/fbaccdd8d994479298c930d684ac49285f3cc901/offline_raw_transitions_dict_200k.pt"
 
+        # get offline data from the specified path in a replay buffer
+        is_action_continuous = False
+        print(f"Loading offline data from {url}")
+        offline_data_replay_buffer = get_offline_data_in_buffer(
+            is_action_continuous, url
+        )
+
         # train conservative agent with offline data
-        offline_learning(url, offline_agent=IQLAgent, training_epochs=2000)
+        offline_learning(
+            offline_agent=IQLAgent,
+            data_buffer=offline_data_replay_buffer,
+            training_epochs=2000,
+        )
 
         # offline evaluation
-        IQL_agent_returns = offline_evaluation(offline_agent=IQLAgent, env=env)
+        IQL_agent_returns = offline_evaluation(
+            offline_agent=IQLAgent, env=env, number_of_episodes=500
+        )
 
         self.assertTrue(max(IQL_agent_returns) > 100)

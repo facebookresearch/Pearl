@@ -53,10 +53,16 @@ class TestOfflineCQL(unittest.TestCase):
         )
 
         max_len_offline_data = 500
+
         create_offline_data(
             agent=onlineDQN_agent,
             env=env,
+            save_path="",
+            file_name="offline_raw_transitions_dict.pt",
             max_len_offline_data=max_len_offline_data,
+            learn=True,
+            learn_after_episode=True,
+            evaluation_episodes=50,
         )
 
         offline_data_replay_buffer = FIFOOffPolicyReplayBuffer(max_len_offline_data)
@@ -88,7 +94,6 @@ class TestOfflineCQL(unittest.TestCase):
         )
 
         offline_learning(
-            url="",
             offline_agent=conservative_agent,
             data_buffer=offline_data_replay_buffer,
             training_epochs=10,

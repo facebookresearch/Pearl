@@ -40,8 +40,8 @@ def action_scaling(
     """
     assert isinstance(action_space, BoxActionSpace)
     device = input_action.device
-    low = action_space.low.to(device)
-    high = action_space.high.to(device)
+    low = action_space.low.clone().detach().to(device)
+    high = action_space.high.clone().detach().to(device)
     centered_and_scaled_action = (((high - low) * (input_action + 1.0)) / 2) + low
     return centered_and_scaled_action
 
@@ -199,7 +199,8 @@ class GaussianActorNetwork(nn.Module):
         assert isinstance(action_space, BoxActionSpace)
         self.register_buffer(
             "_action_bound",
-            torch.tensor((action_space.high - action_space.low) / 2),
+            (action_space.high.clone().detach() - action_space.low.clone().detach())
+            / 2,
         )
 
         # preventing the actor network from learning a flat or a point mass distribution
@@ -260,6 +261,42 @@ class GaussianActorNetwork(nn.Module):
             return action, log_prob
         else:
             return action
+
+    def get_log_probability(
+        self, state_batch: torch.Tensor, action_batch: torch.Tensor
+    ) -> Tensor:
+        """
+        Compute log probability of actions, pi(a|s) under the policy parameterized by
+        the actor network.
+        Args:
+            state_batch: batch of states
+            action_batch: batch of actions
+        Returns:
+            log_prob: log probability of each action in the batch
+        """
+        epsilon = 1e-6
+        mean, log_std = self.forward(state_batch)
+        std = log_std.exp()
+        normal = Normal(mean, std)
+
+        # assume that input actions are in [-1, 1]^d
+        # TODO: change this to add a transform for unscaling and uncentering depending on the
+        # action space
+        unscaled_action_batch = torch.clip(action_batch, -1 + epsilon, 1 - epsilon)
+
+        # transform actions from [-1, 1]^d to [-inf, inf]^d
+        unnormalized_action_batch = torch.atanh(unscaled_action_batch)
+        log_prob = normal.log_prob(unnormalized_action_batch)
+        log_prob -= torch.log(
+            self._action_bound * (1 - unscaled_action_batch.pow(2)) + epsilon
+        )
+
+        # for multi-dimensional action space, sum log probabilities over individual
+        # action dimension
+        if log_prob.dim() == 2:
+            log_prob = log_prob.sum(dim=1, keepdim=True)
+
+        return log_prob
 
 
 ActorNetworkType = Callable[[int, List[int], int], nn.Module]
