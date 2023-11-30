@@ -63,24 +63,24 @@ class PearlAgent(Agent):
     ) -> None:
         """
         Initializes the PearlAgent.
+
         Args:
-            policy_learner: a PolicyLearner instance
-            safety_module: (optional) a SafetyModule instance (default is
-                    RiskNeutralSafetyModule for distributional policy learner
-                    types and IdentitySafetyModule for all other types)
-            risk_sensitive_safety_module: (optional) a RiskSensitiveSafetyModule
-                    instance (default is RiskNeutralSafetyModule)
-            history_summarization_module: (optional) a HistorySummarizationModule
-                    instance (default is IdentityHistorySummarizationModule)
-            replay_buffer: (optional) a replay buffer (default is single-transition
-                    replay buffer for now -- will very likely change)
+            policy_learner (PolicyLearner): An instance of PolicyLearner.
+            safety_module (SafetyModule, optional): An instance of SafetyModule. Defaults to
+                RiskNeutralSafetyModule for distributional policy learner types, and
+                IdentitySafetyModule for other types.
+            risk_sensitive_safety_module (RiskSensitiveSafetyModule, optional): An instance of
+                RiskSensitiveSafetyModule. Defaults to RiskNeutralSafetyModule.
+            history_summarization_module (HistorySummarizationModule, optional): An instance of
+                HistorySummarizationModule. Defaults to IdentityHistorySummarizationModule.
+            replay_buffer (ReplayBuffer, optional): A replay buffer. Defaults to a single-transition
+                replay buffer (note: this default is likely to change).
         """
         self.policy_learner: PolicyLearner = policy_learner
         self._device_id: int = device_id
         self.device: torch.device = get_pearl_device(device_id)
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.safety_module = (
+        self.safety_module: SafetyModule = (
             safety_module
             if safety_module is not None
             else (
@@ -94,14 +94,12 @@ class PearlAgent(Agent):
         # @jalaj, we need to follow the practice below for safety module
         self.policy_learner.safety_module = self.safety_module
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.replay_buffer = (
+        self.replay_buffer: ReplayBuffer = (
             PearlAgent.default_replay_buffer_type()
             if replay_buffer is None
             else replay_buffer
         )
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.history_summarization_module = (
+        self.history_summarization_module: HistorySummarizationModule = (
             PearlAgent.default_history_summarization_module_type()
             if history_summarization_module is None
             else history_summarization_module
@@ -137,6 +135,9 @@ class PearlAgent(Agent):
         self.history_summarization_module.to(self.device)
 
     def act(self, exploit: bool = False) -> Action:
+        # pyre-fixme[6]: contextual bandit environments use subjective state None
+        # We need to adapt that to use Tensors, or instead revert equalling
+        # SubjectiveState to None.
         safe_action_space = self.safety_module.filter_action(self._subjective_state)
         # PolicyLearner requires all tensor inputs to be already on the correct device
         # before being passed to it.
@@ -146,16 +147,18 @@ class PearlAgent(Agent):
             else self._subjective_state
         )
 
+        # TODO: The following code is too specific to be at this high-level.
+        # This needs to be moved to a better place.
         if (
             isinstance(self._action_space, DiscreteActionSpace)
             and self.policy_learner.requires_tensors
         ):
+            assert isinstance(safe_action_space, DiscreteActionSpace)
             for a in safe_action_space.actions:
                 a.to(self.device)
 
-        # TODO: how to handle None state?
         self._latest_action = self.policy_learner.act(
-            subjective_state_to_be_used, safe_action_space, exploit=exploit  # pyre-ignore[6]
+            subjective_state_to_be_used, safe_action_space, exploit=exploit  # pyre-fixme[6]
         )
 
         return self._latest_action
@@ -185,7 +188,6 @@ class PearlAgent(Agent):
 
         self._subjective_state = new_subjective_state
 
-    # pyre-fixme[15]: `learn` overrides method defined in `Agent` inconsistently.
     def learn(self) -> Dict[str, Any]:
         report = self.policy_learner.learn(self.replay_buffer)
         self.safety_module.learn(self.replay_buffer, self.policy_learner)

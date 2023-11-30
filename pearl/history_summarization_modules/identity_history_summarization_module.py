@@ -1,4 +1,7 @@
+from typing import Optional
+
 import torch
+
 from pearl.api.action import Action
 from pearl.api.history import History
 from pearl.api.observation import Observation
@@ -18,7 +21,7 @@ class IdentityHistorySummarizationModule(HistorySummarizationModule):
         self.history: History = None
 
     def summarize_history(
-        self, observation: Observation, action: Action
+        self, observation: Observation, action: Optional[Action]
     ) -> SubjectiveState:
         self.history = observation
         # pyre-fixme[7]: incompatible return type

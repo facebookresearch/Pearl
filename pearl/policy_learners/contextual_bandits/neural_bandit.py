@@ -47,7 +47,7 @@ class NeuralBandit(ContextualBanditBase):
         # TODO define optimizer config to use by all deep algorithms
         use_keyed_optimizer: bool = False,
         state_features_only: bool = False,
-        **kwargs: Dict[str, Any]
+        **kwargs: Any
     ) -> None:
         super(NeuralBandit, self).__init__(
             feature_dim=feature_dim,

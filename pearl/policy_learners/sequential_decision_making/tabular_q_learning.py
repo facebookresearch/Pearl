@@ -41,7 +41,8 @@ class TabularQLearning(PolicyLearner):
             learning_rate (float, optional): the learning rate. Defaults to 0.01.
             discount_factor (float, optional): the discount factor. Defaults to 0.9.
             exploration_rate (float, optional): the exploration rate. Defaults to 0.01.
-            debug (bool, optional): whether to print debug information to standard output. Defaults to False.
+            debug (bool, optional): whether to print debug information to standard output.
+            Defaults to False.
         """
         super(TabularQLearning, self).__init__(
             exploration_module=EGreedyExploration(exploration_rate),

@@ -34,14 +34,13 @@ class Environment(ABC):
         `ActionResult` object containing the next observation, reward, and done flag."""
         pass
 
-    # TODO: Properly handle typing for `render()`.
-    def render(self):  # pyre-ignore[3] # noqa: B027
+    def render(self) -> None:
         """Renders the environment. Default implementation does nothing."""
-        pass
+        return None
 
-    def close(self) -> None:  # noqa: B027
+    def close(self) -> None:
         """
         Closes environment, taking care of any cleanup needed.
         Default implementation does nothing.
         """
-        pass
+        return None

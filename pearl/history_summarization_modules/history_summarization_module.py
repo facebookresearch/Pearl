@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -16,7 +17,7 @@ class HistorySummarizationModule(ABC, nn.Module):
 
     @abstractmethod
     def summarize_history(
-        self, observation: Observation, action: Action
+        self, observation: Observation, action: Optional[Action]
     ) -> SubjectiveState:
         pass
 

@@ -56,7 +56,7 @@ class LinearRegression(nn.Module):
     def batch_quadratic_form(x: torch.Tensor, A: torch.Tensor) -> torch.Tensor:
         """
         Compute the quadratic form x^T * A * x for a batched input x.
-        The calcuation of pred_sigma (uncertainty) in LinUCB is done by quadratic form x^T * A^{-1} * x.
+        The calculation of pred_sigma (uncertainty) in LinUCB is done by quadratic form x^T * A^{-1} * x.
         Inspired by https://stackoverflow.com/questions/18541851/calculate-vt-a-v-for-a-matrix-of-vectors-v
         This is a vectorized implementation of out[i] = x[i].t() @ A @ x[i]
         x shape: (Batch, Feature_dim)

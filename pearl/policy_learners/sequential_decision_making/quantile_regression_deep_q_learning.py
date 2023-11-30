@@ -24,7 +24,8 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
     Quantile Regression based Deep Q Learning Policy Learner
 
     Notes:
-        - Support for offline learning by adding a conservative loss to the quantile regression based distributional
+        - Support for offline learning by adding a conservative loss to the
+            quantile regression based distributional
             temporal difference loss has not been added (literature does not seem to have that)
         - To do: Add support for input a network instance
     """
@@ -97,7 +98,8 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
         )
 
         # get q values from a q value distribution under a risk metric
-        # instead of using the 'get_q_values' method of the QuantileQValueNetwork, we invoke a method from the risk sensitive safety module
+        # instead of using the 'get_q_values' method of the QuantileQValueNetwork,
+        # we invoke a method from the risk sensitive safety module
         next_state_action_values = self.safety_module.get_q_values_under_risk_metric(
             next_state_batch_repeated, next_available_actions_batch, self._Q_target
         ).view(
@@ -114,7 +116,9 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
 
         """
         Step 3: get quantiles corresponding to greedy action index using torch.gather
-            - as the shape of next_state_action_quantiles is (batch_size x action_space_size x num_quantiles), and the shape of greedy_action_idx is (batch_size x 1),
+            - as the shape of next_state_action_quantiles is
+              (batch_size x action_space_size x num_quantiles),
+              and the shape of greedy_action_idx is (batch_size x 1),
             - we need to expand the shape of greedy_action_idx along the last dimension for broadcasting
         """
         quantiles_greedy_action = torch.gather(

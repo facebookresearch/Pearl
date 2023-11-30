@@ -76,9 +76,11 @@ class RiskNeutralSafetyModule(RiskSensitiveSafetyModule):
         Args:
             state_batch: a batch of state tensors (batch_size, state_dim)
             action_batch: a batch of action tensors (batch_size, action_dim)
-            q_value_distribution_network: a distributional q value network that approximates the return distribution
+            q_value_distribution_network: a distributional q value network that
+                                          approximates the return distribution
         Returns:
-            Q-values of (state, action) pairs: (batch_size) under a risk neutral measure, that is, Q(s, a) = E[Z(s, a)]
+            Q-values of (state, action) pairs: (batch_size) under a risk neutral measure,
+            that is, Q(s, a) = E[Z(s, a)]
         """
         # pyre-fixme[20]: Argument `action_batch` expected.
         q_value_distribution = q_value_distribution_network.get_q_value_distribution(
@@ -91,7 +93,8 @@ class RiskNeutralSafetyModule(RiskSensitiveSafetyModule):
 
 class QuantileNetworkMeanVarianceSafetyModule(RiskSensitiveSafetyModule):
     """
-    A safety module that computes q values as a weighted linear combination of mean and variance of the q value distribution.
+    A safety module that computes q values as a weighted linear combination
+    of mean and variance of the q value distribution.
     Q(s, a) = E[Z(s, a)] - (beta) * Var[Z(s, a)]
     """
 

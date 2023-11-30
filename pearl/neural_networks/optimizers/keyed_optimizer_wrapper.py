@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.
 
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping, Optional, Type
 
 import torch
 from torchrec.optim.keyed import KeyedOptimizer
@@ -22,8 +22,7 @@ class KeyedOptimizerWrapper(KeyedOptimizer):
     def __init__(
         self,
         models: Mapping[str, torch.nn.Module],
-        # pyre-fixme[31]: Expression `Optimizer)` is not a valid type.
-        optimizer_cls: type(torch.optim.Optimizer),
+        optimizer_cls: Type[torch.optim.Optimizer],
         **kwargs: Any,
     ) -> None:
         params = {
@@ -40,19 +39,19 @@ class KeyedOptimizerWrapper(KeyedOptimizer):
     def zero_grad(self, set_to_none: bool = False) -> None:
         self._optimizer.zero_grad()
 
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-    def step(self, closure: Any = None) -> None:
-        self._optimizer.step(closure=closure)
+    def step(self, closure: Optional[Callable[[], float]] = None) -> Optional[float]:
+        if closure is not None:
+            return self._optimizer.step(closure=closure)
+        else:
+            return self._optimizer.step()
 
 
 class NoOpOptimizer(KeyedOptimizer):
-    # pyre-fixme[3]: Return type must be annotated.
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__({}, {}, {})
 
     def zero_grad(self, set_to_none: bool = False) -> None:
         pass
 
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-    def step(self, closure: Any = None) -> None:
+    def step(self, closure: Optional[Callable[[], float]] = None) -> Optional[float]:
         pass

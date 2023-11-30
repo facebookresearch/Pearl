@@ -32,7 +32,8 @@ def extend_state_feature_by_available_action_space(
 
     How: it adds a dimension and repeats state features available_action_space_size times
 
-    Example: state_batch: [1 x 4] --> state_repeated_batch: [1 x 2 x 4], where batch_size=1, state_dim=4,
+    Example:
+    state_batch: [1 x 4] --> state_repeated_batch: [1 x 2 x 4], where batch_size=1, state_dim=4,
     and available_action_space_size=2. Hence, 2 actions are added into dim=-2
     [[1,2,3,4]] --> [[[1,2,3,4],
                       [1,2,3,4]]]

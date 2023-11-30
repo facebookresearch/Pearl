@@ -1,3 +1,4 @@
+import inspect
 from typing import Callable, Iterable, Tuple, Type
 
 import torch
@@ -27,24 +28,28 @@ class TwinCritic(torch.nn.Module):
         output_dim: int = 1,
     ) -> None:
         super(TwinCritic, self).__init__()
-        # pyre-fixme[4]: Attribute must be annotated.
-        # pyre-fixme[45]: Cannot instantiate abstract class `QValueNetwork`.
-        self._critic_1 = network_type(
-            state_dim=state_dim,
-            action_dim=action_dim,
-            hidden_dims=hidden_dims,
-            output_dim=output_dim,
-        )
-        # pyre-fixme[4]: Attribute must be annotated.
-        # pyre-fixme[45]: Cannot instantiate abstract class `QValueNetwork`.
-        self._critic_2 = network_type(
+
+        if inspect.isabstract(network_type):
+            raise ValueError("network_type must not be abstract")
+
+        # pyre-ignore[45]: Cannot instantiate abstract class `QValueNetwork`.
+        self._critic_1: QValueNetwork = network_type(
             state_dim=state_dim,
             action_dim=action_dim,
             hidden_dims=hidden_dims,
             output_dim=output_dim,
         )
 
-        # nn.ModuleList helps manage the networks (initilization, parameter update etc.) efficiently
+        # pyre-ignore[45]: Cannot instantiate abstract class `QValueNetwork`.
+        self._critic_2: QValueNetwork = network_type(
+            state_dim=state_dim,
+            action_dim=action_dim,
+            hidden_dims=hidden_dims,
+            output_dim=output_dim,
+        )
+
+        # nn.ModuleList helps manage the networks
+        # (initialization, parameter update etc.) efficiently
         self._critic_networks_combined = nn.ModuleList([self._critic_1, self._critic_2])
         self._critic_networks_combined.apply(init_fn)
 
@@ -58,7 +63,8 @@ class TwinCritic(torch.nn.Module):
             state_batch (torch.Tensor): a batch of states with shape (batch_size, state_dim)
             action_batch (torch.Tensor): a batch of actions with shape (batch_size, action_dim)
         Returns:
-            torch.Tensor: Q-values of (state, action) pairs with shape (batch_size)
+            Tuple[torch.Tensor, torch.Tensor]: Q-values of (state, action) pairs with shape
+            (batch_size)
         """
         critic_1_values = self._critic_1.get_q_values(state_batch, action_batch)
         critic_2_values = self._critic_2.get_q_values(state_batch, action_batch)

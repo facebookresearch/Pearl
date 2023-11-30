@@ -20,6 +20,10 @@ class SafetyModule(ABC):
         pass
 
     @abstractmethod
+    def reset(self, action_space: ActionSpace) -> None:
+        pass
+
+    @abstractmethod
     def learn(self, replay_buffer: ReplayBuffer, policy_learner: PolicyLearner) -> None:
         pass
 

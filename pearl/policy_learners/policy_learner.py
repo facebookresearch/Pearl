@@ -55,9 +55,7 @@ class PolicyLearner(torch.nn.Module, ABC):
         training_rounds: int = 100,
         batch_size: int = 1,
         requires_tensors: bool = True,
-        # temporary solution before abstract interfaces are implemented
-        # pyre-fixme[2]: Parameter must be annotated.
-        **options,
+        **options: Any,
     ) -> None:
         super(PolicyLearner, self).__init__()
         # pyre-fixme[4]: Attribute must be annotated.

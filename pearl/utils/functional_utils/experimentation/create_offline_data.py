@@ -7,6 +7,7 @@ from typing import List, Optional
 
 import torch
 from pearl.api.environment import Environment
+from pearl.api.reward import Value
 from pearl.pearl_agent import PearlAgent
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.online_learning import run_episode
@@ -21,7 +22,7 @@ def create_offline_data(
     learn: bool = True,
     learn_after_episode: bool = True,
     evaluation_episodes: int = 500,
-) -> List[float]:
+) -> List[Value]:
 
     """
     This function creates offline data by interacting with a given environment using a specified
@@ -30,13 +31,13 @@ def create_offline_data(
 
     Args:
         agent: a pearl agent with policy learner, exploration module and replay buffer specified
-            (e.g. a DQN agent for discrete control tasks).
+               (e.g. a DQN agent).
         env: an environment to collect data from (e.g. GymEnvironment)
         number_of_episodes: number of episodes for which data is to be collected.
         learn: whether to learn after each episode (depends on the policy learner used by agent).
         exploit: set as default to False as we want exploration during data collection.
-        learn_after_episode: whether to learn after each episode (depends on policy learner
-            used by agent).
+        learn_after_episode: whether to learn after each episode
+        (depends on the policy learner used by agent).
     """
 
     # much of this function overlaps with episode return function but i think writing it
@@ -134,7 +135,7 @@ def create_offline_data(
 def get_data_collection_agent_returns(
     data_path: str,
     returns_file_path: Optional[str] = None,
-) -> List[float]:
+) -> List[Value]:
 
     """
     This function returns episode returns of a Pearl Agent using for offline data collection.

@@ -1,3 +1,5 @@
+from typing import Optional
+
 import torch
 from pearl.api.action import Action
 from pearl.api.history import History
@@ -26,7 +28,7 @@ class StackingHistorySummarizationModule(HistorySummarizationModule):
         )
 
     def summarize_history(
-        self, observation: Observation, action: Action
+        self, observation: Observation, action: Optional[Action]
     ) -> torch.Tensor:
         if action is None:
             action = self.default_action

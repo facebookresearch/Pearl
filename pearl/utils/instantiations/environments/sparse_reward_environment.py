@@ -16,6 +16,7 @@ import math
 import random
 from abc import abstractmethod
 from collections import namedtuple
+from typing import Optional
 
 import torch
 

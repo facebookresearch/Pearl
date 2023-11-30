@@ -551,7 +551,7 @@ class IntegrationTests(unittest.TestCase):
         )
 
         # specify path for offline data set
-        url = "https://raw.githubusercontent.com/jb3618columbia/offline_data/ee11452e5c6116d12cd3c1cab25aff39ad7d6ebf/offline_raw_transitions_dict_50k.pt"  # noqa E501
+        url = "https://raw.githubusercontent.com/jb3618columbia/offline_data/ee11452e5c6116d12cd3c1cab25aff39ad7d6ebf/offline_raw_transitions_dict_50k.pt"  # noqa: E501
 
         # get offline data from the specified path in a replay buffer
         is_action_continuous = False

@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import torch
 import torch.nn as nn
@@ -29,7 +29,7 @@ def mlp_block(
     last_activation: Optional[str] = None,
     dropout_ratio: float = 0.0,
     use_skip_connections: bool = False,
-    **kwargs,  # pyre-ignore
+    **kwargs: Any,
 ) -> nn.Module:
     """
     A simple MLP which can be reused to create more complex networks

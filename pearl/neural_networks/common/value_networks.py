@@ -4,7 +4,7 @@ This module defines several types of value neural networks.
 
 
 from abc import ABC
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import torch
 import torch.nn as nn
@@ -37,7 +37,7 @@ class VanillaValueNetwork(ValueNetwork):
         input_dim: int,
         hidden_dims: Optional[List[int]],
         output_dim: int = 1,
-        **kwargs,  # pyre-ignore
+        **kwargs: Any,
     ) -> None:
         super(VanillaValueNetwork, self).__init__()
         self._model: nn.Module = mlp_block(

@@ -40,8 +40,7 @@ class ImplicitQLearning(ActorCriticBase):
     """
     Implementation of Implicit Q learning, an offline RL algorithm:
     https://arxiv.org/pdf/2110.06169.pdf.
-
-    Please refer to author implementation in Jax: https://github.com/ikostrikov/implicit_q_learning
+    Author implementation in Jax: https://github.com/ikostrikov/implicit_q_learning
 
     Algorithm implementation:
      - perform value, crtic and actor updates sequentially

@@ -17,7 +17,8 @@ def argmax_random_tie_breaks(
 
     Args:
         scores: A 2D tensor of scores
-        mask [Optional]: A 2D score presence mask. If missing, assuming that all scores are unmasked.
+        mask [Optional]: A 2D score presence mask.
+                         If missing, assuming that all scores are unmasked.
     """
     # This function only works for 2D tensor
     assert scores.ndim == 2

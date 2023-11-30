@@ -44,7 +44,8 @@ class QValueNetwork(abc.ABC, nn.Module):
         Args:
             state_batch (torch.Tensor): a batch of state tensors (batch_size, state_dim)
             action_batch (torch.Tensor): a batch of action tensors (batch_size, action_dim)
-            curr_available_actions_batch (torch.Tensor, optional): a batch of currently available actions (batch_size, available_action_space_size, action_dim)
+            curr_available_actions_batch (torch.Tensor, optional): a batch of currently available
+                actions (batch_size, available_action_space_size, action_dim)
         Returns:
             Q-values of (state, action) pairs: (batch_size)
         """
@@ -54,7 +55,8 @@ class QValueNetwork(abc.ABC, nn.Module):
 class DistributionalQValueNetwork(abc.ABC, nn.Module):
     """
     An interface for estimators of state-action value distribution (Q-value distribution).
-    These are value neural networks with special method for computing the Q-value distribution and the expected Q-values for a state-action pair.
+    These are value neural networks with special method for computing the Q-value distribution
+    and the expected Q-values for a state-action pair.
     Examples include Categorical DQN, Quantile DQN, IQN etc.
     """
 
@@ -91,7 +93,8 @@ class DistributionalQValueNetwork(abc.ABC, nn.Module):
         state_batch: torch.Tensor,
         action_batch: torch.Tensor,
     ) -> torch.Tensor:
-        """Returns Z(s, a), a probability distribution over q values, given s and a. Note that under a risk neutral measure, Q(s,a) = E[Z(s, a)].
+        """Returns Z(s, a), a probability distribution over q values, given s and a.
+        Note that under a risk neutral measure, Q(s,a) = E[Z(s, a)].
         Args:
             state_batch (torch.Tensor): a batch of state tensors (batch_size, state_dim)
             action_batch (torch.Tensor): a batch of action tensors (batch_size, action_dim)

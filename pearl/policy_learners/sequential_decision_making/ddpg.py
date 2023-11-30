@@ -97,8 +97,8 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
 
         with torch.no_grad():
             # sample a batch of next actions from target actor network;
-            # shape (batch_size, action_dim)
             next_action = self._actor_target.sample_action(batch.next_state)
+            # (batch_size, action_dim)
 
             # get q values of (batch.next_state, next_action) from targets of twin critic
             next_q1, next_q2 = self._critic_target.get_q_values(
@@ -110,7 +110,8 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
             next_q = torch.minimum(next_q1, next_q2)
 
             # compute bellman target:
-            # r + gamma * (min{Qtarget_1(s', a from target actor network), Qtarget_2(s', a from target actor network)})
+            # r + gamma * (min{Qtarget_1(s', a from target actor network),
+            #                  Qtarget_2(s', a from target actor network)})
             expected_state_action_values = (
                 next_q * self._discount_factor * (1 - batch.done.float())
             ) + batch.reward  # shape (batch_size)

@@ -1,4 +1,3 @@
-import typing
 from typing import Dict, Optional, Type, TypeVar
 
 K = TypeVar("K")

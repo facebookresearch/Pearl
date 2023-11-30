@@ -1,6 +1,8 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Dict, Iterable, Optional, Type
+
+from pearl.neural_networks.common.value_networks import QValueNetwork
 
 from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 
@@ -61,8 +63,7 @@ class ActorCriticBase(PolicyLearner):
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,
         actor_network_type: ActorNetworkType = VanillaActorNetwork,
-        # pyre-fixme
-        critic_network_type=VanillaValueNetwork,
+        critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
         use_actor_target: bool = False,
         use_critic_target: bool = False,
         actor_soft_update_tau: float = 0.005,

@@ -17,8 +17,8 @@ def compute_cql_loss(q_network, batch, batch_size) -> torch.Tensor:
 
     Inputs:
     1) q_network: to compute the q values of every (state, action) pair.
-    2) batch: batch of data transitions (state, action, reward, done, next_state) along with (current and next)
-            available actions.
+    2) batch: batch of data transitions (state, action, reward, done, next_state) along with
+              (current and next) available actions.
     3) batch_size: size of batch.
 
     Outputs:

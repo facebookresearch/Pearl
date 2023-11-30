@@ -138,7 +138,8 @@ class TD3(DeepDeterministicPolicyGradient):
             next_q = torch.minimum(next_q1, next_q2)
 
             # compute bellman target:
-            # r + gamma * (min{Qtarget_1(s', a from target actor network), Qtarget_2(s', a from target actor network)})
+            # r + gamma * (min{Qtarget_1(s', a from target actor network),
+            #                  Qtarget_2(s', a from target actor network)})
             expected_state_action_values = (
                 next_q * self._discount_factor * (1 - batch.done.float())
             ) + batch.reward  # (batch_size)
