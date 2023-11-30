@@ -46,7 +46,7 @@ from pearl.utils.instantiations.environments.environments import (
     FixedNumberOfStepsEnvironment,
 )
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
-from pearl.utils.instantiations.environments.reward_is_equal_to_ten_times_action_contextual_bandit_environment import (
+from pearl.utils.instantiations.environments.reward_is_equal_to_ten_times_action_contextual_bandit_environment import (  # noqa: E501
     RewardIsEqualToTenTimesActionContextualBanditEnvironment,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
@@ -213,9 +213,10 @@ class TestAgentWithPyTorch(unittest.TestCase):
         online_learning(agent, env, number_of_episodes=500)
 
         for _ in range(100):  # Should always reach the goal
-            assert (
-                run_episode(agent, env, learn=False, exploit=True)[0]["return"] == 1.0
+            episode_info, total_steps = run_episode(
+                agent, env, learn=False, exploit=True
             )
+            assert episode_info["return"] == 1.0
 
     def test_contextual_bandit_with_tabular_q_learning_online_rl(self) -> None:
         num_actions = 5
@@ -238,7 +239,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
 
         # Should have learned to use action max_action with reward equal to max_action * 10
         for _ in range(100):
-            assert (
-                run_episode(agent, env, learn=False, exploit=True)[0]["return"]
-                == max_action * 10
+            episode_info, total_steps = run_episode(
+                agent, env, learn=False, exploit=True
             )
+            assert episode_info["return"] == max_action * 10

@@ -97,14 +97,14 @@ def online_learning(
         if number_of_steps is not None and total_steps >= number_of_steps:
             break
         old_total_steps = total_steps
-        episode_info, total_steps = run_episode(
+        episode_info, episode_total_steps = run_episode(
             agent,
             env,
             learn=True,
             exploit=False,
             learn_after_episode=learn_after_episode,
-            total_steps=old_total_steps,
         )
+        total_steps += episode_total_steps
         total_episodes += 1
         if (
             print_every_x_steps is not None
@@ -167,17 +167,17 @@ def target_return_is_reached(
     for i in range(max_episodes):
         if i % 10 == 0:
             print(f"episode {i}")
-        info, total_steps = run_episode(
+        episode_info, episode_total_steps = run_episode(
             agent=agent,
             env=env,
             learn=learn,
             learn_after_episode=learn_after_episode,
             exploit=exploit,
-            total_steps=total_steps,
         )
-        returns.append(info["return"])
+        total_steps += episode_total_steps
+        returns.append(episode_info["return"])
         value = (
-            info["return"]
+            episode_info["return"]
             if not check_moving_average
             else latest_moving_average(returns)
         )
@@ -196,20 +196,22 @@ def run_episode(
     learn: bool = False,
     exploit: bool = True,
     learn_after_episode: bool = False,
-    total_steps: int = 0,
 ) -> Tuple[Dict[str, Any], int]:
     """
-    Runs one episode and returns an info dict.
+    Runs one episode and returns an info dict and number of steps taken.
 
     Args:
         agent (Agent): the agent.
         env (Environment): the environment.
         learn (bool, optional): Runs `agent.learn()` after every step. Defaults to False.
         exploit (bool, optional): asks the agent to only exploit. Defaults to False.
-        learn_after_episode (bool, optional): asks the agent to only learn after every episode. Defaults to False.
+        learn_after_episode (bool, optional): asks the agent to only learn at
+                                              the end of the episode. Defaults to False.
+
     Returns:
-        Value: the return of the episode.
+        Tuple[Dict[str, Any], int]: the return of the episode and the number of steps taken.
     """
+    total_steps = 0
     observation, action_space = env.reset()
     agent.reset(observation, action_space)
     cum_reward = 0

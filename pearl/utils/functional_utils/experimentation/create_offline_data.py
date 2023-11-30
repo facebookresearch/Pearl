@@ -94,6 +94,7 @@ def create_offline_data(
         + ".pickle",
         "wb",
     ) as handle:
+        # @lint-ignore PYTHONPICKLEISBAD
         pickle.dump(epi_returns, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     # evaluation results of the data collection agent
@@ -104,14 +105,14 @@ def create_offline_data(
 
     evaluation_returns = []
     for i in range(evaluation_episodes):
-        info, _ = run_episode(
+        episode_info, _ = run_episode(
             agent=agent,
             env=env,
             learn=False,
             exploit=True,
             learn_after_episode=False,
         )
-        g = info["return"]
+        g = episode_info["return"]
         print(f"\repisode {i}, return={g}", end="")
         evaluation_returns.append(g)
 
@@ -122,6 +123,7 @@ def create_offline_data(
         + ".pickle",
         "wb",
     ) as handle:
+        # @lint-ignore PYTHONPICKLEISBAD
         pickle.dump(evaluation_returns, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     return epi_returns  # for plotting returns of the policy used to collect offine data
@@ -163,6 +165,7 @@ def get_data_collection_agent_returns(
     else:
         print(f"loading returns from file {returns_file_path}")
         with open(returns_file_path, "rb") as file:
+            # @lint-ignore PYTHONPICKLEISBAD
             data_collection_agent_returns = pickle.load(file)
 
     return data_collection_agent_returns

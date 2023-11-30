@@ -179,19 +179,17 @@ def offline_evaluation(
     learn_after_episode = False
 
     returns_offline_agent = []
-    total_steps = 0
     for i in range(number_of_episodes):
-        info, total_steps = run_episode(
+        episode_info, total_steps = run_episode(
             agent=offline_agent,
             env=env,
             learn=learn,
             exploit=exploit,
             learn_after_episode=learn_after_episode,
-            total_steps=total_steps,
         )
+        g = episode_info["return"]
         if i % 1 == 0:
-            g = info["return"]
             print(f"\repisode {i}, return={g}", end="")
-        returns_offline_agent.append(info["return"])
+        returns_offline_agent.append(g)
 
     return returns_offline_agent
