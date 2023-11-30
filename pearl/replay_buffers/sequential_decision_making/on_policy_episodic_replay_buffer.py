@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -19,9 +19,7 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
         # this is used to delay push SARS
         # wait for next action is available and then final push
         # this is designed for single transition for now
-        # pyre-fixme[4]: Attribute must be annotated.
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.state_action_cache = []
+        self.state_action_cache: List[Transition] = []
         self._discounted_factor = discounted_factor
 
     def push(
