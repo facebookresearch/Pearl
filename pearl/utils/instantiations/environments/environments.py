@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
@@ -46,7 +47,7 @@ class FixedNumberOfStepsEnvironment(Environment):
         return self._action_space
 
     # pyre-fixme[3]: Return type must be annotated.
-    def reset(self):
+    def reset(self, seed: Optional[int] = None):
         return self.number_of_steps_so_far, self.action_space
 
     # pyre-fixme[3]: Return type must be annotated.
@@ -95,8 +96,8 @@ class BoxObservationsEnvironmentBase(Environment, ABC):
         return action_result
 
     # pyre-fixme[3]: Return type must be annotated.
-    def reset(self):
-        observation, action_space = self.base_environment.reset()
+    def reset(self, seed: Optional[int] = None):
+        observation, action_space = self.base_environment.reset(seed=seed)
         return self.compute_tensor_observation(observation), action_space
 
     # pyre-fixme[3]: Return type must be annotated.

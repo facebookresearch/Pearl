@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch.multiprocessing as mp
 from pearl.pearl_agent import PearlAgent
+from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 from pearl.utils.scripts.benchmark_config import (
@@ -121,6 +122,7 @@ def evaluate_single(
     print_every_x_steps,
 ):
     """Performing one run of experiment."""
+    set_seed(run_idx)
     policy_learner = method["policy_learner"]
     policy_learner_args = method["policy_learner_args"]
     agent_args = method["agent_args"]
@@ -223,6 +225,7 @@ def evaluate_single(
         print_every_x_episodes=print_every_x_episodes,
         print_every_x_steps=print_every_x_steps,
         learn_after_episode=learn_after_episode,
+        seed=run_idx,
     )
     dir = f"outputs/{env_name}/{method_name}"
     os.makedirs(dir, exist_ok=True)

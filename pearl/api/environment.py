@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import Optional, Tuple
 
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
@@ -23,7 +23,7 @@ class Environment(ABC):
         pass
 
     @abstractmethod
-    def reset(self) -> Tuple[Observation, ActionSpace]:
+    def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
         """Resets the environment and returns the initial observation and
         initial available action space."""
         pass

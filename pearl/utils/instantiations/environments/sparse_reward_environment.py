@@ -58,8 +58,10 @@ class SparseRewardEnvironment(Environment):
     def step(self, action: Action) -> ActionResult:
         pass
 
-    # pyre-fixme[31]: Expression `ActionSpace)` is not a valid type.
-    def reset(self) -> (SparseRewardEnvironmentObservation, ActionSpace):
+    def reset(
+        self, seed: Optional[int] = None
+    ) -> (SparseRewardEnvironmentObservation, ActionSpace):  # pyre-fixme[31]: Expression `ActionSpace)` is not a valid type.
+
         # reset (x, y)
         self._agent_position = (self._length / 2, self._height / 2)
         self._goal = (random.uniform(0, self._length), random.uniform(0, self._height))

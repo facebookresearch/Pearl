@@ -560,12 +560,12 @@ def main(device_id: int = -1) -> None:
         [
             # Methods applied to the same environment will be grouped in the same plot.
             # All receive device id
-            # PearlDQN("CartPole-v1", device_id=device_id),
+            PearlDQN("CartPole-v1", device_id=device_id),
             # PearlPPO("CartPole-v1", device_id=device_id),
             # PearlDQN("Acrobot-v1", device_id=device_id),
             # PearlPPO("Acrobot-v1", device_id=device_id),
             # PearlDDPG("Pendulum-v1", device_id=device_id),
-            PearlTD3("wc_Pendulum-v1", device_id=device_id),
+            # PearlTD3("wc_Pendulum-v1", device_id=device_id),
             # MuJoCo environments -- require MuJoCo to be installed.
             # PearlDDPG("HalfCheetah-v4"),
             # PearlDDPG("Ant-v4"),

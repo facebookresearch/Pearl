@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Iterable, Tuple, Union
+from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import numpy as np
 from pearl.api.action import Action
@@ -85,13 +85,16 @@ class GymEnvironment(Environment):
     def observation_space(self) -> Space:
         return self._observation_space
 
-    def reset(self) -> Tuple[Observation, ActionSpace]:
+    def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
         """Resets the environment and returns the initial observation and
         initial action space."""
+        # pyre-fixme: ActionSpace does not have _gym_space
+        self._action_space._gym_space.seed(seed)
+        self.env.action_space.seed(seed)
         reset_result = self.env.reset()
         if isinstance(reset_result, Iterable) and isinstance(reset_result[1], dict):
             # newer Gym versions return an info dict.
-            observation, info = reset_result
+            observation, info = self.env.reset(seed=seed)
         else:
             # TODO: Deprecate this part at some point and only support new
             # version of Gymnasium?

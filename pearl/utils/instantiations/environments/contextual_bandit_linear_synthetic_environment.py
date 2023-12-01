@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import pandas as pd
 import torch
@@ -103,7 +103,7 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         )
 
     # pyre-fixme[31]: Expression `ActionSpace)` is not a valid type.
-    def reset(self) -> (Observation, ActionSpace):
+    def reset(self, seed: Optional[int] = None) -> (Observation, ActionSpace):
         """
         Provides the observation and action space to the agent.
         """
@@ -303,7 +303,7 @@ class SLCBEnvironment(ContextualBanditEnvironment):
     def action_space(self) -> ActionSpace:
         return self._action_space
 
-    def reset(self) -> Tuple[Observation, ActionSpace]:
+    def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
         """
         Provides the observation and action space to the agent.
         """

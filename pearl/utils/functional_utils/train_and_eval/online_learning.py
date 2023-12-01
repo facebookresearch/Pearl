@@ -74,6 +74,7 @@ def online_learning(
     learn_after_episode: bool = False,
     print_every_x_episodes: Optional[int] = None,
     print_every_x_steps: Optional[int] = None,
+    seed: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Performs online learning for a number of episodes.
@@ -103,6 +104,8 @@ def online_learning(
             learn=True,
             exploit=False,
             learn_after_episode=learn_after_episode,
+            total_steps=old_total_steps,
+            seed=seed,
         )
         total_steps += episode_total_steps
         total_episodes += 1
@@ -196,6 +199,8 @@ def run_episode(
     learn: bool = False,
     exploit: bool = True,
     learn_after_episode: bool = False,
+    total_steps: int = 0,
+    seed: Optional[int] = None,
 ) -> Tuple[Dict[str, Any], int]:
     """
     Runs one episode and returns an info dict and number of steps taken.
@@ -211,8 +216,11 @@ def run_episode(
     Returns:
         Tuple[Dict[str, Any], int]: the return of the episode and the number of steps taken.
     """
-    total_steps = 0
-    observation, action_space = env.reset()
+    if seed is None:
+        observation, action_space = env.reset(seed=seed)
+    else:
+        # each episode has a different seed
+        observation, action_space = env.reset(seed=seed + total_steps)
     agent.reset(observation, action_space)
     cum_reward = 0
     done = False

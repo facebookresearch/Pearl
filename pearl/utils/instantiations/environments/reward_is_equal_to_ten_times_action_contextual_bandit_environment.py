@@ -1,3 +1,5 @@
+from typing import Optional, Tuple
+
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.observation import Observation
@@ -22,8 +24,7 @@ class RewardIsEqualToTenTimesActionContextualBanditEnvironment(
     def action_space(self) -> ActionSpace:
         return self._action_space
 
-    # pyre-fixme[31]: Expression `ActionSpace)` is not a valid type.
-    def reset(self) -> (Observation, ActionSpace):
+    def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
         # Function returning the context and the available action space
         # Here, we use no context (None), but we could return varied implementations.
         return None, self.action_space
