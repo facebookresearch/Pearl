@@ -624,9 +624,8 @@ class IntegrationTests(unittest.TestCase):
         )
 
         # offline evaluation
-        # IQL_agent_returns =
-        offline_evaluation(offline_agent=IQLAgent, env=env, number_of_episodes=500)
+        icq_agent_returns = offline_evaluation(
+            offline_agent=IQLAgent, env=env, number_of_episodes=500
+        )
 
-        # FIXME: commented out for now so we can land a large stack
-        # while bug is fixed.
-        # self.assertTrue(max(IQL_agent_returns) > 100)
+        self.assertTrue(max(icq_agent_returns) > 100)
