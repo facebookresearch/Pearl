@@ -49,6 +49,7 @@ def get_random_agent_returns(
     learn: bool = False,
     learn_after_episode: bool = False,
     evaluation_episodes: int = 500,
+    seed: Optional[int] = None,
 ) -> List[float]:
 
     """
@@ -82,12 +83,14 @@ def get_random_agent_returns(
         )
         random_agent_returns = []
         for i in range(evaluation_episodes):
+            evaluation_seed = seed + i if seed is not None else None
             info, _ = run_episode(
                 agent=agent,
                 env=env,
                 learn=False,
                 exploit=True,
                 learn_after_episode=False,
+                seed=evaluation_seed,
             )
             g = info["return"]
             print(f"episode {i}, return={g}")
@@ -118,6 +121,7 @@ def evaluate_offline_rl(
     file_name: Optional[str] = None,
     data_save_path: Optional[str] = "../fbsource/fbcode/pearl/offline_rl_data/",
     data_size: int = 1000000,
+    seed: Optional[int] = None,
 ) -> List[float]:
 
     """
@@ -166,9 +170,6 @@ def evaluate_offline_rl(
             is_action_continuous, url, data_path, size=data_size
         )
     else:
-        print(
-            f"collecting data from the data collection agent: {data_collection_agent}"
-        )
         if file_name is None:
             raise ValueError("Must provide a name of file to store data.")
 
@@ -181,6 +182,7 @@ def evaluate_offline_rl(
             max_len_offline_data=data_size,
             learn=True,
             learn_after_episode=False,
+            seed=seed,
         )
         print("\n")
         print("collected data; starting import in replay buffer")
@@ -194,17 +196,16 @@ def evaluate_offline_rl(
         offline_agent=offline_agent,
         data_buffer=offline_data_replay_buffer,
         training_epochs=training_epochs,
+        seed=seed,
     )
 
     print("\n")
     print("offline training done; start offline evaluation")
-    # print(
-    #     f"actor network type: {offline_agent.policy_learner._actor.__class__.__name__}"
-    # )
     offline_evaluation_returns = offline_evaluation(
         offline_agent=offline_agent,
         env=env,
         number_of_episodes=evaluation_episodes,
+        seed=seed,
     )
 
     # save the offline evaluation results
@@ -235,13 +236,14 @@ def evaluate_offline_rl(
 
 if __name__ == "__main__":
     device_id = 1
+    experiment_seed = 100
     env_name = "HalfCheetah-v4"
     env = GymEnvironment(env_name)
     action_space = env.action_space
     is_action_continuous = True
 
-    actor_network_type = GaussianActorNetwork
-    # actor_network_type = VanillaContinuousActorNetwork
+    # actor_network_type = GaussianActorNetwork
+    actor_network_type = VanillaContinuousActorNetwork
 
     offline_agent = PearlAgent(
         policy_learner=ImplicitQLearning(
@@ -254,7 +256,7 @@ if __name__ == "__main__":
             value_critic_learning_rate=1e-4,
             actor_learning_rate=3e-4,
             critic_learning_rate=1e-4,
-            critic_soft_update_tau=0.005,
+            critic_soft_update_tau=0.05,
             training_rounds=2,
             batch_size=256,
             expectile=0.75,
@@ -271,7 +273,7 @@ if __name__ == "__main__":
             critic_hidden_dims=[256, 256],
             training_rounds=1,
             batch_size=256,
-            entropy_coef=0.5,
+            entropy_coef=0.25,
             entropy_autotune=False,
             actor_learning_rate=0.0003,
             critic_learning_rate=0.0005,
@@ -282,7 +284,11 @@ if __name__ == "__main__":
 
     data_save_path = "../fbsource/fbcode/pearl/offline_rl_data/" + env_name + "/"
     # dataset = "small_2"
-    dataset = "medium"
+    # dataset = "medium"
+
+    # this is only for end to end testing check
+    # for benchmarking, using the "small_2", "medium" or "large" datasets
+    dataset = "small"
     file_name = "offline_raw_transitions_dict_" + dataset + ".pt"
 
     print(" ")
@@ -303,13 +309,14 @@ if __name__ == "__main__":
         is_action_continuous=is_action_continuous,
         offline_agent=offline_agent,
         method_name="Implicit Q learning",
-        training_epochs=1000000,
-        data_path=data_path,
-        # data_collection_agent=data_collection_agent,
+        training_epochs=10000,
+        # data_path=data_path,
+        data_collection_agent=data_collection_agent,
         file_name=file_name,
         data_save_path=data_save_path,
-        data_size=500000,
-        evaluation_episodes=500,
+        data_size=100000,
+        evaluation_episodes=100,
+        seed=experiment_seed,
     )
     avg_offline_agent_returns = torch.mean(torch.tensor(offline_agent_returns))
     print()
@@ -347,3 +354,8 @@ if __name__ == "__main__":
     # ideally, we would want normalized score to be greater than 1 (indicating the agent has
     # learned something better than the data collection agent) but this is not always the case
     print(f"normalized score {normalized_score}")
+    if normalized_score < 0.25:
+        print(
+            "Offline agent does not seems to be learning well. Check the "
+            "hyperparameters in IQL_offline_method in benchmark_config.py file and run with the dataset_name = `small_2`."
+        )

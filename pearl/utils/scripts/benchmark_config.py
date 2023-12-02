@@ -84,6 +84,7 @@ from pearl.user_envs import (
 )
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 
+
 DQN_method = {
     "name": "DQN",
     "policy_learner": DeepQLearning,
@@ -363,6 +364,33 @@ IQL_method = {
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
 }
+
+IQL_offline_method = {
+    "name": "IQL",
+    "policy_learner": ImplicitQLearning,
+    "policy_learner_args": {
+        "actor_hidden_dims": [256, 256],
+        "critic_hidden_dims": [256, 256],
+        "value_critic_hidden_dims": [256, 256],
+        "training_rounds": 2,
+        "batch_size": 256,
+        "expectile": 0.75,
+        "critic_soft_update_tau": 0.05,
+        "temperature_advantage_weighted_regression": 3.0,
+        "state_value_learning_rate": 1e-4,
+        "actor_learning_rate": 3e-4,
+        "critic_learning_rate": 1e-4,
+        "actor_network_type": VanillaContinuousActorNetwork,
+        "critic_network_type": VanillaQValueNetwork,
+        "state_value_network_type": VanillaValueNetwork,
+        "discount_factor": 0.99,
+    },
+    "exploration_module": None,
+    "exploration_module_args": {},
+    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer_args": {"capacity": 100000},
+}
+
 DDPG_method = {
     "name": "DDPG",
     "policy_learner": DeepDeterministicPolicyGradient,

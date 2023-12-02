@@ -132,6 +132,7 @@ def offline_learning(
     offline_agent: PearlAgent,
     data_buffer: ReplayBuffer,
     training_epochs: int = 1000,
+    seed: int = 100,
 ) -> None:
     """
     Trains the offline agent using transition tuples from offline data (provided in
@@ -143,7 +144,7 @@ def offline_learning(
         data_buffer: a replay buffer to sample a batch of transition data.
         training_epochs: number of training epochs for offline learning.
     """
-    set_seed(100)
+    set_seed(seed=seed)
 
     # move replay buffer to device of the offline agent
     data_buffer.device = offline_agent.device
@@ -161,6 +162,7 @@ def offline_evaluation(
     offline_agent: Agent,
     env: Environment,
     number_of_episodes: int = 1000,
+    seed: Optional[int] = None,
 ) -> List[float]:
     """
     Evaluates the performance of an offline trained agent.
@@ -180,12 +182,14 @@ def offline_evaluation(
 
     returns_offline_agent = []
     for i in range(number_of_episodes):
+        evaluation_seed = seed + i if seed is not None else None
         episode_info, total_steps = run_episode(
             agent=offline_agent,
             env=env,
             learn=learn,
             exploit=exploit,
             learn_after_episode=learn_after_episode,
+            seed=evaluation_seed,
         )
         g = episode_info["return"]
         if i % 1 == 0:

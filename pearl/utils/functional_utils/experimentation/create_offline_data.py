@@ -9,7 +9,6 @@ import torch
 from pearl.api.environment import Environment
 from pearl.api.reward import Value
 from pearl.pearl_agent import PearlAgent
-from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.online_learning import run_episode
 
 
@@ -21,7 +20,8 @@ def create_offline_data(
     max_len_offline_data: int = 50000,
     learn: bool = True,
     learn_after_episode: bool = True,
-    evaluation_episodes: int = 500,
+    evaluation_episodes: int = 100,
+    seed: Optional[int] = None,
 ) -> List[Value]:
 
     """
@@ -45,13 +45,12 @@ def create_offline_data(
 
     print(f"collecting data from env: {env} using agent: {agent}")
 
-    set_seed(111)
     epi_returns = []
     epi = 0
     raw_transitions_buffer = deque([], maxlen=max_len_offline_data)
     while len(raw_transitions_buffer) < max_len_offline_data:
         g = 0
-        observation, action_space = env.reset()
+        observation, action_space = env.reset(seed=seed)
         agent.reset(observation, action_space)
         done = False
         while not done:
@@ -106,12 +105,15 @@ def create_offline_data(
 
     evaluation_returns = []
     for i in range(evaluation_episodes):
+        # data creation and evaluation seed should be different
+        evaluation_seed = seed + i if seed is not None else seed
         episode_info, _ = run_episode(
             agent=agent,
             env=env,
             learn=False,
             exploit=True,
             learn_after_episode=False,
+            seed=evaluation_seed,
         )
         g = episode_info["return"]
         print(f"\repisode {i}, return={g}", end="")
