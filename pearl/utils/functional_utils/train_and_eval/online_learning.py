@@ -69,12 +69,16 @@ def online_learning_to_png_graph(
 def online_learning(
     agent: Agent,
     env: Environment,
-    number_of_episodes: int = 1000,
+    number_of_episodes: Optional[int] = None,
     number_of_steps: Optional[int] = None,
     learn_after_episode: bool = False,
     print_every_x_episodes: Optional[int] = None,
     print_every_x_steps: Optional[int] = None,
     seed: Optional[int] = None,
+    # if number_of_episodes is used, report every record_period episodes
+    # if number_of_steps is used, report every record_period steps
+    # episodic stats collected within the period are averaged and then reported
+    record_period: int = 1,
 ) -> Dict[str, Any]:
     """
     Performs online learning for a number of episodes.
@@ -107,6 +111,11 @@ def online_learning(
             total_steps=old_total_steps,
             seed=seed,
         )
+        if number_of_steps is not None and episode_total_steps > record_period:
+            print(
+                f"An episode is longer than the report_period: episode length {episode_total_steps}, record_period {record_period}. Try using a smaller record_period."
+            )
+            exit(1)
         total_steps += episode_total_steps
         total_episodes += 1
         if (
@@ -122,18 +131,22 @@ def online_learning(
             )
             for key in episode_info:
                 print(f"{key}: {episode_info[key]}")
-        if number_of_episodes is not None:  # record info value every episode
-            for key in episode_info:
-                info.setdefault(key, []).append(episode_info[key])
-        if number_of_steps is not None:
-            for key in episode_info:
-                info_period.setdefault(key, []).append(episode_info[key])
-            if old_total_steps // (number_of_steps // 100) < (total_steps) // (
-                number_of_steps // 100
-            ):  # record info value every every 1% of number_of_steps
-                for key in info_period:
-                    info.setdefault(key, []).append(np.mean(info_period[key]))
-                info_period = {}
+        for key in episode_info:
+            info_period.setdefault(key, []).append(episode_info[key])
+        if number_of_episodes is not None and (
+            total_episodes % record_period == 0
+        ):  # record average info value every report_period episodes
+            for key in info_period:
+                info.setdefault(key, []).append(np.mean(info_period[key]))
+            info_period = {}
+        if number_of_steps is not None and old_total_steps // record_period < (
+            total_steps
+        ) // (
+            record_period
+        ):  # record average info value every record_period steps
+            for key in info_period:
+                info.setdefault(key, []).append(np.mean(info_period[key]))
+            info_period = {}
     return info
 
 
@@ -247,7 +260,6 @@ def run_episode(
             agent.learn()
         done = action_result.done
         episode_steps += 1
-        total_steps += 1
 
     if learn and learn_after_episode:
         agent.learn()
@@ -262,4 +274,4 @@ def run_episode(
             "risky_sa_ratio": num_risky_sa / episode_steps,
         }
 
-    return info, total_steps
+    return info, episode_steps

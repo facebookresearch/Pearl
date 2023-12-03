@@ -204,7 +204,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
     def test_online_rl(self) -> None:
         env = FixedNumberOfStepsEnvironment(number_of_steps=100)
         agent = PearlAgent(TabularQLearning())
-        online_learning(agent, env)
+        online_learning(agent, env, number_of_episodes=1000)
 
     def test_tabular_q_learning_online_rl(self) -> None:
         env = GymEnvironment("FrozenLake-v1", is_slippery=False)

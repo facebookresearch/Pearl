@@ -93,7 +93,6 @@ DQN_method = {
         "training_rounds": 1,
         "batch_size": 32,
     },
-    "agent_args": {"device_id": 1},
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
@@ -101,7 +100,6 @@ DQN_method = {
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
 }
-
 DQN_LSTM_method = {
     "name": "LSTMDQN",
     "policy_learner": DeepQLearning,
@@ -110,7 +108,6 @@ DQN_LSTM_method = {
         "training_rounds": 1,
         "batch_size": 32,
     },
-    "agent_args": {"device_id": 1},
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
@@ -129,7 +126,6 @@ CDQN_method = {
         "batch_size": 32,
         "is_conservative": True,
     },
-    "agent_args": {"device_id": 0},
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
@@ -145,7 +141,6 @@ DDQN_method = {
         "training_rounds": 1,
         "batch_size": 32,
     },
-    "agent_args": {"device_id": 0},
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
@@ -161,7 +156,6 @@ SARSA_method = {
         "training_rounds": 1,
         "batch_size": 32,
     },
-    "agent_args": {"device_id": 0},
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
     "replay_buffer": FIFOOnPolicyReplayBuffer,
@@ -177,7 +171,6 @@ REINFORCE_method = {
         "critic_hidden_dims": [64, 64],
         "training_rounds": 1,
     },
-    "agent_args": {"device_id": 0},
     "replay_buffer": OnPolicyEpisodicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
@@ -191,7 +184,6 @@ DuelingDQN_method = {
         "training_rounds": 1,
         "batch_size": 32,
     },
-    "agent_args": {"device_id": 0},
     "network_module": DuelingQValueNetwork,
     "network_args": {"hidden_dims": [64, 64], "output_dim": 1},
     "exploration_module": EGreedyExploration,
@@ -209,7 +201,6 @@ QRDQN_method = {
         "training_rounds": 1,
         "batch_size": 32,
     },
-    "agent_args": {"device_id": 1},
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
@@ -227,7 +218,6 @@ QRDQN_var_coeff_05_method = {
         "training_rounds": 1,
         "batch_size": 32,
     },
-    "agent_args": {"device_id": 1},
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
@@ -245,7 +235,6 @@ QRDQN_var_coeff_2_method = {
         "training_rounds": 1,
         "batch_size": 32,
     },
-    "agent_args": {"device_id": 1},
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
@@ -262,7 +251,6 @@ BootstrappedDQN_method = {
         "training_rounds": 1,
         "batch_size": 32,
     },
-    "agent_args": {"device_id": 0},
     "replay_buffer": BootstrapReplayBuffer,
     "replay_buffer_args": {
         "capacity": 50000,
@@ -286,7 +274,6 @@ BootstrappedDQN_ensemble_1_method = {
         "training_rounds": 1,
         "batch_size": 32,
     },
-    "agent_args": {"device_id": 1},
     "replay_buffer": BootstrapReplayBuffer,
     "replay_buffer_args": {
         "capacity": 50000,
@@ -313,7 +300,6 @@ PPO_method = {
         "batch_size": 32,
         "epsilon": 0.1,
     },
-    "agent_args": {"device_id": 0},
     "replay_buffer": OnPolicyEpisodicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
@@ -329,34 +315,32 @@ SAC_method = {
         "batch_size": 32,
         "entropy_coef": 0.1,
     },
-    "agent_args": {"device_id": 1},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
 }
-IQL_method = {
+IQL_online_method = {
     "name": "IQL",
     "policy_learner": ImplicitQLearning,
     "policy_learner_args": {
         "actor_hidden_dims": [64, 64],
         "critic_hidden_dims": [64, 64],
-        "state_value_critic_hidden_dims": [64, 64],
+        "value_critic_hidden_dims": [64, 64],
         "training_rounds": 1,
         "batch_size": 32,
-        "expectile": 0.7,
+        "expectile": 0.75,
         "critic_soft_update_tau": 0.005,
         "advantage_clamp": 100.0,
         "temperature_advantage_weighted_regression": 3.0,
-        "state_value_learning_rate": 1e-3,
+        "value_critic_learning_rate": 1e-3,
         "actor_learning_rate": 1e-3,
         "critic_learning_rate": 1e-3,
         "actor_network_type": VanillaActorNetwork,
         "critic_network_type": VanillaQValueNetwork,
-        "state_value_network_type": VanillaValueNetwork,
+        "value_network_type": VanillaValueNetwork,
         "discount_factor": 0.99,
     },
-    "agent_args": {"device_id": 1},
     "exploration_module": PropensityExploration,
     "exploration_module_args": {},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
@@ -377,7 +361,7 @@ IQL_offline_method = {
         "expectile": 0.75,
         "critic_soft_update_tau": 0.05,
         "temperature_advantage_weighted_regression": 3.0,
-        "state_value_learning_rate": 1e-4,
+        "value_critic_learning_rate": 1e-3,
         "actor_learning_rate": 3e-4,
         "critic_learning_rate": 1e-4,
         "actor_network_type": VanillaContinuousActorNetwork,
@@ -391,6 +375,35 @@ IQL_offline_method = {
     "replay_buffer_args": {"capacity": 100000},
 }
 
+CIQL_online_method = {
+    "name": "Continuous IQL",
+    "policy_learner": ImplicitQLearning,
+    "policy_learner_args": {
+        "actor_hidden_dims": [256, 256],
+        "critic_hidden_dims": [256, 256],
+        "value_critic_hidden_dims": [256, 256],
+        "training_rounds": 1,
+        "batch_size": 256,
+        "expectile": 0.75,
+        "critic_soft_update_tau": 0.05,
+        "advantage_clamp": 100.0,
+        "temperature_advantage_weighted_regression": 3.0,
+        "actor_learning_rate": 1e-4,
+        "critic_learning_rate": 3e-4,
+        "value_critic_learning_rate": 1e-3,
+        "actor_network_type": VanillaContinuousActorNetwork,
+        "critic_network_type": VanillaQValueNetwork,
+        "value_network_type": VanillaValueNetwork,
+        "discount_factor": 0.99,
+    },
+    "exploration_module": NormalDistributionExploration,
+    "exploration_module_args": {
+        "mean": 0,
+        "std_dev": 0.1,
+    },
+    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer_args": {"capacity": 100000},
+}
 DDPG_method = {
     "name": "DDPG",
     "policy_learner": DeepDeterministicPolicyGradient,
@@ -402,12 +415,11 @@ DDPG_method = {
         "actor_network_type": VanillaContinuousActorNetwork,
         "critic_network_type": VanillaQValueNetwork,
         "actor_soft_update_tau": 0.005,
-        "critic_soft_update_tau": 0.05,
+        "critic_soft_update_tau": 0.005,
         "actor_learning_rate": 1e-3,
         "critic_learning_rate": 3e-4,
         "discount_factor": 0.99,
     },
-    "agent_args": {"device_id": 0},
     "exploration_module": NormalDistributionExploration,
     "exploration_module_args": {
         "mean": 0,
@@ -427,7 +439,7 @@ TD3_method = {
         "actor_network_type": VanillaContinuousActorNetwork,
         "critic_network_type": VanillaQValueNetwork,
         "actor_soft_update_tau": 0.005,
-        "critic_soft_update_tau": 0.05,
+        "critic_soft_update_tau": 0.005,
         "actor_learning_rate": 1e-3,
         "critic_learning_rate": 3e-4,
         "discount_factor": 0.99,
@@ -435,7 +447,6 @@ TD3_method = {
         "actor_update_noise": 0.2,
         "actor_update_noise_clip": 0.5,
     },
-    "agent_args": {"device_id": 1},
     "exploration_module": NormalDistributionExploration,
     "exploration_module_args": {
         "mean": 0,
@@ -452,7 +463,6 @@ RCTD3_method = {
         "training_rounds": 1,
         "batch_size": 256,
     },
-    "agent_args": {"device_id": 1},
     "exploration_module": NormalDistributionExploration,
     "exploration_module_args": {
         "mean": 0,
@@ -469,20 +479,19 @@ CSAC_method = {
         "critic_hidden_dims": [256, 256],
         "training_rounds": 1,
         "batch_size": 256,
-        "entropy_autotune": True,
-        "entropy_coef": 0.05,
-        "critic_soft_update_tau": 0.05,
+        "entropy_autotune": False,
+        "entropy_coef": 0.25,
+        "critic_soft_update_tau": 0.005,
         "actor_learning_rate": 3e-4,
-        "critic_learning_rate": 1e-3,
+        "critic_learning_rate": 5e-4,
         "actor_network_type": GaussianActorNetwork,
         "critic_network_type": VanillaQValueNetwork,
         "discount_factor": 0.99,
     },
-    "agent_args": {"device_id": 0},
     "replay_buffer": FIFOOffPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 100000},
 }
-all_discrete_control_methods = [
+all_online_discrete_control_methods = [
     DQN_method,
     CDQN_method,
     DDQN_method,
@@ -493,17 +502,19 @@ all_discrete_control_methods = [
     BootstrappedDQN_method,
     PPO_method,
     SAC_method,
+    IQL_online_method,
 ]
-all_ac_discrete_control_methods = [
+all_online_ac_discrete_control_methods = [
     REINFORCE_method,
     PPO_method,
     SAC_method,
-    IQL_method,
+    IQL_online_method,
 ]
-all_continuous_control_methods = [
+all_online_continuous_control_methods = [
     DDPG_method,
     TD3_method,
     CSAC_method,
+    CIQL_online_method,
 ]
 all_discrete_control_envs = [
     "CartPole-v0",
@@ -538,9 +549,9 @@ mujoco_envs = [
 ]
 all_partial_observable_discrete_control_envs = [
     "CartPole-PO-v0",
-    # "Acrobot-PO-v1",
-    # "MountainCar-PO-v0",
-    # "PuckWorld-PLE-500-PO-v0",
+    "Acrobot-PO-v1",
+    "MountainCar-PO-v0",
+    "PuckWorld-PLE-500-PO-v0",
 ]
 all_partial_observable_continuous_control_envs = [
     "Pendulum-PO-v1",
@@ -558,11 +569,188 @@ all_safety_discrete_control_envs = [
     "PuckWorld-PLE-500-SF-v0",
 ]
 
-mujoco_steps = 2000000
-classic_control_steps = 10000
-ple_steps = 2000000
+mujoco_steps = 500000
+classic_control_steps = 100000
+ple_steps = 500000
 num_runs = 5
 print_every_x_steps = 1000
+
+# the following sets of experiments are used to generate figures and should be fixed
+benchmark_cartpole_v1_part_1 = [
+    {
+        "exp_name": "benchmark_cartpole_v1_part_1",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": classic_control_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            DQN_method,
+            CDQN_method,
+            DDQN_method,
+            SARSA_method,
+            REINFORCE_method,
+            DuelingDQN_method,
+        ],
+        "device_id": 0,
+    }
+    for env_name in [
+        "CartPole-v1",
+    ]
+]
+
+benchmark_cartpole_v1_part_2 = [
+    {
+        "exp_name": "benchmark_cartpole_v1_part_2",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": classic_control_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            QRDQN_method,
+            BootstrappedDQN_method,
+            PPO_method,
+            SAC_method,
+            IQL_online_method,
+        ],
+        "device_id": 1,
+    }
+    for env_name in [
+        "CartPole-v1",
+    ]
+]
+
+benchmark_acrobot_v1_part_1 = [
+    {
+        "exp_name": "benchmark_acrobot_v1_part_1",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": classic_control_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            DQN_method,
+            CDQN_method,
+            DDQN_method,
+            SARSA_method,
+            REINFORCE_method,
+            DuelingDQN_method,
+        ],
+        "device_id": 0,
+    }
+    for env_name in [
+        "Acrobot-v1",
+    ]
+]
+
+benchmark_acrobot_v1_part_2 = [
+    {
+        "exp_name": "benchmark_acrobot_v1_part_2",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": classic_control_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            QRDQN_method,
+            BootstrappedDQN_method,
+            PPO_method,
+            SAC_method,
+            IQL_online_method,
+        ],
+        "device_id": 1,
+    }
+    for env_name in [
+        "Acrobot-v1",
+    ]
+]
+
+benchmark_halfcheetah_v4 = [
+    {
+        "exp_name": "benchmark_halfcheetah_v4",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": all_online_continuous_control_methods,
+        "device_id": 0,
+    }
+    for env_name in [
+        "HalfCheetah-v4",
+    ]
+]
+
+benchmark_ant_v4 = [
+    {
+        "exp_name": "benchmark_ant_v4",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": all_online_continuous_control_methods,
+        "device_id": 1,
+    }
+    for env_name in [
+        "Ant-v4",
+    ]
+]
+
+benchmark_hopper_v4 = [
+    {
+        "exp_name": "benchmark_hopper_v4",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": all_online_continuous_control_methods,
+        "device_id": 0,
+    }
+    for env_name in [
+        "Hopper-v4",
+    ]
+]
+
+benchmark_walker2d_v4 = [
+    {
+        "exp_name": "benchmark_walker2d_v4",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": all_online_continuous_control_methods,
+        "device_id": 1,
+    }
+    for env_name in [
+        "Walker2d-v4",
+    ]
+]
+
+# the following experiments are not used to generate figures and may change over time
+
+test_qrdqn = [
+    {
+        "exp_name": "test_qrdqn",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": classic_control_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            QRDQN_method,
+            QRDQN_var_coeff_05_method,
+            QRDQN_var_coeff_2_method,
+        ],
+    }
+    for env_name in [
+        "PuckWorld-PLE-500-SF-v0",
+        "MeanVarBandit-v0",
+    ]
+]
 
 
 def get_env(env_name: str) -> GymEnvironment:

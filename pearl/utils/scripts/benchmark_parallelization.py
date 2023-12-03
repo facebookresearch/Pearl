@@ -23,47 +23,15 @@ from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 from pearl.utils.scripts.benchmark_config import (
-    # SAC_method,
-    # IQL_method,
-    # TD3_method,
-    # CSAC_method,
-    # DDPG_method,
-    # all_discrete_control_methods,
-    # all_partial_observable_continuous_control_envs,
-    # mujoco_envs,
-    # all_continuous_control_w_cost_envs,
-    # BootstrappedDQN_ensemble_1_method,
-    # SARSA_method,
-    # BootstrappedDQN_method,
-    # all_continuous_control_envs,
-    # all_discrete_control_envs,
-    # all_partial_observable_discrete_control_envs,
-    classic_control_steps,
-    # DQN_LSTM_method,
-    # DQN_method,
-    # all_ac_discrete_control_methods,
-    # all_continuous_control_methods,
-    # ple_steps,
+    benchmark_acrobot_v1_part_1,
+    benchmark_acrobot_v1_part_2,
+    benchmark_ant_v4,
+    benchmark_cartpole_v1_part_1,
+    benchmark_cartpole_v1_part_2,
+    benchmark_halfcheetah_v4,
+    benchmark_hopper_v4,
+    benchmark_walker2d_v4,
     get_env,
-    # all_partial_observable_discrete_control_envs,
-    # all_safety_discrete_control_envs,
-    # all_sparse_reward_continuous_control_envs,
-    # all_sparse_reward_discrete_control_envs,
-    # classic_continuous_control_envs,
-    # mujoco_steps,
-    num_runs,
-    # DDQN_method,
-    # CDQN_method,
-    # REINFORCE_method,
-    # PPO_method,
-    print_every_x_steps,
-    # DuelingDQN_method,
-    QRDQN_method,
-    QRDQN_var_coeff_05_method,
-    QRDQN_var_coeff_2_method,
-    # mujoco_envs,
-    # all_continuous_control_envs,
-    # all_discrete_control_envs,
 )
 
 warnings.filterwarnings("ignore")
@@ -89,11 +57,13 @@ def evaluate(experiment, all_processes: List[mp.Process]) -> None:
     num_runs = experiment["num_runs"]
     num_episodes = experiment.get("num_episodes")
     num_steps = experiment.get("num_steps")
+    record_period = experiment["record_period"]
     print_every_x_episodes = experiment.get("print_every_x_episodes")
     print_every_x_steps = experiment.get("print_every_x_steps")
     methods = experiment["methods"]
     processes = []
     for method in methods:
+        method["agent_args"] = {"device_id": experiment["device_id"]}
         for run_idx in range(num_runs):
             p = mp.Process(
                 target=evaluate_single,
@@ -105,6 +75,7 @@ def evaluate(experiment, all_processes: List[mp.Process]) -> None:
                     num_steps,
                     print_every_x_episodes,
                     print_every_x_steps,
+                    record_period,
                 ),
             )
             processes.append(p)
@@ -120,6 +91,7 @@ def evaluate_single(
     num_steps,
     print_every_x_episodes,
     print_every_x_steps,
+    record_period,
 ):
     """Performing one run of experiment."""
     set_seed(run_idx)
@@ -226,6 +198,7 @@ def evaluate_single(
         print_every_x_steps=print_every_x_steps,
         learn_after_episode=learn_after_episode,
         seed=run_idx,
+        record_period=record_period,
     )
     dir = f"outputs/{env_name}/{method_name}"
     os.makedirs(dir, exist_ok=True)
@@ -241,7 +214,9 @@ def generate_plots(experiments, attributes) -> None:
 def generate_one_plot(experiment, attributes):
     """Generating learning curves for all tested methods in one environment."""
     env_name = experiment["env_name"]
+    exp_name = experiment["exp_name"]
     num_runs = experiment["num_runs"]
+    record_period = experiment["record_period"]
     methods = experiment["methods"]
     for attr in attributes:
         for method in methods:
@@ -258,18 +233,14 @@ def generate_one_plot(experiment, attributes):
             data = np.array(data)
             mean = data.mean(axis=0)
             std_error = data.std(axis=0) / np.sqrt(num_runs)
-            if (
-                "num_steps" in experiment
-            ):  # data points are recorded every num_steps/100 steps
-                steps_list = experiment["num_steps"] // 100 * np.arange(mean.shape[0])
-                plt.plot(steps_list, mean, label=method["name"])
+            x_list = record_period * np.arange(mean.shape[0])
+            if "num_steps" in experiment:
+                plt.plot(x_list, mean, label=method["name"])
+                plt.fill_between(x_list, mean - std_error, mean + std_error, alpha=0.2)
+            else:
+                plt.plot(x_list, mean, label=method["name"])
                 plt.fill_between(
-                    steps_list, mean - std_error, mean + std_error, alpha=0.2
-                )
-            else:  # data points are recorded at the end of each episode
-                plt.plot(np.arange(mean.shape[0]), mean, label=method["name"])
-                plt.fill_between(
-                    np.arange(mean.shape[0]),
+                    x_list,
                     mean - std_error,
                     mean + std_error,
                     alpha=0.2,
@@ -281,38 +252,24 @@ def generate_one_plot(experiment, attributes):
             plt.xlabel("Episodes")
         plt.ylabel(attr)
         plt.legend()
-        plt.savefig(f"outputs/{env_name}_{attr}.png")
+        plt.savefig(f"outputs/{exp_name}_{env_name}_{attr}.png")
         plt.close()
 
 
 if __name__ == "__main__":
-    methods = [
-        # BootstrappedDQN_ensemble_1_method,
-        # DQN_method,
-        # DQN_LSTM_method,
-        # BootstrappedDQN_method,
-        QRDQN_method,
-        QRDQN_var_coeff_05_method,
-        QRDQN_var_coeff_2_method,
-    ]
-    envs = [
-        # "PuckWorld-PLE-500-v0",
-        # "PuckWorld-PLE-500-SR-v0",
-        # "PuckWorld-PLE-500-PO-v0",
-        # "PuckWorld-PLE-500-SF-v0",
-        "MeanVarBandit-v0",
-    ]
-    # envs = ["CartPole-v0"]
-    num_steps = classic_control_steps
-    experiments = [
-        {
-            "env_name": env_name,
-            "num_runs": num_runs,
-            "num_steps": num_steps,
-            "print_every_x_steps": print_every_x_steps,
-            "methods": methods,
-        }
-        for env_name in envs
-    ]
-    run(experiments)
-    generate_plots(experiments, ["return", "risky_sa_ratio"])
+    run(benchmark_cartpole_v1_part_1)
+    generate_plots(benchmark_cartpole_v1_part_1, ["return"])
+    run(benchmark_cartpole_v1_part_2)
+    generate_plots(benchmark_cartpole_v1_part_2, ["return"])
+    run(benchmark_acrobot_v1_part_1)
+    generate_plots(benchmark_acrobot_v1_part_1, ["return"])
+    run(benchmark_acrobot_v1_part_2)
+    generate_plots(benchmark_acrobot_v1_part_2, ["return"])
+    run(benchmark_halfcheetah_v4)
+    generate_plots(benchmark_halfcheetah_v4, ["return"])
+    run(benchmark_ant_v4)
+    generate_plots(benchmark_ant_v4, ["return"])
+    run(benchmark_hopper_v4)
+    generate_plots(benchmark_hopper_v4, ["return"])
+    run(benchmark_walker2d_v4)
+    generate_plots(benchmark_walker2d_v4, ["return"])
