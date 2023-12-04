@@ -143,7 +143,6 @@ class PolicyLearner(torch.nn.Module, ABC):
         for _ in range(self._training_rounds):
             self._training_steps += 1
             batch = replay_buffer.sample(batch_size)
-
             single_report = {}
             if isinstance(batch, TransitionBatch):
                 batch = self.preprocess_batch(batch)
