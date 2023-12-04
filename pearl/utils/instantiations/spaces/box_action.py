@@ -24,9 +24,10 @@ except ModuleNotFoundError:
 
 
 class BoxActionSpace(BoxSpace, ActionSpace):
-    """A continuous, box action space. This class is a wrapper around Gymnasium's
-    `Box` space, but uses PyTorch tensors instead of NumPy arrays. The elements of
-    this action space are assumed to be Tensors of shape `d`.
+    """A continuous, box action space. This class takes most of the functionality
+    from `BoxSpace`, but there are two differences. First, the elements of this
+    action space are assumed to be Tensors of shape `d`. Second, an `action_dim`
+    convenience method is implemented.
     """
 
     def __init__(

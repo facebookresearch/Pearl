@@ -6,7 +6,6 @@ from typing import Optional, Union
 import numpy as np
 import torch
 
-from pearl.api.action import Action
 from pearl.api.space import Space
 from pearl.utils.instantiations.spaces.utils import reshape_to_1d_tensor
 from torch import Tensor
@@ -33,11 +32,11 @@ class BoxSpace(Space):
         high: Union[float, Tensor],
         seed: Optional[Union[int, np.random.Generator]] = None,
     ) -> None:
-        """Contructs a `BoxActionSpace`.
+        """Contructs a `BoxSpace`.
 
         Args:
-            low: The lower bound on each dimension of the action space.
-            high: The upper bound on each dimension of the action space.
+            low: The lower bound on each dimension of the space.
+            high: The upper bound on each dimension of the space.
             seed: Random seed used to initialize the random number generator of the
                 underlying Gymnasium `Box` space.
         """
@@ -47,38 +46,31 @@ class BoxSpace(Space):
 
     @property
     def is_continuous(self) -> bool:
-        """Checks whether this is a continuous action space."""
+        """Checks whether this is a continuous space."""
         return True
 
-    @property
-    def action_dim(self) -> int:
-        """Returns the dimensionality of an `Action` element from this space."""
-        return self._gym_space.shape[0]
-
-    def sample(self, mask: Optional[Tensor] = None) -> Action:
-        """Sample an action uniformly at random from this action space.
+    def sample(self, mask: Optional[Tensor] = None) -> Tensor:
+        """Sample an element uniformly at random from the space.
 
         Args:
-            mask: An unused argument for the case of a `BoxActionSpace`, which
+            mask: An unused argument for the case of a `BoxSpace`, which
                 does not support masking.
 
         Returns:
-            A randomly sampled action.
+            A randomly sampled element.
         """
         if mask is not None:
-            logging.warning(
-                "Masked sampling is not supported in BoxActionSpace. Ignoring."
-            )
+            logging.warning("Masked sampling is not supported in `BoxSpace`. Ignoring.")
         return torch.from_numpy(self._gym_space.sample())
 
     @property
     def low(self) -> Tensor:
-        """Returns the lower bound of the action space."""
+        """Returns the lower bound of the space."""
         return reshape_to_1d_tensor(torch.from_numpy(self._gym_space.low))
 
     @property
     def high(self) -> Tensor:
-        """Returns the upper bound of the action space."""
+        """Returns the upper bound of the space."""
         return reshape_to_1d_tensor(torch.from_numpy(self._gym_space.high))
 
     @property
@@ -94,7 +86,7 @@ class BoxSpace(Space):
             gym_space: A Gymnasium `Box` space.
 
         Returns:
-            A `BoxActionSpace` with the same bounds and seed as `gym_space`.
+            A `BoxSpace` with the same bounds and seed as `gym_space`.
         """
         assert isinstance(gym_space, Box)
         return BoxSpace(

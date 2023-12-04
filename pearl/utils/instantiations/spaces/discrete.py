@@ -30,15 +30,15 @@ class DiscreteSpace(Space):
     """
 
     def __init__(self, elements: List[Tensor], seed: Optional[int] = None) -> None:
-        """Contructs a `DiscreteActionSpace`.
+        """Contructs a `DiscreteSpace`.
 
         Args:
-            actions: A list of possible `Action` objects.
+            elements: A list of Tensors representing the elements of the space.
             seed: Random seed used to initialize the random number generator of the
                 underlying Gym `Discrete` space.
         """
         if len(elements) == 0:
-            raise ValueError("`DiscreteActionSpace` requires at least one action.")
+            raise ValueError("`DiscreteSpace` requires at least one element.")
         self._set_validated_elements(elements=elements)  # sets self.elements
         self._gym_space = Discrete(n=len(elements), seed=seed, start=0)
 
@@ -51,7 +51,7 @@ class DiscreteSpace(Space):
         for e in elements:
             if e.shape != expected_shape:
                 raise ValueError(
-                    f"All actions must have the same shape. Expected {expected_shape}, "
+                    f"All elements must have the same shape. Expected {expected_shape}, "
                     f"but got {e.shape}."
                 )
             validated.append(e)
@@ -73,16 +73,16 @@ class DiscreteSpace(Space):
         return self.elements[0].shape
 
     def sample(self, mask: Optional[Tensor] = None) -> Tensor:
-        """Sample an action uniformly at random from this action space.
+        """Sample an element uniformly at random from this space.
 
         Args:
             mask: An optional Tensor of shape `n` specifying the set of available
-                actions, where `1` represents valid actions and `0` invalid actions.
+                elements, where `1` represents valid elements and `0` invalid elements.
                 This mask is passed to Gymnasium's `Discrete.sample` method. If no
-                actions are available, `self.actions[0]` is returned.
+                elements are available, `self.elements[0]` is returned.
 
         Returns:
-            A randomly sampled (available) action.
+            A randomly sampled (available) element.
         """
         mask_np = mask.numpy().astype(int) if mask is not None else None
         idx = self._gym_space.sample(mask=mask_np)
@@ -107,7 +107,7 @@ class DiscreteSpace(Space):
             gym_space: A Gymnasium `Discrete` space.
 
         Returns:
-            A `DiscreteSpace` with the same number of actions as `gym_space`.
+            A `DiscreteSpace` with the same number of elements as `gym_space`.
         """
         assert isinstance(gym_space, Discrete)
         start, n = gym_space.start, gym_space.n
