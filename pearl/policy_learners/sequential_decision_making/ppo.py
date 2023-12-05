@@ -90,13 +90,21 @@ class ProximalPolicyOptimization(ActorCriticBase):
         """
         # TODO: change the output shape of value networks
         vs: torch.Tensor = self._critic(batch.state).view(-1)  # shape (batch_size)
-        action_probs = self._actor.get_action_prob(batch.state, batch.action)
+        action_probs = self._actor.get_action_prob(
+            state_batch=batch.state,
+            action_batch=batch.action,
+            available_actions=batch.curr_available_actions,
+            unavailable_actions_mask=batch.curr_unavailable_actions_mask,
+        )
         # shape (batch_size)
 
         # actor loss
         with torch.no_grad():
             action_probs_old = self._actor_old.get_action_prob(
-                batch.state, batch.action
+                state_batch=batch.state,
+                action_batch=batch.action,
+                available_actions=batch.curr_available_actions,
+                unavailable_actions_mask=batch.curr_unavailable_actions_mask,
             )  # shape (batch_size)
         r_thelta = torch.div(action_probs, action_probs_old)  # shape (batch_size)
         clip = torch.clamp(

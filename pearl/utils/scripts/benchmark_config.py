@@ -321,6 +321,22 @@ PPO_method = {
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
 }
+PPO_dynamic_method = {
+    "name": "PPO_dynamic",
+    "policy_learner": ProximalPolicyOptimization,
+    "policy_learner_args": {
+        "actor_hidden_dims": [64, 64],
+        "critic_hidden_dims": [64, 64],
+        "training_rounds": 50,
+        "batch_size": 32,
+        "epsilon": 0.1,
+    },
+    "actor_network_type": DynamicActionActorNetwork,
+    "replay_buffer": OnPolicyEpisodicReplayBuffer,
+    "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
+}
 SAC_method = {
     "name": "SAC",
     "policy_learner": SoftActorCritic,
@@ -782,6 +798,7 @@ test_dynamic_action_space = [
         "methods": [
             DQN_method,
             REINFORCE_dynamic_method,
+            PPO_dynamic_method,
         ],
         "device_id": 0,
     }
