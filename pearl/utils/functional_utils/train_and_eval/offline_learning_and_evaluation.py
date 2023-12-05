@@ -121,8 +121,8 @@ def get_offline_data_in_buffer(
             transition["next_observation"],
             transition["curr_available_actions"],
             transition["next_available_actions"],
-            transition["action_space"],
             transition["done"],
+            transition["action_space"].n,
         )
 
     return offline_data_replay_buffer

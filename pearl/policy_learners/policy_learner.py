@@ -63,10 +63,12 @@ class PolicyLearner(torch.nn.Module, ABC):
             if "exploration_module" in options
             else NoExploration()
         )
+
+        # -1 will be fixed in following diffs since currently all tests currently use onehot
         self._action_representation_module: ActionRepresentationModule = (
             options["action_representation_module"]
             if "action_representation_module" in options
-            else IdentityActionRepresentationModule()
+            else IdentityActionRepresentationModule(max_number_actions=-1)
         )
         self._history_summarization_module: HistorySummarizationModule = (
             options["history_summarization_module"]

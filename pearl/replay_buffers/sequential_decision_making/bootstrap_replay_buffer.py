@@ -55,8 +55,8 @@ class BootstrapReplayBuffer(FIFOOffPolicyReplayBuffer):
         next_state: SubjectiveState,
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,
-        action_space: ActionSpace,
         done: bool,
+        max_number_actions: Optional[int] = None,
         cost: Optional[float] = None,
     ) -> None:
         # sample the bootstrap mask from Bernoulli(p) on each push
@@ -65,16 +65,20 @@ class BootstrapReplayBuffer(FIFOOffPolicyReplayBuffer):
         (
             curr_available_actions_tensor_with_padding,
             curr_available_actions_mask,
-        ) = self._create_action_tensor_and_mask(action_space, curr_available_actions)
+        ) = self._create_action_tensor_and_mask(
+            max_number_actions, curr_available_actions
+        )
 
         (
             next_available_actions_tensor_with_padding,
             next_available_actions_mask,
-        ) = self._create_action_tensor_and_mask(action_space, next_available_actions)
+        ) = self._create_action_tensor_and_mask(
+            max_number_actions, next_available_actions
+        )
         self.memory.append(
             TransitionWithBootstrapMask(
                 state=self._process_single_state(state),
-                action=self._process_single_action(action, action_space),
+                action=self._process_single_action(action),
                 reward=self._process_single_reward(reward),
                 next_state=self._process_single_state(next_state),
                 curr_available_actions=curr_available_actions_tensor_with_padding,

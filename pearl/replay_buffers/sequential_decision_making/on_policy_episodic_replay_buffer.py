@@ -30,17 +30,19 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
         next_state: Optional[SubjectiveState],
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,
-        action_space: ActionSpace,
         done: bool,
+        max_number_actions: Optional[int] = None,
         cost: Optional[float] = None,
     ) -> None:
         (
             curr_available_actions_tensor_with_padding,
             curr_available_actions_mask,
-        ) = self._create_action_tensor_and_mask(action_space, curr_available_actions)
+        ) = self._create_action_tensor_and_mask(
+            max_number_actions, curr_available_actions
+        )
 
         current_state = self._process_single_state(state)
-        current_action = self._process_single_action(action, action_space)
+        current_action = self._process_single_action(action)
         next_reward = self._process_single_reward(reward)
         self.state_action_cache.append(
             Transition(

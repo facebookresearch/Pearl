@@ -33,8 +33,8 @@ class ReplayBuffer(ABC):
         next_state: SubjectiveState,
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,
-        action_space: ActionSpace,
         done: bool,
+        max_number_actions: Optional[int],
         cost: Optional[float] = None,
     ) -> None:
         """Saves a transition."""

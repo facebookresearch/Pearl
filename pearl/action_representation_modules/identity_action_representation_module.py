@@ -9,8 +9,9 @@ class IdentityActionRepresentationModule(ActionRepresentationModule):
     An trivial class that outputs actions identitically as input.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, max_number_actions: int) -> None:
         super(IdentityActionRepresentationModule, self).__init__()
+        self._max_number_actions = max_number_actions
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x

@@ -17,8 +17,8 @@ SingleTransition = Tuple[
     SubjectiveState,
     ActionSpace,
     ActionSpace,
-    ActionSpace,
     bool,
+    Optional[int],
     Optional[float],
 ]
 
@@ -43,8 +43,8 @@ class SingleTransitionReplayBuffer(ReplayBuffer):
         next_state: SubjectiveState,
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,
-        action_space: ActionSpace,
         done: bool,
+        max_number_actions: Optional[int] = None,
         cost: Optional[float] = None,
     ) -> None:
         self._transition = (
@@ -54,8 +54,8 @@ class SingleTransitionReplayBuffer(ReplayBuffer):
             next_state,
             curr_available_actions,
             next_available_actions,
-            action_space,
             done,
+            max_number_actions,
             cost,
         )
 

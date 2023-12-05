@@ -105,8 +105,9 @@ class PearlAgent(Agent):
             else history_summarization_module
         )
 
+        # -1 will be fixed in following diffs since currently all tests currently use onehot
         self.action_representation_module: ActionRepresentationModule = (
-            PearlAgent.default_action_representation_module_type()
+            PearlAgent.default_action_representation_module_type(max_number_actions=-1)
             if action_representation_module is None
             else action_representation_module
         )
@@ -188,8 +189,10 @@ class PearlAgent(Agent):
             self._action_space
             if action_result.available_action_space is None
             else action_result.available_action_space,  # next_available_actions
-            self._action_space,  # action_space
             action_result.done,
+            self.action_representation_module.max_number_actions
+            if not self.policy_learner.is_action_continuous
+            else None,  # max number of actions for discrete action space
             action_result.cost,
         )
 

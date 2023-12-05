@@ -75,8 +75,8 @@ class TestOfflineCQL(unittest.TestCase):
                 transition["next_observation"],
                 transition["curr_available_actions"],  # curr_available_actions
                 transition["next_available_actions"],  # next_available_actions
-                transition["action_space"],  # action_space
                 transition["done"],
+                transition["max_number_actions"],
             )
 
         conservative_agent = PearlAgent(

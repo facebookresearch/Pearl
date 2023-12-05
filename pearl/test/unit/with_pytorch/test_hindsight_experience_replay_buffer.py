@@ -54,8 +54,8 @@ class TestHindsightExperienceReplayBuffer(unittest.TestCase):
                 next_state=torch.cat([states[i + 1], goal], dim=0),
                 curr_available_actions=action_space,
                 next_available_actions=action_space,
-                action_space=action_space,
                 done=i == len(states) - 2,
+                max_number_actions=action_space.n,
             )
 
         self.assertEqual(len(rb), 2 * len(states) - 2)

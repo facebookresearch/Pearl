@@ -53,8 +53,8 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
                 SubjectiveState,
                 ActionSpace,
                 ActionSpace,
-                ActionSpace,
                 bool,
+                Optional[int],
                 Optional[float],
             ]
         ] = []
@@ -67,8 +67,8 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
         next_state: SubjectiveState,
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,
-        action_space: ActionSpace,
         done: bool,
+        max_number_actions: Optional[int] = None,
         cost: Optional[float] = None,
     ) -> None:
         next_state = assert_is_tensor_like(next_state)
@@ -81,8 +81,8 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
             next_state,
             curr_available_actions,
             next_available_actions,
-            action_space,
             done,
+            max_number_actions,
             cost,
         )
         self._trajectory.append(
@@ -92,8 +92,8 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
                 next_state,
                 curr_available_actions,
                 next_available_actions,
-                action_space,
                 done,
+                max_number_actions,
                 cost,
             )
         )
@@ -105,8 +105,8 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
                 next_state,
                 curr_available_actions,
                 next_available_actions,
-                action_space,
                 done,
+                max_number_actions,
                 cost,
             ) in self._trajectory:
                 # replace current_goal with additional_goal
@@ -121,8 +121,8 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
                     next_state,
                     curr_available_actions,
                     next_available_actions,
-                    action_space,
                     done if self._done_fn is None else self._done_fn(state, action),
+                    max_number_actions,
                     cost,
                 )
             self._trajectory = []

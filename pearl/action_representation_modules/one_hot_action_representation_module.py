@@ -11,8 +11,6 @@ class OneHotActionTensorRepresentationModule(ActionRepresentationModule):
     An one-hot action representation module.
     """
 
-    # TODO: replace max_actions with action_space.n after action
-    # space standardization
     def __init__(self, max_number_actions: int) -> None:
         super(OneHotActionTensorRepresentationModule, self).__init__()
         self._max_number_actions = max_number_actions

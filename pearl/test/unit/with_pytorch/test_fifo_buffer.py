@@ -43,8 +43,8 @@ class TestFifoBuffer(unittest.TestCase):
             self.next_states[0],
             self.curr_available_actions,
             self.next_available_actions,
-            self.action_space,
             False,
+            self.action_space.n,
         )
         # push S1 A1 R1 S2
         replay_buffer.push(
@@ -54,8 +54,8 @@ class TestFifoBuffer(unittest.TestCase):
             self.next_states[1],
             self.curr_available_actions,
             self.next_available_actions,
-            self.action_space,
             False,
+            self.action_space.n,
         )
         # expect S0 A0 R0 S1 A1 returned from sample
         batch = replay_buffer.sample(1)
@@ -101,8 +101,8 @@ class TestFifoBuffer(unittest.TestCase):
             self.next_states[0],
             self.curr_available_actions,
             self.next_available_actions,
-            self.action_space,
             True,
+            self.action_space.n,
         )
         # expect one sample returned
         batch = replay_buffer.sample(1)

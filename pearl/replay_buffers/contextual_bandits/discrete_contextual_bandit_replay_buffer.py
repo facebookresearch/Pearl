@@ -38,8 +38,8 @@ class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
         next_state: SubjectiveState,
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,
-        action_space: ActionSpace,
         done: bool,
+        max_number_actions: Optional[int] = None,
         cost: Optional[float] = None,
     ) -> None:
         # signature of push is the same as others, in order to match codes in PearlAgent

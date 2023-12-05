@@ -49,7 +49,7 @@ class IntegrationReplayBufferTests(unittest.TestCase):
 
         def done_fn(state: SubjectiveState, action: Action) -> bool:
             state = assert_is_tensor_like(state)
-            next_state = state[:2] + torch.Tensor(env._actions[action])
+            next_state = state[:2] + torch.Tensor(env._actions[action]).to(state.device)
             goal = state[-2:]
             if torch.all(torch.eq(next_state, goal)):
                 return True

@@ -10,6 +10,7 @@ from pearl.api.environment import Environment
 from pearl.api.reward import Value
 from pearl.pearl_agent import PearlAgent
 from pearl.utils.functional_utils.train_and_eval.online_learning import run_episode
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 def create_offline_data(
@@ -67,9 +68,12 @@ def create_offline_data(
                 "next_observation": action_result.observation,
                 "curr_available_actions": env.action_space,
                 "next_available_actions": env.action_space,
-                "action_space": env.action_space,
                 "done": action_result.done,
+                "max_number_actions": env.action_space.n
+                if isinstance(env.action_space, DiscreteActionSpace)
+                else None,
             }
+
             observation = action_result.observation
             raw_transitions_buffer.append(transition_tuple)
             if learn and not learn_after_episode:

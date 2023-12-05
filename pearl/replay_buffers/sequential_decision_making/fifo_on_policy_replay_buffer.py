@@ -26,22 +26,26 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
         next_state: SubjectiveState,
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,
-        action_space: ActionSpace,
         done: bool,
+        max_number_actions: Optional[int] = None,
         cost: Optional[float] = None,
     ) -> None:
         (
             curr_available_actions_tensor_with_padding,
             curr_available_actions_mask,
-        ) = self._create_action_tensor_and_mask(action_space, curr_available_actions)
+        ) = self._create_action_tensor_and_mask(
+            max_number_actions, curr_available_actions
+        )
 
         (
             next_available_actions_tensor_with_padding,
             next_available_actions_mask,
-        ) = self._create_action_tensor_and_mask(action_space, next_available_actions)
+        ) = self._create_action_tensor_and_mask(
+            max_number_actions, next_available_actions
+        )
 
         current_state = self._process_single_state(state)
-        current_action = self._process_single_action(action, action_space)
+        current_action = self._process_single_action(action)
 
         if self.cache is not None:
             assert self.cache.next_state is not None

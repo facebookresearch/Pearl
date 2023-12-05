@@ -111,10 +111,10 @@ class TabularQLearning(PolicyLearner):
             action,
             reward,
             next_state,
-            _action_space,
             _curr_available_actions,
             _next_available_actions,
             done,
+            _max_number_actions,
             _cost,
         ) = transition
         old_q_value = self.q_values.get((state, action.item()), 0)

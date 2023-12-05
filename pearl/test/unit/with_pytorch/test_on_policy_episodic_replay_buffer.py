@@ -37,8 +37,8 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
                 next_state=None,
                 curr_available_actions=self.action_space,
                 next_available_actions=self.action_space,
-                action_space=self.action_space,
                 done=False,
+                max_number_actions=self.action_space.n,
             )
         self.assertEqual(len(replay_buffer), 0)
         with self.assertRaises(ValueError):
@@ -54,8 +54,8 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
                 next_state=None,
                 curr_available_actions=self.action_space,
                 next_available_actions=self.action_space,
-                action_space=self.action_space,
                 done=(i == (self.trajectory_len - 1)),
+                max_number_actions=self.action_space.n,
             )
 
         self.assertEqual(len(replay_buffer), self.trajectory_len)
@@ -93,8 +93,8 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
                 next_state=None,
                 curr_available_actions=self.action_space,
                 next_available_actions=self.action_space,
-                action_space=self.action_space,
                 done=(i == (self.trajectory_len - 1)),
+                max_number_actions=self.action_space.n,
             )
 
         rewards_2 = [11.0, 8.0]
@@ -111,8 +111,8 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
                 next_state=None,
                 curr_available_actions=self.action_space,
                 next_available_actions=self.action_space,
-                action_space=self.action_space,
                 done=(i == (trajectory_len_2 - 1)),
+                max_number_actions=self.action_space.n,
             )
 
         self.assertEqual(len(replay_buffer), self.trajectory_len + trajectory_len_2)
@@ -179,8 +179,8 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
                 next_state=None,
                 curr_available_actions=self.action_space,
                 next_available_actions=self.action_space,
-                action_space=self.action_space,
                 done=(i == (self.trajectory_len - 1)),
+                max_number_actions=self.action_space.n,
             )
 
         batch = replay_buffer.sample(self.trajectory_len)
