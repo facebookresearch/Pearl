@@ -2,6 +2,9 @@ from copy import deepcopy
 from typing import Any, Dict, Optional
 
 import torch
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
 
 from pearl.api.action_space import ActionSpace
 from pearl.neural_networks.common.utils import update_target_network
@@ -43,6 +46,7 @@ class BootstrappedDQN(DeepQLearning):
         batch_size: int = 128,
         target_update_freq: int = 10,
         soft_update_tau: float = 1.0,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
     ) -> None:
         PolicyLearner.__init__(
             self=self,
@@ -51,6 +55,7 @@ class BootstrappedDQN(DeepQLearning):
             exploration_module=DeepExploration(q_ensemble_network),
             on_policy=False,
             is_action_continuous=False,
+            action_representation_module=action_representation_module,
         )
         self._action_space = action_space
         self._learning_rate = learning_rate

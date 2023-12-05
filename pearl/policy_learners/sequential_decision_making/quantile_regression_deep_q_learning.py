@@ -2,6 +2,9 @@
 from typing import List, Optional
 
 import torch
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
 
 # import torch.optim as optim
 from pearl.api.action_space import ActionSpace
@@ -44,6 +47,7 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
         batch_size: int = 128,
         target_update_freq: int = 10,
         soft_update_tau: float = 0.05,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
     ) -> None:
         assert isinstance(action_space, DiscreteActionSpace)
         super(QuantileRegressionDeepQLearning, self).__init__(
@@ -62,6 +66,7 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
             target_update_freq=target_update_freq,
             soft_update_tau=soft_update_tau,
             network_type=QuantileQValueNetwork,  # enforced to be of the type QuantileQValueNetwork
+            action_representation_module=action_representation_module,
         )
 
     # QR-DQN is based on QuantileRegressionDeepTDLearning class.

@@ -2,6 +2,9 @@ import copy
 from typing import Any, Dict, Iterable, Optional, Type
 
 import torch
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
 
 from pearl.api.action_space import ActionSpace
 from pearl.neural_networks.common.value_networks import (
@@ -48,6 +51,7 @@ class ProximalPolicyOptimization(ActorCriticBase):
         batch_size: int = 128,
         epsilon: float = 0.0,
         entropy_bonus_scaling: float = 0.01,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
     ) -> None:
         super(ProximalPolicyOptimization, self).__init__(
             state_dim=state_dim,
@@ -74,6 +78,7 @@ class ProximalPolicyOptimization(ActorCriticBase):
             batch_size=batch_size,
             is_action_continuous=False,
             on_policy=True,
+            action_representation_module=action_representation_module,
         )
         self._epsilon = epsilon
         self._entropy_bonus_scaling = entropy_bonus_scaling

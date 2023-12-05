@@ -2,13 +2,6 @@ import typing
 from typing import Any, Dict, Optional
 
 import torch
-from pearl.action_representation_modules.action_representation_module import (
-    ActionRepresentationModule,
-)
-from pearl.action_representation_modules.identity_action_representation_module import (
-    IdentityActionRepresentationModule,
-)
-
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
@@ -49,7 +42,6 @@ class PearlAgent(Agent):
     default_risk_sensitive_safety_module_type = RiskNeutralSafetyModule
     default_history_summarization_module_type = IdentityHistorySummarizationModule
     default_replay_buffer_type = SingleTransitionReplayBuffer
-    default_action_representation_module_type = IdentityActionRepresentationModule
 
     # TODO: define a data structure that hosts the configs for a Pearl Agent
     def __init__(
@@ -58,7 +50,6 @@ class PearlAgent(Agent):
         safety_module: Optional[SafetyModule] = None,
         replay_buffer: Optional[ReplayBuffer] = None,
         history_summarization_module: Optional[HistorySummarizationModule] = None,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
         device_id: int = -1,
     ) -> None:
         """
@@ -103,16 +94,6 @@ class PearlAgent(Agent):
             PearlAgent.default_history_summarization_module_type()
             if history_summarization_module is None
             else history_summarization_module
-        )
-
-        # -1 will be fixed in following diffs since currently all tests currently use onehot
-        self.action_representation_module: ActionRepresentationModule = (
-            PearlAgent.default_action_representation_module_type(max_number_actions=-1)
-            if action_representation_module is None
-            else action_representation_module
-        )
-        self.policy_learner.set_action_representation_module(
-            self.action_representation_module
         )
 
         self.policy_learner.set_history_summarization_module(
@@ -190,7 +171,7 @@ class PearlAgent(Agent):
             if action_result.available_action_space is None
             else action_result.available_action_space,  # next_available_actions
             action_result.done,
-            self.action_representation_module.max_number_actions
+            self.policy_learner.action_representation_module.max_number_actions
             if not self.policy_learner.is_action_continuous
             else None,  # max number of actions for discrete action space
             action_result.cost,
@@ -242,8 +223,10 @@ class PearlAgent(Agent):
 
         latest_action_representation = None
         if self._latest_action is not None:
-            latest_action_representation = self.action_representation_module(
-                torch.as_tensor(self._latest_action).unsqueeze(0).to(self.device)
+            latest_action_representation = (
+                self.policy_learner.action_representation_module(
+                    torch.as_tensor(self._latest_action).unsqueeze(0).to(self.device)
+                )
             )
         observation_to_be_used = (
             torch.as_tensor(observation).to(self.device)

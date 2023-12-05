@@ -45,9 +45,9 @@ class TestGPUUsage(unittest.TestCase):
                 hidden_dims=[64, 64],
                 training_rounds=20,
                 batch_size=1,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
@@ -75,9 +75,9 @@ class TestGPUUsage(unittest.TestCase):
                 training_rounds=20,
                 batch_size=500,
                 epsilon=0.1,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             replay_buffer=OnPolicyEpisodicReplayBuffer(10000),
         )

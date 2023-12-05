@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, TypeVar
+from typing import Any, Dict, Optional, TypeVar
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -27,6 +27,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.device import is_distribution_enabled
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class PolicyLearner(torch.nn.Module, ABC):
@@ -51,9 +52,11 @@ class PolicyLearner(torch.nn.Module, ABC):
         self,
         on_policy: bool,
         is_action_continuous: bool,
+        action_space: Optional[ActionSpace] = None,
         training_rounds: int = 100,
         batch_size: int = 1,
         requires_tensors: bool = True,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
         **options: Any,
     ) -> None:
         super(PolicyLearner, self).__init__()
@@ -64,17 +67,35 @@ class PolicyLearner(torch.nn.Module, ABC):
             else NoExploration()
         )
 
-        # -1 will be fixed in following diffs since currently all tests currently use onehot
-        self._action_representation_module: ActionRepresentationModule = (
-            options["action_representation_module"]
-            if "action_representation_module" in options
-            else IdentityActionRepresentationModule(max_number_actions=-1)
-        )
+        # User needs to either provide the action space or an action representation module at
+        # policy learner's initialization for sequential decision making.
+        if action_representation_module is None:
+            if action_space is not None:
+                # If a policy learner is initialized with an action space, then we assume that
+                # the agent does not need dynamic action space support.
+                self._action_representation_module: ActionRepresentationModule = (
+                    IdentityActionRepresentationModule(
+                        max_number_actions=action_space.n
+                        if isinstance(action_space, DiscreteActionSpace)
+                        else -1,
+                        representation_dim=action_space.action_dim,
+                    )
+                )
+            else:
+                # This is only used in the case of bandit learning applications.
+                # TODO: add action representation module for bandit learning applications.
+                self._action_representation_module = (
+                    IdentityActionRepresentationModule()
+                )
+        else:
+            # User needs to at least specify action dimensions if no action_space is provided.
+            assert action_representation_module.representation_dim != -1
+            self._action_representation_module = action_representation_module
+
         self._history_summarization_module: HistorySummarizationModule = (
-            options["history_summarization_module"]
-            if "history_summarization_module" in options
-            else IdentityHistorySummarizationModule()
+            IdentityHistorySummarizationModule()
         )
+
         self._training_rounds = training_rounds
         self._batch_size = batch_size
         self._training_steps = 0
@@ -95,6 +116,10 @@ class PolicyLearner(torch.nn.Module, ABC):
     def exploration_module(self) -> ExplorationModule:
         return self._exploration_module
 
+    @property
+    def action_representation_module(self) -> ActionRepresentationModule:
+        return self._action_representation_module
+
     @exploration_module.setter
     def exploration_module(self, new_exploration_module: ExplorationModule) -> None:
         self._exploration_module = new_exploration_module
@@ -106,11 +131,6 @@ class PolicyLearner(torch.nn.Module, ABC):
         self, value: HistorySummarizationModule
     ) -> None:
         self._history_summarization_module = value
-
-    def set_action_representation_module(
-        self, value: ActionRepresentationModule
-    ) -> None:
-        self._action_representation_module = value
 
     def reset(self, action_space: ActionSpace) -> None:
         """Resets policy maker for a new episode. Default implementation does nothing."""
@@ -207,6 +227,7 @@ class DistributionalPolicyLearner(PolicyLearner):
         is_action_continuous: bool,
         training_rounds: int = 100,
         batch_size: int = 1,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
         **options: Any,
     ) -> None:
 
@@ -215,5 +236,6 @@ class DistributionalPolicyLearner(PolicyLearner):
             is_action_continuous=is_action_continuous,
             training_rounds=training_rounds,
             batch_size=batch_size,
+            action_representation_module=action_representation_module,
             **options,
         )

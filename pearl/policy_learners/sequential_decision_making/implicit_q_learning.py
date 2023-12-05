@@ -1,6 +1,9 @@
 from typing import Any, Dict, Iterable, Optional, Type
 
 import torch
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
 
 from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
@@ -80,6 +83,7 @@ class ImplicitQLearning(ActorCriticBase):
         expectile: float = 0.5,
         temperature_advantage_weighted_regression: float = 0.5,
         advantage_clamp: float = 100.0,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
     ) -> None:
         super(ImplicitQLearning, self).__init__(
             state_dim=state_dim,
@@ -102,6 +106,7 @@ class ImplicitQLearning(ActorCriticBase):
             batch_size=batch_size,
             is_action_continuous=action_space.is_continuous,  # inferred from the action space
             on_policy=False,
+            action_representation_module=action_representation_module,
         )
 
         self._expectile = expectile

@@ -1,6 +1,9 @@
 from typing import Any, Optional
 
 import torch
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
 
 from pearl.api.action_space import ActionSpace
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
@@ -25,6 +28,7 @@ class DeepSARSA(DeepTDLearning):
         state_dim: int,
         action_space: Optional[ActionSpace] = None,
         exploration_module: Optional[ExplorationModule] = None,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
         **kwargs: Any,
     ) -> None:
         super(DeepSARSA, self).__init__(
@@ -34,6 +38,7 @@ class DeepSARSA(DeepTDLearning):
             if exploration_module is not None
             else EGreedyExploration(0.05),
             on_policy=True,
+            action_representation_module=action_representation_module,
             **kwargs,
         )
 

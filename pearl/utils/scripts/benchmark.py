@@ -116,12 +116,17 @@ class PearlDQN(Evaluation):
 
     def evaluate(self, seed: int) -> Iterable[Value]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        action_representation_module = OneHotActionTensorRepresentationModule(
+            max_number_actions=env.action_space.n
+        )
         agent = PearlAgent(
             policy_learner=DeepQLearning(
                 state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
+                action_representation_module=action_representation_module,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
             device_id=self.device_id,
@@ -167,8 +172,8 @@ class PearlLSTMDQN(Evaluation):
                 action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
+                action_representation_module=action_representation_module,
             ),
-            action_representation_module=action_representation_module,
             history_summarization_module=history_summarization_module,
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
             device_id=self.device_id,
@@ -239,6 +244,10 @@ class PearlPPO(Evaluation):
 
     def evaluate(self, seed: int) -> Iterable[Value]:
         env = GymEnvironment(self.gym_environment_name, *self.args, **self.kwargs)
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        action_representation_module = OneHotActionTensorRepresentationModule(
+            max_number_actions=env.action_space.n
+        )
         agent = PearlAgent(
             policy_learner=ProximalPolicyOptimization(
                 state_dim=env.observation_space.shape[0],
@@ -248,6 +257,7 @@ class PearlPPO(Evaluation):
                 training_rounds=50,
                 batch_size=64,
                 epsilon=0.1,
+                action_representation_module=action_representation_module,
             ),
             replay_buffer=OnPolicyEpisodicReplayBuffer(10_000),
             device_id=self.device_id,

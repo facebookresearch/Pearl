@@ -2,6 +2,9 @@ from typing import Any, Dict, Iterable, Optional, Type
 
 import torch
 import torch.nn.functional as F
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
 from pearl.api.action_space import ActionSpace
 from pearl.neural_networks.common.value_networks import VanillaQValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
@@ -53,6 +56,7 @@ class SoftActorCritic(ActorCriticBase):
         training_rounds: int = 100,
         batch_size: int = 128,
         entropy_coef: float = 0.2,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
     ) -> None:
         super(SoftActorCritic, self).__init__(
             state_dim=state_dim,
@@ -76,6 +80,7 @@ class SoftActorCritic(ActorCriticBase):
             batch_size=batch_size,
             is_action_continuous=False,
             on_policy=False,
+            action_representation_module=action_representation_module,
         )
 
         # This is needed to avoid actor softmax overflow issue.

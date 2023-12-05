@@ -2,6 +2,10 @@
 from abc import abstractmethod
 from typing import Any, Dict, Iterable, Optional, Type
 
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
+
 from pearl.neural_networks.common.value_networks import QValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import ActorNetwork
 
@@ -74,6 +78,7 @@ class ActorCriticBase(PolicyLearner):
         batch_size: int = 256,
         is_action_continuous: bool = False,
         on_policy: bool = False,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
     ) -> None:
         super(ActorCriticBase, self).__init__(
             on_policy=on_policy,
@@ -81,6 +86,7 @@ class ActorCriticBase(PolicyLearner):
             training_rounds=training_rounds,
             batch_size=batch_size,
             exploration_module=exploration_module,
+            action_representation_module=action_representation_module,
         )
         self._state_dim = state_dim
         self._use_actor_target = use_actor_target

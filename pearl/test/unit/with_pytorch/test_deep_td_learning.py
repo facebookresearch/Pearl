@@ -59,15 +59,15 @@ class TestDeepTDLearning(unittest.TestCase):
             action_space=self.action_space,
             hidden_dims=[3],
             training_rounds=1,
+            action_representation_module=self.action_representation_module,
         )
-        double_dqn.set_action_representation_module(self.action_representation_module)
         dqn = DeepQLearning(
             state_dim=self.state_dim,
             action_space=self.action_space,
             hidden_dims=[3],
             training_rounds=1,
+            action_representation_module=self.action_representation_module,
         )
-        dqn.set_action_representation_module(self.action_representation_module)
         differ = False
         for _ in range(10):
             # 10 should be large enough to see difference.
@@ -93,8 +93,8 @@ class TestDeepTDLearning(unittest.TestCase):
             hidden_dims=[3],
             training_rounds=1,
             exploration_module=EGreedyExploration(0.05),
+            action_representation_module=self.action_representation_module,
         )
-        sarsa.set_action_representation_module(self.action_representation_module)
         sa_value = sarsa._get_next_state_values(
             batch=sarsa.preprocess_batch(self.batch), batch_size=self.batch_size
         )

@@ -4,6 +4,9 @@ from typing import Any, Dict, List, Optional, Type
 
 import torch
 import torch.nn.functional as F
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -52,6 +55,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             QuantileQValueNetwork
         ] = QuantileQValueNetwork,  # C51 might use a different network type; add that later
         network_instance: Optional[QuantileQValueNetwork] = None,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
     ) -> None:
         assert isinstance(action_space, DiscreteActionSpace)
         super(QuantileRegressionDeepTDLearning, self).__init__(
@@ -60,6 +64,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             exploration_module=exploration_module,
             on_policy=on_policy,
             is_action_continuous=False,
+            action_representation_module=action_representation_module,
         )
 
         if hidden_dims is None:

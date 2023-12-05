@@ -1,6 +1,9 @@
 from typing import Any, Optional, Tuple
 
 import torch
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
 from pearl.api.action_space import ActionSpace
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
     EGreedyExploration,
@@ -27,6 +30,7 @@ class DeepQLearning(DeepTDLearning):
         learning_rate: float = 0.001,
         exploration_module: Optional[ExplorationModule] = None,
         soft_update_tau: float = 1.0,  # no soft update
+        action_representation_module: Optional[ActionRepresentationModule] = None,
         **kwargs: Any,
     ) -> None:
         super(DeepQLearning, self).__init__(
@@ -38,6 +42,7 @@ class DeepQLearning(DeepTDLearning):
             action_space=action_space,
             learning_rate=learning_rate,
             soft_update_tau=soft_update_tau,
+            action_representation_module=action_representation_module,
             **kwargs,
         )
 

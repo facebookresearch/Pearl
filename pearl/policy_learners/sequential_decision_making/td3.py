@@ -1,6 +1,9 @@
 from typing import Any, Dict, Iterable, Optional, Type
 
 import torch
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
 from pearl.api.action_space import ActionSpace
 from pearl.neural_networks.common.utils import update_target_network
 from pearl.neural_networks.common.value_networks import VanillaQValueNetwork
@@ -54,6 +57,7 @@ class TD3(DeepDeterministicPolicyGradient):
         actor_update_freq: int = 2,
         actor_update_noise: float = 0.2,
         actor_update_noise_clip: float = 0.5,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
     ) -> None:
         assert isinstance(action_space, BoxActionSpace)
         super(TD3, self).__init__(
@@ -71,6 +75,7 @@ class TD3(DeepDeterministicPolicyGradient):
             discount_factor=discount_factor,
             training_rounds=training_rounds,
             batch_size=batch_size,
+            action_representation_module=action_representation_module,
         )
         self._action_space: BoxActionSpace = action_space
         self._actor_update_freq = actor_update_freq

@@ -142,7 +142,6 @@ def run_experiments_online(
     agent = PearlAgent(
         policy_learner=policy_learner,
         replay_buffer=DiscreteContextualBanditReplayBuffer(replay_buffer_size),
-        action_representation_module=policy_learner._action_representation_module,
     )
 
     regrets = online_evaluation(env, agent, num_steps=T, training_mode=True)

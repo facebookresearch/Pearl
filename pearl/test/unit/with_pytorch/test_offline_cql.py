@@ -47,8 +47,8 @@ class TestOfflineCQL(unittest.TestCase):
                 hidden_dims=[64, 64],
                 exploration_module=EGreedyExploration(0.5),
                 training_rounds=20,
+                action_representation_module=action_representation_module,
             ),
-            action_representation_module=action_representation_module,
             replay_buffer=FIFOOffPolicyReplayBuffer(1000000),
         )
 
@@ -88,8 +88,8 @@ class TestOfflineCQL(unittest.TestCase):
                 is_conservative=True,
                 conservative_alpha=8.0,
                 batch_size=128,
+                action_representation_module=action_representation_module,
             ),
-            action_representation_module=action_representation_module,
             replay_buffer=offline_data_replay_buffer,
         )
 

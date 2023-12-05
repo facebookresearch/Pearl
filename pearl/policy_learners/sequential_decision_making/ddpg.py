@@ -1,6 +1,9 @@
 from typing import Any, Dict, Iterable, Optional, Type
 
 import torch
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
 from pearl.api.action_space import ActionSpace
 
 from pearl.neural_networks.common.value_networks import VanillaQValueNetwork
@@ -47,6 +50,7 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
         discount_factor: float = 0.99,
         training_rounds: int = 1,
         batch_size: int = 256,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
     ) -> None:
         super(DeepDeterministicPolicyGradient, self).__init__(
             state_dim=state_dim,
@@ -70,6 +74,7 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
             batch_size=batch_size,
             is_action_continuous=True,
             on_policy=False,
+            action_representation_module=action_representation_module,
         )
 
     def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:

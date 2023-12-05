@@ -22,3 +22,7 @@ class OneHotActionTensorRepresentationModule(ActionRepresentationModule):
     @property
     def max_number_actions(self) -> int:
         return self._max_number_actions
+
+    @property
+    def representation_dim(self) -> int:
+        return self._max_number_actions

@@ -3,6 +3,9 @@ from abc import abstractmethod
 from typing import Any, Dict, Iterable, List, Optional, Type
 
 import torch
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -65,6 +68,7 @@ class DeepTDLearning(PolicyLearner):
         network_instance: Optional[QValueNetwork] = None,
         # TODO define optimizer config to be used by all deep algorithms
         use_keyed_optimizer: bool = False,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
         **kwargs: Any,
     ) -> None:
         super(DeepTDLearning, self).__init__(
@@ -73,6 +77,7 @@ class DeepTDLearning(PolicyLearner):
             exploration_module=exploration_module,
             on_policy=on_policy,
             is_action_continuous=False,
+            action_representation_module=action_representation_module,
         )
         self._action_space = action_space
         self._learning_rate = learning_rate
@@ -90,7 +95,7 @@ class DeepTDLearning(PolicyLearner):
                 # Pyre does not know that `network_type` is asserted to be concrete
                 return network_type(
                     state_dim=state_dim,
-                    action_dim=action_space.n,
+                    action_dim=self._action_representation_module.representation_dim,
                     hidden_dims=hidden_dims,
                     state_output_dim=state_output_dim,
                     action_output_dim=action_output_dim,
@@ -103,7 +108,7 @@ class DeepTDLearning(PolicyLearner):
                 # Pyre does not know that `network_type` is asserted to be concrete
                 return network_type(
                     state_dim=state_dim,
-                    action_dim=action_space.n,
+                    action_dim=self._action_representation_module.representation_dim,
                     hidden_dims=hidden_dims,
                     output_dim=1,
                 )

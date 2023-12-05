@@ -72,8 +72,8 @@ class IntegrationReplayBufferTests(unittest.TestCase):
                 hidden_dims=[64, 64],
                 training_rounds=10,
                 batch_size=500,
+                action_representation_module=action_representation_module,
             ),
-            action_representation_module=action_representation_module,
             replay_buffer=HindsightExperienceReplayBuffer(
                 2_000_000, goal_dim=2, reward_fn=reward_fn, done_fn=done_fn
             ),

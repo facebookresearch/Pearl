@@ -122,9 +122,9 @@ def evaluate_single(
             == "OneHotActionTensorRepresentationModule"
         ):
             method["action_representation_module_args"][
-                "max_actions"
+                "max_number_actions"
             ] = env.action_space.n
-        agent_args["action_representation_module"] = method[
+        policy_learner_args["action_representation_module"] = method[
             "action_representation_module"
         ](**method["action_representation_module_args"])
 

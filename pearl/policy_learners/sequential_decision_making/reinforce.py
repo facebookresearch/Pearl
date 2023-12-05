@@ -1,5 +1,9 @@
 from typing import Any, Dict, Iterable, Optional, Type
 
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
+
 from pearl.neural_networks.common.value_networks import ValueNetwork
 
 from pearl.neural_networks.sequential_decision_making.actor_networks import ActorNetwork
@@ -48,6 +52,7 @@ class REINFORCE(ActorCriticBase):
         exploration_module: Optional[ExplorationModule] = None,
         discount_factor: float = 0.99,
         training_rounds: int = 1,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
     ) -> None:
         super(REINFORCE, self).__init__(
             state_dim=state_dim,
@@ -74,6 +79,7 @@ class REINFORCE(ActorCriticBase):
             batch_size=0,  # REINFORCE does not use batch size
             is_action_continuous=False,
             on_policy=True,
+            action_representation_module=action_representation_module,
         )
 
     def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:

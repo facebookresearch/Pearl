@@ -88,9 +88,9 @@ class IntegrationTests(unittest.TestCase):
                 env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
         )
@@ -155,9 +155,9 @@ class IntegrationTests(unittest.TestCase):
                 env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
         )
@@ -187,9 +187,9 @@ class IntegrationTests(unittest.TestCase):
                 env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             replay_buffer=FIFOOnPolicyReplayBuffer(10_000),
         )
@@ -219,9 +219,9 @@ class IntegrationTests(unittest.TestCase):
                 actor_hidden_dims=[64, 64],
                 critic_hidden_dims=[64, 64],
                 training_rounds=1,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             replay_buffer=OnPolicyEpisodicReplayBuffer(10_000),
         )
@@ -257,9 +257,9 @@ class IntegrationTests(unittest.TestCase):
                 training_rounds=20,
                 network_instance=q_network,
                 batch_size=batch_size,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
         )
@@ -291,9 +291,9 @@ class IntegrationTests(unittest.TestCase):
                 exploration_module=EGreedyExploration(0.10),
                 learning_rate=5e-4,
                 training_rounds=20,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             safety_module=QuantileNetworkMeanVarianceSafetyModule(0.2),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
@@ -327,9 +327,9 @@ class IntegrationTests(unittest.TestCase):
                 training_rounds=50,
                 batch_size=64,
                 epsilon=0.1,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             replay_buffer=OnPolicyEpisodicReplayBuffer(10_000),
         )
@@ -363,9 +363,9 @@ class IntegrationTests(unittest.TestCase):
                 entropy_coef=0.1,
                 actor_learning_rate=0.0001,
                 critic_learning_rate=0.0003,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(50000),
         )
@@ -431,9 +431,9 @@ class IntegrationTests(unittest.TestCase):
                 hidden_dims=[64, 64],
                 training_rounds=20,
                 is_conservative=True,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
         )
@@ -543,9 +543,9 @@ class IntegrationTests(unittest.TestCase):
                 is_conservative=True,
                 conservative_alpha=4.0,
                 batch_size=128,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
@@ -599,9 +599,9 @@ class IntegrationTests(unittest.TestCase):
                 expectile=0.70,
                 temperature_advantage_weighted_regression=3.0,
                 critic_soft_update_tau=0.005,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(200000),
         )

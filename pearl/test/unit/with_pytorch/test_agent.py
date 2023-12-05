@@ -71,9 +71,9 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 hidden_dims=[64, 64],
                 training_rounds=20,
                 batch_size=1,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
@@ -94,9 +94,9 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 hidden_dims=[64, 64],
                 training_rounds=20,
                 is_conservative=True,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
@@ -123,9 +123,9 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 training_rounds=20,
                 network_type=DuelingQValueNetwork,
                 batch_size=batch_size,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
@@ -151,9 +151,9 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 state_hidden_dims=[64],
                 action_hidden_dims=[64],
                 batch_size=1,
-            ),
-            action_representation_module=OneHotActionTensorRepresentationModule(
-                max_number_actions=num_actions
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
