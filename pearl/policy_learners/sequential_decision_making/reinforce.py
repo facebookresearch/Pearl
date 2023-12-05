@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterable, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
@@ -42,9 +42,9 @@ class REINFORCE(ActorCriticBase):
     def __init__(
         self,
         state_dim: int,
-        action_space: ActionSpace,
-        actor_hidden_dims: Iterable[int],
-        critic_hidden_dims: Optional[Iterable[int]],
+        actor_hidden_dims: List[int],
+        critic_hidden_dims: Optional[List[int]] = None,
+        action_space: Optional[ActionSpace] = None,
         actor_learning_rate: float = 1e-4,
         critic_learning_rate: float = 1e-4,
         actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
@@ -88,7 +88,10 @@ class REINFORCE(ActorCriticBase):
         )  # (batch_size x state_dim) note that here batch_size = episode length
         return_batch = batch.cum_reward  # (batch_size)
         policy_propensities = self._actor.get_action_prob(
-            batch.state, batch.action
+            batch.state,
+            batch.action,
+            batch.curr_available_actions,
+            batch.curr_unavailable_actions_mask,
         )  # shape (batch_size)
         negative_log_probs = -torch.log(policy_propensities + 1e-8)
         if self._use_critic:

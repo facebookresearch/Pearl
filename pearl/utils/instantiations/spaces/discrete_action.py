@@ -97,3 +97,7 @@ class DiscreteActionSpace(DiscreteSpace, ActionSpace):
             actions=list(torch.arange(start=start, end=start + n).view(-1, 1)),
             seed=gym_space._np_random,
         )
+
+    def to(self, device: torch.device) -> None:
+        for i, action in enumerate(self.actions):
+            self.actions[i] = action.to(device)

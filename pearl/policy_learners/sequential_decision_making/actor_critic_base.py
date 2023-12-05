@@ -1,13 +1,16 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, Optional, Type
+from typing import Any, Dict, Iterable, List, Optional, Type
 
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
 
 from pearl.neural_networks.common.value_networks import QValueNetwork
-from pearl.neural_networks.sequential_decision_making.actor_networks import ActorNetwork
+from pearl.neural_networks.sequential_decision_making.actor_networks import (
+    ActorNetwork,
+    DynamicActionActorNetwork,
+)
 
 from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 
@@ -60,10 +63,10 @@ class ActorCriticBase(PolicyLearner):
     def __init__(
         self,
         state_dim: int,
-        action_space: ActionSpace,
         exploration_module: ExplorationModule,
-        actor_hidden_dims: Iterable[int],
-        critic_hidden_dims: Optional[Iterable[int]],
+        actor_hidden_dims: List[int],
+        critic_hidden_dims: Optional[List[int]] = None,
+        action_space: Optional[ActionSpace] = None,
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,
         actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
@@ -87,6 +90,7 @@ class ActorCriticBase(PolicyLearner):
             batch_size=batch_size,
             exploration_module=exploration_module,
             action_representation_module=action_representation_module,
+            action_space=action_space,
         )
         self._state_dim = state_dim
         self._use_actor_target = use_actor_target
@@ -94,21 +98,21 @@ class ActorCriticBase(PolicyLearner):
         self._use_twin_critic = use_twin_critic
         self._use_critic: bool = critic_hidden_dims is not None
 
-        if isinstance(
-            action_space, (gym.spaces.discrete.Discrete, DiscreteActionSpace)
-        ):
-            # TODO: This assumes OneHotActionRepresentation
-            self._action_dim: int = action_space.n
-        elif isinstance(action_space, (gym.spaces.box.Box, BoxActionSpace)):
-            self._action_dim = action_space.action_dim
-        else:
-            raise NotImplementedError("Action space not implemented")
+        self._action_dim: int = (
+            self.action_representation_module.representation_dim
+            if self.is_action_continuous
+            else self.action_representation_module.max_number_actions
+        )
 
         # actor network takes state as input and outputs an action vector
         self._actor: nn.Module = actor_network_type(
-            input_dim=state_dim,
+            input_dim=state_dim + self._action_dim
+            if actor_network_type is DynamicActionActorNetwork
+            else state_dim,
             hidden_dims=actor_hidden_dims,
-            output_dim=self._action_dim,
+            output_dim=1
+            if actor_network_type is DynamicActionActorNetwork
+            else self._action_dim,
             action_space=action_space,
         )
         self._actor.apply(init_weights)
@@ -124,9 +128,13 @@ class ActorCriticBase(PolicyLearner):
         self._actor_soft_update_tau = actor_soft_update_tau
         if self._use_actor_target:
             self._actor_target: nn.Module = actor_network_type(
-                input_dim=state_dim,
+                input_dim=state_dim + self._action_dim
+                if actor_network_type is DynamicActionActorNetwork
+                else state_dim,
                 hidden_dims=actor_hidden_dims,
-                output_dim=self._action_dim,
+                output_dim=1
+                if actor_network_type is DynamicActionActorNetwork
+                else self._action_dim,
                 action_space=action_space,
             )
             update_target_network(self._actor_target, self._actor, tau=1)
@@ -140,7 +148,7 @@ class ActorCriticBase(PolicyLearner):
                 use_twin_critic=use_twin_critic,
                 network_type=critic_network_type,
             )
-            self._critic_optimizer = optim.AdamW(
+            self._critic_optimizer: optim.Optimizer = optim.AdamW(
                 [
                     {
                         "params": self._critic.parameters(),
@@ -150,7 +158,7 @@ class ActorCriticBase(PolicyLearner):
                 ]
             )
             if self._use_critic_target:
-                self._critic_target = make_critic(
+                self._critic_target: nn.Module = make_critic(
                     state_dim=self._state_dim,
                     action_dim=self._action_dim,
                     hidden_dims=critic_hidden_dims,
@@ -180,9 +188,6 @@ class ActorCriticBase(PolicyLearner):
         available_action_space: ActionSpace,
         exploit: bool = False,
     ) -> Action:
-        # TODO: Assumes subjective state is a torch tensor and gym action space.
-        # Fix the available action space.
-
         # Step 1: compute exploit_action
         # (action computed by actor network; and without any exploration)
         with torch.no_grad():
@@ -190,9 +195,16 @@ class ActorCriticBase(PolicyLearner):
                 exploit_action = self._actor.sample_action(subjective_state)
                 action_probabilities = None
             else:
-                action_probabilities = self._actor(subjective_state)
-                # (action_space_size, 1)
-                exploit_action = torch.argmax(action_probabilities).view((-1))
+                assert isinstance(available_action_space, DiscreteActionSpace)
+                actions = self.action_representation_module(
+                    available_action_space.actions_batch
+                )
+                action_probabilities = self._actor.get_policy_distribution(
+                    state_batch=subjective_state,
+                    available_actions=actions,
+                )
+                # (action_space_size)
+                exploit_action = torch.argmax(action_probabilities)
 
         # Step 2: return exploit action if no exploration,
         # else pass through the exploration module
@@ -302,7 +314,9 @@ def single_critic_state_value_update(
     vs = critic(state_batch)
     # critic loss
     criterion = torch.nn.MSELoss()
-    loss = criterion(vs, expected_target_batch.detach())
+    loss = criterion(
+        vs.reshape_as(expected_target_batch), expected_target_batch.detach()
+    )
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
@@ -332,9 +346,9 @@ def twin_critic_action_value_update(
     criterion = torch.nn.MSELoss()
     optimizer.zero_grad()
     q_1, q_2 = critic.get_q_values(state_batch, action_batch)
-    loss = criterion(q_1, expected_target_batch.detach()) + criterion(
-        q_2, expected_target_batch.detach()
-    )
+    loss = criterion(
+        q_1.reshape_as(expected_target_batch), expected_target_batch.detach()
+    ) + criterion(q_2.reshape_as(expected_target_batch), expected_target_batch.detach())
     loss.backward()
     optimizer.step()
 

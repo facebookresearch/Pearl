@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterable, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 import torch
 import torch.nn.functional as F
@@ -44,8 +44,8 @@ class SoftActorCritic(ActorCriticBase):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        actor_hidden_dims: Iterable[int],
-        critic_hidden_dims: Iterable[int],
+        actor_hidden_dims: List[int],
+        critic_hidden_dims: List[int],
         actor_learning_rate: float = 1e-4,
         critic_learning_rate: float = 1e-4,
         actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,

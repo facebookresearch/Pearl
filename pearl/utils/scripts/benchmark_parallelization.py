@@ -174,6 +174,9 @@ def evaluate_single(
         )
         del policy_learner_args["state_dim"]
 
+    if "dynamic" in method["name"]:
+        policy_learner_args["actor_network_type"] = method["actor_network_type"]
+
     policy_learner_args["action_space"] = env.action_space
     agent = PearlAgent(
         policy_learner=policy_learner(

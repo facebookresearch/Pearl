@@ -12,6 +12,7 @@ from pearl.neural_networks.common.value_networks import (
     VanillaValueNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
+    DynamicActionActorNetwork,
     GaussianActorNetwork,
     VanillaActorNetwork,
     VanillaContinuousActorNetwork,
@@ -172,6 +173,20 @@ REINFORCE_method = {
         "critic_hidden_dims": [64, 64],
         "training_rounds": 1,
     },
+    "replay_buffer": OnPolicyEpisodicReplayBuffer,
+    "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
+}
+REINFORCE_dynamic_method = {
+    "name": "REINFORCE_dynamic",
+    "policy_learner": REINFORCE,
+    "policy_learner_args": {
+        "actor_hidden_dims": [64, 64],
+        "critic_hidden_dims": [64, 64],
+        "training_rounds": 1,
+    },
+    "actor_network_type": DynamicActionActorNetwork,
     "replay_buffer": OnPolicyEpisodicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
@@ -766,11 +781,13 @@ test_dynamic_action_space = [
         "record_period": 1000,
         "methods": [
             DQN_method,
+            REINFORCE_dynamic_method,
         ],
         "device_id": 0,
     }
     for env_name in [
         "Acrobot-DynamicAction-v1",
+        "CartPole-DynamicAction-v1",
     ]
 ]
 
@@ -823,6 +840,8 @@ def get_env(env_name: str) -> GymEnvironment:
         )
     elif env_name == "Acrobot-DynamicAction-v1":
         return GymEnvironment(DynamicActionSpaceWrapper(gym.make("Acrobot-v1")))
+    elif env_name == "CartPole-DynamicAction-v1":
+        return GymEnvironment(DynamicActionSpaceWrapper(gym.make("CartPole-v1")))
     elif env_name[-7:] == "_w_cost":
         env_name = env_name[:-7]
         return GymEnvironment(GymAvgTorqueWrapper(gym.make(env_name)))

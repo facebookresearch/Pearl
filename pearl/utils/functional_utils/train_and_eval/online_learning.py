@@ -181,8 +181,8 @@ def target_return_is_reached(
     returns = []
     total_steps = 0
     for i in range(max_episodes):
-        if i % 10 == 0:
-            print(f"episode {i}")
+        if i % 10 == 0 and i != 0:
+            print(f"episode {i} return:", returns[-1])
         episode_info, episode_total_steps = run_episode(
             agent=agent,
             env=env,

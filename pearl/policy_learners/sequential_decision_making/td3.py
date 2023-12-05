@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterable, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -42,8 +42,8 @@ class TD3(DeepDeterministicPolicyGradient):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        actor_hidden_dims: Iterable[int],
-        critic_hidden_dims: Iterable[int],
+        actor_hidden_dims: List[int],
+        critic_hidden_dims: List[int],
         exploration_module: Optional[ExplorationModule] = None,
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,
@@ -174,8 +174,8 @@ class RCTD3(TD3):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        actor_hidden_dims: Iterable[int],
-        critic_hidden_dims: Iterable[int],
+        actor_hidden_dims: List[int],
+        critic_hidden_dims: List[int],
         exploration_module: Optional[ExplorationModule] = None,
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,

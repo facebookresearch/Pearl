@@ -1,5 +1,5 @@
 import copy
-from typing import Any, Dict, Iterable, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -39,8 +39,8 @@ class ProximalPolicyOptimization(ActorCriticBase):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        actor_hidden_dims: Iterable[int],
-        critic_hidden_dims: Optional[Iterable[int]],
+        actor_hidden_dims: List[int],
+        critic_hidden_dims: Optional[List[int]],
         actor_learning_rate: float = 1e-4,
         critic_learning_rate: float = 1e-4,
         exploration_module: Optional[ExplorationModule] = None,

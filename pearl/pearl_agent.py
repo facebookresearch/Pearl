@@ -141,8 +141,7 @@ class PearlAgent(Agent):
             and self.policy_learner.requires_tensors
         ):
             assert isinstance(safe_action_space, DiscreteActionSpace)
-            for a in safe_action_space.actions:
-                a.to(self.device)
+            safe_action_space.to(self.device)
 
         self._latest_action = self.policy_learner.act(
             subjective_state_to_be_used, safe_action_space, exploit=exploit  # pyre-fixme[6]
