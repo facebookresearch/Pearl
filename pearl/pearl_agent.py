@@ -176,6 +176,7 @@ class PearlAgent(Agent):
         # need to modify ActionResults
         assert self._latest_action is not None
         assert self._action_space is not None
+
         self.replay_buffer.push(
             # pyre-fixme[6]: this can be removed when tabular Q learning test uses tensors
             current_history,
@@ -184,12 +185,19 @@ class PearlAgent(Agent):
             # pyre-fixme[6]: this can be removed when tabular Q learning test uses tensors
             new_history,
             self._action_space,  # curr_available_actions
-            self._action_space,  # next_available_actions
+            self._action_space
+            if action_result.available_action_space is None
+            else action_result.available_action_space,  # next_available_actions
             self._action_space,  # action_space
             action_result.done,
             action_result.cost,
         )
 
+        self._action_space = (
+            action_result.available_action_space
+            if action_result.available_action_space is not None
+            else self._action_space
+        )
         self._subjective_state = new_subjective_state
 
     def learn(self) -> Dict[str, Any]:
@@ -212,14 +220,16 @@ class PearlAgent(Agent):
 
         return policy_learner_loss
 
-    def reset(self, observation: Observation, action_space: ActionSpace) -> None:
+    def reset(
+        self, observation: Observation, available_action_space: ActionSpace
+    ) -> None:
         self.history_summarization_module.reset()
         self.history_summarization_module.to(self.device)
         self._latest_action = None
         self._subjective_state = self._update_subjective_state(observation)
-        self._action_space = action_space
-        self.safety_module.reset(action_space)
-        self.policy_learner.reset(action_space)
+        self._action_space = available_action_space
+        self.safety_module.reset(available_action_space)
+        self.policy_learner.reset(available_action_space)
 
     def _update_subjective_state(
         self, observation: Observation

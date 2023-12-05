@@ -24,5 +24,7 @@ class Agent(ABC):
         pass
 
     @abstractmethod
-    def reset(self, observation: Observation, action_space: ActionSpace) -> None:
+    def reset(
+        self, observation: Observation, available_action_space: ActionSpace
+    ) -> None:
         pass
