@@ -352,6 +352,22 @@ SAC_method = {
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
 }
+SAC_dynamic_method = {
+    "name": "SAC_dynamic",
+    "policy_learner": SoftActorCritic,
+    "policy_learner_args": {
+        "actor_hidden_dims": [64, 64],
+        "critic_hidden_dims": [64, 64],
+        "training_rounds": 1,
+        "batch_size": 32,
+        "entropy_coef": 0.1,
+    },
+    "actor_network_type": DynamicActionActorNetwork,
+    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
+}
 IQL_online_method = {
     "name": "IQL",
     "policy_learner": ImplicitQLearning,
@@ -791,7 +807,7 @@ test_dynamic_action_space = [
     {
         "exp_name": "test_dynamic_action",
         "env_name": env_name,
-        "num_runs": 1,
+        "num_runs": 3,
         "num_steps": classic_control_steps,
         "print_every_x_steps": print_every_x_steps,
         "record_period": 1000,
@@ -799,6 +815,7 @@ test_dynamic_action_space = [
             DQN_method,
             REINFORCE_dynamic_method,
             PPO_dynamic_method,
+            SAC_dynamic_method,
         ],
         "device_id": 0,
     }

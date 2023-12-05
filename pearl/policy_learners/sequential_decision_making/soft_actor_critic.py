@@ -131,9 +131,10 @@ class SoftActorCritic(ActorCriticBase):
         )  # (batch_size x action_space_size)
 
         assert next_state_batch is not None
+        assert next_available_actions_batch is not None
         next_state_batch_repeated = torch.repeat_interleave(
             next_state_batch.unsqueeze(1),
-            self._action_dim,
+            self.action_representation_module.max_number_actions,
             dim=1,
         )  # (batch_size x action_space_size x state_dim)
 
@@ -156,59 +157,65 @@ class SoftActorCritic(ActorCriticBase):
 
         # Make sure that unavailable actions' Q values are assigned to 0.0
         # since we are calculating expectation
-        # TODO: evaluate if there's a better way to deal with variable action space
-        # in actor-critic type of algorithms
-        next_state_action_values[next_unavailable_actions_mask_batch] = 0.0
 
-        next_state_policy_dist = self._actor(
-            next_state_batch
+        if next_unavailable_actions_mask_batch is not None:
+            next_state_action_values[next_unavailable_actions_mask_batch] = 0.0
+
+        next_state_policy_dist = self._actor.get_policy_distribution(
+            state_batch=next_state_batch,
+            available_actions=next_available_actions_batch,
+            unavailable_actions_mask=next_unavailable_actions_mask_batch,
         )  # (batch_size x action_space_size)
 
         # Entropy Regularization
         next_state_action_values = (
             next_state_action_values
-            - self._entropy_coef * torch.log(next_state_policy_dist)
+            - self._entropy_coef * torch.log(next_state_policy_dist + 1e-8)
         ) * next_state_policy_dist  # (batch_size x action_space_size)
 
         return next_state_action_values.sum(dim=1)
 
     def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         state_batch = batch.state  # (batch_size x state_dim)
-
-        # TODO: assumes all current actions are available. Needs to fix.
-        action_space = (
-            F.one_hot(torch.arange(0, self._action_dim))
-            .unsqueeze(0)
-            .repeat(self.batch_size, 1, 1)
-        ).to(
-            batch.device
-        )  # (batch_size x action_space_size x action_dim)
-
-        new_policy_dist = self._actor(state_batch)  # (batch_size x action_space_size)
         state_batch_repeated = torch.repeat_interleave(
-            state_batch.unsqueeze(1), self._action_dim, dim=1
+            state_batch.unsqueeze(1),
+            self.action_representation_module.max_number_actions,
+            dim=1,
         )  # (batch_size x action_space_size x state_dim)
+
+        available_actions = (
+            batch.curr_available_actions
+        )  # (batch_size x action_space_size x action_dim)
 
         # get q values of (states, all actions) from twin critics
         q1, q2 = self._critic.get_q_values(
-            state_batch=state_batch_repeated, action_batch=action_space
+            state_batch=state_batch_repeated, action_batch=available_actions
         )
         # clipped double q learning (reduce overestimation bias)
         q = torch.minimum(q1, q2)
 
-        # random ensemble distillation (reduce overestimation bias)
-        # random_index = torch.randint(0, 2, (1,)).item()
-        # q = q1 if random_index == 0 else q2
+        unavailable_actions_mask = (
+            batch.curr_unavailable_actions_mask
+        )  # (batch_size x action_space_size)
+
+        new_policy_dist = self._actor.get_policy_distribution(
+            state_batch=state_batch,
+            available_actions=available_actions,
+            unavailable_actions_mask=unavailable_actions_mask,
+        )  # (batch_size x action_space_size)
 
         state_action_values = q.view(
-            (self.batch_size, self._action_dim)
+            (self.batch_size, self.action_representation_module.max_number_actions)
         )  # (batch_size x action_space_size)
+
+        if unavailable_actions_mask is not None:
+            state_action_values[unavailable_actions_mask] = 0.0
 
         policy_loss = (
             (
                 new_policy_dist
                 * (
-                    self._entropy_coef * torch.log(new_policy_dist)
+                    self._entropy_coef * torch.log(new_policy_dist + 1e-8)
                     - state_action_values
                 )
             )

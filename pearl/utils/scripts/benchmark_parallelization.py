@@ -31,8 +31,8 @@ from pearl.utils.scripts.benchmark_config import (
     benchmark_halfcheetah_v4,
     benchmark_hopper_v4,
     benchmark_walker2d_v4,
-    # test_dynamic_action_space,
     get_env,
+    test_dynamic_action_space,
 )
 
 warnings.filterwarnings("ignore")
@@ -261,20 +261,21 @@ def generate_one_plot(experiment, attributes):
 
 
 if __name__ == "__main__":
-    run(benchmark_cartpole_v1_part_1)
-    generate_plots(benchmark_cartpole_v1_part_1, ["return"])
-    run(benchmark_cartpole_v1_part_2)
-    generate_plots(benchmark_cartpole_v1_part_2, ["return"])
-    run(benchmark_acrobot_v1_part_1)
-    generate_plots(benchmark_acrobot_v1_part_1, ["return"])
-    run(benchmark_acrobot_v1_part_2)
-    generate_plots(benchmark_acrobot_v1_part_2, ["return"])
-    run(benchmark_halfcheetah_v4)
-    generate_plots(benchmark_halfcheetah_v4, ["return"])
-    run(benchmark_ant_v4)
-    generate_plots(benchmark_ant_v4, ["return"])
-    run(benchmark_hopper_v4)
-    generate_plots(benchmark_hopper_v4, ["return"])
-    run(benchmark_walker2d_v4)
-    generate_plots(benchmark_walker2d_v4, ["return"])
-    # run(test_dynamic_action_space)
+    # run(benchmark_cartpole_v1_part_1)
+    # generate_plots(benchmark_cartpole_v1_part_1, ["return"])
+    # run(benchmark_cartpole_v1_part_2)
+    # generate_plots(benchmark_cartpole_v1_part_2, ["return"])
+    # run(benchmark_acrobot_v1_part_1)
+    # generate_plots(benchmark_acrobot_v1_part_1, ["return"])
+    # run(benchmark_acrobot_v1_part_2)
+    # generate_plots(benchmark_acrobot_v1_part_2, ["return"])
+    # run(benchmark_halfcheetah_v4)
+    # generate_plots(benchmark_halfcheetah_v4, ["return"])
+    # run(benchmark_ant_v4)
+    # generate_plots(benchmark_ant_v4, ["return"])
+    # run(benchmark_hopper_v4)
+    # generate_plots(benchmark_hopper_v4, ["return"])
+    # run(benchmark_walker2d_v4)
+    # generate_plots(benchmark_walker2d_v4, ["return"])
+    run(test_dynamic_action_space)
+    generate_plots(test_dynamic_action_space, ["return"])
