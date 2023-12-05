@@ -33,14 +33,14 @@ class FIFOOffPolicyReplayBuffer(TensorBasedReplayBuffer):
     ) -> None:
         (
             curr_available_actions_tensor_with_padding,
-            curr_available_actions_mask,
+            curr_unavailable_actions_mask,
         ) = self._create_action_tensor_and_mask(
             max_number_actions, curr_available_actions
         )
 
         (
             next_available_actions_tensor_with_padding,
-            next_available_actions_mask,
+            next_unavailable_actions_mask,
         ) = self._create_action_tensor_and_mask(
             max_number_actions, next_available_actions
         )
@@ -51,9 +51,9 @@ class FIFOOffPolicyReplayBuffer(TensorBasedReplayBuffer):
                 reward=self._process_single_reward(reward),
                 next_state=self._process_single_state(next_state),
                 curr_available_actions=curr_available_actions_tensor_with_padding,
-                curr_available_actions_mask=curr_available_actions_mask,
+                curr_unavailable_actions_mask=curr_unavailable_actions_mask,
                 next_available_actions=next_available_actions_tensor_with_padding,
-                next_available_actions_mask=next_available_actions_mask,
+                next_unavailable_actions_mask=next_unavailable_actions_mask,
                 done=self._process_single_done(done),
                 cost=self._process_single_cost(cost),
             ).to(self.device)

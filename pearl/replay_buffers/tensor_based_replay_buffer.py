@@ -174,9 +174,9 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         next_state_list = []
         next_action_list = []
         curr_available_actions_list = []
-        curr_available_actions_mask_list = []
+        curr_unavailable_actions_mask_list = []
         next_available_actions_list = []
-        next_available_actions_mask_list = []
+        next_unavailable_actions_mask_list = []
         has_none_cum_reward = False
         for x in transitions:
             state_list.append(x.state)
@@ -195,11 +195,15 @@ class TensorBasedReplayBuffer(ReplayBuffer):
                 next_action_list.append(x.next_action)
             if not is_action_continuous:
                 curr_available_actions_list.append(x.curr_available_actions)
-                curr_available_actions_mask_list.append(x.curr_available_actions_mask)
+                curr_unavailable_actions_mask_list.append(
+                    x.curr_unavailable_actions_mask
+                )
 
             if not is_action_continuous and has_next_available_actions:
                 next_available_actions_list.append(x.next_available_actions)
-                next_available_actions_mask_list.append(x.next_available_actions_mask)
+                next_unavailable_actions_mask_list.append(
+                    x.next_unavailable_actions_mask
+                )
 
         state_batch = torch.cat(state_list)
         action_batch = torch.cat(action_list)
@@ -217,18 +221,18 @@ class TensorBasedReplayBuffer(ReplayBuffer):
             next_state_batch = torch.cat(next_state_list)
         if has_next_action:
             next_action_batch = torch.cat(next_action_list)
-        curr_available_actions_batch, curr_available_actions_mask_batch = None, None
+        curr_available_actions_batch, curr_unavailable_actions_mask_batch = None, None
         if not is_action_continuous:
             curr_available_actions_batch = torch.cat(curr_available_actions_list)
-            curr_available_actions_mask_batch = torch.cat(
-                curr_available_actions_mask_list
+            curr_unavailable_actions_mask_batch = torch.cat(
+                curr_unavailable_actions_mask_list
             )
 
-        next_available_actions_batch, next_available_actions_mask_batch = None, None
+        next_available_actions_batch, next_unavailable_actions_mask_batch = None, None
         if not is_action_continuous and has_next_available_actions:
             next_available_actions_batch = torch.cat(next_available_actions_list)
-            next_available_actions_mask_batch = torch.cat(
-                next_available_actions_mask_list
+            next_unavailable_actions_mask_batch = torch.cat(
+                next_unavailable_actions_mask_list
             )
         return TransitionBatch(
             state=state_batch,
@@ -237,9 +241,9 @@ class TensorBasedReplayBuffer(ReplayBuffer):
             next_state=next_state_batch,
             next_action=next_action_batch,
             curr_available_actions=curr_available_actions_batch,
-            curr_available_actions_mask=curr_available_actions_mask_batch,
+            curr_unavailable_actions_mask=curr_unavailable_actions_mask_batch,
             next_available_actions=next_available_actions_batch,
-            next_available_actions_mask=next_available_actions_mask_batch,
+            next_unavailable_actions_mask=next_unavailable_actions_mask_batch,
             done=done_batch,
             cum_reward=cum_reward_batch,
             cost=cost_batch,

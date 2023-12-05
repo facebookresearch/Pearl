@@ -22,9 +22,9 @@ class Transition:
     next_state: Optional[torch.Tensor] = None
     next_action: Optional[torch.Tensor] = None
     curr_available_actions: Optional[torch.Tensor] = None
-    curr_available_actions_mask: Optional[torch.Tensor] = None
+    curr_unavailable_actions_mask: Optional[torch.Tensor] = None
     next_available_actions: Optional[torch.Tensor] = None
-    next_available_actions_mask: Optional[torch.Tensor] = None
+    next_unavailable_actions_mask: Optional[torch.Tensor] = None
     weight: Optional[torch.Tensor] = None
     cum_reward: Optional[torch.Tensor] = None
     cost: Optional[torch.Tensor] = None
@@ -60,9 +60,9 @@ class TransitionBatch:
     next_state: Optional[torch.Tensor] = None
     next_action: Optional[torch.Tensor] = None
     curr_available_actions: Optional[torch.Tensor] = None
-    curr_available_actions_mask: Optional[torch.Tensor] = None
+    curr_unavailable_actions_mask: Optional[torch.Tensor] = None
     next_available_actions: Optional[torch.Tensor] = None
-    next_available_actions_mask: Optional[torch.Tensor] = None
+    next_unavailable_actions_mask: Optional[torch.Tensor] = None
     weight: Optional[torch.Tensor] = None
     cum_reward: Optional[torch.Tensor] = None
     time_diff: Optional[torch.Tensor] = None
@@ -140,9 +140,13 @@ def filter_batch_by_bootstrap_mask(
         next_state=_filter_tensor(batch.next_state),
         next_action=_filter_tensor(batch.next_action),
         curr_available_actions=_filter_tensor(batch.curr_available_actions),
-        curr_available_actions_mask=_filter_tensor(batch.curr_available_actions_mask),
+        curr_unavailable_actions_mask=_filter_tensor(
+            batch.curr_unavailable_actions_mask
+        ),
         next_available_actions=_filter_tensor(batch.next_available_actions),
-        next_available_actions_mask=_filter_tensor(batch.next_available_actions_mask),
+        next_unavailable_actions_mask=_filter_tensor(
+            batch.next_unavailable_actions_mask
+        ),
         weight=_filter_tensor(batch.weight),
         cum_reward=_filter_tensor(batch.cum_reward),
         cost=_filter_tensor(batch.cost),

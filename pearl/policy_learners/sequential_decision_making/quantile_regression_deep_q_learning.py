@@ -79,8 +79,8 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
             batch.next_available_actions
         )  # shape: (batch_size x action_space_size x action_dim)
 
-        next_available_actions_mask_batch = (
-            batch.next_available_actions_mask
+        next_unavailable_actions_mask_batch = (
+            batch.next_unavailable_actions_mask
         )  # shape: (batch_size x action_space_size)
 
         assert next_state_batch is not None
@@ -110,7 +110,7 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
         )  # shape: (batch_size, action_space_size)
 
         # make sure that unavailable actions' Q values are assigned to -inf
-        next_state_action_values[next_available_actions_mask_batch] = -float("inf")
+        next_state_action_values[next_unavailable_actions_mask_batch] = -float("inf")
 
         """
         Step 2: choose the greedy action for each state

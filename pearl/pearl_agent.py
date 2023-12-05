@@ -166,20 +166,20 @@ class PearlAgent(Agent):
 
         self.replay_buffer.push(
             # pyre-fixme[6]: this can be removed when tabular Q learning test uses tensors
-            current_history,
-            self._latest_action,
-            action_result.reward,
+            state=current_history,
+            action=self._latest_action,
+            reward=action_result.reward,
             # pyre-fixme[6]: this can be removed when tabular Q learning test uses tensors
-            new_history,
-            self._action_space,  # curr_available_actions
-            self._action_space
+            next_state=new_history,
+            curr_available_actions=self._action_space,  # curr_available_actions
+            next_available_actions=self._action_space
             if action_result.available_action_space is None
             else action_result.available_action_space,  # next_available_actions
-            action_result.done,
-            self.policy_learner.action_representation_module.max_number_actions
+            done=action_result.done,
+            max_number_actions=self.policy_learner.action_representation_module.max_number_actions
             if not self.policy_learner.is_action_continuous
             else None,  # max number of actions for discrete action space
-            action_result.cost,
+            cost=action_result.cost,
         )
 
         self._action_space = (

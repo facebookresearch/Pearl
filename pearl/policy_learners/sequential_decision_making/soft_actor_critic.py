@@ -126,8 +126,8 @@ class SoftActorCritic(ActorCriticBase):
         next_available_actions_batch = (
             batch.next_available_actions
         )  # (batch_size x action_space_size x action_dim)
-        next_available_actions_mask_batch = (
-            batch.next_available_actions_mask
+        next_unavailable_actions_mask_batch = (
+            batch.next_unavailable_actions_mask
         )  # (batch_size x action_space_size)
 
         assert next_state_batch is not None
@@ -158,7 +158,7 @@ class SoftActorCritic(ActorCriticBase):
         # since we are calculating expectation
         # TODO: evaluate if there's a better way to deal with variable action space
         # in actor-critic type of algorithms
-        next_state_action_values[next_available_actions_mask_batch] = 0.0
+        next_state_action_values[next_unavailable_actions_mask_batch] = 0.0
 
         next_state_policy_dist = self._actor(
             next_state_batch

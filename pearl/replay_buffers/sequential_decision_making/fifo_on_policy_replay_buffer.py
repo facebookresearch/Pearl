@@ -32,14 +32,14 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
     ) -> None:
         (
             curr_available_actions_tensor_with_padding,
-            curr_available_actions_mask,
+            curr_unavailable_actions_mask,
         ) = self._create_action_tensor_and_mask(
             max_number_actions, curr_available_actions
         )
 
         (
             next_available_actions_tensor_with_padding,
-            next_available_actions_mask,
+            next_unavailable_actions_mask,
         ) = self._create_action_tensor_and_mask(
             max_number_actions, next_available_actions
         )
@@ -64,9 +64,9 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
                     next_state=self.cache.next_state,
                     next_action=current_action,
                     curr_available_actions=self.cache.curr_available_actions,
-                    curr_available_actions_mask=self.cache.curr_available_actions_mask,
+                    curr_unavailable_actions_mask=self.cache.curr_unavailable_actions_mask,
                     next_available_actions=self.cache.next_available_actions,
-                    next_available_actions_mask=self.cache.next_available_actions_mask,
+                    next_unavailable_actions_mask=self.cache.next_unavailable_actions_mask,
                     done=self.cache.done,
                 ).to(self.device)
             )
@@ -78,9 +78,9 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
                 reward=self._process_single_reward(reward),
                 next_state=self._process_single_state(next_state),
                 curr_available_actions=curr_available_actions_tensor_with_padding,
-                curr_available_actions_mask=curr_available_actions_mask,
+                curr_unavailable_actions_mask=curr_unavailable_actions_mask,
                 next_available_actions=next_available_actions_tensor_with_padding,
-                next_available_actions_mask=next_available_actions_mask,
+                next_unavailable_actions_mask=next_unavailable_actions_mask,
                 done=self._process_single_done(done),
             ).to(self.device)
         else:
@@ -94,9 +94,9 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
                     # this value doesnt matter, use current_action for same shape
                     next_action=current_action,
                     curr_available_actions=curr_available_actions_tensor_with_padding,
-                    curr_available_actions_mask=curr_available_actions_mask,
+                    curr_unavailable_actions_mask=curr_unavailable_actions_mask,
                     next_available_actions=next_available_actions_tensor_with_padding,
-                    next_available_actions_mask=next_available_actions_mask,
+                    next_unavailable_actions_mask=next_unavailable_actions_mask,
                     done=self._process_single_done(done),
                 ).to(self.device)
             )

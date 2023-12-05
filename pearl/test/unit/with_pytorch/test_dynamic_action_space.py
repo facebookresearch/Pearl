@@ -58,7 +58,7 @@ class TestDynamicActionSpaceReplayBuffer(unittest.TestCase):
         )
         batch = replay_buffer.sample(1)
         current_available_actions = batch.curr_available_actions
-        current_available_actions_mask = batch.curr_available_actions_mask
+        current_available_actions_mask = batch.curr_unavailable_actions_mask
         self.assertIsNotNone(current_available_actions)
         self.assertTrue(
             torch.equal(
@@ -75,7 +75,7 @@ class TestDynamicActionSpaceReplayBuffer(unittest.TestCase):
         )
 
         next_available_actions = batch.next_available_actions
-        next_available_actions_mask = batch.next_available_actions_mask
+        next_unavailable_actions_mask = batch.next_unavailable_actions_mask
         self.assertIsNotNone(next_available_actions)
         self.assertTrue(
             torch.equal(
@@ -83,10 +83,10 @@ class TestDynamicActionSpaceReplayBuffer(unittest.TestCase):
                 torch.tensor([[[0.0], [3.0], [0.0], [0.0], [0.0]]]),
             )
         )
-        self.assertIsNotNone(next_available_actions_mask)
+        self.assertIsNotNone(next_unavailable_actions_mask)
         self.assertTrue(
             torch.equal(
-                next_available_actions_mask,
+                next_unavailable_actions_mask,
                 torch.tensor([[False, False, True, True, True]]),
             )
         )
@@ -100,7 +100,7 @@ class TestDynamicActionSpaceReplayBuffer(unittest.TestCase):
 
         batch = policy_learner.preprocess_batch(batch)
         current_available_actions = batch.curr_available_actions
-        current_available_actions_mask = batch.curr_available_actions_mask
+        current_unavailable_actions_mask = batch.curr_unavailable_actions_mask
         self.assertIsNotNone(current_available_actions)
         self.assertTrue(
             torch.equal(
@@ -118,16 +118,16 @@ class TestDynamicActionSpaceReplayBuffer(unittest.TestCase):
                 ),
             )
         )
-        self.assertIsNotNone(current_available_actions_mask)
+        self.assertIsNotNone(current_unavailable_actions_mask)
         self.assertTrue(
             torch.equal(
-                current_available_actions_mask,
+                current_unavailable_actions_mask,
                 torch.tensor([[False, False, False, True, True]]),
             )
         )
 
         next_available_actions = batch.next_available_actions
-        next_available_actions_mask = batch.next_available_actions_mask
+        next_unavailable_actions_mask = batch.next_unavailable_actions_mask
         self.assertIsNotNone(next_available_actions)
         self.assertTrue(
             torch.equal(
@@ -145,10 +145,10 @@ class TestDynamicActionSpaceReplayBuffer(unittest.TestCase):
                 ),
             )
         )
-        self.assertIsNotNone(next_available_actions_mask)
+        self.assertIsNotNone(next_unavailable_actions_mask)
         self.assertTrue(
             torch.equal(
-                next_available_actions_mask,
+                next_unavailable_actions_mask,
                 torch.tensor([[False, False, True, True, True]]),
             )
         )

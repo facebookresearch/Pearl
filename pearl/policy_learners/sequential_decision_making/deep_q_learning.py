@@ -53,7 +53,7 @@ class DeepQLearning(DeepTDLearning):
         (
             next_state,
             next_available_actions,
-            next_available_actions_mask,
+            next_unavailable_actions_mask,
         ) = self._prepare_next_state_action_batch(batch)
 
         assert next_available_actions is not None
@@ -64,7 +64,7 @@ class DeepQLearning(DeepTDLearning):
         # (batch_size x action_space_size)
 
         # Make sure that unavailable actions' Q values are assigned to -inf
-        next_state_action_values[next_available_actions_mask] = -float("inf")
+        next_state_action_values[next_unavailable_actions_mask] = -float("inf")
 
         # Torch.max(1) returns value, indices
         return next_state_action_values.max(1)[0]  # (batch_size)
@@ -78,7 +78,7 @@ class DeepQLearning(DeepTDLearning):
         next_available_actions_batch = batch.next_available_actions
         # (batch_size x action_space_size x action_dim)
 
-        next_available_actions_mask_batch = batch.next_available_actions_mask
+        next_unavailable_actions_mask_batch = batch.next_unavailable_actions_mask
         # (batch_size x action_space_size)
 
         assert isinstance(self._action_space, DiscreteActionSpace)
@@ -90,5 +90,5 @@ class DeepQLearning(DeepTDLearning):
         return (
             next_state_batch_repeated,
             next_available_actions_batch,
-            next_available_actions_mask_batch,
+            next_unavailable_actions_mask_batch,
         )

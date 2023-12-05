@@ -26,8 +26,8 @@ class DoubleDQN(DeepQLearning):
         assert next_available_actions_batch is not None
 
         # (batch_size x action_space_size x action_dim)
-        next_available_actions_mask_batch = (
-            batch.next_available_actions_mask
+        next_unavailable_actions_mask_batch = (
+            batch.next_unavailable_actions_mask
         )  # (batch_size x action_space_size)
 
         assert isinstance(self._action_space, DiscreteActionSpace)
@@ -45,7 +45,7 @@ class DoubleDQN(DeepQLearning):
             (batch_size, -1)
         )  # (batch_size x action_space_size)
         # Make sure that unavailable actions' Q values are assigned to -inf
-        next_state_action_values[next_available_actions_mask_batch] = -float("inf")
+        next_state_action_values[next_unavailable_actions_mask_batch] = -float("inf")
 
         # Torch.max(1) returns value, indices
         next_action_indices = next_state_action_values.max(1)[1]  # (batch_size)

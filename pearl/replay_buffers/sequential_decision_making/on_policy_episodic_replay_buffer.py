@@ -36,7 +36,7 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
     ) -> None:
         (
             curr_available_actions_tensor_with_padding,
-            curr_available_actions_mask,
+            curr_unavailable_actions_mask,
         ) = self._create_action_tensor_and_mask(
             max_number_actions, curr_available_actions
         )
@@ -52,9 +52,9 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
                 cum_reward=None,
                 next_state=None,
                 curr_available_actions=curr_available_actions_tensor_with_padding,
-                curr_available_actions_mask=curr_available_actions_mask,
+                curr_unavailable_actions_mask=curr_unavailable_actions_mask,
                 next_available_actions=None,
-                next_available_actions_mask=None,
+                next_unavailable_actions_mask=None,
                 done=self._process_single_done(done),
             ).to(self.device)
         )
