@@ -16,11 +16,9 @@ class SafetyModule(ABC):
     """
 
     @abstractmethod
-    def filter_action(self, subjective_state: SubjectiveState) -> ActionSpace:
-        pass
-
-    @abstractmethod
-    def reset(self, action_space: ActionSpace) -> None:
+    def filter_action(
+        self, subjective_state: SubjectiveState, action_space: ActionSpace
+    ) -> ActionSpace:
         pass
 
     @abstractmethod

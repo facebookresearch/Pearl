@@ -84,8 +84,8 @@ class IntegrationTests(unittest.TestCase):
         num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                env.observation_space.shape[0],
-                env.action_space,
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
                 action_representation_module=OneHotActionTensorRepresentationModule(
@@ -151,8 +151,8 @@ class IntegrationTests(unittest.TestCase):
         num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=DoubleDQN(
-                env.observation_space.shape[0],
-                env.action_space,
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
                 action_representation_module=OneHotActionTensorRepresentationModule(
@@ -183,8 +183,8 @@ class IntegrationTests(unittest.TestCase):
         num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=DeepSARSA(
-                env.observation_space.shape[0],
-                env.action_space,
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
                 hidden_dims=[64, 64],
                 training_rounds=20,
                 action_representation_module=OneHotActionTensorRepresentationModule(
@@ -214,8 +214,8 @@ class IntegrationTests(unittest.TestCase):
         num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=REINFORCE(
-                env.observation_space.shape[0],
-                env.action_space,
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
                 actor_hidden_dims=[64, 64],
                 critic_hidden_dims=[64, 64],
                 training_rounds=1,
@@ -252,8 +252,8 @@ class IntegrationTests(unittest.TestCase):
         )
         agent = PearlAgent(
             policy_learner=DeepQLearning(
-                env.observation_space.shape[0],
-                env.action_space,
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
                 training_rounds=20,
                 network_instance=q_network,
                 batch_size=batch_size,

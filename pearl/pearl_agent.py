@@ -117,10 +117,15 @@ class PearlAgent(Agent):
         self.history_summarization_module.to(self.device)
 
     def act(self, exploit: bool = False) -> Action:
-        # pyre-fixme[6]: contextual bandit environments use subjective state None
         # We need to adapt that to use Tensors, or instead revert equalling
         # SubjectiveState to None.
-        safe_action_space = self.safety_module.filter_action(self._subjective_state)
+        assert self._action_space is not None
+        safe_action_space = self.safety_module.filter_action(
+            # pyre-fixme[6]: contextual bandit environments use subjective state None
+            self._subjective_state,
+            self._action_space,
+        )
+
         # PolicyLearner requires all tensor inputs to be already on the correct device
         # before being passed to it.
         subjective_state_to_be_used = (
@@ -132,7 +137,7 @@ class PearlAgent(Agent):
         # TODO: The following code is too specific to be at this high-level.
         # This needs to be moved to a better place.
         if (
-            isinstance(self._action_space, DiscreteActionSpace)
+            isinstance(safe_action_space, DiscreteActionSpace)
             and self.policy_learner.requires_tensors
         ):
             assert isinstance(safe_action_space, DiscreteActionSpace)
@@ -212,7 +217,6 @@ class PearlAgent(Agent):
         self._latest_action = None
         self._subjective_state = self._update_subjective_state(observation)
         self._action_space = available_action_space
-        self.safety_module.reset(available_action_space)
         self.policy_learner.reset(available_action_space)
 
     def _update_subjective_state(

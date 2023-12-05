@@ -82,6 +82,7 @@ from pearl.user_envs import (
     PuckWorldSafetyWrapper,
     PuckWorldSparseRewardWrapper,
 )
+from pearl.user_envs.wrappers.dynamic_action_env import DynamicActionSpaceWrapper
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 
 
@@ -537,6 +538,9 @@ all_continuous_control_w_cost_envs = [
     "Hopper-v4_w_cost",
     "Walker2d-v4_w_cost",
 ]
+all_dynamic_action_space_envs = [
+    "Acrobot-DynamicAction-v1",
+]
 classic_continuous_control_envs = [
     "MountainCarContinuous-v0",
     "Pendulum-v1",
@@ -752,6 +756,24 @@ test_qrdqn = [
     ]
 ]
 
+test_dynamic_action_space = [
+    {
+        "exp_name": "test_dynamic_action",
+        "env_name": env_name,
+        "num_runs": 1,
+        "num_steps": classic_control_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            DQN_method,
+        ],
+        "device_id": 0,
+    }
+    for env_name in [
+        "Acrobot-DynamicAction-v1",
+    ]
+]
+
 
 def get_env(env_name: str) -> GymEnvironment:
     """
@@ -799,6 +821,8 @@ def get_env(env_name: str) -> GymEnvironment:
         return GymEnvironment(
             PuckWorldPartialObservableWrapper(gym.make("PuckWorld-PLE-500-v0"))
         )
+    elif env_name == "Acrobot-DynamicAction-v1":
+        return GymEnvironment(DynamicActionSpaceWrapper(gym.make("Acrobot-v1")))
     elif env_name[-7:] == "_w_cost":
         env_name = env_name[:-7]
         return GymEnvironment(GymAvgTorqueWrapper(gym.make(env_name)))

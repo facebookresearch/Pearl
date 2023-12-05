@@ -26,8 +26,8 @@ class DeepQLearning(DeepTDLearning):
     def __init__(
         self,
         state_dim: int,
-        action_space: ActionSpace,
         learning_rate: float = 0.001,
+        action_space: Optional[ActionSpace] = None,
         exploration_module: Optional[ExplorationModule] = None,
         soft_update_tau: float = 1.0,  # no soft update
         action_representation_module: Optional[ActionRepresentationModule] = None,

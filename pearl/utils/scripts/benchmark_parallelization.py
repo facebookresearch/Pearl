@@ -31,6 +31,7 @@ from pearl.utils.scripts.benchmark_config import (
     benchmark_halfcheetah_v4,
     benchmark_hopper_v4,
     benchmark_walker2d_v4,
+    # test_dynamic_action_space,
     get_env,
 )
 
@@ -273,3 +274,4 @@ if __name__ == "__main__":
     generate_plots(benchmark_hopper_v4, ["return"])
     run(benchmark_walker2d_v4)
     generate_plots(benchmark_walker2d_v4, ["return"])
+    # run(test_dynamic_action_space)

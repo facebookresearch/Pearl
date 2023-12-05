@@ -59,8 +59,10 @@ class RewardConstrainedSafetyModule(SafetyModule):
         lambda_update = min(lambda_update, self.lambda_constraint_ub_value)
         self.lambda_constraint = lambda_update
 
-    def filter_action(self, subjective_state: SubjectiveState) -> ActionSpace:
-        return self._action_space
+    def filter_action(
+        self, subjective_state: SubjectiveState, action_space: ActionSpace
+    ) -> ActionSpace:
+        return action_space
 
     def learn_batch(self, batch: TransitionBatch) -> None:
         pass

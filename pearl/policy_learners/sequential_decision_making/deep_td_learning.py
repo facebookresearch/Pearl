@@ -1,6 +1,6 @@
 import copy
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -16,6 +16,7 @@ from pearl.history_summarization_modules.history_summarization_module import (
 from pearl.neural_networks.common.utils import update_target_network
 
 from pearl.neural_networks.common.value_networks import (
+    DuelingQValueNetwork,
     TwoTowerQValueNetwork,
     VanillaQValueNetwork,
 )
@@ -51,7 +52,7 @@ class DeepTDLearning(PolicyLearner):
         exploration_module: ExplorationModule,
         on_policy: bool,
         action_space: Optional[ActionSpace] = None,
-        hidden_dims: Optional[Iterable[int]] = None,
+        hidden_dims: Optional[List[int]] = None,
         learning_rate: float = 0.001,
         discount_factor: float = 0.99,
         training_rounds: int = 100,
@@ -78,6 +79,7 @@ class DeepTDLearning(PolicyLearner):
             on_policy=on_policy,
             is_action_continuous=False,
             action_representation_module=action_representation_module,
+            action_space=action_space,
         )
         self._action_space = action_space
         self._learning_rate = learning_rate
@@ -87,12 +89,9 @@ class DeepTDLearning(PolicyLearner):
         self._is_conservative = is_conservative
         self._conservative_alpha = conservative_alpha
 
-        # TODO: Assumes Gym interface, fix it.
-        def make_specified_network(action_space: ActionSpace) -> QValueNetwork:
-            assert isinstance(action_space, DiscreteActionSpace)
-            if network_type == TwoTowerQValueNetwork:
-                # pyre-ignore[45]:
-                # Pyre does not know that `network_type` is asserted to be concrete
+        def make_specified_network() -> QValueNetwork:
+            assert hidden_dims is not None
+            if network_type is TwoTowerQValueNetwork:
                 return network_type(
                     state_dim=state_dim,
                     action_dim=self._action_representation_module.representation_dim,
@@ -104,8 +103,10 @@ class DeepTDLearning(PolicyLearner):
                     output_dim=1,
                 )
             else:
-                # pyre-ignore[45]:
-                # Pyre does not know that `network_type` is asserted to be concrete
+                assert (
+                    network_type is VanillaQValueNetwork
+                    or network_type is DuelingQValueNetwork
+                )
                 return network_type(
                     state_dim=state_dim,
                     action_dim=self._action_representation_module.representation_dim,
@@ -116,12 +117,7 @@ class DeepTDLearning(PolicyLearner):
         if network_instance is not None:
             self._Q: QValueNetwork = network_instance
         else:
-            assert hidden_dims is not None
-            if action_space is None:
-                raise ValueError(
-                    "Instantiating a `TwoTowerQValueNetwork` requires an action space."
-                )
-            self._Q = make_specified_network(action_space=action_space)
+            self._Q = make_specified_network()
 
         self._Q_target: QValueNetwork = copy.deepcopy(self._Q)
         self._optimizer: torch.optim.Optimizer = optim.AdamW(

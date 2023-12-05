@@ -129,6 +129,11 @@ class GymEnvironment(Environment):
         else:
             cost = None
 
+        if "available_action_space" in info.keys():
+            available_action_space = info["available_action_space"]
+        else:
+            available_action_space = None
+
         if isinstance(observation, np.ndarray):
             observation = observation.astype(np.float32)
         if isinstance(reward, np.float64):
@@ -143,6 +148,7 @@ class GymEnvironment(Environment):
             truncated=truncated,
             info=info,
             cost=cost,
+            available_action_space=available_action_space,
         )
 
     # pyre-fixme[3]: Return type must be annotated.
