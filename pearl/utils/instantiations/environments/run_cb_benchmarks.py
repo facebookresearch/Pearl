@@ -228,7 +228,7 @@ def run_experiments(
     write_to_manifold(manifold_path_name, df_regrets)
 
 
-if __name__ == "__main__":
+def main() -> None:
     MANIFOLD_PATH: str = "manifold://cb_datasets/tree/uci_datasets"
     save_experiments_path: str = os.path.join(MANIFOLD_PATH, "experiments")
 
@@ -327,3 +327,7 @@ if __name__ == "__main__":
         dataset_name=dataset_name,
         run_offline=algorithm == "OfflineEval",
     )
+
+
+if __name__ == "__main__":
+    main()  # pragma: no cover
