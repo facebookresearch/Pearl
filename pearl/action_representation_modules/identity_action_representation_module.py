@@ -14,3 +14,7 @@ class IdentityActionRepresentationModule(ActionRepresentationModule):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x
+
+    @property
+    def max_number_actions(self) -> int:
+        return self._max_number_actions

@@ -73,7 +73,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 batch_size=1,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=num_actions
+                max_number_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
@@ -96,7 +96,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 is_conservative=True,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=num_actions
+                max_number_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
@@ -125,7 +125,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 batch_size=batch_size,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=num_actions
+                max_number_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
@@ -153,7 +153,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 batch_size=1,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=num_actions
+                max_number_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )

@@ -154,7 +154,7 @@ class PearlLSTMDQN(Evaluation):
         action_space = env.action_space
         assert isinstance(action_space, DiscreteActionSpace)
         action_representation_module = OneHotActionTensorRepresentationModule(
-            max_actions=action_space.n
+            max_number_actions=action_space.n
         )
         history_summarization_module = LSTMHistorySummarizationModule(
             observation_dim=env.observation_space.shape[0],

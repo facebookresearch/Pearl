@@ -32,7 +32,7 @@ class TestDeepTDLearning(unittest.TestCase):
             actions=list(torch.arange(self.action_count).view(-1, 1))
         )
         self.action_representation_module = OneHotActionTensorRepresentationModule(
-            max_actions=3
+            max_number_actions=3
         )
         buffer = FIFOOffPolicyReplayBuffer(self.batch_size)
         for _ in range(self.batch_size):

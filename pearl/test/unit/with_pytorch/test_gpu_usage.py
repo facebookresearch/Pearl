@@ -47,7 +47,7 @@ class TestGPUUsage(unittest.TestCase):
                 batch_size=1,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=num_actions
+                max_number_actions=num_actions
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(10000),
         )
@@ -77,7 +77,7 @@ class TestGPUUsage(unittest.TestCase):
                 epsilon=0.1,
             ),
             action_representation_module=OneHotActionTensorRepresentationModule(
-                max_actions=num_actions
+                max_number_actions=num_actions
             ),
             replay_buffer=OnPolicyEpisodicReplayBuffer(10000),
         )

@@ -37,7 +37,7 @@ class TestOfflineCQL(unittest.TestCase):
         env = GymEnvironment("CartPole-v1")
         assert isinstance(env.action_space, DiscreteActionSpace)
         action_representation_module = OneHotActionTensorRepresentationModule(
-            max_actions=env.action_space.n
+            max_number_actions=env.action_space.n
         )
 
         onlineDQN_agent = PearlAgent(
