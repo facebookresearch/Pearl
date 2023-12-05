@@ -192,7 +192,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
             action_result = env.step(action)
             agent.observe(action_result)
             agent.learn()
-            # pyre-fixme[16]: `Number` has no attribute `squeeze`.
+            assert isinstance(regret, torch.Tensor)
             regrets.append(regret.squeeze().item())
 
         # to test learning ability of linear contextual bandits we check

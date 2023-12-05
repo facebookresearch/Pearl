@@ -11,8 +11,7 @@ from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpac
 
 
 class TestFifoBuffer(unittest.TestCase):
-    # pyre-fixme[3]: Return type must be annotated.
-    def setUp(self):
+    def setUp(self) -> None:
         self.batch_size = 3
         state_dim = 10
         action_dim = 3
@@ -72,19 +71,17 @@ class TestFifoBuffer(unittest.TestCase):
             )
         )
         self.assertTrue(torch.equal(batch.reward, torch.tensor([self.rewards[0]])))
+        assert (batch_next_state := batch.next_state) is not None
         self.assertTrue(
             torch.equal(
-                # pyre-fixme[6]: For 1st argument expected `Tensor` but got
-                #  `Optional[Tensor]`.
-                batch.next_state,
+                batch_next_state,
                 self.next_states[0].view(1, -1),
             )
         )
+        assert (batch_next_action := batch.next_action) is not None
         self.assertTrue(
             torch.equal(
-                # pyre-fixme[6]: For 1st argument expected `Tensor` but got
-                #  `Optional[Tensor]`.
-                batch.next_action,
+                batch_next_action,
                 torch.tensor([self.actions[1]]),
             )
         )

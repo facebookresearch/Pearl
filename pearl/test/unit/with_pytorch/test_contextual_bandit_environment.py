@@ -27,10 +27,11 @@ class TestContextualBanditEnvironment(unittest.TestCase):
             action_space.n,
             self.env.arm_feature_vector_dim,
         )
-        observation, action_space = self.env.reset()
+        observation, _ = self.env.reset()
+        assert isinstance(observation, torch.Tensor)
         assert observation.shape == torch.Size([self.env.observation_dim])
         assert action_space.n == self.number_of_actions
         if action_space.n > 0:
             reward = self.env.get_reward(action=torch.tensor(0))
-            # pyre-fixme[16]: `Number` has no attribute `shape`.
+            assert isinstance(reward, torch.Tensor)
             assert reward.shape == torch.Size([1])  # reward is scalar

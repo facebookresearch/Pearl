@@ -2,6 +2,7 @@ import io
 import logging
 import os
 import sys
+from logging import Logger
 from typing import List, Optional
 
 import requests
@@ -15,7 +16,6 @@ except ImportError:
         "a url directly won't work inside meta"
     )
 
-from pearl.api.agent import Agent
 from pearl.api.environment import Environment
 from pearl.pearl_agent import PearlAgent
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
@@ -35,15 +35,12 @@ CORP_ENDPOINT = "https://npm.thefacebook.com/"
 
 FB_CA_BUNDLE = "/var/facebook/rootcanal/ca.pem"
 
-# pyre-fixme[5]: Global expression must be annotated.
-logger = logging.getLogger(__name__)
+logger: Logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[2]: Parameter must be annotated.
-def is_file_readable(file_path):
+def is_file_readable(file_path: str) -> bool:
     return os.path.isfile(file_path) and os.access(file_path, os.R_OK)
 
 
@@ -159,7 +156,7 @@ def offline_learning(
 
 
 def offline_evaluation(
-    offline_agent: Agent,
+    offline_agent: PearlAgent,
     env: Environment,
     number_of_episodes: int = 1000,
     seed: Optional[int] = None,

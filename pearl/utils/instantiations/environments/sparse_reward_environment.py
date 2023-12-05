@@ -15,8 +15,7 @@ There are 2 versions in this file:
 import math
 import random
 from abc import abstractmethod
-from collections import namedtuple
-from typing import Optional
+from typing import List, Optional, Tuple
 
 import torch
 
@@ -27,30 +26,21 @@ from pearl.api.action_space import ActionSpace
 from pearl.api.environment import Environment
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
-# pyre-fixme[4]: Attribute annotation cannot be `Any`.
-# pyre-fixme[2]: Parameter annotation cannot be `Any`.
-SparseRewardEnvironmentObservation = namedtuple(
-    "SparseRewardEnvironmentObservation", ["agent_position", "goal"]
-)
-
 
 class SparseRewardEnvironment(Environment):
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         length: float,
         height: float,
         max_episode_duration: int = 500,
         reward_distance: float = 1,
-    ):
+    ) -> None:
         self._length = length
         self._height = height
         self._max_episode_duration = max_episode_duration
         # reset will initialize following
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._agent_position = None
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._goal = None
+        self._agent_position: Optional[Tuple[float, float]] = None
+        self._goal: Optional[Tuple[float, float]] = None
         self._step_count = 0
         self._reward_distance = reward_distance
 
@@ -58,25 +48,25 @@ class SparseRewardEnvironment(Environment):
     def step(self, action: Action) -> ActionResult:
         pass
 
-    def reset(
-        self, seed: Optional[int] = None
-    ) -> (SparseRewardEnvironmentObservation, ActionSpace):  # pyre-fixme[31]: Expression `ActionSpace)` is not a valid type.
+    def reset(self, seed: Optional[int] = None) -> Tuple[torch.Tensor, ActionSpace]:
 
         # reset (x, y)
         self._agent_position = (self._length / 2, self._height / 2)
         self._goal = (random.uniform(0, self._length), random.uniform(0, self._height))
         self._step_count = 0
+        assert self._agent_position is not None
+        assert (goal := self._goal) is not None
         return (
-            torch.tensor(list(self._agent_position) + list(self._goal)),
+            torch.tensor(list(self._agent_position) + list(goal)),
             self.action_space,
         )
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _update_position(self, delta) -> None:
+    def _update_position(self, delta: Tuple[float, float]) -> None:
         """
         This API is to update and clip and ensure agent always stay in map
         """
         delta_x, delta_y = delta
+        assert self._agent_position is not None
         x, y = self._agent_position
         self._agent_position = (
             max(min(x + delta_x, self._length), 0),
@@ -89,6 +79,8 @@ class SparseRewardEnvironment(Environment):
             True if reached goal
             False if not reached goal
         """
+        assert self._agent_position is not None
+        assert self._goal is not None
         if math.dist(self._agent_position, self._goal) < self._reward_distance:
             return True
         return False
@@ -101,24 +93,25 @@ class ContinuousSparseRewardEnvironment(SparseRewardEnvironment):
     """
 
     def step(self, action: Action) -> ActionResult:
-        self._update_position(action)
+        assert isinstance(action, torch.Tensor)
+        self._update_position((action[0].item(), action[1].item()))
 
         has_win = self._check_win()
         self._step_count += 1
         terminated = has_win or self._step_count >= self._max_episode_duration
+        assert self._agent_position is not None
+        assert (goal := self._goal) is not None
         return ActionResult(
-            observation=torch.tensor(list(self._agent_position) + list(self._goal)),
+            observation=torch.tensor(list(self._agent_position) + list(goal)),
             reward=0 if has_win else -1,
             terminated=terminated,
             truncated=False,
-            # pyre-fixme[6]: For 5th argument expected `Dict[typing.Any,
-            #  typing.Any]` but got `None`.
-            info=None,
         )
 
     @property
     def action_space(self) -> ActionSpace:
         # pyre-fixme[7]: Expected `ActionSpace` but got `None`.
+        # FIXME: does this really do not have an action space?
         return None
 
 
@@ -130,8 +123,7 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
     y +=  sin(360/N * n) * step_size
     """
 
-    # TODO: This environment mixes the concepts of action index and action feature. Fix.
-    # pyre-fixme[3]: Return type must be annotated.
+    # FIXME: This environment mixes the concepts of action index and action feature.
     def __init__(
         self,
         length: float,
@@ -139,9 +131,8 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
         step_size: float = 0.01,
         action_count: int = 4,
         max_episode_duration: int = 500,
-        # pyre-fixme[9]: reward_distance has type `float`; used as `None`.
-        reward_distance: float = None,
-    ):
+        reward_distance: Optional[float] = None,
+    ) -> None:
         super(DiscreteSparseRewardEnvironment, self).__init__(
             length,
             height,
@@ -150,8 +141,7 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
         )
         self._step_size = step_size
         self._action_count = action_count
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._actions = [
+        self._actions: List[torch.Tensor] = [
             torch.tensor(
                 [
                     math.cos(2 * math.pi / self._action_count * i),

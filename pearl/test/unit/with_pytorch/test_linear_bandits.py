@@ -17,8 +17,7 @@ from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpac
 
 
 class TestLinearBandits(unittest.TestCase):
-    # pyre-fixme[3]: Return type must be annotated.
-    def setUp(self):
+    def setUp(self) -> None:
         self.policy_learner = LinearBandit(
             feature_dim=4,
             exploration_module=UCBExploration(alpha=0),

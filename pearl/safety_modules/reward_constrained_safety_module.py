@@ -1,4 +1,6 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+from typing import Optional
+
 import torch
 from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
@@ -29,8 +31,7 @@ class RewardConstrainedSafetyModule(SafetyModule):
         self.lambda_constraint_ub_value = lambda_constraint_ub_value
         self.lambda_constraint = lambda_constraint_init_value
         self.batch_size = batch_size
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._action_space = None
+        self._action_space: Optional[ActionSpace] = None
 
     def learn(self, replay_buffer: ReplayBuffer, policy_learner: PolicyLearner) -> None:
         if len(replay_buffer) < self.batch_size or len(replay_buffer) == 0:

@@ -7,7 +7,6 @@ from iopath.common.file_io import PathManager
 from iopath.fb.manifold import ManifoldPathHandler
 
 from pearl.api.action import Action
-from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
 
 from pearl.api.observation import Observation
@@ -34,7 +33,6 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
     and the arm feature vevctor.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         action_space: ActionSpace,
@@ -42,7 +40,7 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         arm_feature_vector_dim: int = 4,
         reward_noise_sigma: float = 0.0,
         simple_linear_mapping: bool = False,
-    ):
+    ) -> None:
         """
         Args:
             action_space (ActionSpace): the environment's action space
@@ -60,10 +58,9 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         self.reward_noise_sigma = reward_noise_sigma
         self._simple_linear_mapping = simple_linear_mapping
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._features_of_all_arms = self._generate_features_of_all_arms()
-        # pyre-fixme[4]: Attribute must be annotated.
-        self._linear_mapping = self._make_initial_linear_mapping()
+        self._features_of_all_arms: torch.Tensor = self._generate_features_of_all_arms()
+        self._linear_mapping: torch.nn.Module = self._make_initial_linear_mapping()
+        self._observation: Optional[torch.Tensor] = None
 
     @property
     def action_space(self) -> ActionSpace:
@@ -81,8 +78,7 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
     def linear_mapping(self) -> torch.nn.Module:
         return self._linear_mapping
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def _generate_features_of_all_arms(self):
+    def _generate_features_of_all_arms(self) -> torch.Tensor:
         features_of_all_arms = torch.rand(
             self._action_space.n,
             self.arm_feature_vector_dim,
@@ -102,13 +98,10 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
             out_features=1,
         )
 
-    # pyre-fixme[31]: Expression `ActionSpace)` is not a valid type.
-    def reset(self, seed: Optional[int] = None) -> (Observation, ActionSpace):
+    def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
         """
         Provides the observation and action space to the agent.
         """
-        # pyre-fixme[16]: `ContextualBanditLinearSyntheticEnvironment` has no
-        #  attribute `_observation`.
         self._observation = torch.rand(self.observation_dim)
         return self._observation, self.action_space
 
@@ -134,12 +127,12 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         #  `Iterable[Variable[SupportsRichComparisonT (bound to
         #  Union[SupportsDunderGT[typing.Any], SupportsDunderLT[typing.Any]])]]` but
         #  got `List[Tensor]`.
+        # Requires greater cleanup
         return max(rewards) - rewards[action]
 
     def _get_context_for_arm(self, action: int) -> torch.Tensor:
         assert action in range(self._action_space.n)  # action is index in action_space
-        # pyre-fixme[16]: `ContextualBanditLinearSyntheticEnvironment` has no
-        #  attribute `_observation`.
+        assert self._observation is not None
         return torch.cat([self._observation, self.features_of_all_arms[action]])
 
     def _compute_reward_from_context(
@@ -176,23 +169,11 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         else:
             return reward
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def render(self):
-        # Either print or open rendering of environment (optional).
-        pass
-
-    # pyre-fixme[3]: Return type must be annotated.
-    def close(self):
-        # Close resources (files etc)
-        pass
-
-    # pyre-fixme[3]: Return type must be annotated.
-    def __str__(self):
+    def __str__(self) -> str:
         return "Bandit with reward linearly mapped from context feature vector"
 
 
 class SLCBEnvironment(ContextualBanditEnvironment):
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         manifold_path_filename: str,
@@ -202,10 +183,12 @@ class SLCBEnvironment(ContextualBanditEnvironment):
         action_embeddings: str = "binary_embedding",
         delim_whitespace: bool = False,
         target_column: int = 0,
-        ind_to_drop: List[int] = [],
-    ):
+        ind_to_drop: Optional[List[int]] = None,
+    ) -> None:
+        if ind_to_drop is None:
+            ind_to_drop = []
 
-        #### Load dataset from Manifold
+        # ### Load dataset from Manifold
         pathmgr = PathManager()
         pathmgr.register_handler(
             ManifoldPathHandler(timeout_sec=180), allow_override=True
@@ -239,8 +222,7 @@ class SLCBEnvironment(ContextualBanditEnvironment):
         normalized_data = (tensor[:, 1:] - means) / stds
         tensor[:, 1:] = normalized_data
 
-        # pyre-fixme[6]: For 1st argument expected `Dataset[Variable[T]]` but got
-        #  `Tensor`
+        assert isinstance(tensor, torch.utils.data.Dataset[torch.Tensor])
         train_set, _ = torch.utils.data.random_split(tensor, [1, 0])
         dataloader_tr = torch.utils.data.DataLoader(
             train_set,
@@ -335,18 +317,7 @@ class SLCBEnvironment(ContextualBanditEnvironment):
         """
         return float(action != self._current_label)
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def render(self):
-        # Either print or open rendering of environment (optional).
-        pass
-
-    # pyre-fixme[3]: Return type must be annotated.
-    def close(self):
-        # Close resources (files etc)
-        pass
-
-    # pyre-fixme[3]: Return type must be annotated.
-    def __str__(self):
+    def __str__(self) -> str:
         return "Contextual bandits with CB datasets"
 
 

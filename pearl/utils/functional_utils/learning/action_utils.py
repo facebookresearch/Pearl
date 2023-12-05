@@ -59,7 +59,8 @@ def get_model_actions(
 
     Args:
         scores: A 2D tensor of scores
-        mask [Optional]: A 2D score presence mask. If missing, assuming that all scores are unmasked.
+        mask [Optional]: A 2D score presence mask.
+                         If missing, assuming that all scores are unmasked.
 
     Returns:
         1D tensor of size (batch_size,)

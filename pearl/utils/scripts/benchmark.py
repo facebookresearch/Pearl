@@ -3,7 +3,7 @@
 
 import warnings
 from abc import ABC, abstractmethod
-from typing import Dict, Iterable, List
+from typing import Any, Dict, Iterable, List
 
 from pearl.api.reward import Value
 
@@ -21,7 +21,6 @@ import pickle
 
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 from pearl.action_representation_modules.one_hot_action_representation_module import (
     OneHotActionTensorRepresentationModule,
 )
@@ -57,14 +56,6 @@ from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 
-from tianshou.data import Collector, VectorReplayBuffer
-from tianshou.env import DummyVectorEnv
-from tianshou.policy import DQNPolicy, PPOPolicy
-from tianshou.trainer import offpolicy_trainer, onpolicy_trainer
-from tianshou.utils.net.common import ActorCritic, Net
-from tianshou.utils.net.discrete import Actor, Critic
-from torch import nn
-
 warnings.filterwarnings("ignore")
 
 number_of_episodes = 2000
@@ -84,17 +75,13 @@ class Evaluation(ABC):
         self,
         gym_environment_name: str,
         device_id: int,
-        # pyre-fixme[2]: Parameter must be annotated.
-        *args,
-        # pyre-fixme[2]: Parameter must be annotated.
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         self.gym_environment_name: str = gym_environment_name
         self.device_id: int = device_id
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.args = args
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.kwargs = kwargs
+        self.args: Any = args  # pyre-ignore
+        self.kwargs: Any = kwargs  # pyre-ignore
 
     @abstractmethod
     def evaluate(self, seed: int = 0) -> Iterable[Value]:
@@ -107,10 +94,8 @@ class PearlDQN(Evaluation):
         self,
         gym_environment_name: str,
         device_id: int,
-        # pyre-fixme[2]: Parameter must be annotated.
-        *args,
-        # pyre-fixme[2]: Parameter must be annotated.
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         super(PearlDQN, self).__init__(gym_environment_name, device_id, *args, **kwargs)
 
@@ -146,10 +131,8 @@ class PearlLSTMDQN(Evaluation):
         self,
         gym_environment_name: str,
         device_id: int,
-        # pyre-fixme[2]: Parameter must be annotated.
-        *args,
-        # pyre-fixme[2]: Parameter must be annotated.
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         super(PearlDQN, self).__init__(gym_environment_name, device_id, *args, **kwargs)
 
@@ -193,10 +176,8 @@ class PearlContinuousSAC(Evaluation):
         self,
         gym_environment_name: str,
         device_id: int,
-        # pyre-fixme[2]: Parameter must be annotated.
-        *args,
-        # pyre-fixme[2]: Parameter must be annotated.
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         super(PearlContinuousSAC, self).__init__(
             gym_environment_name, device_id, *args, **kwargs
@@ -235,10 +216,8 @@ class PearlPPO(Evaluation):
         self,
         gym_environment_name: str,
         device_id: int,
-        # pyre-fixme[2]: Parameter must be annotated.
-        *args,
-        # pyre-fixme[2]: Parameter must be annotated.
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         super(PearlPPO, self).__init__(gym_environment_name, device_id, *args, **kwargs)
 
@@ -277,10 +256,8 @@ class PearlDDPG(Evaluation):
         self,
         gym_environment_name: str,
         device_id: int,
-        # pyre-fixme[2]: Parameter must be annotated.
-        *args,
-        # pyre-fixme[2]: Parameter must be annotated.
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         super(PearlDDPG, self).__init__(
             gym_environment_name, device_id, *args, **kwargs
@@ -320,10 +297,8 @@ class PearlTD3(Evaluation):
         self,
         gym_environment_name: str,
         device_id: int,
-        # pyre-fixme[2]: Parameter must be annotated.
-        *args,
-        # pyre-fixme[2]: Parameter must be annotated.
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         super(PearlTD3, self).__init__(gym_environment_name, device_id, *args, **kwargs)
 
@@ -427,141 +402,6 @@ def generate_plots(
         plt.savefig(filename)
         plt.savefig(dir_name + "/" + filename)
         plt.close()
-
-
-def tianshou_dqn_cart_pole() -> int:
-    """Evaluates a set of algorithms on a set of environments"""
-
-    class Net(nn.Module):
-        def __init__(self, state_shape, action_shape):
-            super().__init__()
-            self.model = nn.Sequential(
-                nn.Linear(np.prod(state_shape), 128),
-                nn.ReLU(inplace=True),
-                nn.Linear(128, 128),
-                nn.ReLU(inplace=True),
-                nn.Linear(128, 128),
-                nn.ReLU(inplace=True),
-                nn.Linear(128, np.prod(action_shape)),
-            )
-
-        def forward(self, obs, state=None, info=None):
-            if not isinstance(obs, torch.Tensor):
-                obs = torch.tensor(obs)
-            batch = obs.shape[0]
-            logits = self.model(obs.view(batch, -1))
-            return logits, state
-
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    # environments
-    env = gym.make("CartPole-v1")
-    # pyre-fixme[6]: For 1st argument expected `List[typing.Callable[[], Env]]` but
-    #  got `List[typing.Callable[[], Env[typing.Any, typing.Any]]]`.
-    train_envs = DummyVectorEnv([lambda: gym.make("CartPole-v1") for _ in range(20)])
-    # pyre-fixme[6]: For 1st argument expected `List[typing.Callable[[], Env]]` but
-    #  got `List[typing.Callable[[], Env[typing.Any, typing.Any]]]`.
-    test_envs = DummyVectorEnv([lambda: gym.make("CartPole-v1") for _ in range(10)])
-
-    # model & optimizer
-    # pyre-fixme[16]: `Space` has no attribute `n`.
-    net = Net(env.observation_space.shape, env.action_space.n).to(device)
-    optim = torch.optim.Adam(net.parameters(), lr=0.0003)
-
-    # DQN policy
-    policy = DQNPolicy(
-        net,
-        optim,
-        action_space=env.action_space,
-        discount_factor=0.99,
-        estimation_step=3,
-        target_update_freq=320,
-    )
-
-    # collector
-    train_collector = Collector(
-        policy,
-        train_envs,
-        VectorReplayBuffer(total_size=20000, buffer_num=20),
-        exploration_noise=True,
-    )
-    test_collector = Collector(policy, test_envs)
-
-    # trainer
-    result = offpolicy_trainer(
-        policy,
-        train_collector,
-        test_collector,
-        max_epoch=10,
-        step_per_epoch=10000,
-        step_per_collect=10,
-        update_per_step=0.1,
-        episode_per_test=100,
-        batch_size=64,
-        train_fn=lambda epoch, env_step: policy.set_eps(0.1),
-        test_fn=lambda epoch, env_step: policy.set_eps(0.05),
-        stop_fn=lambda mean_rewards: mean_rewards >= env.spec.reward_threshold,
-    )
-    print(result)
-    return 0
-
-
-def tianshou_ppo_cart_pole() -> int:
-    """Evaluates a set of algorithms on a set of environments"""
-
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    # environments
-    env = gym.make("CartPole-v1")
-    # pyre-fixme[6]: For 1st argument expected `List[typing.Callable[[], Env]]` but
-    #  got `List[typing.Callable[[], Env[typing.Any, typing.Any]]]`.
-    train_envs = DummyVectorEnv([lambda: gym.make("CartPole-v1") for _ in range(20)])
-    # pyre-fixme[6]: For 1st argument expected `List[typing.Callable[[], Env]]` but
-    #  got `List[typing.Callable[[], Env[typing.Any, typing.Any]]]`.
-    test_envs = DummyVectorEnv([lambda: gym.make("CartPole-v1") for _ in range(10)])
-
-    # model & optimizer
-    # pyre-fixme[6]: For 1st argument expected `Union[Sequence[int], int]` but got
-    #  `Optional[typing.Tuple[int, ...]]`.
-    net = Net(env.observation_space.shape, hidden_sizes=[64, 64], device=device)
-    # pyre-fixme[16]: `Space` has no attribute `n`.
-    actor = Actor(net, env.action_space.n, device=device).to(device)
-    critic = Critic(net, device=device).to(device)
-    actor_critic = ActorCritic(actor, critic)
-    optim = torch.optim.Adam(actor_critic.parameters(), lr=0.0003)
-
-    # PPO policy
-    dist = torch.distributions.Categorical
-    policy = PPOPolicy(
-        actor,
-        critic,
-        optim,
-        dist,
-        action_space=env.action_space,
-        deterministic_eval=True,
-    )
-
-    # collector
-    train_collector = Collector(
-        policy, train_envs, VectorReplayBuffer(20000, len(train_envs))
-    )
-    test_collector = Collector(policy, test_envs)
-
-    # trainer
-    result = onpolicy_trainer(
-        policy,
-        train_collector,
-        test_collector,
-        max_epoch=10,
-        step_per_epoch=50000,
-        repeat_per_collect=10,
-        episode_per_test=10,
-        batch_size=256,
-        step_per_collect=2000,
-        stop_fn=lambda mean_reward: mean_reward >= env.spec.reward_threshold,
-    )
-    print(result)
-    return 0
 
 
 def main(device_id: int = -1) -> None:

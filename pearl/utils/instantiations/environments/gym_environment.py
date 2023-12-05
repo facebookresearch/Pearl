@@ -89,6 +89,7 @@ class GymEnvironment(Environment):
         """Resets the environment and returns the initial observation and
         initial action space."""
         # pyre-fixme: ActionSpace does not have _gym_space
+        # FIXME: private attribute _gym_space should not be accessed
         self._action_space._gym_space.seed(seed)
         self.env.action_space.seed(seed)
         reset_result = self.env.reset()
@@ -151,12 +152,11 @@ class GymEnvironment(Environment):
             available_action_space=available_action_space,
         )
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def render(self):
-        return self.env.render()
+    def render(self) -> None:
+        self.env.render()
 
     def close(self) -> None:
-        return self.env.close()
+        self.env.close()
 
     def __str__(self) -> str:
         return self.env.spec.id

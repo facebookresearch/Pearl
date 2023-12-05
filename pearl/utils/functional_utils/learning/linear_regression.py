@@ -57,7 +57,7 @@ class LinearRegression(nn.Module):
         """
         Compute the quadratic form x^T * A * x for a batched input x.
         The calculation of pred_sigma (uncertainty) in LinUCB is done by quadratic form x^T * A^{-1} * x.
-        Inspired by https://stackoverflow.com/questions/18541851/calculate-vt-a-v-for-a-matrix-of-vectors-v
+        Inspired by https://stackoverflow.com/questions/18541851/calculate-vt-a-v-for-a-matrix-of-vectors-v  # noqa: E501
         This is a vectorized implementation of out[i] = x[i].t() @ A @ x[i]
         x shape: (Batch, Feature_dim)
         A shape: (Feature_dim, Feature_dim)
@@ -86,7 +86,7 @@ class LinearRegression(nn.Module):
         """
         try:
             inv_A = torch.linalg.inv(A).contiguous()
-        # pyre-fixme[16]: Module `_C` has no attribute `_LinAlgError`.
+        # pyre-ignore[16]: Module `_C` has no attribute `_LinAlgError`.
         except torch._C._LinAlgError as e:
             logger.warning(
                 "Exception raised during A inversion, falling back to pseudo-inverse",

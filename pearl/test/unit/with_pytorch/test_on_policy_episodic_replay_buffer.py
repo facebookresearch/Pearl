@@ -12,8 +12,7 @@ from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpac
 
 
 class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
-    # pyre-fixme[3]: Return type must be annotated.
-    def setUp(self):
+    def setUp(self) -> None:
         self.batch_size = 3
         self.capacity = 10
 
@@ -67,7 +66,7 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         order = torch.argsort(batch.state.squeeze())
 
         # validate cumulative return calculation
-        # pyre-fixme
+        assert batch.cum_reward is not None
         returns_buffer = batch.cum_reward[order]
         self.assertTrue(torch.equal(returns_buffer, torch.tensor(self.returns)))
 
@@ -124,7 +123,7 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         order = torch.argsort(batch.state.squeeze())
 
         # validate cumulative return calculation
-        # pyre-fixme
+        assert batch.cum_reward is not None
         returns_buffer = batch.cum_reward[order]
         self.assertTrue(
             torch.equal(
@@ -185,10 +184,10 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
 
         batch = replay_buffer.sample(self.trajectory_len)
         for i in range(len(batch.action)):
+            assert (batch_cum_reward := batch.cum_reward) is not None
             if batch.state[i] == 0:
-                # pyre-fixme
-                self.assertEqual(4 + 8.5 * 0.5, batch.cum_reward[i])
+                self.assertEqual(4 + 8.5 * 0.5, batch_cum_reward[i])
             if batch.state[i] == 1:
-                self.assertEqual(8.5, batch.cum_reward[i])
+                self.assertEqual(8.5, batch_cum_reward[i])
             if batch.state[i] == 2:
-                self.assertEqual(5, batch.cum_reward[i])
+                self.assertEqual(5, batch_cum_reward[i])

@@ -11,14 +11,12 @@ from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
 
 
 class TestTwinCritic(unittest.TestCase):
-    # pyre-fixme[3]: Return type must be annotated.
-    def setUp(self):
+    def setUp(self) -> None:
         self.state_dim = 20
         self.action_dim = 10
         self.batch_size = 128
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def test_twin_critic(self):
+    def test_twin_critic(self) -> None:
         twin_critics = TwinCritic(
             state_dim=self.state_dim,
             action_dim=self.action_dim,

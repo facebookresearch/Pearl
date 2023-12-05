@@ -1,5 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Tuple
+
+from pearl.api.observation import Observation
+from pearl.api.space import Space
+from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
 
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
@@ -18,12 +22,9 @@ from pearl.api.environment import Environment
 
 
 class FixedNumberOfStepsEnvironment(Environment):
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, number_of_steps=100):
+    def __init__(self, number_of_steps: int = 100) -> None:
         self.number_of_steps_so_far = 0
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.number_of_steps = number_of_steps
+        self.number_of_steps: int = number_of_steps
         self._action_space = DiscreteActionSpace(
             [torch.tensor(True), torch.tensor(False)]
         )
@@ -38,20 +39,17 @@ class FixedNumberOfStepsEnvironment(Environment):
             info={},
         )
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def render(self):
+    def render(self) -> None:
         print(self.number_of_steps_so_far)
 
     @property
     def action_space(self) -> ActionSpace:
         return self._action_space
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def reset(self, seed: Optional[int] = None):
+    def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
         return self.number_of_steps_so_far, self.action_space
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __str__(self):
+    def __str__(self) -> str:
         return type(self).__name__
 
 
@@ -62,30 +60,24 @@ class BoxObservationsEnvironmentBase(Environment, ABC):
     This is useful to use with agents expecting tensor observations.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         base_environment: Environment,
-    ):
+    ) -> None:
         self.base_environment = base_environment
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.observation_space = self.make_observation_space(base_environment)
+        self.observation_space: Space = self.make_observation_space(base_environment)
 
     @staticmethod
     @abstractmethod
-    # pyre-fixme[3]: Return type must be annotated.
-    def make_observation_space(base_environment: Environment):
+    def make_observation_space(base_environment: Environment) -> Space:
         pass
 
     @abstractmethod
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def compute_tensor_observation(self, observation):
+    def compute_tensor_observation(self, observation: Observation) -> torch.Tensor:
         pass
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def action_space(self):
+    def action_space(self) -> ActionSpace:
         return self.base_environment.action_space
 
     def step(self, action: Action) -> ActionResult:
@@ -95,18 +87,15 @@ class BoxObservationsEnvironmentBase(Environment, ABC):
         )
         return action_result
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def reset(self, seed: Optional[int] = None):
+    def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
         observation, action_space = self.base_environment.reset(seed=seed)
         return self.compute_tensor_observation(observation), action_space
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.short_description} from {self.base_environment}"
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def short_description(self):
+    def short_description(self) -> str:
         return self.__class__.__name__
 
 
@@ -119,21 +108,20 @@ class BoxObservationsFromDiscrete(BoxObservationsEnvironmentBase):
     This is useful to use with agents expecting tensor observations.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __init__(self, base_environment: Environment):
+    def __init__(self, base_environment: Environment) -> None:
         super(BoxObservationsFromDiscrete, self).__init__(base_environment)
 
     @staticmethod
-    # pyre-fixme[3]: Return type must be annotated.
-    def make_observation_space(base_environment: Environment):
+    def make_observation_space(base_environment: Environment) -> Space:
         low_action = np.array([0])
-        # pyre-fixme[16]: `Environment` has no attribute `observation_space`.
+        # pyre-fixme: need to add this property in Environment
+        # and implement it in all concrete subclasses
+        assert isinstance(base_environment.observation_space, DiscreteSpace)
         high_action = np.array([base_environment.observation_space.n - 1])
+        # pyre-fixme: returning Gym Box but needs to return Pearl Space
         return gym.spaces.Box(low=low_action, high=high_action, shape=(1,))
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def compute_tensor_observation(self, observation):
+    def compute_tensor_observation(self, observation: Observation) -> torch.Tensor:
         return torch.tensor([observation])
 
 
@@ -146,33 +134,33 @@ class OneHotObservationsFromDiscrete(BoxObservationsEnvironmentBase):
     This is useful to use with agents expecting tensor observations.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __init__(self, base_environment: Environment):
+    def __init__(self, base_environment: Environment) -> None:
         super(OneHotObservationsFromDiscrete, self).__init__(base_environment)
 
     @staticmethod
-    # pyre-fixme[3]: Return type must be annotated.
-    def make_observation_space(base_environment: Environment):
-        # pyre-fixme[16]: `Environment` has no attribute `observation_space`.
+    def make_observation_space(base_environment: Environment) -> Space:
+        # pyre-fixme: need to add this property in Environment
+        # and implement it in all concrete subclasses
+        assert isinstance(base_environment.observation_space, DiscreteSpace)
         n = base_environment.observation_space.n
         low = np.full((n,), 0)
         high = np.full((n,), 1)
+        # pyre-fixme: returning Gym Box but needs to return Pearl Space
         return gym.spaces.Box(low=low, high=high, shape=(n,))
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def compute_tensor_observation(self, observation):
+    def compute_tensor_observation(self, observation: Observation) -> torch.Tensor:
         if isinstance(observation, torch.Tensor):
             observation_tensor = observation
         else:
             observation_tensor = torch.tensor(observation)
+        # pyre-fixme: need to add this property in Environment
+        # and implement it in all concrete subclasses
+        assert isinstance(self.base_environment.observation_space, DiscreteSpace)
         return F.one_hot(
             observation_tensor,
-            # pyre-fixme[16]: `Environment` has no attribute `observation_space`.
             self.base_environment.observation_space.n,
         )
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def short_description(self):
+    def short_description(self) -> str:
         return "One-hot observations"

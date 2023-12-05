@@ -16,8 +16,7 @@ class RewardIsEqualToTenTimesActionContextualBanditEnvironment(
     A example implementation of a contextual bandit environment.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __init__(self, action_space: ActionSpace):
+    def __init__(self, action_space: ActionSpace) -> None:
         self._action_space = action_space
 
     @property
@@ -34,16 +33,5 @@ class RewardIsEqualToTenTimesActionContextualBanditEnvironment(
         # In this example, the reward is 10 times the digit representing the action.
         return (action * 10).item()
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def render(self):
-        # Either print or open rendering of environment (optional).
-        pass
-
-    # pyre-fixme[3]: Return type must be annotated.
-    def close(self):
-        # Close resources (files etc)
-        pass
-
-    # pyre-fixme[3]: Return type must be annotated.
-    def __str__(self):
+    def __str__(self) -> str:
         return "Bandit with reward = 10 * action index"

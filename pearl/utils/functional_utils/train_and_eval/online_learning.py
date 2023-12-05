@@ -1,43 +1,37 @@
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-
-from pearl.api.agent import Agent
 from pearl.api.environment import Environment
 from pearl.api.reward import Value
+from pearl.pearl_agent import PearlAgent
 from pearl.utils.functional_utils.experimentation.plots import fontsize_for
 
 MA_WINDOW_SIZE = 10
 
 
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[2]: Parameter must be annotated.
-def latest_moving_average(data):
+def latest_moving_average(data: List[Value]) -> float:
     return (
-        sum(data[-MA_WINDOW_SIZE:]) * 1.0 / MA_WINDOW_SIZE
+        sum(data[-MA_WINDOW_SIZE:]) * 1.0 / MA_WINDOW_SIZE  # pyre-ignore
         if len(data) >= MA_WINDOW_SIZE
-        else sum(data) * 1.0 / len(data)
+        else sum(data) * 1.0 / len(data)  # pyre-ignore
     )
 
 
 def online_learning_to_png_graph(
-    agent: Agent,
+    agent: PearlAgent,
     env: Environment,
-    # pyre-fixme[2]: Parameter must be annotated.
-    filename="returns.png",
-    # pyre-fixme[2]: Parameter must be annotated.
-    number_of_episodes=1000,
-    # pyre-fixme[2]: Parameter must be annotated.
-    learn_after_episode=False,
+    filename: str = "returns.png",
+    number_of_episodes: int = 1000,
+    learn_after_episode: bool = False,
 ) -> None:
     """
     Runs online learning and generates a PNG graph of the returns.
 
     Args:
-        agent (Agent): the agent.
+        agent (PearlAgent): the agent.
         env (Environment): the environment.
         filename (str, optional): the filename to save to. Defaults to "returns.png".
         number_of_episodes (int, optional): the number of episodes to run. Defaults to 1000.
@@ -67,7 +61,7 @@ def online_learning_to_png_graph(
 
 
 def online_learning(
-    agent: Agent,
+    agent: PearlAgent,
     env: Environment,
     number_of_episodes: Optional[int] = None,
     number_of_steps: Optional[int] = None,
@@ -84,10 +78,11 @@ def online_learning(
     Performs online learning for a number of episodes.
 
     Args:
-        agent (Agent): the agent.
+        agent (PearlAgent): the agent.
         env (Environment): the environmnent.
         number_of_episodes (int, optional): the number of episodes to run. Defaults to 1000.
-        learn_after_episode (bool, optional): asks the agent to only learn after every episode. Defaults to False.
+        learn_after_episode (bool, optional): asks the agent to only learn after every episode.
+        Defaults to False.
     """
     assert (number_of_episodes is None and number_of_steps is not None) or (
         number_of_episodes is not None and number_of_steps is None
@@ -113,7 +108,8 @@ def online_learning(
         )
         if number_of_steps is not None and episode_total_steps > record_period:
             print(
-                f"An episode is longer than the report_period: episode length {episode_total_steps}, record_period {record_period}. Try using a smaller record_period."
+                f"An episode is longer than the report_period: episode length {episode_total_steps}"
+                ", record_period {record_period}. Try using a smaller record_period."
             )
             exit(1)
         total_steps += episode_total_steps
@@ -153,17 +149,17 @@ def online_learning(
 def target_return_is_reached(
     target_return: Value,
     max_episodes: int,
-    agent: Agent,
+    agent: PearlAgent,
     env: Environment,
     learn: bool,
     learn_after_episode: bool,
     exploit: bool,
-    # pyre-fixme[2]: Parameter must be annotated.
-    required_target_returns_in_a_row=1,
+    required_target_returns_in_a_row: int = 1,
     check_moving_average: bool = False,
 ) -> bool:
     """
-    Learns until obtaining target return (a certain number of times in a row, default 1) or max_episodes are completed.
+    Learns until obtaining target return (a certain number of times in a row, default 1)
+    or max_episodes are completed.
     Args
         target_return (Value): the targeted return.
         max_episodes (int): the maximum number of episodes to run.
@@ -172,10 +168,13 @@ def target_return_is_reached(
         learn (bool): whether to learn.
         learn_after_episode (bool): whether to learn after every episode.
         exploit (bool): whether to exploit.
-        required_target_returns_in_a_row (int, optional): how many times we must hit the target to succeed.
-        check_moving_average: if this is enabled, we check the if latest moving average value reaches goal
+        required_target_returns_in_a_row (int, optional): how many times we must hit the target
+        to succeed.
+        check_moving_average: if this is enabled, we check the if latest moving average value
+                              reaches goal
     Returns
-        bool: whether target_return has been obtained required_target_returns_in_a_row times in a row.
+        bool: whether target_return has been obtained required_target_returns_in_a_row times
+              in a row.
     """
     target_returns_in_a_row = 0
     returns = []
@@ -207,7 +206,7 @@ def target_return_is_reached(
 
 
 def run_episode(
-    agent: Agent,
+    agent: PearlAgent,
     env: Environment,
     learn: bool = False,
     exploit: bool = True,
@@ -240,7 +239,6 @@ def run_episode(
     episode_steps = 0
     num_risky_sa = 0
     while not done:
-        # pyre-fixme[28]: Unexpected keyword argument `exploit`.
         action = agent.act(exploit=exploit)
         action = (
             action.cpu() if isinstance(action, torch.Tensor) else action

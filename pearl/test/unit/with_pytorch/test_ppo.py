@@ -11,8 +11,7 @@ from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpac
 
 
 class TestPPO(unittest.TestCase):
-    # pyre-fixme[3]: Return type must be annotated.
-    def test_optimizer_param_count(self):
+    def test_optimizer_param_count(self) -> None:
         """
         This test is to ensure optimizer defined in PPO has all the parameters needed
         including actor and critic
@@ -36,8 +35,7 @@ class TestPPO(unittest.TestCase):
         )
         self.assertEqual(optimizer_params_count, model_params_count)
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def test_training_round_setup(self):
+    def test_training_round_setup(self) -> None:
         """
         PPO inherit from PG and overwrite training_rounds
         This test is to ensure it indeed overwrite

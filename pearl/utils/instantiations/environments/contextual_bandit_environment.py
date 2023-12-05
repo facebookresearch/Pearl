@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
@@ -8,7 +8,7 @@ from pearl.api.environment import Environment
 from pearl.api.reward import Reward
 
 
-class ContextualBanditEnvironment(Environment):
+class ContextualBanditEnvironment(Environment, ABC):
     """
     A specialization of Environment for contextual bandits.
     In a contextual bandit environment, an episode always has a single step
@@ -23,8 +23,8 @@ class ContextualBanditEnvironment(Environment):
     """
 
     @property
+    @abstractmethod
     def action_space(self) -> ActionSpace:
-        # pyre-fixme[7]: Expected `ActionSpace` but got implicit return value of `None`.
         pass
 
     @abstractmethod
@@ -41,15 +41,10 @@ class ContextualBanditEnvironment(Environment):
             reward=reward,
             terminated=True,
             truncated=False,
-            # pyre-fixme[6]: For 5th argument expected `Dict[typing.Any,
-            #  typing.Any]` but got `None`.
-            info=None,
         )
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def render(self):
+    def render(self) -> None:
         pass
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def close(self):
+    def close(self) -> None:
         pass

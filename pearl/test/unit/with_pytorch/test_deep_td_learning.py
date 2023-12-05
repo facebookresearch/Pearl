@@ -23,8 +23,7 @@ from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpac
 
 
 class TestDeepTDLearning(unittest.TestCase):
-    # pyre-fixme[3]: Return type must be annotated.
-    def setUp(self):
+    def setUp(self) -> None:
         self.batch_size = 24
         self.state_dim = 10
         self.action_count = 3

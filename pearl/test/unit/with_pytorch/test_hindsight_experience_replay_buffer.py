@@ -1,6 +1,7 @@
 #!/usr/bin/env fbpython
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
+from typing import Dict
 
 import torch
 
@@ -27,14 +28,13 @@ class TestHindsightExperienceReplayBuffer(unittest.TestCase):
         ]
         goal = torch.Tensor([1, 1])
         actions = [torch.tensor([i]) for i in range(len(states) - 1)]
-        action_to_next_states = {
-            action.item(): states[i + 1] for i, action in enumerate(actions)
+        action_to_next_states: Dict[int, torch.Tensor] = {
+            int(action.item()): states[i + 1] for i, action in enumerate(actions)
         }
 
-        # pyre-fixme[53]: Captured variable `action_to_next_states` is not annotated.
         def reward_fn(state: torch.Tensor, action: torch.Tensor) -> int:
             goal = state[-2:]
-            next_state = action_to_next_states[action.item()]
+            next_state = action_to_next_states[int(action.item())]
             if torch.all(torch.eq(next_state, goal)):
                 return 0
             return -1
@@ -79,8 +79,9 @@ class TestHindsightExperienceReplayBuffer(unittest.TestCase):
         self.assertEqual(0, len(rb._trajectory))
 
         # check for same transition, goal in state and next state should stay the same
+        assert (batch_state := batch.state) is not None
+        assert (batch_next_state := batch.next_state) is not None
         for i in range(2 * len(states) - 2):
             self.assertTrue(
-                # pyre-fixme[16]: Optional type has no attribute `__getitem__`.
-                torch.all(torch.eq(batch.state[i][-2:], batch.next_state[i][-2:]))
+                torch.all(torch.eq(batch_state[i][-2:], batch_next_state[i][-2:]))
             )

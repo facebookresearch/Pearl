@@ -32,7 +32,7 @@ class BoxSpace(Space):
         high: Union[float, Tensor],
         seed: Optional[Union[int, np.random.Generator]] = None,
     ) -> None:
-        """Contructs a `BoxSpace`.
+        """Constructs a `BoxSpace`.
 
         Args:
             low: The lower bound on each dimension of the space.

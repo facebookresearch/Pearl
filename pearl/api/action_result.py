@@ -14,7 +14,7 @@ class ActionResult:
     reward: Reward
     terminated: bool
     truncated: bool
-    info: Dict[str, Any]
+    info: Optional[Dict[str, Any]] = None
     cost: Optional[float] = None
     available_action_space: Optional[ActionSpace] = None
 
