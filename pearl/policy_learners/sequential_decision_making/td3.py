@@ -248,20 +248,8 @@ class RCTD3(TD3):
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
         # update critics
-        res = self._critic_learn_batch(batch)
+        self._critic_learn_batch(batch)
         self._critic_update_count += 1
-
-        if self._critic_update_count % 500 == 0:
-            print(
-                "constraint value: {} \n lambda: {} \n critic_mean_loss: {} \n cost_critic_mean_loss: {} \n critic_mean: {} cost_critic_mean: {}".format(
-                    self.safety_module.constraint_value,
-                    self.lambda_constraint,
-                    res["critic_mean_loss"],
-                    res["cost_critic_mean_loss"],
-                    res["critic_1_values"],
-                    res["cost_critic_2_values"],
-                )
-            )
 
         # update lambda to the current value of safety module
         self.lambda_constraint = self.safety_module.lambda_constraint
@@ -314,8 +302,6 @@ class RCTD3(TD3):
         cost_q = torch.maximum(cost_q1, cost_q2)
         # optimization objective: optimize actor to maximize Q(s, a)
         loss = -(q.mean() - self.lambda_constraint * cost_q.mean())
-        # print("actor loss q mean:{}".format(q.mean().item()))
-        # print("actor loss cost q mean:{}".format(cost_q.mean().item()))
 
         self._actor_optimizer.zero_grad()
         loss.backward()
