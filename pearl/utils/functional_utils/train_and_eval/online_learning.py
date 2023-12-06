@@ -235,6 +235,7 @@ def run_episode(
         observation, action_space = env.reset(seed=seed + total_steps)
     agent.reset(observation, action_space)
     cum_reward = 0
+    cum_cost = 0
     done = False
     episode_steps = 0
     num_risky_sa = 0
@@ -253,6 +254,10 @@ def run_episode(
             num_risky_sa += action_result.info["risky_sa"]
         else:
             num_risky_sa = None
+        if cum_cost is not None and action_result.cost is not None:
+            cum_cost += action_result.cost
+        else:
+            cum_cost = None
         agent.observe(action_result)
         if learn and not learn_after_episode:
             agent.learn()
@@ -262,14 +267,10 @@ def run_episode(
     if learn and learn_after_episode:
         agent.learn()
 
-    if num_risky_sa is None:
-        info = {
-            "return": cum_reward,
-        }
-    else:
-        info = {
-            "return": cum_reward,
-            "risky_sa_ratio": num_risky_sa / episode_steps,
-        }
+    info = {"return": cum_reward}
+    if num_risky_sa is not None:
+        info.update({"risky_sa_ratio": num_risky_sa / episode_steps})
+    if cum_cost is not None:
+        info.update({"return_cost": cum_cost})
 
     return info, episode_steps

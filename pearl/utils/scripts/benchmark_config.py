@@ -1,7 +1,10 @@
+from copy import deepcopy
+
 import gymnasium as gym
 from pearl.action_representation_modules.one_hot_action_representation_module import (
     OneHotActionTensorRepresentationModule,
 )
+
 from pearl.history_summarization_modules.lstm_history_summarization_module import (
     LSTMHistorySummarizationModule,
 )
@@ -54,7 +57,7 @@ from pearl.policy_learners.sequential_decision_making.soft_actor_critic import (
 from pearl.policy_learners.sequential_decision_making.soft_actor_critic_continuous import (
     ContinuousSoftActorCritic,
 )
-from pearl.policy_learners.sequential_decision_making.td3 import TD3
+from pearl.policy_learners.sequential_decision_making.td3 import RCTD3, TD3
 from pearl.replay_buffers.sequential_decision_making.bootstrap_replay_buffer import (
     BootstrapReplayBuffer,
 )
@@ -67,9 +70,13 @@ from pearl.replay_buffers.sequential_decision_making.fifo_on_policy_replay_buffe
 from pearl.replay_buffers.sequential_decision_making.on_policy_episodic_replay_buffer import (  # noqa E501
     OnPolicyEpisodicReplayBuffer,
 )
+from pearl.safety_modules.reward_constrained_safety_module import (
+    RewardConstrainedSafetyModule,
+)
 from pearl.safety_modules.risk_sensitive_safety_modules import (
     QuantileNetworkMeanVarianceSafetyModule,
 )
+
 from pearl.user_envs import (
     AcrobotPartialObservableWrapper,
     AcrobotSparseRewardWrapper,
@@ -503,22 +510,58 @@ TD3_method = {
     "replay_buffer": FIFOOffPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 100000},
 }
-RCTD3_method = {
-    "name": "TD3",
-    "policy_learner": TD3,
+
+RCTD3_method_const_0_2 = {
+    "name": "RCTD3 $\\alpha$=0.2",
+    "policy_learner": RCTD3,
     "policy_learner_args": {
-        "hidden_dims": [256, 256],
+        "actor_hidden_dims": [256, 256],
+        "critic_hidden_dims": [256, 256],
         "training_rounds": 1,
         "batch_size": 256,
+        "actor_network_type": VanillaContinuousActorNetwork,
+        "critic_network_type": VanillaQValueNetwork,
+        "actor_soft_update_tau": 0.005,
+        "critic_soft_update_tau": 0.005,
+        "actor_learning_rate": 1e-3,
+        "critic_learning_rate": 3e-4,
+        "discount_factor": 0.99,
+        "actor_update_freq": 2,
+        "actor_update_noise": 0.2,
+        "actor_update_noise_clip": 0.5,
     },
     "exploration_module": NormalDistributionExploration,
     "exploration_module_args": {
         "mean": 0,
-        "std_dev": 0.2,
+        "std_dev": 0.1,
     },
     "replay_buffer": FIFOOffPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 100000, "has_cost_available": True},
+    "safety_module": RewardConstrainedSafetyModule,
+    "safety_module_args": {
+        "constraint_value": 0.2,
+        "lambda_constraint_ub_value": 200.0,
+        "lr_lambda": 3e-4,
+    },
 }
+
+RCTD3_method_const_0_05 = deepcopy(RCTD3_method_const_0_2)
+RCTD3_method_const_0_05["name"] = "RCTD3 $\\alpha$=0.05"
+RCTD3_method_const_0_05["safety_module_args"]["constraint_value"] = 0.05
+
+RCTD3_method_const_0_1 = deepcopy(RCTD3_method_const_0_2)
+RCTD3_method_const_0_1["name"] = "RCTD3 $\\alpha$=0.1"
+RCTD3_method_const_0_1["safety_module_args"]["constraint_value"] = 0.1
+
+RCTD3_method_const_0_4 = deepcopy(RCTD3_method_const_0_2)
+RCTD3_method_const_0_4["name"] = "RCTD3 $\\alpha$=0.4"
+RCTD3_method_const_0_4["safety_module_args"]["constraint_value"] = 0.4
+
+RCTD3_method_const_0_8 = deepcopy(RCTD3_method_const_0_2)
+RCTD3_method_const_0_8["name"] = "RCTD3 $\\alpha$=0.8"
+RCTD3_method_const_0_8["safety_module_args"]["constraint_value"] = 0.8
+
+
 CSAC_method = {
     "name": "ContinuousSAC",
     "policy_learner": ContinuousSoftActorCritic,
@@ -578,12 +621,12 @@ all_continuous_control_envs = [
     "Walker2d-v4",
 ]
 all_continuous_control_w_cost_envs = [
-    "MountainCarContinuous-v0_w_cost",
-    "Pendulum-v1_w_cost",
-    "HalfCheetah-v4_w_cost",
-    "Ant-v4_w_cost",
+    # "MountainCarContinuous-v0_w_cost",
+    # "Pendulum-v1_w_cost",
+    # "HalfCheetah-v4_w_cost",
+    # "Ant-v4_w_cost",
     "Hopper-v4_w_cost",
-    "Walker2d-v4_w_cost",
+    # "Walker2d-v4_w_cost",
 ]
 all_dynamic_action_space_envs = [
     "Acrobot-DynamicAction-v1",
@@ -627,6 +670,295 @@ num_runs = 5
 print_every_x_steps = 1000
 
 # the following sets of experiments are used to generate figures and should be fixed
+
+rctd3_walker_part_1 = [
+    {
+        "exp_name": "rctd3_walker_part_1",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            RCTD3_method_const_0_05,
+            RCTD3_method_const_0_1,
+            RCTD3_method_const_0_2,
+        ],
+        "device_id": 0,
+    }
+    for env_name in [
+        "Walker2d-v4_w_cost",
+    ]
+]
+
+rctd3_walker_part_2 = [
+    {
+        "exp_name": "rctd3_walker_part_2",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            RCTD3_method_const_0_4,
+            RCTD3_method_const_0_8,
+            TD3_method,
+        ],
+        "device_id": 1,
+    }
+    for env_name in [
+        "Walker2d-v4_w_cost",
+    ]
+]
+
+generate_rctd3_walker = [
+    {
+        "exp_name": "rctd3_walker",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            RCTD3_method_const_0_05,
+            RCTD3_method_const_0_1,
+            RCTD3_method_const_0_2,
+            RCTD3_method_const_0_4,
+            RCTD3_method_const_0_8,
+            TD3_method,
+        ],
+        "device_id": 1,
+    }
+    for env_name in [
+        "Walker2d-v4_w_cost",
+    ]
+]
+
+
+rctd3_hopper_part_1 = [
+    {
+        "exp_name": "rctd3_hopper_part_1",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            RCTD3_method_const_0_05,
+            RCTD3_method_const_0_1,
+            RCTD3_method_const_0_2,
+        ],
+        "device_id": 0,
+    }
+    for env_name in [
+        "Hopper-v4_w_cost",
+    ]
+]
+
+rctd3_hopper_part_2 = [
+    {
+        "exp_name": "rctd3_hopper_part_2",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            RCTD3_method_const_0_4,
+            RCTD3_method_const_0_8,
+            TD3_method,
+        ],
+        "device_id": 1,
+    }
+    for env_name in [
+        "Hopper-v4_w_cost",
+    ]
+]
+
+generate_rctd3_hopper = [
+    {
+        "exp_name": "rctd3_hopper",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            RCTD3_method_const_0_05,
+            RCTD3_method_const_0_1,
+            RCTD3_method_const_0_2,
+            RCTD3_method_const_0_4,
+            RCTD3_method_const_0_8,
+            TD3_method,
+        ],
+        "device_id": 1,
+    }
+    for env_name in [
+        "Hopper-v4_w_cost",
+    ]
+]
+
+
+rctd3_ant_part_1 = [
+    {
+        "exp_name": "rctd3_ant_part_1",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            RCTD3_method_const_0_05,
+            RCTD3_method_const_0_1,
+            RCTD3_method_const_0_2,
+        ],
+        "device_id": 0,
+    }
+    for env_name in [
+        "Ant-v4_w_cost",
+    ]
+]
+
+rctd3_ant_part_2 = [
+    {
+        "exp_name": "rctd3_ant_part_2",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            RCTD3_method_const_0_8,
+        ],
+        "device_id": 1,
+    }
+    for env_name in [
+        "Ant-v4_w_cost",
+    ]
+]
+
+rctd3_ant_part_3 = [
+    {
+        "exp_name": "rctd3_ant_part_2",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            RCTD3_method_const_0_4,
+        ],
+        "device_id": 2,
+    }
+    for env_name in [
+        "Ant-v4_w_cost",
+    ]
+]
+
+rctd3_ant_part_4 = [
+    {
+        "exp_name": "rctd3_ant_part_2",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            TD3_method,
+        ],
+        "device_id": 0,
+    }
+    for env_name in [
+        "Ant-v4_w_cost",
+    ]
+]
+
+generate_rctd3_ant = [
+    {
+        "exp_name": "rctd3_ant",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            RCTD3_method_const_0_05,
+            RCTD3_method_const_0_1,
+            RCTD3_method_const_0_2,
+            RCTD3_method_const_0_4,
+            RCTD3_method_const_0_8,
+            TD3_method,
+        ],
+        "device_id": 1,
+    }
+    for env_name in [
+        "Ant-v4_w_cost",
+    ]
+]
+
+rctd3_half_cheetah_v1_part_1 = [
+    {
+        "exp_name": "rctd3_half_cheetah_v1_part_1",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            RCTD3_method_const_0_05,
+            RCTD3_method_const_0_1,
+            RCTD3_method_const_0_2,
+        ],
+        "device_id": 0,
+    }
+    for env_name in [
+        "HalfCheetah-v4_w_cost",
+    ]
+]
+
+rctd3_half_cheetah_v1_part_2 = [
+    {
+        "exp_name": "rctd3_half_cheetah_v1_part_2",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            RCTD3_method_const_0_4,
+            RCTD3_method_const_0_8,
+            TD3_method,
+        ],
+        "device_id": 1,
+    }
+    for env_name in [
+        "HalfCheetah-v4_w_cost",
+    ]
+]
+
+generate_rctd3_half_cheetah_v1 = [
+    {
+        "exp_name": "rctd3_half_cheetah",
+        "env_name": env_name,
+        "num_runs": num_runs,
+        "num_steps": mujoco_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            RCTD3_method_const_0_05,
+            RCTD3_method_const_0_1,
+            RCTD3_method_const_0_2,
+            RCTD3_method_const_0_4,
+            RCTD3_method_const_0_8,
+            TD3_method,
+        ],
+        "device_id": 1,
+    }
+    for env_name in [
+        "HalfCheetah-v4_w_cost",
+    ]
+]
+
 benchmark_cartpole_v1_part_1 = [
     {
         "exp_name": "benchmark_cartpole_v1_part_1",

@@ -31,7 +31,23 @@ from pearl.utils.scripts.benchmark_config import (
     benchmark_halfcheetah_v4,
     benchmark_hopper_v4,
     benchmark_walker2d_v4,
+    generate_rctd3_ant,
+    generate_rctd3_half_cheetah_v1,
+    generate_rctd3_hopper,
+    generate_rctd3_walker,
     get_env,
+    num_runs,
+    print_every_x_steps,
+    rctd3_ant_part_1,
+    rctd3_ant_part_2,
+    rctd3_ant_part_3,
+    rctd3_ant_part_4,
+    rctd3_half_cheetah_v1_part_1,
+    rctd3_half_cheetah_v1_part_2,
+    rctd3_hopper_part_1,
+    rctd3_hopper_part_2,
+    rctd3_walker_part_1,
+    rctd3_walker_part_2,
     test_dynamic_action_space,
 )
 
@@ -277,5 +293,10 @@ if __name__ == "__main__":
     # generate_plots(benchmark_hopper_v4, ["return"])
     # run(benchmark_walker2d_v4)
     # generate_plots(benchmark_walker2d_v4, ["return"])
+    # test rctd3
+    # run(rctd3_ant_part_1)
+    # run(rctd3_ant_part_2)
+    # generate_plots(generate_rctd3_ant, ["return", "return_cost"])
+    # test dynamic action spaces
     run(test_dynamic_action_space)
     generate_plots(test_dynamic_action_space, ["return"])
