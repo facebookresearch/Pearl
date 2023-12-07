@@ -29,4 +29,4 @@ class PropensityExploration(ExplorationModule):
         action_availability_mask: Optional[torch.Tensor] = None,
         representation: Optional[torch.nn.Module] = None,
     ) -> Action:
-        return torch.distributions.Categorical(values).sample().item()
+        return torch.distributions.Categorical(values).sample()

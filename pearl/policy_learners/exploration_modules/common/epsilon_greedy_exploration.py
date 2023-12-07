@@ -9,6 +9,7 @@ from pearl.api.state import SubjectiveState
 from pearl.policy_learners.exploration_modules.common.uniform_exploration_base import (
     UniformExplorationBase,
 )
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class EGreedyExploration(UniformExplorationBase):
@@ -33,8 +34,8 @@ class EGreedyExploration(UniformExplorationBase):
             raise ValueError(
                 "exploit_action cannot be None for epsilon-greedy exploration"
             )
-        if action_availability_mask is not None:
-            raise NotImplementedError("Action availability mask is not supported.")
+        if not isinstance(action_space, DiscreteActionSpace):
+            raise TypeError("action space must be discrete")
         if random.random() < self.epsilon:
-            return action_space.sample()
+            return torch.randint(action_space.n, (1,))
         return exploit_action

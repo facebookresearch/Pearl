@@ -143,9 +143,14 @@ class PearlAgent(Agent):
             assert isinstance(safe_action_space, DiscreteActionSpace)
             safe_action_space.to(self.device)
 
-        self._latest_action = self.policy_learner.act(
+        action = self.policy_learner.act(
             subjective_state_to_be_used, safe_action_space, exploit=exploit  # pyre-fixme[6]
         )
+
+        if isinstance(safe_action_space, DiscreteActionSpace):
+            self._latest_action = safe_action_space.actions_batch[int(action.item())]
+        else:
+            self._latest_action = action
 
         return self._latest_action
 

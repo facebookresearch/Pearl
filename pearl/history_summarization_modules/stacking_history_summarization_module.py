@@ -36,7 +36,9 @@ class StackingHistorySummarizationModule(HistorySummarizationModule):
         observation = assert_is_tensor_like(observation)
         action = assert_is_tensor_like(action)
         assert observation.shape[-1] + action.shape[-1] == self.history.shape[-1]
-        observation_action_pair = torch.cat((action, observation), dim=-1).detach()
+        observation_action_pair = torch.cat(
+            (action, observation.view(1, -1)), dim=-1
+        ).detach()
         self.history = torch.cat(
             [
                 self.history[1:, :],
