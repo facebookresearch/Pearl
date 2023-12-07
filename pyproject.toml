@@ -18,8 +18,8 @@ classifiers = [
 ]
 dependencies = [
     "gym",
-    "gymnasium[mujoco,atari,accept-rom-license] == 0.26.3",
-    "numpy == 1.19.2",
+    "gymnasium[mujoco,atari,accept-rom-license]",
+    "numpy",
     "matplotlib",
     "pandas",
     "requests",
