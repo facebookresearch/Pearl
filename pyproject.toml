@@ -33,3 +33,7 @@ dependencies = [
 homepage = "http://pearlagent.github.io"
 # documentation = "https://example.com/my_package/docs"
 repository = "http://github.com/facebookresearch/Pearl"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pearl*"]

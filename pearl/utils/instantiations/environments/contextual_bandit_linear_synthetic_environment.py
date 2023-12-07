@@ -5,13 +5,9 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Tuple
 
-import pandas as pd
 import torch
-
-from iopath.common.file_io import PathManager
-from iopath.fb.manifold import ManifoldPathHandler
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
