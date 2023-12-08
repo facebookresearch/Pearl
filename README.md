@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Support Ukraine](https://img.shields.io/badge/Support-Ukraine-FFD500?style=flat&labelColor=005BBB)](https://opensource.fb.com/support-ukraine)
 
-More details of the library at our official website: [Link](pearlagent.github.io)
+More details of the library at our official website: [Link](https://pearlagent.github.io)
 
 Our paper is ArXived at: [Link](https://chs6.short.gy/pearl_paper)
 
