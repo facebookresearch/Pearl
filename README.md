@@ -95,7 +95,7 @@ Pearl is in progress supporting real-world applications, including recommender s
 <center>
 
 |Pearl Features | Pearl  | ReAgent (Superseded by Pearl) | RLLib | SB3|Tianshou | Dopamine |
-|:-------------:|:------:|:-----------------------------:|:-----:|:--:|:-----:|:-----|
+|:-------------:|:------:|:-----------------------------:|:-----:|:--:|:-----:|:----:|
 |Modularity|✅|❌|❌|❌|❌|❌|
 |Dynamic Action Space|✅|✅|❌|❌|❌|❌|
 |Offline RL|✅|✅|✅|✅|✅|❌|
@@ -110,10 +110,10 @@ Pearl is in progress supporting real-world applications, including recommender s
 ## Cite Us
 ```
 @misc{pearl2023paper,
-    title = {Pearl - A Production-ready Reinforcement Learning AI Agent Library},
+    title = {Pearl: A Production-ready Reinforcement Learning AI Agent Library},
     author = {Zheqing Zhu, Rodrigo de Salvo Braz, Jalaj Bhandari, Daniel Jiang, Yi Wan, Yonathan Efroni, Ruiyang Xu, Liyuan Wang, Hongbo Guo, Alex Nikulkov, Dmytro Korenkevych, Urun Dogan, Frank Cheng, Zheng Wu, Wanqiao Xu},
     year = 2023,
-    eprint = {arXiv}
+    eprint = {arXiv:2310.07786}
 }
 ```
 

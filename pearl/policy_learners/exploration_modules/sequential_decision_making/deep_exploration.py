@@ -64,7 +64,7 @@ class DeepExploration(ExplorationModule):
         )
         # (action_space_size x state_dim)
 
-        actions = F.one_hot(torch.arange(0, action_space.n)).to(subjective_state.device)
+        actions = action_space.actions_batch.to(subjective_state.device)
         # (action_space_size, action_dim)
 
         with torch.no_grad():
