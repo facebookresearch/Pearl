@@ -77,17 +77,17 @@ You can find many Pearl agent candidates with mix-and-match set of reinforcement
 Pearl is in progress supporting real-world applications, including recommender systems, auction bidding system and creative selection. Each of them requires a subset of features offered by Pearl. To visualize the subset of features used by each of the applications above, see the table below.
 <center>
 
-|Pearl Features | Recommender Systems | Auction Bidding | Creative Selection |
+**|Pearl Features | Pearl | Recommender Systems | Auction Bidding | Creative Selection |**
 |:-------------:|:-------------------:|:---------------:|:------------------:|
-|Policy Learning| ✅ |✅|✅|
-|Intelligent Exploration|✅|✅ |✅|
-|Safety| | ✅ | |
-|History Summarization| | ✅ | |
-|Replay Buffer| ✅ |✅ |✅ |
-|Contextual Bandit| | |✅|
-|Offline RL|✅|✅||
-|Dynamic Action Space|✅||✅|
-|Large-scale Neural Network|✅|||
+|Policy Learning|✅|✅|✅|✅|
+|Intelligent Exploration|✅|✅|✅ |✅|
+|Safety|✅| | ✅ | |
+|History Summarization|✅| | ✅ | |
+|Replay Buffer|✅| ✅ |✅ |✅ |
+|Contextual Bandit|✅| | |✅|
+|Offline RL|✅|✅|✅||
+|Dynamic Action Spacev|✅||✅|
+|Large-scale Neural Network|✅|✅|||
 
 </center>
 
