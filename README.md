@@ -2,7 +2,7 @@
 # Pearl - A Production-ready Reinforcement Learning AI Agent Library
 ### Proudly brought by Applied Reinforcement Learning @ Meta
 
-- v0.1 - Pearl beta-version is now released!
+- v0.1 - Pearl beta-version is now released! Annoucements: [Twitter Post](https://x.com/ZheqingZhu/status/1732880717263352149?s=20), [LinkedIn Post](https://www.linkedin.com/posts/zheqingzhubill_github-facebookresearchpearl-a-production-ready-activity-7138647748102258688-rz-g?utm_source=share&utm_medium=member_desktop)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Support Ukraine](https://img.shields.io/badge/Support-Ukraine-FFD500?style=flat&labelColor=005BBB)](https://opensource.fb.com/support-ukraine)
@@ -65,7 +65,7 @@ while not done:
     agent.learn()
     done = action_result.done
 ```
-More detailed tutorial will be presented at NeurIPS 2023 EXPO presentation (12/10/2023, 2 pm to 4 pm). Users can replace the environment with any real-world problems.
+More detailed tutorial will be presented at NeurIPS 2023 EXPO presentation (12/10/2023, 4 pm to 6 pm). Users can replace the environment with any real-world problems.
 
 ## Design and Features
 ![alt](./logo/agent_interface.png)
@@ -96,7 +96,7 @@ Pearl is in progress supporting real-world applications, including recommender s
 
 |Pearl Features | Pearl  | ReAgent (Superseded by Pearl) | RLLib | SB3|Tianshou | Dopamine |
 |:-------------:|:------:|:-----------------------------:|:-----:|:--:|:-----:|:----:|
-|Modularity|✅|❌|❌|❌|❌|❌|
+|Agent Modularity|✅|❌|❌|❌|❌|❌|
 |Dynamic Action Space|✅|✅|❌|❌|❌|❌|
 |Offline RL|✅|✅|✅|✅|✅|❌|
 |Intelligent Exploration|✅|❌|❌|❌|⚪ (limited support)|❌|
