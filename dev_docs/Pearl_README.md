@@ -10,7 +10,7 @@ implementations, the library has different components written in a modular way s
 for different applications.
 
 Pearl has been developed keeping in mind the concept of a reinforcement learning agent, which interacts with an environment to collect data. It has different modules to process and learn from
-this data, with the goal of utlimately learning to act optimally in the given environment. We expect
+this data, with the goal of ultimately learning to act optimally in the given environment. We expect
 Pearl to be useful for both academic researchers who want to test novel innovations to (a subset) of
 agent modules as well as for industry practiotioners who want to test reinforcement learning ideas
 for applications to large scale production ready systems
