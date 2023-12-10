@@ -2,7 +2,7 @@
 # Pearl - A Production-ready Reinforcement Learning AI Agent Library
 ### Proudly brought by Applied Reinforcement Learning @ Meta
 
-- v0.1 - Pearl beta-version is now released! Annoucements: [Twitter Post](https://x.com/ZheqingZhu/status/1732880717263352149?s=20), [LinkedIn Post](https://www.linkedin.com/posts/zheqingzhubill_github-facebookresearchpearl-a-production-ready-activity-7138647748102258688-rz-g?utm_source=share&utm_medium=member_desktop)
+- v0.1 - Pearl beta-version is now released! Announcements: [Twitter Post](https://x.com/ZheqingZhu/status/1732880717263352149?s=20), [LinkedIn Post](https://www.linkedin.com/posts/zheqingzhubill_github-facebookresearchpearl-a-production-ready-activity-7138647748102258688-rz-g?utm_source=share&utm_medium=member_desktop)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Support Ukraine](https://img.shields.io/badge/Support-Ukraine-FFD500?style=flat&labelColor=005BBB)](https://opensource.fb.com/support-ukraine)
@@ -18,7 +18,7 @@ Pearl is a new production-ready Reinforcement Learning AI agent library open-sou
 
 ### Installation
 To install Pearl, you can simply clone this repo and pip install
-```
+```bash
 git clone https://github.com/facebookresearch/Pearl.git
 cd Pearl
 pip install -e .
@@ -26,7 +26,7 @@ pip install -e .
 
 ### Quick Start
 To kick off a Pearl agent with a classic reinforcement learning environment, here's a quick example.
-```
+```py
 from pearl.pearl_agent import PearlAgent
 from pearl.action_representation_modules.one_hot_action_representation_module import (
     OneHotActionTensorRepresentationModule,
@@ -74,7 +74,7 @@ Pearl was built with a modular design so that industry practitioners or academic
 You can find many Pearl agent candidates with mix-and-match set of reinforcement learning features in utils/scripts/benchmark_config.py
 
 ## Adoption in Real-world Applications
-Pearl is in progress supporting real-world applications, including recommender systems, auction bidding system and creative selection. Each of them requires a subset of features offered by Pearl. To visualize the subset of features used by each of the applications above, see the table below.
+Pearl is in progress supporting real-world applications, including recommender systems, auction bidding systems, and creative selection. Each of them requires a subset of features offered by Pearl. To visualize the subset of features used by each of the applications above, see the table below.
 <center>
 
 |Pearl Features | Recommender Systems | Auction Bidding | Creative Selection |
