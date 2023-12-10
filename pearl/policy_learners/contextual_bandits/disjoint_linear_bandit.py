@@ -7,8 +7,6 @@
 
 from typing import Any, Dict, List
 
-from warnings import warn
-
 import torch
 
 from pearl.api.action import Action
@@ -34,7 +32,8 @@ from torch import nn
 class DisjointLinearBandit(ContextualBanditBase):
     """
     LinearBandit for discrete action space with each action has its own linear
-    regression
+    regression.
+    DisjointLinearBandit will be deprecated. Use DisjointBanditContainer instead.
     """
 
     def __init__(
@@ -47,11 +46,6 @@ class DisjointLinearBandit(ContextualBanditBase):
         batch_size: int = 128,
         state_features_only: bool = False,
     ) -> None:
-        warn(
-            "DisjointLinearBandit will be deprecated. "
-            "Use DisjointBanditContainer instead",
-            DeprecationWarning,
-        )
         super(DisjointLinearBandit, self).__init__(
             feature_dim=feature_dim,
             training_rounds=training_rounds,
