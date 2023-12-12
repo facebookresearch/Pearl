@@ -25,6 +25,8 @@ pip install -e .
 ```
 
 ### Quick Start
+NeurIPS EXPO Tutorial Colab: [Link](https://github.com/PearlAgent/pearl_neurips_demo/blob/main/demo.ipynb)
+
 To kick off a Pearl agent with a classic reinforcement learning environment, here's a quick example.
 ```py
 from pearl.pearl_agent import PearlAgent

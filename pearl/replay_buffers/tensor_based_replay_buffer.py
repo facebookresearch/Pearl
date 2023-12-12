@@ -52,10 +52,16 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         self._device = value
 
     def _process_single_state(self, state: SubjectiveState) -> torch.Tensor:
-        return torch.tensor(state, device=self._device).unsqueeze(0)
+        if isinstance(state, torch.Tensor):
+            return state.clone().detach().to(self._device).unsqueeze(0)
+        else:
+            return torch.tensor(state, device=self._device).unsqueeze(0)
 
     def _process_single_action(self, action: Action) -> torch.Tensor:
-        return torch.tensor(action, device=self._device).unsqueeze(0)
+        if isinstance(action, torch.Tensor):
+            return action.clone().detach().to(self._device).unsqueeze(0)
+        else:
+            return torch.tensor(action, device=self._device).unsqueeze(0)
 
     def _process_single_reward(self, reward: Reward) -> torch.Tensor:
         return torch.tensor([reward], device=self._device)

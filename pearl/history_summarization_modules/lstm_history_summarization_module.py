@@ -65,10 +65,14 @@ class LSTMHistorySummarizationModule(HistorySummarizationModule):
     def summarize_history(
         self, observation: Observation, action: Optional[Action]
     ) -> torch.Tensor:
-        observation = torch.tensor(observation).float().view((1, self.observation_dim))
+        assert isinstance(observation, torch.Tensor)
+        observation = (
+            observation.clone().detach().float().view((1, self.observation_dim))
+        )
         if action is None:
             action = self.default_action
-        action = torch.tensor(action).float().view((1, self.action_dim))
+        assert isinstance(action, torch.Tensor)
+        action = action.clone().detach().float().view((1, self.action_dim))
         observation_action_pair = torch.cat((action, observation.view(1, -1)), dim=-1)
 
         assert observation.shape[-1] + action.shape[-1] == self.history.shape[-1]

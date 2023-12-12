@@ -162,7 +162,7 @@ class TestLinearBandits(unittest.TestCase):
         )
 
         # the 2nd arm's sigma is sqrt(10) times 1st arm's sigma
-        sigma_ratio = torch.tensor(sigma[-1] / sigma[0])
+        sigma_ratio = (sigma[-1] / sigma[0]).clone().detach()
         self.assertTrue(
             torch.allclose(
                 sigma_ratio,
