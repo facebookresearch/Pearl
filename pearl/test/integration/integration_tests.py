@@ -530,108 +530,107 @@ class IntegrationTests(unittest.TestCase):
             )
         )
 
-    # TODO: restore these when we have external tests set up
-    # def test_cql_offline_training(self) -> None:
-    #     """
-    #     This test is checking if DQN with conservative loss will eventually get to > 50 return for
-    #     CartPole-v1 when trained with offline data.
-    #     """
-    #     set_seed(100)
-    #     env = GymEnvironment("CartPole-v1")
-    #     assert isinstance(env.action_space, DiscreteActionSpace)
-    #     num_actions = env.action_space.n
-    #     conservativeDQN_agent = PearlAgent(
-    #         policy_learner=DeepQLearning(
-    #             state_dim=env.observation_space.shape[0],
-    #             action_space=env.action_space,
-    #             hidden_dims=[64, 64],
-    #             training_rounds=100,
-    #             is_conservative=True,
-    #             conservative_alpha=4.0,
-    #             batch_size=128,
-    #             action_representation_module=OneHotActionTensorRepresentationModule(
-    #                 max_number_actions=num_actions
-    #             ),
-    #         ),
-    #         replay_buffer=FIFOOffPolicyReplayBuffer(10000),
-    #     )
+    def test_cql_offline_training(self) -> None:
+        """
+        This test is checking if DQN with conservative loss will eventually get to > 50 return for
+        CartPole-v1 when trained with offline data.
+        """
+        set_seed(100)
+        env = GymEnvironment("CartPole-v1")
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
+        conservativeDQN_agent = PearlAgent(
+            policy_learner=DeepQLearning(
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                hidden_dims=[64, 64],
+                training_rounds=100,
+                is_conservative=True,
+                conservative_alpha=4.0,
+                batch_size=128,
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+        )
 
-    #     # specify path for offline data set
-    #     url = "https://raw.githubusercontent.com/jb3618columbia/offline_data/ee11452e5c6116d12cd3c1cab25aff39ad7d6ebf/offline_raw_transitions_dict_50k.pt"  # noqa: E501
+        # specify path for offline data set
+        url = "https://raw.githubusercontent.com/jb3618columbia/offline_data/ee11452e5c6116d12cd3c1cab25aff39ad7d6ebf/offline_raw_transitions_dict_50k.pt"  # noqa: E501
 
-    #     # get offline data from the specified path in a replay buffer
-    #     is_action_continuous = False
-    #     print(f"Loading offline data from {url}")
-    #     offline_data_replay_buffer = get_offline_data_in_buffer(
-    #         is_action_continuous, url
-    #     )
+        # get offline data from the specified path in a replay buffer
+        is_action_continuous = False
+        print(f"Loading offline data from {url}")
+        offline_data_replay_buffer = get_offline_data_in_buffer(
+            is_action_continuous, url
+        )
 
-    #     # train conservative agent with offline data
-    #     print("offline data in replay buffer; start offline training")
-    #     offline_learning(
-    #         offline_agent=conservativeDQN_agent,
-    #         data_buffer=offline_data_replay_buffer,
-    #         training_epochs=2000,
-    #     )
+        # train conservative agent with offline data
+        print("offline data in replay buffer; start offline training")
+        offline_learning(
+            offline_agent=conservativeDQN_agent,
+            data_buffer=offline_data_replay_buffer,
+            training_epochs=2000,
+        )
 
-    #     # offline evaluation
-    #     conservativeDQN_agent_returns = offline_evaluation(
-    #         offline_agent=conservativeDQN_agent,
-    #         env=env,
-    #         number_of_episodes=500,
-    #     )
+        # offline evaluation
+        conservativeDQN_agent_returns = offline_evaluation(
+            offline_agent=conservativeDQN_agent,
+            env=env,
+            number_of_episodes=500,
+        )
 
-    #     self.assertTrue(max(conservativeDQN_agent_returns) > 50)
+        self.assertTrue(max(conservativeDQN_agent_returns) > 50)
 
-    # def test_iql_offline_training(self) -> None:
-    #     """
-    #     This test checks whether Implicit Q Learning will eventually get
-    #     to > 100 return for CartPole-v1 when trained with offline data.
-    #     """
-    #     set_seed(100)
-    #     env = GymEnvironment("CartPole-v1")
-    #     assert isinstance(env.action_space, DiscreteActionSpace)
-    #     num_actions = env.action_space.n
-    #     IQLAgent = PearlAgent(
-    #         policy_learner=ImplicitQLearning(
-    #             state_dim=env.observation_space.shape[0],
-    #             action_space=env.action_space,
-    #             exploration_module=NoExploration(),
-    #             actor_hidden_dims=[64, 64],
-    #             critic_hidden_dims=[64, 64],
-    #             value_critic_hidden_dims=[64, 64],
-    #             training_rounds=1,
-    #             batch_size=32,
-    #             expectile=0.70,
-    #             temperature_advantage_weighted_regression=3.0,
-    #             critic_soft_update_tau=0.005,
-    #             action_representation_module=OneHotActionTensorRepresentationModule(
-    #                 max_number_actions=num_actions
-    #             ),
-    #         ),
-    #         replay_buffer=FIFOOffPolicyReplayBuffer(200000),
-    #     )
+    def test_iql_offline_training(self) -> None:
+        """
+        This test checks whether Implicit Q Learning will eventually get
+        to > 100 return for CartPole-v1 when trained with offline data.
+        """
+        set_seed(100)
+        env = GymEnvironment("CartPole-v1")
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
+        IQLAgent = PearlAgent(
+            policy_learner=ImplicitQLearning(
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                exploration_module=NoExploration(),
+                actor_hidden_dims=[64, 64],
+                critic_hidden_dims=[64, 64],
+                value_critic_hidden_dims=[64, 64],
+                training_rounds=1,
+                batch_size=32,
+                expectile=0.70,
+                temperature_advantage_weighted_regression=3.0,
+                critic_soft_update_tau=0.005,
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(200000),
+        )
 
-    #     # specify path for offline data set
-    #     url = "https://raw.githubusercontent.com/jb3618columbia/offline_data/fbaccdd8d994479298c930d684ac49285f3cc901/offline_raw_transitions_dict_200k.pt"  # noqa: E501
+        # specify path for offline data set
+        url = "https://raw.githubusercontent.com/jb3618columbia/offline_data/fbaccdd8d994479298c930d684ac49285f3cc901/offline_raw_transitions_dict_200k.pt"  # noqa: E501
 
-    #     # get offline data from the specified path in a replay buffer
-    #     is_action_continuous = False
-    #     print(f"Loading offline data from {url}")
-    #     offline_data_replay_buffer = get_offline_data_in_buffer(
-    #         is_action_continuous, url
-    #     )
+        # get offline data from the specified path in a replay buffer
+        is_action_continuous = False
+        print(f"Loading offline data from {url}")
+        offline_data_replay_buffer = get_offline_data_in_buffer(
+            is_action_continuous, url
+        )
 
-    #     # train conservative agent with offline data
-    #     offline_learning(
-    #         offline_agent=IQLAgent,
-    #         data_buffer=offline_data_replay_buffer,
-    #         training_epochs=2000,
-    #     )
+        # train conservative agent with offline data
+        offline_learning(
+            offline_agent=IQLAgent,
+            data_buffer=offline_data_replay_buffer,
+            training_epochs=2000,
+        )
 
-    #     # offline evaluation
-    #     icq_agent_returns = offline_evaluation(
-    #         offline_agent=IQLAgent, env=env, number_of_episodes=500
-    #     )
+        # offline evaluation
+        icq_agent_returns = offline_evaluation(
+            offline_agent=IQLAgent, env=env, number_of_episodes=500
+        )
 
-    #     self.assertTrue(max(icq_agent_returns) > 100)
+        self.assertTrue(max(icq_agent_returns) > 100)

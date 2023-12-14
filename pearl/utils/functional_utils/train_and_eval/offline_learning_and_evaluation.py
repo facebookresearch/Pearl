@@ -10,7 +10,6 @@ import os
 
 from typing import List, Optional
 
-import requests
 import torch
 
 from pearl.api.environment import Environment
@@ -21,6 +20,7 @@ from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buff
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
+from pearl.utils.functional_utils.requests_get import requests_get
 from pearl.utils.functional_utils.train_and_eval.online_learning import run_episode
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
@@ -58,9 +58,7 @@ def get_offline_data_in_buffer(
         ReplayBuffer: a FIFOOffPolicyReplayBuffer containing offline data of transition tuples.
     """
     if url is not None:
-        offline_transitions_data = requests.get(
-            url,
-        )
+        offline_transitions_data = requests_get(url)
         stream = io.BytesIO(offline_transitions_data.content)  # implements seek()
         raw_transitions_buffer = torch.load(stream)
     else:
