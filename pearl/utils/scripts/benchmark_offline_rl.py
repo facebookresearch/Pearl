@@ -15,7 +15,6 @@ from pearl.api.agent import Agent
 from pearl.api.environment import Environment
 
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
-    GaussianActorNetwork,
     VanillaContinuousActorNetwork,
 )
 
@@ -78,6 +77,7 @@ def get_random_agent_returns(
         if os.path.isfile(file_path):
             print(f"loading returns from file {file_path}")
             with open(file_path, "rb") as file:
+                # @lint-ignore PYTHONPICKLEISBAD
                 random_agent_returns = pickle.load(file)
         else:
             raise FileNotFoundError(f"No file found at {file_path}")
@@ -104,6 +104,7 @@ def get_random_agent_returns(
                 save_path + "returns_random_agent" + ".pickle",
                 "wb",
             ) as handle:
+                # @lint-ignore PYTHONPICKLEISBAD
                 pickle.dump(
                     random_agent_returns, handle, protocol=pickle.HIGHEST_PROTOCOL
                 )
@@ -123,7 +124,7 @@ def evaluate_offline_rl(
     data_path: Optional[str] = None,
     data_collection_agent: Optional[PearlAgent] = None,
     file_name: Optional[str] = None,
-    data_save_path: Optional[str] = "../fbsource/fbcode/pearl/offline_rl_data/",
+    data_save_path: Optional[str] = "offline_rl_data/",
     data_size: int = 1000000,
     seed: Optional[int] = None,
 ) -> List[float]:
@@ -231,6 +232,7 @@ def evaluate_offline_rl(
         + ".pickle",
         "wb",
     ) as handle:
+        # @lint-ignore PYTHONPICKLEISBAD
         pickle.dump(
             offline_evaluation_returns, handle, protocol=pickle.HIGHEST_PROTOCOL
         )
@@ -239,14 +241,13 @@ def evaluate_offline_rl(
 
 
 if __name__ == "__main__":
-    device_id = 1
+    device_id = 1  # use -1 for CPU, 0, 1, for cuda
     experiment_seed = 100
     env_name = "HalfCheetah-v4"
     env = GymEnvironment(env_name)
     action_space = env.action_space
     is_action_continuous = True
 
-    # actor_network_type = GaussianActorNetwork
     actor_network_type = VanillaContinuousActorNetwork
 
     offline_agent = PearlAgent(
@@ -286,7 +287,7 @@ if __name__ == "__main__":
         device_id=device_id,
     )
 
-    data_save_path = "../fbsource/fbcode/pearl/offline_rl_data/" + env_name + "/"
+    data_save_path = "offline_rl_data/" + env_name + "/"
     # dataset = "small_2"
     # dataset = "medium"
 
@@ -361,5 +362,6 @@ if __name__ == "__main__":
     if normalized_score < 0.25:
         print(
             "Offline agent does not seems to be learning well. Check the "
-            "hyperparameters in IQL_offline_method in benchmark_config.py file and run with the dataset_name = `small_2`."
+            "hyperparameters in IQL_offline_method in benchmark_config.py file "
+            "and run with the dataset_name = `small_2`."
         )
