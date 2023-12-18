@@ -115,7 +115,7 @@ Pearl is in progress supporting real-world applications, including recommender s
     title = {Pearl: A Production-ready Reinforcement Learning AI Agent Library},
     author = {Zheqing Zhu, Rodrigo de Salvo Braz, Jalaj Bhandari, Daniel Jiang, Yi Wan, Yonathan Efroni, Ruiyang Xu, Liyuan Wang, Hongbo Guo, Alex Nikulkov, Dmytro Korenkevych, Urun Dogan, Frank Cheng, Zheng Wu, Wanqiao Xu},
     year = 2023,
-    eprint = {arXiv:2310.07786}
+    eprint = {arXiv:2312.03814}
 }
 ```
 
