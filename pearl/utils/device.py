@@ -7,7 +7,7 @@
 
 import torch
 import torch.distributed as dist
-from pearl.utils.functional_utils.python_utils import value_of_first_item
+from Pearl.pearl.utils.functional_utils.python_utils import value_of_first_item
 
 
 class DeviceNotFoundInModuleError(ValueError):

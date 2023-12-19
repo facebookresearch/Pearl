@@ -8,12 +8,12 @@
 from typing import List, Optional, Tuple
 
 import torch
-from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
-from pearl.api.reward import Reward
-from pearl.api.state import SubjectiveState
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.api.reward import Reward
+from Pearl.pearl.api.state import SubjectiveState
 
-from pearl.replay_buffers.replay_buffer import ReplayBuffer
+from Pearl.pearl.replay_buffers.replay_buffer import ReplayBuffer
 
 
 # Preferred to define inside class but that is not working. Pending discussion.

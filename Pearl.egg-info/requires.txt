@@ -1,0 +1,10 @@
+gym
+gymnasium[accept-rom-license,atari,mujoco]
+numpy
+matplotlib
+pandas
+requests
+mujoco
+torch
+torchvision
+torchaudio

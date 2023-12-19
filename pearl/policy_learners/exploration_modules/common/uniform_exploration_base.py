@@ -10,10 +10,10 @@ from typing import Optional
 
 import torch
 
-from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
-from pearl.api.state import SubjectiveState
-from pearl.policy_learners.exploration_modules.exploration_module import (
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.api.state import SubjectiveState
+from Pearl.pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
     ExplorationType,
 )

@@ -10,7 +10,7 @@ from typing import Callable, Iterable, Tuple, Type
 
 import torch
 import torch.nn as nn
-from pearl.neural_networks.common.value_networks import (
+from Pearl.pearl.neural_networks.common.value_networks import (
     QValueNetwork,
     VanillaQValueNetwork,
 )

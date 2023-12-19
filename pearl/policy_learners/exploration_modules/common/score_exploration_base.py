@@ -11,15 +11,15 @@ from warnings import warn
 
 import torch
 
-from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
-from pearl.api.state import SubjectiveState
-from pearl.policy_learners.exploration_modules.exploration_module import (
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.api.state import SubjectiveState
+from Pearl.pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
     ExplorationType,
 )
-from pearl.utils.functional_utils.learning.action_utils import get_model_actions
-from pearl.utils.tensor_like import assert_is_tensor_like
+from Pearl.pearl.utils.functional_utils.learning.action_utils import get_model_actions
+from Pearl.pearl.utils.tensor_like import assert_is_tensor_like
 
 
 class ScoreExplorationBase(ExplorationModule):

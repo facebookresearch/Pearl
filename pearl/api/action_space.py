@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 
-from pearl.api.space import Space
+from Pearl.pearl.api.space import Space
 
 
 class ActionSpace(Space):

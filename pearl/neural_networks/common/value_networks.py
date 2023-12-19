@@ -15,13 +15,13 @@ from typing import Any, List, Optional
 
 import torch
 import torch.nn as nn
-from pearl.neural_networks.common.epistemic_neural_networks import Ensemble
+from Pearl.pearl.neural_networks.common.epistemic_neural_networks import Ensemble
 
-from pearl.neural_networks.sequential_decision_making.q_value_network import (
+from Pearl.pearl.neural_networks.sequential_decision_making.q_value_network import (
     DistributionalQValueNetwork,
     QValueNetwork,
 )
-from pearl.utils.functional_utils.learning.extend_state_feature import (
+from Pearl.pearl.utils.functional_utils.learning.extend_state_feature import (
     extend_state_feature_by_available_action_space,
 )
 from torch import Tensor

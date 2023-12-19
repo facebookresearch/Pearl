@@ -12,14 +12,14 @@ from typing import Deque, List, Optional, Tuple, Union
 
 import torch
 
-from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
-from pearl.api.reward import Reward
-from pearl.api.state import SubjectiveState
-from pearl.replay_buffers.replay_buffer import ReplayBuffer
-from pearl.replay_buffers.transition import Transition, TransitionBatch
-from pearl.utils.device import get_default_device
-from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.api.reward import Reward
+from Pearl.pearl.api.state import SubjectiveState
+from Pearl.pearl.replay_buffers.replay_buffer import ReplayBuffer
+from Pearl.pearl.replay_buffers.transition import Transition, TransitionBatch
+from Pearl.pearl.utils.device import get_default_device
+from Pearl.pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class TensorBasedReplayBuffer(ReplayBuffer):
@@ -191,10 +191,24 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         next_available_actions_list = []
         next_unavailable_actions_mask_list = []
         has_none_cum_reward = False
+
         for x in transitions:
+
+            # If the action doesn't have a dimension of 2, then add a dimension of 2.
+            if x.action.dim() == 1:
+                x.action = x.action.view(1, -1)
+            if x.action.dtype != torch.int64:
+                x.action = x.action.to(torch.int64)
+            if x.state.dtype != torch.float32:
+                x.state = x.state.to(torch.float32)
+
+            # transform_layer = torch.nn.Linear(992, 122)
+            # x.state = transform_layer(x.state)
+
             state_list.append(x.state)
             action_list.append(x.action)
             reward_list.append(x.reward)
+
             done_list.append(x.done)
             if has_cost_available:
                 cost_list.append(x.cost)
@@ -223,12 +237,17 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         reward_batch = torch.cat(reward_list)
         done_batch = torch.cat(done_list)
         cum_reward_batch = None
+
+        assert action_batch.shape == (124, 1), f"{action_batch.shape=}"
+        # assert state_batch.shape == (128, 992), f"{state_batch.shape=}"
+
         if has_cost_available:
             cost_batch = torch.cat(cost_list)
         else:
             cost_batch = None
         if not has_none_cum_reward:
             cum_reward_batch = torch.cat(cum_reward_list)
+
         next_state_batch, next_action_batch = None, None
         if has_next_state:
             next_state_batch = torch.cat(next_state_list)

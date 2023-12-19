@@ -8,19 +8,19 @@
 from abc import abstractmethod
 from typing import Any, Dict, Iterable, List, Optional, Type
 
-from pearl.action_representation_modules.action_representation_module import (
+from Pearl.pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
 
-from pearl.neural_networks.common.value_networks import QValueNetwork
-from pearl.neural_networks.sequential_decision_making.actor_networks import (
+from Pearl.pearl.neural_networks.common.value_networks import QValueNetwork
+from Pearl.pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetwork,
     DynamicActionActorNetwork,
 )
 
-from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
+from Pearl.pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 
-from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from Pearl.pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 try:
     import gymnasium as gym
@@ -29,31 +29,31 @@ except ModuleNotFoundError:
 
 import torch
 
-from pearl.api.action import Action
+from Pearl.pearl.api.action import Action
 
-from pearl.api.action_space import ActionSpace
-from pearl.api.state import SubjectiveState
-from pearl.history_summarization_modules.history_summarization_module import (
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.api.state import SubjectiveState
+from Pearl.pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
 )
-from pearl.neural_networks.common.utils import (
+from Pearl.pearl.neural_networks.common.utils import (
     init_weights,
     update_target_network,
     update_target_networks,
 )
-from pearl.neural_networks.common.value_networks import (
+from Pearl.pearl.neural_networks.common.value_networks import (
     VanillaQValueNetwork,
     VanillaValueNetwork,
 )
-from pearl.neural_networks.sequential_decision_making.actor_networks import (
+from Pearl.pearl.neural_networks.sequential_decision_making.actor_networks import (
     VanillaActorNetwork,
 )
-from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
-from pearl.policy_learners.exploration_modules.exploration_module import (
+from Pearl.pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
+from Pearl.pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
-from pearl.policy_learners.policy_learner import PolicyLearner
-from pearl.replay_buffers.transition import TransitionBatch
+from Pearl.pearl.policy_learners.policy_learner import PolicyLearner
+from Pearl.pearl.replay_buffers.transition import TransitionBatch
 from torch import nn, optim
 
 

@@ -10,34 +10,34 @@ from abc import abstractmethod
 from typing import Any, Dict, List, Optional, Type
 
 import torch
-from pearl.action_representation_modules.action_representation_module import (
+from Pearl.pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
 
-from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
-from pearl.api.state import SubjectiveState
-from pearl.history_summarization_modules.history_summarization_module import (
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.api.state import SubjectiveState
+from Pearl.pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
 )
-from pearl.neural_networks.common.utils import update_target_network
+from Pearl.pearl.neural_networks.common.utils import update_target_network
 
-from pearl.neural_networks.common.value_networks import (
+from Pearl.pearl.neural_networks.common.value_networks import (
     DuelingQValueNetwork,
     TwoTowerQValueNetwork,
     VanillaQValueNetwork,
 )
-from pearl.neural_networks.sequential_decision_making.q_value_network import (
+from Pearl.pearl.neural_networks.sequential_decision_making.q_value_network import (
     QValueNetwork,
 )
-from pearl.policy_learners.exploration_modules.exploration_module import (
+from Pearl.pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
-from pearl.policy_learners.policy_learner import PolicyLearner
-from pearl.replay_buffers.transition import TransitionBatch
+from Pearl.pearl.policy_learners.policy_learner import PolicyLearner
+from Pearl.pearl.replay_buffers.transition import TransitionBatch
 
-from pearl.utils.functional_utils.learning.loss_fn_utils import compute_cql_loss
-from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from Pearl.pearl.utils.functional_utils.learning.loss_fn_utils import compute_cql_loss
+from Pearl.pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import optim
 
 
@@ -59,7 +59,7 @@ class DeepTDLearning(PolicyLearner):
         learning_rate: float = 0.001,
         discount_factor: float = 0.99,
         training_rounds: int = 100,
-        batch_size: int = 128,
+        batch_size: int = 124,
         target_update_freq: int = 10,
         soft_update_tau: float = 0.1,
         is_conservative: bool = False,
@@ -148,11 +148,16 @@ class DeepTDLearning(PolicyLearner):
         # Fix the available action space.
         assert isinstance(available_action_space, DiscreteActionSpace)
         with torch.no_grad():
+
+            # display(f"{subjective_state.shape=}")
+
             states_repeated = torch.repeat_interleave(
                 subjective_state.unsqueeze(0),
                 available_action_space.n,
                 dim=0,
             )
+
+            # display(f"{states_repeated.shape=}")
             # (action_space_size x state_dim)
 
             actions = self._action_representation_module(
@@ -160,7 +165,36 @@ class DeepTDLearning(PolicyLearner):
             )
             # (action_space_size, action_dim)
 
-            q_values = self._Q.get_q_values(states_repeated, actions)
+            tensor_float_types = (
+                torch.float16,
+                torch.float32,
+                torch.float64,
+            )
+
+            # Check the data types of each: coerce to float64
+            if states_repeated.dtype != actions.dtype and states_repeated.dtype in tensor_float_types:
+                actions = actions.to(states_repeated.dtype)
+
+            assert actions.dtype == states_repeated.dtype, (
+                f"{actions.dtype=} {states_repeated.dtype=}"
+            )
+
+            # Possible data loss here: if states_repeated is float64 and actions is float32
+            # But this is necessary for the forward pass to work.
+            actions = actions.to(torch.int64)
+            states_repeated = states_repeated.to(torch.float32)
+
+            assert actions.dtype == torch.int64, f"{actions.dtype=} {actions=}"
+            assert states_repeated.dtype == torch.float32, f"{states_repeated.dtype=} {states_repeated=}"
+
+            # display(f"{states_repeated.shape=} {actions.shape=}")
+
+            transform_layer = torch.nn.Linear(992, 122)
+            states_repeated_transformed = transform_layer(states_repeated)
+
+            # display(f"{states_repeated_transformed.shape=}")
+
+            q_values = self._Q.get_q_values(states_repeated_transformed, actions)
             # this does a forward pass since all avaialble
             # actions are already stacked together
 
@@ -189,10 +223,24 @@ class DeepTDLearning(PolicyLearner):
         reward_batch = batch.reward  # (batch_size)
         done_batch = batch.done  # (batch_size)
 
+        action_batch = action_batch.to(dtype=torch.int64)
+        state_batch = state_batch.to(torch.float32)
+        # transform_layer = torch.nn.Linear(992, 122)
+        # state_batch = transform_layer(state_batch)
+        if state_batch.size(1) == 992:
+            transform_layer = torch.nn.Linear(992, 122)
+            state_batch = transform_layer(state_batch)
+
+        batch.state = state_batch
+        batch.action = action_batch
+
+        # display(f"{state_batch.shape=} {action_batch.shape=}")
+
         batch_size = state_batch.shape[0]
         # sanity check they have same batch_size
         assert reward_batch.shape[0] == batch_size
         assert done_batch.shape[0] == batch_size
+
         state_action_values = self._Q.get_q_values(
             state_batch=state_batch,
             action_batch=action_batch,
@@ -205,6 +253,13 @@ class DeepTDLearning(PolicyLearner):
             * self._discount_factor
             * (1 - done_batch.float())
         ) + reward_batch  # (batch_size), r + gamma * V(s)
+
+
+        state_action_values = state_action_values.to(dtype=torch.float32)
+        # Make sure that the expected state action values are not None
+        expected_state_action_values = expected_state_action_values.to(
+            dtype=torch.float32
+        )
 
         criterion = torch.nn.MSELoss()
         bellman_loss = criterion(state_action_values, expected_state_action_values)

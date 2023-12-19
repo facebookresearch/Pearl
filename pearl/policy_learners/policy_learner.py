@@ -9,31 +9,31 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, TypeVar
 
 import torch
-from pearl.action_representation_modules.action_representation_module import (
+from Pearl.pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
-from pearl.action_representation_modules.identity_action_representation_module import (
+from Pearl.pearl.action_representation_modules.identity_action_representation_module import (
     IdentityActionRepresentationModule,
 )
-from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
-from pearl.history_summarization_modules.history_summarization_module import (
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
     SubjectiveState,
 )
-from pearl.history_summarization_modules.identity_history_summarization_module import (
+from Pearl.pearl.history_summarization_modules.identity_history_summarization_module import (
     IdentityHistorySummarizationModule,
 )
-from pearl.policy_learners.exploration_modules.common.no_exploration import (
+from Pearl.pearl.policy_learners.exploration_modules.common.no_exploration import (
     NoExploration,
 )
-from pearl.policy_learners.exploration_modules.exploration_module import (
+from Pearl.pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
-from pearl.replay_buffers.replay_buffer import ReplayBuffer
-from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.device import is_distribution_enabled
-from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from Pearl.pearl.replay_buffers.replay_buffer import ReplayBuffer
+from Pearl.pearl.replay_buffers.transition import TransitionBatch
+from Pearl.pearl.utils.device import is_distribution_enabled
+from Pearl.pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class PolicyLearner(torch.nn.Module, ABC):

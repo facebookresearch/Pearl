@@ -11,10 +11,10 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
-from pearl.api.action import Action
-from pearl.api.history import History
-from pearl.api.observation import Observation
-from pearl.api.state import SubjectiveState
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.history import History
+from Pearl.pearl.api.observation import Observation
+from Pearl.pearl.api.state import SubjectiveState
 
 
 class HistorySummarizationModule(ABC, nn.Module):
