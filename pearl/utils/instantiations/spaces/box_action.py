@@ -13,9 +13,9 @@ from typing import Optional, Union
 
 import numpy as np
 import torch
-from pearl.api.action_space import ActionSpace
-from pearl.utils.instantiations.spaces.box import BoxSpace
-from pearl.utils.instantiations.spaces.utils import reshape_to_1d_tensor
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.utils.instantiations.spaces.box import BoxSpace
+from Pearl.pearl.utils.instantiations.spaces.utils import reshape_to_1d_tensor
 from torch import Tensor
 
 try:

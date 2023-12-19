@@ -7,12 +7,12 @@
 
 from typing import Optional
 
-from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
-from pearl.api.reward import Reward
-from pearl.api.state import SubjectiveState
-from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
-from pearl.replay_buffers.transition import Transition
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.api.reward import Reward
+from Pearl.pearl.api.state import SubjectiveState
+from Pearl.pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
+from Pearl.pearl.replay_buffers.transition import Transition
 
 
 class FIFOOffPolicyReplayBuffer(TensorBasedReplayBuffer):

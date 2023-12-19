@@ -9,16 +9,16 @@ import logging
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import numpy as np
-from pearl.api.action import Action
-from pearl.api.action_result import ActionResult
-from pearl.api.action_space import ActionSpace
-from pearl.api.environment import Environment
-from pearl.api.observation import Observation
-from pearl.api.space import Space
-from pearl.utils.instantiations.spaces.box import BoxSpace
-from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
-from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
-from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.action_result import ActionResult
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.api.environment import Environment
+from Pearl.pearl.api.observation import Observation
+from Pearl.pearl.api.space import Space
+from Pearl.pearl.utils.instantiations.spaces.box import BoxSpace
+from Pearl.pearl.utils.instantiations.spaces.box_action import BoxActionSpace
+from Pearl.pearl.utils.instantiations.spaces.discrete import DiscreteSpace
+from Pearl.pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import Tensor
 
 try:

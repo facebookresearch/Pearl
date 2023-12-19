@@ -15,7 +15,7 @@ from typing import List, Optional
 
 import torch
 import torch.nn as nn
-from pearl.neural_networks.common.utils import mlp_block
+from Pearl.pearl.neural_networks.common.utils import mlp_block
 from torch import Tensor
 
 

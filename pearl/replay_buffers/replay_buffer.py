@@ -9,10 +9,10 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 import torch
-from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
-from pearl.api.reward import Reward
-from pearl.api.state import SubjectiveState
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.api.reward import Reward
+from Pearl.pearl.api.state import SubjectiveState
 
 
 class ReplayBuffer(ABC):

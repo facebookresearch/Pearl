@@ -17,6 +17,15 @@ import torch
 import torch.nn as nn
 
 from pearl.neural_networks.common.utils import conv_block, mlp_block
+from Pearl.pearl.neural_networks.common.epistemic_neural_networks import Ensemble
+
+from Pearl.pearl.neural_networks.sequential_decision_making.q_value_network import (
+    DistributionalQValueNetwork,
+    QValueNetwork,
+)
+from Pearl.pearl.utils.functional_utils.learning.extend_state_feature import (
+    extend_state_feature_by_available_action_space,
+)
 from torch import Tensor
 
 

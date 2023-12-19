@@ -12,7 +12,7 @@ import logging
 from typing import Iterator, List, Optional
 
 import torch
-from pearl.api.space import Space
+from Pearl.pearl.api.space import Space
 from torch import Tensor
 
 try:

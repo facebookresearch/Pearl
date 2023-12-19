@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-from pearl.policy_learners.policy_learner import (
+from Pearl.pearl.policy_learners.policy_learner import (
     DistributionalPolicyLearner,
     PolicyLearner,
 )

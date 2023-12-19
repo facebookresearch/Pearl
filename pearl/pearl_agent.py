@@ -9,33 +9,33 @@ import typing
 from typing import Any, Dict, Optional
 
 import torch
-from pearl.api.action import Action
-from pearl.api.action_result import ActionResult
-from pearl.api.action_space import ActionSpace
-from pearl.api.agent import Agent
-from pearl.api.observation import Observation
-from pearl.api.state import SubjectiveState
-from pearl.history_summarization_modules.history_summarization_module import (
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.action_result import ActionResult
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.api.agent import Agent
+from Pearl.pearl.api.observation import Observation
+from Pearl.pearl.api.state import SubjectiveState
+from Pearl.pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
 )
-from pearl.history_summarization_modules.identity_history_summarization_module import (
+from Pearl.pearl.history_summarization_modules.identity_history_summarization_module import (
     IdentityHistorySummarizationModule,
 )
-from pearl.policy_learners.policy_learner import (
+from Pearl.pearl.policy_learners.policy_learner import (
     DistributionalPolicyLearner,
     PolicyLearner,
 )
-from pearl.replay_buffers.examples.single_transition_replay_buffer import (
+from Pearl.pearl.replay_buffers.examples.single_transition_replay_buffer import (
     SingleTransitionReplayBuffer,
 )
-from pearl.replay_buffers.replay_buffer import ReplayBuffer
-from pearl.replay_buffers.transition import TransitionBatch
-from pearl.safety_modules.identity_safety_module import IdentitySafetyModule
-from pearl.safety_modules.risk_sensitive_safety_modules import RiskNeutralSafetyModule
-from pearl.safety_modules.safety_module import SafetyModule
-from pearl.utils.compatibility_checks import pearl_agent_compatibility_check
-from pearl.utils.device import get_pearl_device
-from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from Pearl.pearl.replay_buffers.replay_buffer import ReplayBuffer
+from Pearl.pearl.replay_buffers.transition import TransitionBatch
+from Pearl.pearl.safety_modules.identity_safety_module import IdentitySafetyModule
+from Pearl.pearl.safety_modules.risk_sensitive_safety_modules import RiskNeutralSafetyModule
+from Pearl.pearl.safety_modules.safety_module import SafetyModule
+from Pearl.pearl.utils.compatibility_checks import pearl_agent_compatibility_check
+from Pearl.pearl.utils.device import get_pearl_device
+from Pearl.pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class PearlAgent(Agent):

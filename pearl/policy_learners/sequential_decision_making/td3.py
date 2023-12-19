@@ -8,7 +8,7 @@
 from typing import Any, Dict, List, Optional, Type
 
 import torch
-from pearl.action_representation_modules.action_representation_module import (
+from Pearl.pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
 from pearl.api.action_space import ActionSpace
@@ -21,15 +21,15 @@ from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     QValueNetwork,
     VanillaQValueNetwork,
 )
-from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
-from pearl.policy_learners.exploration_modules.exploration_module import (
+from Pearl.pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
+from Pearl.pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     twin_critic_action_value_loss,
     update_critic_target_network,
 )
-from pearl.policy_learners.sequential_decision_making.ddpg import (
+from Pearl.pearl.policy_learners.sequential_decision_making.ddpg import (
     DeepDeterministicPolicyGradient,
 )
 from pearl.replay_buffers.transition import TransitionBatch

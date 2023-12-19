@@ -10,18 +10,18 @@ from typing import Any, cast, Dict, Iterable, List, Optional, Type, Union
 
 import torch
 
-from pearl.action_representation_modules.action_representation_module import (
+from Pearl.pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
 
-from pearl.api.action import Action
+from Pearl.pearl.api.action import Action
 
-from pearl.api.action_space import ActionSpace
-from pearl.api.state import SubjectiveState
-from pearl.history_summarization_modules.history_summarization_module import (
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.api.state import SubjectiveState
+from Pearl.pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
 )
-from pearl.neural_networks.common.utils import (
+from Pearl.pearl.neural_networks.common.utils import (
     init_weights,
     update_target_network,
     update_target_networks,

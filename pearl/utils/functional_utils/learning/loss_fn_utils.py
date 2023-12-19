@@ -9,8 +9,8 @@ import torch
 from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     QValueNetwork,
 )
-from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.functional_utils.learning.extend_state_feature import (
+from Pearl.pearl.replay_buffers.transition import TransitionBatch
+from Pearl.pearl.utils.functional_utils.learning.extend_state_feature import (
     extend_state_feature_by_available_action_space,
 )
 from torch import Tensor
