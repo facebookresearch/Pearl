@@ -18,7 +18,10 @@ from pearl.history_summarization_modules.history_summarization_module import (
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     DEFAULT_ACTION_SPACE,
 )
-from pearl.policy_learners.contextual_bandits.neural_bandit import NeuralBandit
+from pearl.policy_learners.contextual_bandits.neural_bandit import (
+    LOSS_TYPES,
+    NeuralBandit,
+)
 from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
     UCBExploration,
 )
@@ -37,6 +40,12 @@ class NeuralLinearBandit(NeuralBandit):
     """
     Policy Learner for Contextual Bandit with:
     features --> neural networks --> linear regression --> predicted rewards
+
+    The difference vs its parent class NeuralBandit is the extra
+    linear regression on top of `_deep_represent_layers`.
+    Here _deep_represent_layers can be treated as featuer processing,
+    and then processed features are fed into a linear regression layer to output predicted score.
+    For example : features --> neural networks --> LinUCB --> UCB score
     """
 
     def __init__(
@@ -49,7 +58,9 @@ class NeuralLinearBandit(NeuralBandit):
         learning_rate: float = 0.001,
         l2_reg_lambda_linear: float = 1.0,
         state_features_only: bool = False,
-        **kwargs: Any,
+        loss_type: str = "mse",  # one of the LOSS_TYPES names, e.g., mse, mae, xentropy
+        # pyre-fixme[2]: Parameter must be annotated.
+        **kwargs,
     ) -> None:
         assert (
             len(hidden_dims) >= 1
@@ -62,6 +73,7 @@ class NeuralLinearBandit(NeuralBandit):
             batch_size=batch_size,
             exploration_module=exploration_module,
             state_features_only=state_features_only,
+            loss_type=loss_type,
             **kwargs,
         )
         # TODO specify linear regression type when needed
@@ -82,7 +94,7 @@ class NeuralLinearBandit(NeuralBandit):
         current_values = self._linear_regression(mlp_output)
         expected_values = batch.reward
 
-        criterion = torch.nn.MSELoss()
+        criterion = LOSS_TYPES[self.loss_type]
         loss = criterion(current_values.view(expected_values.shape), expected_values)
 
         # Optimize the deep layer

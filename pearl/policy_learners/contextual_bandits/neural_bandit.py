@@ -30,10 +30,17 @@ from pearl.utils.functional_utils.learning.action_utils import (
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import optim
 
+LOSS_TYPES = {
+    "mse": torch.nn.functional.mse_loss,
+    "mae": torch.nn.functional.l1_loss,
+    "cross_entropy": torch.nn.functional.binary_cross_entropy,
+}  # loss func for neural bandits algorithms
+
 
 class NeuralBandit(ContextualBanditBase):
     """
-    Policy Learner for Contextual Bandit with Deep Policy
+    Policy Learner for Contextual Bandit with Deep Policy.
+    The MLP (_deep_represent_layers) directly returns a predicted score.
     """
 
     def __init__(
@@ -46,6 +53,7 @@ class NeuralBandit(ContextualBanditBase):
         batch_size: int = 128,
         learning_rate: float = 0.001,
         state_features_only: bool = False,
+        loss_type: str = "mse",  # one of the LOSS_TYPES names, e.g., mse, mae, xentropy
         **kwargs: Any
     ) -> None:
         super(NeuralBandit, self).__init__(
@@ -64,6 +72,7 @@ class NeuralBandit(ContextualBanditBase):
             self._deep_represent_layers.parameters(), lr=learning_rate, amsgrad=True
         )
         self._state_features_only = state_features_only
+        self.loss_type = loss_type
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         if self._state_features_only:
@@ -75,7 +84,7 @@ class NeuralBandit(ContextualBanditBase):
         current_values = self._deep_represent_layers(input_features)
         expected_values = batch.reward
 
-        criterion = torch.nn.MSELoss()
+        criterion = LOSS_TYPES[self.loss_type]
         loss = criterion(current_values.view(expected_values.shape), expected_values)
 
         # Optimize the deep layer
