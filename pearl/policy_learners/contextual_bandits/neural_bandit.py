@@ -8,6 +8,7 @@
 from typing import Any, Dict, List, Optional
 
 import torch
+import torch.nn as nn
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -35,6 +36,15 @@ LOSS_TYPES = {
     "mae": torch.nn.functional.l1_loss,
     "cross_entropy": torch.nn.functional.binary_cross_entropy,
 }  # loss func for neural bandits algorithms
+
+ACTIVATION_MAP = {
+    "tanh": nn.Tanh,
+    "relu": nn.ReLU,
+    "leaky_relu": nn.LeakyReLU,
+    "linear": nn.Identity,
+    "sigmoid": nn.Sigmoid,
+    "softplus": nn.Softplus,
+}
 
 
 class NeuralBandit(ContextualBanditBase):
