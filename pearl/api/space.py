@@ -12,7 +12,7 @@ from typing import Optional
 
 import torch
 
-from pearl.api.action import Action
+from Pearl.pearl.api.action import Action
 from torch import Tensor
 
 

@@ -9,15 +9,15 @@ from typing import Optional
 
 import torch
 
-from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
-from pearl.history_summarization_modules.history_summarization_module import (
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
-from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
+from Pearl.pearl.policy_learners.exploration_modules.common.score_exploration_base import (
     ScoreExplorationBase,
 )
-from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
+from Pearl.pearl.utils.instantiations.spaces.discrete import DiscreteSpace
 
 
 class NoExploration(ScoreExplorationBase):

@@ -8,33 +8,33 @@
 from typing import Any, Dict, List, Optional, Type
 
 import torch
-from pearl.action_representation_modules.action_representation_module import (
+from Pearl.pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
-from pearl.api.action_space import ActionSpace
-from pearl.neural_networks.common.utils import update_target_network
-from pearl.neural_networks.common.value_networks import VanillaQValueNetwork
-from pearl.neural_networks.sequential_decision_making.actor_networks import (
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.neural_networks.common.utils import update_target_network
+from Pearl.pearl.neural_networks.common.value_networks import VanillaQValueNetwork
+from Pearl.pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetwork,
     VanillaContinuousActorNetwork,
 )
-from pearl.neural_networks.sequential_decision_making.q_value_network import (
+from Pearl.pearl.neural_networks.sequential_decision_making.q_value_network import (
     QValueNetwork,
 )
-from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
-from pearl.policy_learners.exploration_modules.exploration_module import (
+from Pearl.pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
+from Pearl.pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
-from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
+from Pearl.pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     make_critic,
     twin_critic_action_value_update,
     update_critic_target_network,
 )
-from pearl.policy_learners.sequential_decision_making.ddpg import (
+from Pearl.pearl.policy_learners.sequential_decision_making.ddpg import (
     DeepDeterministicPolicyGradient,
 )
-from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
+from Pearl.pearl.replay_buffers.transition import TransitionBatch
+from Pearl.pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 from torch import nn, optim
 
 

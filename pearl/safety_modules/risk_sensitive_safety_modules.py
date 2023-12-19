@@ -9,17 +9,17 @@ from abc import abstractmethod
 from typing import Optional
 
 import torch
-from pearl.api.action_space import ActionSpace
-from pearl.history_summarization_modules.history_summarization_module import (
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
-from pearl.neural_networks.sequential_decision_making.q_value_network import (
+from Pearl.pearl.neural_networks.sequential_decision_making.q_value_network import (
     DistributionalQValueNetwork,
 )
-from pearl.policy_learners.policy_learner import PolicyLearner
-from pearl.replay_buffers.replay_buffer import ReplayBuffer
-from pearl.replay_buffers.transition import TransitionBatch
-from pearl.safety_modules.safety_module import SafetyModule
+from Pearl.pearl.policy_learners.policy_learner import PolicyLearner
+from Pearl.pearl.replay_buffers.replay_buffer import ReplayBuffer
+from Pearl.pearl.replay_buffers.transition import TransitionBatch
+from Pearl.pearl.safety_modules.safety_module import SafetyModule
 from torch import Tensor
 
 

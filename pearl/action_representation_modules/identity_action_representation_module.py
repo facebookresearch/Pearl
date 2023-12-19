@@ -6,7 +6,7 @@
 #
 
 import torch
-from pearl.action_representation_modules.action_representation_module import (
+from Pearl.pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
 

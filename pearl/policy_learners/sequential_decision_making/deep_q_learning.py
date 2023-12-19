@@ -8,26 +8,28 @@
 from typing import Any, Optional, Tuple
 
 import torch
-from pearl.action_representation_modules.action_representation_module import (
+from Pearl.pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
-from pearl.api.action_space import ActionSpace
-from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
     EGreedyExploration,
 )
-from pearl.policy_learners.exploration_modules.exploration_module import (
+from Pearl.pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
-from pearl.policy_learners.sequential_decision_making.deep_td_learning import (
+from Pearl.pearl.policy_learners.sequential_decision_making.deep_td_learning import (
     DeepTDLearning,
 )
-from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from Pearl.pearl.replay_buffers.transition import TransitionBatch
+from Pearl.pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class DeepQLearning(DeepTDLearning):
     """
     Deep Q Learning Policy Learner
+
+    DO NOT ADJUST THE BATCH SIZE.
     """
 
     def __init__(
@@ -65,13 +67,48 @@ class DeepQLearning(DeepTDLearning):
 
         assert next_available_actions is not None
 
+        next_available_actions = next_available_actions.to(dtype=torch.int64)
+        next_state = next_state.to(dtype=torch.float32)
+
+        # display(f"{next_state.shape=} {next_available_actions.shape=}")
+
+        assert next_state.size(0) == 124, f"{next_state.shape=}"
+        assert next_available_actions.size(0) == 124, f"{next_available_actions.shape=}"
+
+        # if next_state.size(1) == 992:
+        #    transform_layer = torch.nn.Linear(992, 122)
+        #    next_state = transform_layer(next_state)
+
+        # Flatten the next_state tensor
+        # next_state_flat = next_state.view(batch_size, -1)  # Reshapes to [128, 2*994]
+        # Define a transformation layer (if not already defined)
+        # transform_layer = torch.nn.Linear(2*994, 124)
+        # Apply the transformation
+        # next_state_transformed = transform_layer(next_state_flat)  # Reshapes to [128, 124]
+        # next_state_transformed = next_state_transformed.to(torch.float32)
+        # Concatenate state and action batches
+        # combined_batch = torch.cat([next_state, next_available_actions], dim=2)  # Shape: [124, 124]
+        # Define a transformation layer
+        # transform_layer = torch.nn.Linear(124, 124)  # Adjust to match the actual size
+        # Apply the transformation
+        # next_state_transformed = transform_layer(combined_batch)  # New shape: [124, 124]
+        next_state_transformed = next_state[:, 0, :]
+        next_actions_transformed = next_available_actions[:, 0, :]
+
+        transform_layer = torch.nn.Linear(992, 122)  # Transformation from 994 to 124 features
+        next_state_transformed_input = transform_layer(next_state_transformed)  # Applying the transformation
+
+        # display(f"{next_state_transformed.shape=}")
         next_state_action_values = self._Q_target.get_q_values(
-            next_state, next_available_actions
+            next_state_transformed_input, next_actions_transformed
         ).view(batch_size, -1)
         # (batch_size x action_space_size)
 
+        next_unavailable_actions_mask = next_unavailable_actions_mask[:, 0]
         # Make sure that unavailable actions' Q values are assigned to -inf
         next_state_action_values[next_unavailable_actions_mask] = -float("inf")
+
+
 
         # Torch.max(1) returns value, indices
         return next_state_action_values.max(1)[0]  # (batch_size)

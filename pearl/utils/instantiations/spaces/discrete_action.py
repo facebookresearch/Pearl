@@ -12,10 +12,10 @@ import logging
 from typing import List, Optional
 
 import torch
-from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
-from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
-from pearl.utils.instantiations.spaces.utils import reshape_to_1d_tensor
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.utils.instantiations.spaces.discrete import DiscreteSpace
+from Pearl.pearl.utils.instantiations.spaces.utils import reshape_to_1d_tensor
 from torch import Tensor
 
 try:

@@ -11,12 +11,12 @@ from typing import Optional
 
 import torch
 
-from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
-from pearl.history_summarization_modules.history_summarization_module import (
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
-from pearl.replay_buffers.replay_buffer import ReplayBuffer
+from Pearl.pearl.replay_buffers.replay_buffer import ReplayBuffer
 
 
 class ExplorationType(Enum):

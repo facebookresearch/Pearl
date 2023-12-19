@@ -10,13 +10,13 @@ from typing import Optional
 
 import torch
 
-from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
-from pearl.api.state import SubjectiveState
-from pearl.policy_learners.exploration_modules.common.uniform_exploration_base import (
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.api.state import SubjectiveState
+from Pearl.pearl.policy_learners.exploration_modules.common.uniform_exploration_base import (
     UniformExplorationBase,
 )
-from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from Pearl.pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class EGreedyExploration(UniformExplorationBase):

@@ -8,13 +8,13 @@
 from typing import Optional
 
 import torch
-from pearl.api.action import Action
-from pearl.api.history import History
-from pearl.api.observation import Observation
-from pearl.history_summarization_modules.history_summarization_module import (
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.history import History
+from Pearl.pearl.api.observation import Observation
+from Pearl.pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
 )
-from pearl.utils.tensor_like import assert_is_tensor_like
+from Pearl.pearl.utils.tensor_like import assert_is_tensor_like
 
 
 class StackingHistorySummarizationModule(HistorySummarizationModule):
@@ -42,10 +42,24 @@ class StackingHistorySummarizationModule(HistorySummarizationModule):
 
         observation = assert_is_tensor_like(observation)
         action = assert_is_tensor_like(action)
-        assert observation.shape[-1] + action.shape[-1] == self.history.shape[-1]
+
+        assert observation.shape[-1] + action.shape[-1] == self.history.shape[-1], (
+            f"{observation.shape=} {action.shape=} {self.history.shape=}"
+        )
+
+        if action.dim() == 1:
+            # Then create a tensor of shape (1, action_dim)
+            action = action.view(1, -1)
+
+        assert action.dim() == 2, f"{action.dim()=}"
+
+        # The observation takes on a dimension of 2 when we run:
+        # observation = observation.view(1, -1)
+
         observation_action_pair = torch.cat(
             (action, observation.view(1, -1)), dim=-1
         ).detach()
+
         self.history = torch.cat(
             [
                 self.history[1:, :],
@@ -61,7 +75,10 @@ class StackingHistorySummarizationModule(HistorySummarizationModule):
         return self.history.view((-1))
 
     def forward(self, x: History) -> torch.Tensor:
-        x = assert_is_tensor_like(x)
+        try:
+            x = assert_is_tensor_like(x)
+        except AssertionError as ae:
+            raise AssertionError(f"{type(x)=} {x=} is not a tensor like object.") from ae
         return x
 
     def reset(self) -> None:

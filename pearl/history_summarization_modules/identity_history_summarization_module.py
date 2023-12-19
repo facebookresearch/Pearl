@@ -9,10 +9,10 @@ from typing import Optional
 
 import torch
 
-from pearl.api.action import Action
-from pearl.api.history import History
-from pearl.api.observation import Observation
-from pearl.history_summarization_modules.history_summarization_module import (
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.history import History
+from Pearl.pearl.api.observation import Observation
+from Pearl.pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
     SubjectiveState,
 )

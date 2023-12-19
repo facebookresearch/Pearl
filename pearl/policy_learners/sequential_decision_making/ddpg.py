@@ -8,31 +8,31 @@
 from typing import Any, Dict, List, Optional, Type
 
 import torch
-from pearl.action_representation_modules.action_representation_module import (
+from Pearl.pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
-from pearl.api.action_space import ActionSpace
+from Pearl.pearl.api.action_space import ActionSpace
 
-from pearl.neural_networks.common.value_networks import VanillaQValueNetwork
-from pearl.neural_networks.sequential_decision_making.actor_networks import (
+from Pearl.pearl.neural_networks.common.value_networks import VanillaQValueNetwork
+from Pearl.pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetwork,
     VanillaContinuousActorNetwork,
 )
-from pearl.neural_networks.sequential_decision_making.q_value_network import (
+from Pearl.pearl.neural_networks.sequential_decision_making.q_value_network import (
     QValueNetwork,
 )
-from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
-from pearl.policy_learners.exploration_modules.common.normal_distribution_exploration import (  # noqa E501
+from Pearl.pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
+from Pearl.pearl.policy_learners.exploration_modules.common.normal_distribution_exploration import (  # noqa E501
     NormalDistributionExploration,
 )
-from pearl.policy_learners.exploration_modules.exploration_module import (
+from Pearl.pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
-from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
+from Pearl.pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
     twin_critic_action_value_update,
 )
-from pearl.replay_buffers.transition import TransitionBatch
+from Pearl.pearl.replay_buffers.transition import TransitionBatch
 
 
 class DeepDeterministicPolicyGradient(ActorCriticBase):

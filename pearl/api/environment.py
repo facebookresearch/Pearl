@@ -10,10 +10,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Optional, Tuple
 
-from pearl.api.action import Action
-from pearl.api.action_result import ActionResult
-from pearl.api.action_space import ActionSpace
-from pearl.api.observation import Observation
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.action_result import ActionResult
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.api.observation import Observation
 
 
 class Environment(ABC):

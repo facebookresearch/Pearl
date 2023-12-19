@@ -15,9 +15,9 @@ from typing import List, Optional, Tuple, Union
 import torch
 import torch.nn as nn
 
-from pearl.api.action_space import ActionSpace
-from pearl.neural_networks.common.utils import mlp_block
-from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.neural_networks.common.utils import mlp_block
+from Pearl.pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 
 from torch import Tensor
 from torch.distributions import Normal
