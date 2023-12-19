@@ -5,9 +5,11 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import torch
+
+import torch.nn as nn
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -18,7 +20,11 @@ from pearl.history_summarization_modules.history_summarization_module import (
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     DEFAULT_ACTION_SPACE,
 )
-from pearl.policy_learners.contextual_bandits.neural_bandit import NeuralBandit
+from pearl.policy_learners.contextual_bandits.neural_bandit import (
+    ACTIVATION_MAP,
+    LOSS_TYPES,
+    NeuralBandit,
+)
 from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
     UCBExploration,
 )
@@ -37,7 +43,17 @@ class NeuralLinearBandit(NeuralBandit):
     """
     Policy Learner for Contextual Bandit with:
     features --> neural networks --> linear regression --> predicted rewards
+
+    The difference vs its parent class NeuralBandit is the extra
+    linear regression on top of `_deep_represent_layers`.
+    Here _deep_represent_layers can be treated as featuer processing,
+    and then processed features are fed into a linear regression layer to output predicted score.
+    For example : features --> neural networks --> LinUCB --> UCB score
     """
+
+    output_activation: Union[
+        nn.LeakyReLU, nn.ReLU, nn.Sigmoid, nn.Softplus, nn.Tanh, nn.Identity
+    ]
 
     def __init__(
         self,
@@ -49,7 +65,10 @@ class NeuralLinearBandit(NeuralBandit):
         learning_rate: float = 0.001,
         l2_reg_lambda_linear: float = 1.0,
         state_features_only: bool = False,
-        **kwargs: Any,
+        loss_type: str = "mse",  # one of the LOSS_TYPES names, e.g., mse, mae, xentropy
+        output_activation_name: str = "linear",
+        # pyre-fixme[2]: Parameter must be annotated.
+        **kwargs,
     ) -> None:
         assert (
             len(hidden_dims) >= 1
@@ -62,6 +81,7 @@ class NeuralLinearBandit(NeuralBandit):
             batch_size=batch_size,
             exploration_module=exploration_module,
             state_features_only=state_features_only,
+            loss_type=loss_type,
             **kwargs,
         )
         # TODO specify linear regression type when needed
@@ -69,7 +89,11 @@ class NeuralLinearBandit(NeuralBandit):
             feature_dim=hidden_dims[-1],
             l2_reg_lambda=l2_reg_lambda_linear,
         )
-        self._linear_regression_dim: int = hidden_dims[-1]
+        # pyre-fixme[4]: Attribute must be annotated.
+        self._linear_regression_dim = hidden_dims[-1]
+        self.loss_type = loss_type
+        self.output_activation = ACTIVATION_MAP[output_activation_name]()
+        self.output_activation_name = output_activation_name
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         if self._state_features_only:
@@ -79,10 +103,17 @@ class NeuralLinearBandit(NeuralBandit):
 
         # forward pass
         mlp_output = self._deep_represent_layers(input_features)
-        current_values = self._linear_regression(mlp_output)
+        lr_output = self._linear_regression(mlp_output)
         expected_values = batch.reward
 
-        criterion = torch.nn.MSELoss()
+        # criterion = mae, mse, Xentropy
+        # Xentropy loss apply Sigmoid, MSE or MAE apply Identiy
+        criterion = LOSS_TYPES[self.loss_type]
+        current_values = self.output_activation(lr_output)
+        if self.loss_type == "cross_entropy":
+            assert torch.all(expected_values >= 0) and torch.all(expected_values <= 1)
+            assert torch.all(current_values >= 0) and torch.all(current_values <= 1)
+            assert self.output_activation_name == "sigmoid"
         loss = criterion(current_values.view(expected_values.shape), expected_values)
 
         # Optimize the deep layer
@@ -161,4 +192,5 @@ class NeuralLinearBandit(NeuralBandit):
             representation=self._linear_regression,
         )
         # dim: [batch_size, num_arms] or [batch_size]
+        scores = self.output_activation(scores)
         return scores.reshape(batch_size, -1).squeeze()

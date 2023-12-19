@@ -25,32 +25,30 @@ from pearl.pearl_agent import PearlAgent
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
-from pearl.utils.scripts.benchmark_config import (
-    benchmark_acrobot_v1_part_1,
-    benchmark_acrobot_v1_part_2,
-    benchmark_ant_v4,
-    benchmark_cartpole_v1_part_1,
-    benchmark_cartpole_v1_part_2,
-    benchmark_halfcheetah_v4,
-    benchmark_hopper_v4,
-    benchmark_walker2d_v4,
-    generate_rctd3_ant,
-    generate_rctd3_half_cheetah_v1,
-    generate_rctd3_hopper,
-    generate_rctd3_walker,
+from pearl.utils.scripts.benchmark_config import (  # noqa
+    benchmark_acrobot_v1_part_1,  # noqa
+    benchmark_acrobot_v1_part_2,  # noqa
+    benchmark_ant_v4,  # noqa
+    benchmark_cartpole_v1_part_1,  # noqa
+    benchmark_cartpole_v1_part_2,  # noqa
+    benchmark_halfcheetah_v4,  # noqa
+    benchmark_hopper_v4,  # noqa
+    benchmark_walker2d_v4,  # noqa
+    generate_rctd3_ant,  # noqa
+    generate_rctd3_half_cheetah_v1,  # noqa
+    generate_rctd3_hopper,  # noqa
+    generate_rctd3_walker,  # noqa
     get_env,
-    num_runs,
-    print_every_x_steps,
-    rctd3_ant_part_1,
-    rctd3_ant_part_2,
-    rctd3_ant_part_3,
-    rctd3_ant_part_4,
-    rctd3_half_cheetah_v1_part_1,
-    rctd3_half_cheetah_v1_part_2,
-    rctd3_hopper_part_1,
-    rctd3_hopper_part_2,
-    rctd3_walker_part_1,
-    rctd3_walker_part_2,
+    rctd3_ant_part_1,  # noqa
+    rctd3_ant_part_2,  # noqa
+    rctd3_ant_part_3,  # noqa
+    rctd3_ant_part_4,  # noqa
+    rctd3_half_cheetah_v1_part_1,  # noqa
+    rctd3_half_cheetah_v1_part_2,  # noqa
+    rctd3_hopper_part_1,  # noqa
+    rctd3_hopper_part_2,  # noqa
+    rctd3_walker_part_1,  # noqa
+    rctd3_walker_part_2,  # noqa
     test_dynamic_action_space,
 )
 
