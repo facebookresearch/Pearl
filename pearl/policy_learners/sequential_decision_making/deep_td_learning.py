@@ -59,7 +59,11 @@ class DeepTDLearning(PolicyLearner):
         learning_rate: float = 0.001,
         discount_factor: float = 0.99,
         training_rounds: int = 100,
+<<<<<<< Updated upstream
         batch_size: int = 86,
+=======
+        batch_size: int = 124,
+>>>>>>> Stashed changes
         target_update_freq: int = 10,
         soft_update_tau: float = 0.1,
         is_conservative: bool = False,
@@ -192,9 +196,13 @@ class DeepTDLearning(PolicyLearner):
 
             # display(f"{states_repeated.shape=} {actions.shape=}")
 
+<<<<<<< Updated upstream
             self.states_repeated_shape = states_repeated.shape[1]
 
             transform_layer = torch.nn.Linear(states_repeated.shape[1], self.state_dim)
+=======
+            transform_layer = torch.nn.Linear(992, 122)
+>>>>>>> Stashed changes
             states_repeated_transformed = transform_layer(states_repeated)
 
             # display(f"{states_repeated_transformed.shape=}")
@@ -230,9 +238,16 @@ class DeepTDLearning(PolicyLearner):
 
         action_batch = action_batch.to(dtype=torch.int64)
         state_batch = state_batch.to(torch.float32)
+<<<<<<< Updated upstream
 
         if state_batch.size(1) > 10:
             transform_layer = torch.nn.Linear(state_batch.size(1), self.state_dim)
+=======
+        # transform_layer = torch.nn.Linear(992, 122)
+        # state_batch = transform_layer(state_batch)
+        if state_batch.size(1) == 992:
+            transform_layer = torch.nn.Linear(992, 122)
+>>>>>>> Stashed changes
             state_batch = transform_layer(state_batch)
 
         batch.state = state_batch

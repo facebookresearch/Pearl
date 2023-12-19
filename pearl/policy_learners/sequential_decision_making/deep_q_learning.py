@@ -107,6 +107,8 @@ class DeepQLearning(DeepTDLearning):
         # Make sure that unavailable actions' Q values are assigned to -inf
         next_state_action_values[next_unavailable_actions_mask] = -float("inf")
 
+
+
         # Torch.max(1) returns value, indices
         return next_state_action_values.max(1)[0]  # (batch_size)
 
