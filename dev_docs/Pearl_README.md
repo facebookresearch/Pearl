@@ -33,7 +33,7 @@ environment interaction data. Examples:
     * Reinforcement learning:
         1) Noise based exploration: epsilon greedy (for discrete action space) and random noise
            injection (for continuous action space).
-        2) Propesity based exploration for stochastic policies.
+        2) Propensity based exploration for stochastic policies.
         3) Posterior sampling methods using ensemble approximation (model episetemic uncertainty
            in value function approximation).
 
