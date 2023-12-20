@@ -121,6 +121,7 @@ class PearlAgent(Agent):
         self._latest_action: Optional[Action] = None
         self._action_space: Optional[ActionSpace] = None
         self.policy_learner.to(self.device)
+        self.safety_module.to(self.device)
         self.history_summarization_module.to(self.device)
 
     def act(self, exploit: bool = False) -> Action:

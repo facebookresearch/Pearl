@@ -7,6 +7,8 @@
 
 from abc import ABC, abstractmethod
 
+import torch
+
 from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
@@ -17,7 +19,7 @@ from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
 
 
-class SafetyModule(ABC):
+class SafetyModule(torch.nn.Module, ABC):
     """
     An abstract interface for exploration module.
     """
