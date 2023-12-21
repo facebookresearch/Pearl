@@ -3,6 +3,8 @@
 ### Proudly brought by Applied Reinforcement Learning @ Meta
 
 - v0.1 - Pearl beta-version is now released! Announcements: [Twitter Post](https://x.com/ZheqingZhu/status/1732880717263352149?s=20), [LinkedIn Post](https://www.linkedin.com/posts/zheqingzhubill_github-facebookresearchpearl-a-production-ready-activity-7138647748102258688-rz-g?utm_source=share&utm_medium=member_desktop)
+  - Highlighted on Meta NeurIPS 2023 Official Website: [Website](https://ai.meta.com/events/neurips-2023/)
+  - Highlighted by AI at Meta official handle on Twitter and LinkedIn: [Twitter Post](https://x.com/AIatMeta/status/1734633932975407202?s=20), [LinkedIn Post](https://www.linkedin.com/posts/aiatmeta_neurips2023-activity-7140398603868549120-5T7E?utm_source=share&utm_medium=member_desktop).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Support Ukraine](https://img.shields.io/badge/Support-Ukraine-FFD500?style=flat&labelColor=005BBB)](https://opensource.fb.com/support-ukraine)
@@ -10,6 +12,8 @@
 More details of the library at our [official website](https://pearlagent.github.io).
 
 The Pearl paper is [available at Arxiv](https://chs6.short.gy/pearl_paper).
+
+Our NeurIPS 2023 Presentation Slides is released [here](https://pearlagent.github.io/pearl_detailed_intro.pdf).
 
 ## Overview
 Pearl is a new production-ready Reinforcement Learning AI agent library open-sourced by the Applied Reinforcement Learning team at Meta. Furthering our efforts on open AI innovation, Pearl enables researchers and practitioners to develop Reinforcement Learning AI agents. These AI agents prioritize cumulative long-term feedback over immediate feedback and can adapt to environments with limited observability, sparse feedback, and high stochasticity. We hope that Pearl offers the community a means to build state-of-the-art Reinforcement Learning AI agents that can adapt to a wide range of complex production environments.
@@ -25,8 +29,6 @@ pip install -e .
 ```
 
 ### Quick Start
-NeurIPS EXPO Tutorial Colab: [Link](https://github.com/PearlAgent/pearl_neurips_demo/blob/main/demo.ipynb)
-
 To kick off a Pearl agent with a classic reinforcement learning environment, here's a quick example.
 ```py
 from pearl.pearl_agent import PearlAgent
@@ -67,7 +69,7 @@ while not done:
     agent.learn()
     done = action_result.done
 ```
-More detailed tutorial will be presented at NeurIPS 2023 EXPO presentation (12/10/2023, 4 pm to 6 pm). Users can replace the environment with any real-world problems.
+Users can replace the environment with any real-world problems.
 
 ## Design and Features
 ![alt](./logo/agent_interface.png)
