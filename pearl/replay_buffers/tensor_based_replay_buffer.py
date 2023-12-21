@@ -238,11 +238,15 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         done_batch = torch.cat(done_list)
         cum_reward_batch = None
 
+<<<<<<< HEAD
 <<<<<<< Updated upstream
         # assert action_batch.shape == (124, 1), f"{action_batch.shape=}"
 =======
         assert action_batch.shape == (124, 1), f"{action_batch.shape=}"
 >>>>>>> Stashed changes
+=======
+        # assert action_batch.shape == (124, 1), f"{action_batch.shape=}"
+>>>>>>> f0ac0d1 (Updated linear transformations to dynamic variables based on input dim)
         # assert state_batch.shape == (128, 992), f"{state_batch.shape=}"
 
         if has_cost_available:
