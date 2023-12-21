@@ -57,11 +57,15 @@ class DeepTDLearning(PolicyLearner):
         learning_rate: float = 0.001,
         discount_factor: float = 0.99,
         training_rounds: int = 100,
+<<<<<<< HEAD
 <<<<<<< Updated upstream
         batch_size: int = 86,
 =======
         batch_size: int = 124,
 >>>>>>> Stashed changes
+=======
+        batch_size: int = 86,
+>>>>>>> f0ac0d1 (Updated linear transformations to dynamic variables based on input dim)
         target_update_freq: int = 10,
         soft_update_tau: float = 0.1,
         is_conservative: bool = False,
@@ -194,6 +198,7 @@ class DeepTDLearning(PolicyLearner):
 
             # display(f"{states_repeated.shape=} {actions.shape=}")
 
+<<<<<<< HEAD
 <<<<<<< Updated upstream
             self.states_repeated_shape = states_repeated.shape[1]
 
@@ -201,6 +206,11 @@ class DeepTDLearning(PolicyLearner):
 =======
             transform_layer = torch.nn.Linear(992, 122)
 >>>>>>> Stashed changes
+=======
+            self.states_repeated_shape = states_repeated.shape[1]
+
+            transform_layer = torch.nn.Linear(states_repeated.shape[1], self.state_dim)
+>>>>>>> f0ac0d1 (Updated linear transformations to dynamic variables based on input dim)
             states_repeated_transformed = transform_layer(states_repeated)
 
             # display(f"{states_repeated_transformed.shape=}")
@@ -236,6 +246,7 @@ class DeepTDLearning(PolicyLearner):
 
         action_batch = action_batch.to(dtype=torch.int64)
         state_batch = state_batch.to(torch.float32)
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 
         if state_batch.size(1) > 10:
@@ -246,6 +257,11 @@ class DeepTDLearning(PolicyLearner):
         if state_batch.size(1) == 992:
             transform_layer = torch.nn.Linear(992, 122)
 >>>>>>> Stashed changes
+=======
+
+        if state_batch.size(1) > 10:
+            transform_layer = torch.nn.Linear(state_batch.size(1), self.state_dim)
+>>>>>>> f0ac0d1 (Updated linear transformations to dynamic variables based on input dim)
             state_batch = transform_layer(state_batch)
 
         batch.state = state_batch
