@@ -21,7 +21,7 @@ Pearl is a new production-ready Reinforcement Learning AI agent library open-sou
 ## Getting Started
 
 ### Installation
-To install Pearl, you can simply clone this repo and pip install
+To install Pearl, you can simply clone this repository and run `pip install -e .` (you need `pip` version ≥ 21.3 and `setuptools` version ≥ 64):
 ```bash
 git clone https://github.com/facebookresearch/Pearl.git
 cd Pearl
