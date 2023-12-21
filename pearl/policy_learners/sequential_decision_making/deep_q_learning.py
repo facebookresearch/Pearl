@@ -29,7 +29,6 @@ class DeepQLearning(DeepTDLearning):
     """
     Deep Q Learning Policy Learner
 
-    DO NOT ADJUST THE BATCH SIZE.
     """
 
     def __init__(
@@ -45,7 +44,7 @@ class DeepQLearning(DeepTDLearning):
         super(DeepQLearning, self).__init__(
             exploration_module=exploration_module
             if exploration_module is not None
-            else EGreedyExploration(0.05),
+            else EGreedyExploration(0.33),
             on_policy=False,
             state_dim=state_dim,
             action_space=action_space,
@@ -72,8 +71,8 @@ class DeepQLearning(DeepTDLearning):
 
         # display(f"{next_state.shape=} {next_available_actions.shape=}")
 
-        assert next_state.size(0) == 124, f"{next_state.shape=}"
-        assert next_available_actions.size(0) == 124, f"{next_available_actions.shape=}"
+        # assert next_state.size(0) == self.state_dim, f"{next_state.shape=} \n {self.state_dim=}"
+        # assert next_available_actions.size(0) == self.state_dim, f"{next_available_actions.shape=}"
 
         # if next_state.size(1) == 992:
         #    transform_layer = torch.nn.Linear(992, 122)
@@ -95,7 +94,7 @@ class DeepQLearning(DeepTDLearning):
         next_state_transformed = next_state[:, 0, :]
         next_actions_transformed = next_available_actions[:, 0, :]
 
-        transform_layer = torch.nn.Linear(992, 122)  # Transformation from 994 to 124 features
+        transform_layer = torch.nn.Linear(in_features=self.states_repeated_shape, out_features=self.state_dim)  # Transformation from 994 to 124 features
         next_state_transformed_input = transform_layer(next_state_transformed)  # Applying the transformation
 
         # display(f"{next_state_transformed.shape=}")
@@ -107,8 +106,6 @@ class DeepQLearning(DeepTDLearning):
         next_unavailable_actions_mask = next_unavailable_actions_mask[:, 0]
         # Make sure that unavailable actions' Q values are assigned to -inf
         next_state_action_values[next_unavailable_actions_mask] = -float("inf")
-
-
 
         # Torch.max(1) returns value, indices
         return next_state_action_values.max(1)[0]  # (batch_size)

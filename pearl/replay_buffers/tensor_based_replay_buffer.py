@@ -238,7 +238,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         done_batch = torch.cat(done_list)
         cum_reward_batch = None
 
-        assert action_batch.shape == (124, 1), f"{action_batch.shape=}"
+        # assert action_batch.shape == (124, 1), f"{action_batch.shape=}"
         # assert state_batch.shape == (128, 992), f"{state_batch.shape=}"
 
         if has_cost_available:
