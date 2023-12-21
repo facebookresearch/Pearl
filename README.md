@@ -71,6 +71,11 @@ while not done:
 ```
 Users can replace the environment with any real-world problems.
 
+## Tutorials
+1. The first tutorial of Pearl focuses on recommender systems. We derived a small contrived recommender system environment using the MIND dataset (Wu et al. 2020). More details in https://github.com/facebookresearch/Pearl/tree/main/pearl/tutorials/single_item_recommender_system_example/demo.ipynb
+
+More tutorials coming in 2024.
+
 ## Design and Features
 ![alt](./logo/agent_interface.png)
 Pearl was built with a modular design so that industry practitioners or academic researchers can select any subset and flexibly combine features below to construct a Pearl agent customized for their specific use cases. Pearl offers a diverse set of unique features for production environments, including dynamic action spaces, offline learning, intelligent neural exploration, safe decision making, history summarization, and data augmentation.
