@@ -155,6 +155,7 @@ class DisjointBanditContainer(ContextualBanditBase):
             subjective_state=subjective_state,
             action_space=available_action_space,
             state_features_only=self._state_features_only,
+            action_representation_module=self._action_representation_module,
         )
         # (batch_size, action_count, feature_size)
 
@@ -186,6 +187,7 @@ class DisjointBanditContainer(ContextualBanditBase):
             subjective_state=subjective_state,
             action_space=action_space,
             state_features_only=self._state_features_only,
+            action_representation_module=self._action_representation_module,
         )
         # (batch_size, action_count, feature_size)
 

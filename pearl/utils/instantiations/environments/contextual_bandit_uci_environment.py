@@ -26,6 +26,7 @@ class SLCBEnvironment(ContextualBanditEnvironment):
         target_column: int = 0,
         ind_to_drop: Optional[List[int]] = None,
     ) -> None:
+
         if ind_to_drop is None:
             ind_to_drop = []
 

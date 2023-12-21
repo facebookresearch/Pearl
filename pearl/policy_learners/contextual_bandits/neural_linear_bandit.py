@@ -145,6 +145,7 @@ class NeuralLinearBandit(NeuralBandit):
             subjective_state=subjective_state,
             action_space=action_space,
             state_features_only=self._state_features_only,
+            action_representation_module=self._action_representation_module,
         )
         mlp_values = self._deep_represent_layers(new_feature)
         # `_linear_regression` is not nn.Linear().
@@ -176,6 +177,7 @@ class NeuralLinearBandit(NeuralBandit):
             subjective_state=subjective_state,
             action_space=action_space,
             state_features_only=self._state_features_only,
+            action_representation_module=self._action_representation_module,
         )
         batch_size = feature.shape[0]
         feature_dim = feature.shape[-1]

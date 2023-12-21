@@ -10,6 +10,12 @@ import random
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
+from pearl.action_representation_modules.binary_action_representation_module import (
+    BinaryActionTensorRepresentationModule,
+)
 
 from pearl.pearl_agent import PearlAgent
 from pearl.policy_learners.contextual_bandits.neural_bandit import NeuralBandit
@@ -69,7 +75,7 @@ def train_via_uniform_data(
     agent: PearlAgent,
     T: int = 50000,
     training_epoches: int = 100,
-    action_embeddings: str = "binary_embedding",
+    action_embeddings: str = "discrete",
 ) -> PearlAgent:
     """
     Get model trained on a dataset collected by acting with a uniform policy
@@ -103,7 +109,8 @@ def run_experiments_offline(
     T: int = 50000,
     training_rounds: int = 100,
     hidden_dims: Optional[List[int]] = None,
-    num_eval_steps: int = 5000,
+    num_eval_steps: int = 100,
+    action_representation_module: Optional[ActionRepresentationModule] = None,
 ) -> List[float]:
     """
     Runs offline evaluation by training a `NeuralBandit` on the data collected
@@ -113,8 +120,12 @@ def run_experiments_offline(
         hidden_dims = [64, 16]
 
     feature_dim = env.observation_dim
-    dim_actions = env._action_dim_env
+    dim_actions = env.bits_num
 
+    if action_representation_module is None:
+        action_representation_module = BinaryActionTensorRepresentationModule(
+            bits_num=dim_actions
+        )
     # prepare offline agent
     neural_greedy_policy = NeuralBandit(
         feature_dim=feature_dim + dim_actions,
@@ -125,6 +136,8 @@ def run_experiments_offline(
         exploration_module=NoExploration(),
         use_keyed_optimizer=False,
     )
+
+    neural_greedy_policy._action_representation_module = action_representation_module
     agent = PearlAgent(
         policy_learner=neural_greedy_policy,
         replay_buffer=DiscreteContextualBanditReplayBuffer(T),
@@ -146,7 +159,8 @@ def run_experiments_online(
     replay_buffer_size: int = 100,
 ) -> List[float]:
     """
-    Runs online evaluation by training a policy learner on the data collected by following the attached `exploration_module`.
+    Runs online evaluation by training a policy learner on the
+    data collected by following the attached `exploration_module`.
     """
     # prepare agent
     agent = PearlAgent(
@@ -214,6 +228,9 @@ def run_experiments(
                 training_rounds=run_config["training_rounds"],
                 hidden_dims=policy_learner_dict["params"]["hidden_dim"],
                 num_eval_steps=policy_learner_dict["params"]["num_eval_steps"],
+                action_representation_module=policy_learner_dict["params"][
+                    "action_representation_module"
+                ],
             )
             experiment_name = "offline_evaluation_experiment_num_{}".format(
                 experiment_num
@@ -232,7 +249,7 @@ def run_experiments(
         ),
     )
     if os.path.exists(save_results_path_name):
-        os.remove(save_results_path)
+        os.remove(save_results_path_name)
 
     # save results
     df_regrets = pd.DataFrame(regrets)
@@ -278,7 +295,7 @@ def run_cb_benchmarks() -> None:
 
             run_experiments(
                 env=env,
-                T=run_config["T"],
+                T=run_config["T"] if dataset_name != "letter" else 30000,
                 num_of_experiments=run_config["num_of_experiments"],
                 policy_learner_dict=policy_learner_dict,
                 exploration_module_dict=exploration_module_dict,

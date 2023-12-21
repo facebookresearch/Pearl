@@ -8,6 +8,9 @@
 from typing import Optional
 
 import torch
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import Tensor
 
@@ -91,6 +94,7 @@ def get_model_actions(
 def concatenate_actions_to_state(
     subjective_state: Tensor,
     action_space: DiscreteActionSpace,
+    action_representation_module: ActionRepresentationModule,
     state_features_only: bool = False,
 ) -> Tensor:
     """A helper function for concatenating all actions from a `DiscreteActionSpace`
@@ -109,7 +113,11 @@ def concatenate_actions_to_state(
     subjective_state = subjective_state.view(-1, state_dim)
     batch_size = subjective_state.shape[0]
 
-    action_dim = action_space.action_dim
+    # action dim is the dimension of the output of action representation if set
+    if action_representation_module.representation_dim != -1:
+        action_dim = action_representation_module.representation_dim
+    else:
+        action_dim = action_space.action_dim
     action_count = action_space.n
 
     # Expand to (batch_size, action_count, state_dim) and return if `state_features_only`
@@ -119,6 +127,8 @@ def concatenate_actions_to_state(
 
     # Stack actions and expand to (batch_size, action_count, action_dim)
     actions = torch.stack(action_space.actions).to(subjective_state.device)
+    # Apply action transformation (default is the identity transformation)
+    actions = action_representation_module(actions)
     expanded_action = actions.unsqueeze(0).repeat(batch_size, 1, 1)
 
     # (batch_size, action_count, state_dim + action_dim)

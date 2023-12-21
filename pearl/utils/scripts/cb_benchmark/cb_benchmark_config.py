@@ -47,7 +47,7 @@ UCI Dataset configs
 satimage_uci: str = os.path.join(DATA_PATH, "satimage/sat.trn")
 satimage_uci_dict: Dict[str, Any] = {
     "path_filename": satimage_uci,
-    "action_embeddings": "binary_embedding",
+    "action_embeddings": "discrete",
     "delim_whitespace": True,
     "ind_to_drop": [],
     "target_column": 36,
@@ -57,14 +57,14 @@ satimage_uci_dict: Dict[str, Any] = {
 letter_uci: str = os.path.join(DATA_PATH, "letter/letter-recognition.data")
 letter_uci_dict: Dict[str, Any] = {
     "path_filename": letter_uci,
-    "action_embeddings": "binary_embedding",
+    "action_embeddings": "discrete",
 }
 
 # yeast uci dataset
 yeast_uci: str = os.path.join(DATA_PATH, "yeast/yeast.data")
 yeast_uci_dict: Dict[str, Any] = {
     "path_filename": yeast_uci,
-    "action_embeddings": "binary_embedding",
+    "action_embeddings": "discrete",
     "delim_whitespace": True,
     "ind_to_drop": [0],
     "target_column": 8,
@@ -74,7 +74,7 @@ yeast_uci_dict: Dict[str, Any] = {
 pendigits_uci: str = os.path.join(DATA_PATH, "pendigits/pendigits.tra")
 pendigits_uci_dict: Dict[str, Any] = {
     "path_filename": pendigits_uci,
-    "action_embeddings": "binary_embedding",
+    "action_embeddings": "discrete",
     "delim_whitespace": False,
     "ind_to_drop": [],
     "target_column": 16,
@@ -193,10 +193,17 @@ def return_NeuralLinTSConfig(
 def return_offlineEvalConfig(
     env: SLCBEnvironment,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    dim_actions: int = env.bits_num
     exploration_module_dict = {"name": "None"}
     policy_learner_dict = {
         "name": "Offline",
-        "params": {"hidden_dim": [64, 16], "num_eval_steps": 5000},
+        "params": {
+            "hidden_dim": [64, 16],
+            "num_eval_steps": 5000,
+            "action_representation_module": BinaryActionTensorRepresentationModule(
+                bits_num=dim_actions
+            ),
+        },
     }
 
     return policy_learner_dict, exploration_module_dict

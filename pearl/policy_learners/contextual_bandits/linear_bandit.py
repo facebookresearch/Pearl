@@ -93,7 +93,9 @@ class LinearBandit(ContextualBanditBase):
         ), "exploration module must be set to call act()"
         action_count = available_action_space.n
         new_feature = concatenate_actions_to_state(
-            subjective_state=subjective_state, action_space=available_action_space
+            subjective_state=subjective_state,
+            action_space=available_action_space,
+            action_representation_module=self._action_representation_module,
         )
         values = self.model(new_feature)  # (batch_size, action_count)
         assert values.shape == (new_feature.shape[0], action_count)
@@ -117,7 +119,9 @@ class LinearBandit(ContextualBanditBase):
         """
         assert isinstance(self._exploration_module, ScoreExplorationBase)
         feature = concatenate_actions_to_state(
-            subjective_state=subjective_state, action_space=action_space
+            subjective_state=subjective_state,
+            action_space=action_space,
+            action_representation_module=self._action_representation_module,
         )
         assert isinstance(self._exploration_module, ScoreExplorationBase)
         return self._exploration_module.get_scores(

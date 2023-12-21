@@ -28,7 +28,7 @@ class BinaryActionTensorRepresentationModule(ActionRepresentationModule):
 
     def binary(self, x: torch.Tensor) -> torch.Tensor:
         mask = 2 ** torch.arange(self._bits_num).to(device=x.device)
-        x = x.unsqueeze(-1).bitwise_and(mask).ne(0).byte()
+        x = x.bitwise_and(mask).ne(0).byte()
         return x.to(dtype=torch.float32)
 
     @property
