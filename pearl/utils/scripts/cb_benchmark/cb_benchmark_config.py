@@ -85,7 +85,7 @@ CB config
 """
 
 
-def return_NeuralSquareCBConfig(
+def return_neural_squarecb_config(
     env: SLCBEnvironment,
     run_config: Dict[str, Any] = run_config,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -122,7 +122,7 @@ def return_NeuralSquareCBConfig(
     return policy_learner_dict, exploration_module_dict
 
 
-def return_NeuralLinUCBConfig(
+def return_neural_lin_ucb_config(
     env: SLCBEnvironment,
     run_config: Dict[str, Any] = run_config,
     alpha: float = 1.0,
@@ -156,7 +156,7 @@ def return_NeuralLinUCBConfig(
     return policy_learner_dict, exploration_module_dict
 
 
-def return_NeuralLinTSConfig(
+def return_neural_lin_ts_config(
     env: SLCBEnvironment,
     run_config: Dict[str, Any] = run_config,
     alpha: float = 0.25,
@@ -190,7 +190,7 @@ def return_NeuralLinTSConfig(
     return policy_learner_dict, exploration_module_dict
 
 
-def return_offlineEvalConfig(
+def return_offline_eval_config(
     env: SLCBEnvironment,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     dim_actions: int = env.bits_num
@@ -209,7 +209,7 @@ def return_offlineEvalConfig(
     return policy_learner_dict, exploration_module_dict
 
 
-def return_NeuralFastCBConfig(
+def return_neural_fastcb_config(
     env: SLCBEnvironment,
     run_config: Dict[str, Any] = run_config,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:

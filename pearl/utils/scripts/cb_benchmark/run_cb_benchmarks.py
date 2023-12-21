@@ -36,11 +36,11 @@ from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpac
 from pearl.utils.scripts.cb_benchmark.cb_benchmark_config import (
     letter_uci_dict,
     pendigits_uci_dict,
-    return_NeuralFastCBConfig,
-    return_NeuralLinTSConfig,
-    return_NeuralLinUCBConfig,
-    return_NeuralSquareCBConfig,
-    return_offlineEvalConfig,
+    return_neural_fastcb_config,
+    return_neural_lin_ts_config,
+    return_neural_lin_ucb_config,
+    return_neural_squarecb_config,
+    return_offline_eval_config,
     run_config,
     satimage_uci_dict,
     yeast_uci_dict,
@@ -277,19 +277,19 @@ def run_cb_benchmarks() -> None:
     }
 
     # load CB algorithm
-    return_CB_config: Dict[str, Any] = {
-        "NeuralSquareCB": return_NeuralSquareCBConfig,
-        "NeuralFastCB": return_NeuralFastCBConfig,
-        "NeuralLinTS": return_NeuralLinTSConfig,
-        "NeuralLinUCB": return_NeuralLinUCBConfig,
-        "OfflineEval": return_offlineEvalConfig,
+    return_cb_config: Dict[str, Any] = {
+        "NeuralSquareCB": return_neural_squarecb_config,
+        "NeuralFastCB": return_neural_fastcb_config,
+        "NeuralLinTS": return_neural_lin_ts_config,
+        "NeuralLinUCB": return_neural_lin_ucb_config,
+        "OfflineEval": return_offline_eval_config,
     }
 
     # run all CB algorithms on all benchmarks
-    for algorithm in return_CB_config.keys():
+    for algorithm in return_cb_config.keys():
         for dataset_name in valid_env_dict.keys():
             env = SLCBEnvironment(**valid_env_dict[dataset_name])
-            policy_learner_dict, exploration_module_dict = return_CB_config[algorithm](
+            policy_learner_dict, exploration_module_dict = return_cb_config[algorithm](
                 env
             )
 
