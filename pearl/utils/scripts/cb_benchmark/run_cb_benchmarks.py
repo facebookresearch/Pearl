@@ -134,7 +134,6 @@ def run_experiments_offline(
         batch_size=128,
         training_rounds=T,
         exploration_module=NoExploration(),
-        use_keyed_optimizer=False,
     )
 
     neural_greedy_policy._action_representation_module = action_representation_module

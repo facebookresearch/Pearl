@@ -12,10 +12,10 @@ import torch
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
+from pearl.neural_networks.contextual_bandit.linear_regression import LinearRegression
 from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
     ScoreExplorationBase,
 )
-from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 

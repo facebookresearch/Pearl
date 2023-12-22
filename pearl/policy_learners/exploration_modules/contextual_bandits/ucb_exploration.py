@@ -100,18 +100,16 @@ class DisjointUCBExploration(UCBExploration):
             subjective_state: this is feature vector in shape, batch_size, action_count, feature
             representation: a list of bandit models, one per action (arm)
         """
-        sigma = []
+        sigmas = []
         for i, arm_model in enumerate(representation):
-            sigma.append(
+            sigmas.append(
                 super(DisjointUCBExploration, self).sigma(
                     subjective_state=subjective_state[:, i, :],
                     representation=arm_model,
                 )
             )
-        sigma = torch.stack(sigma)
-        # change from shape(action_count, batch_size) to shape(batch_size, action_count)
-        sigma = sigma.permute(1, 0)
-        return sigma
+        sigmas = torch.cat(sigmas, dim=1)
+        return sigmas
 
 
 class VanillaUCBExploration(UCBExploration):

@@ -16,15 +16,15 @@ from pearl.policy_learners.contextual_bandits.neural_bandit import NeuralBandit
 from pearl.policy_learners.contextual_bandits.neural_linear_bandit import (
     NeuralLinearBandit,
 )
-from pearl.policy_learners.exploration_modules.contextual_bandits.linucb_exploration import (
-    LinUCBExploration,
-)
 from pearl.policy_learners.exploration_modules.contextual_bandits.squarecb_exploration import (
     FastCBExploration,
     SquareCBExploration,
 )
 from pearl.policy_learners.exploration_modules.contextual_bandits.thompson_sampling_exploration import (
     ThompsonSamplingExplorationLinear,
+)
+from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
+    UCBExploration,
 )
 from pearl.utils.instantiations.environments.contextual_bandit_uci_environment import (
     SLCBEnvironment,
@@ -101,7 +101,6 @@ def return_neural_squarecb_config(
             "hidden_dims": [64, 16],
             "learning_rate": 0.01,
             "batch_size": 128,
-            "use_keyed_optimizer": False,
             "training_rounds": run_config["training_rounds"],
             "action_representation_module": BinaryActionTensorRepresentationModule(
                 bits_num=dim_actions
@@ -139,7 +138,6 @@ def return_neural_lin_ucb_config(
             "hidden_dims": [64, 16],
             "learning_rate": 0.01,
             "batch_size": 128,
-            "use_keyed_optimizer": False,
             "training_rounds": run_config["training_rounds"],
             "action_representation_module": BinaryActionTensorRepresentationModule(
                 bits_num=dim_actions
@@ -148,8 +146,8 @@ def return_neural_lin_ucb_config(
     }
 
     exploration_module_dict: Dict[str, Any] = {
-        "name": "LinUCBExploration",
-        "method": LinUCBExploration,
+        "name": "UCBExploration",
+        "method": UCBExploration,
         "params": {"alpha": alpha},
     }
 
@@ -173,7 +171,6 @@ def return_neural_lin_ts_config(
             "hidden_dims": [64, 16],
             "learning_rate": 0.01,
             "batch_size": 128,
-            "use_keyed_optimizer": False,
             "training_rounds": run_config["training_rounds"],
             "action_representation_module": BinaryActionTensorRepresentationModule(
                 bits_num=dim_actions
@@ -225,7 +222,6 @@ def return_neural_fastcb_config(
             "hidden_dims": [64, 16],
             "learning_rate": 0.01,
             "batch_size": 128,
-            "use_keyed_optimizer": False,
             "training_rounds": run_config["training_rounds"],
             "action_representation_module": BinaryActionTensorRepresentationModule(
                 bits_num=dim_actions

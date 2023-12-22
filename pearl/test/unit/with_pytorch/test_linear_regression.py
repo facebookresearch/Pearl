@@ -9,7 +9,7 @@ import unittest
 
 import torch
 
-from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
+from pearl.neural_networks.contextual_bandit.linear_regression import LinearRegression
 
 
 class TestLinearRegression(unittest.TestCase):
@@ -43,8 +43,8 @@ class TestLinearRegression(unittest.TestCase):
         linear_regression = LinearRegression(feature_dim=feature_dim)
         losses = []
         feature = torch.randn(batch_size, feature_dim)
-        reward = feature.sum(-1)
-        weight = torch.ones(batch_size)
+        reward = feature.sum(-1, keepdim=True)
+        weight = torch.ones(batch_size, 1)
         for _ in range(10):
             loss = (linear_regression(feature) - reward) ** 2
             losses.append(loss.mean().item())

@@ -9,6 +9,7 @@ import copy
 import unittest
 
 import torch
+from pearl.neural_networks.contextual_bandit.linear_regression import LinearRegression
 from pearl.policy_learners.contextual_bandits.linear_bandit import LinearBandit
 from pearl.policy_learners.exploration_modules.contextual_bandits.thompson_sampling_exploration import (  # noqa: E501
     ThompsonSamplingExplorationLinear,
@@ -17,7 +18,6 @@ from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploratio
     UCBExploration,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
@@ -42,8 +42,8 @@ class TestLinearBandits(unittest.TestCase):
             action=torch.tensor(
                 [[2.0, 2.0], [1.0, 2.0], [3.0, 2.0], [1.0, 3.0], [2.0, 2.0]]
             ),
-            reward=torch.tensor([7.0, 7.0, 9.0, 9.0, 9.0]),
-            weight=torch.tensor([1, 1, 1, 1, 1]),
+            reward=torch.tensor([7.0, 7.0, 9.0, 9.0, 9.0]).unsqueeze(-1),
+            weight=torch.tensor([1, 1, 1, 1, 1]).unsqueeze(-1),
         )
         self.policy_learner.learn_batch(self.batch)
 
@@ -52,8 +52,10 @@ class TestLinearBandits(unittest.TestCase):
         # a single input
         self.assertTrue(
             torch.allclose(
-                self.policy_learner.model(torch.cat([batch.state[0], batch.action[0]])),
-                batch.reward[0],
+                self.policy_learner.model(
+                    torch.cat([batch.state[0], batch.action[0]]).unsqueeze(0),
+                ),
+                batch.reward[0:1],
                 atol=1e-4,
             )
         )
@@ -95,7 +97,7 @@ class TestLinearBandits(unittest.TestCase):
         self.assertEqual(policy_learner.act(batch.state[0], action_space), 2)
         # test with batch state
         actions = policy_learner.act(batch.state, action_space)
-        self.assertEqual(actions.shape, batch.reward.shape)
+        self.assertEqual(actions.shape, (batch.reward.shape[0],))
 
         policy_learner.exploration_module = UCBExploration(alpha=1)
 
@@ -144,10 +146,10 @@ class TestLinearBandits(unittest.TestCase):
             ),
             reward=torch.tensor(
                 [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 4.0]
-            ),
+            ).unsqueeze(-1),
             weight=torch.tensor(
                 [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-            ),
+            ).unsqueeze(-1),
         )
 
         policy_learner.learn_batch(batch)

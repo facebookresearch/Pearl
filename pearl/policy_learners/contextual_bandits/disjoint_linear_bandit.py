@@ -14,6 +14,7 @@ from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
 from pearl.neural_networks.common.utils import ensemble_forward
+from pearl.neural_networks.contextual_bandit.linear_regression import LinearRegression
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
 )
@@ -24,7 +25,6 @@ from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.action_utils import (
     concatenate_actions_to_state,
 )
-from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import nn
 

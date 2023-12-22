@@ -64,7 +64,6 @@ class NeuralBandit(ContextualBanditBase):
         learning_rate: float = 0.001,
         state_features_only: bool = False,
         loss_type: str = "mse",  # one of the LOSS_TYPES names, e.g., mse, mae, xentropy
-        **kwargs: Any
     ) -> None:
         super(NeuralBandit, self).__init__(
             feature_dim=feature_dim,
@@ -72,14 +71,13 @@ class NeuralBandit(ContextualBanditBase):
             batch_size=batch_size,
             exploration_module=exploration_module,
         )
-        self._deep_represent_layers = VanillaValueNetwork(
+        self.model = VanillaValueNetwork(
             input_dim=feature_dim,
             hidden_dims=hidden_dims,
             output_dim=output_dim,
-            **kwargs,
         )
         self._optimizer: torch.optim.Optimizer = optim.AdamW(
-            self._deep_represent_layers.parameters(), lr=learning_rate, amsgrad=True
+            self.model.parameters(), lr=learning_rate, amsgrad=True
         )
         self._state_features_only = state_features_only
         self.loss_type = loss_type
@@ -91,29 +89,22 @@ class NeuralBandit(ContextualBanditBase):
             input_features = torch.cat([batch.state, batch.action], dim=1)
 
         # forward pass
-        current_values = self._deep_represent_layers(input_features)
+        current_values = self.model(input_features)
         expected_values = batch.reward
 
         criterion = LOSS_TYPES[self.loss_type]
         loss = criterion(current_values.view(expected_values.shape), expected_values)
 
-        # Optimize the deep layer
-        self._optimizer.zero_grad()
+        # Backward pass + optimizer step
+        self.optimizer.zero_grad()
         loss.backward()
-        self._optimizer.step()
+        self.optimizer.step()
         return {"loss": loss.item()}
 
-    # pyre-fixme[14]: inconsistent override
-    # Note that renaming `action_space` to `available_action_space`
-    # makes the Pyre error go away, but does not seem like a real solution
-    # since here `action_space` is not supposed to be the "available action space",
-    # but something rather to be combined with the availability mask.
-    # However, PolicyLeaner.act expects the action space to be the available
-    # action space, so there is an deep inconsistency to be resolved here.
     def act(
         self,
         subjective_state: SubjectiveState,
-        action_space: ActionSpace,
+        available_action_space: ActionSpace,
         action_availability_mask: Optional[torch.Tensor] = None,
         exploit: bool = False,
     ) -> Action:
@@ -124,21 +115,21 @@ class NeuralBandit(ContextualBanditBase):
         Return:
             action index chosen given state and action vectors
         """
-        assert isinstance(action_space, DiscreteActionSpace)
+        assert isinstance(available_action_space, DiscreteActionSpace)
         # It doesnt make sense to call act if we are not working with action vector
-        action_count = action_space.n
+        action_count = available_action_space.n
         new_feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
-            action_space=action_space,
+            action_space=available_action_space,
             state_features_only=self._state_features_only,
             action_representation_module=self._action_representation_module,
         )
-        values = self._deep_represent_layers(new_feature).squeeze()
+        values = self.model(new_feature).squeeze()
         # batch_size * action_count
         assert values.numel() == new_feature.shape[0] * action_count
         return self._exploration_module.act(
             subjective_state=subjective_state,
-            action_space=action_space,
+            action_space=available_action_space,
             values=values,
             action_availability_mask=action_availability_mask,
             representation=None,  # fill in as needed in the future
@@ -167,8 +158,8 @@ class NeuralBandit(ContextualBanditBase):
         feature_dim = feature.shape[-1]
         # dim: [batch_size * num_arms, feature_dim]
         feature = feature.reshape(-1, feature_dim)
-        # dim: [batch_size, num_arms] or [batch_size]
-        return self._deep_represent_layers(feature).reshape(batch_size, -1).squeeze()
+        # dim: [batch_size, num_arms] (or [batch_size] if num_arms==1)
+        return self.model(feature).reshape(batch_size, -1).squeeze()
 
     @property
     def optimizer(self) -> torch.optim.Optimizer:

@@ -25,7 +25,6 @@ class TestNeuralContextualBandit(unittest.TestCase):
             hidden_dims=[16, 16],
             learning_rate=0.01,
             exploration_module=NoExploration(),
-            use_keyed_optimizer=True,
         )
         state = torch.randn(batch_size, 3)
         action = torch.randn(batch_size, feature_dim - 3)
@@ -54,6 +53,6 @@ class TestNeuralContextualBandit(unittest.TestCase):
         # TEST ACT
         action_space = DiscreteActionSpace(actions=list(batch.action))
         actions = policy_learner.act(
-            subjective_state=batch.state, action_space=action_space
+            subjective_state=batch.state, available_action_space=action_space
         )
         self.assertEqual(actions.shape, batch.reward.shape)

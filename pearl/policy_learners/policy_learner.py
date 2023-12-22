@@ -68,9 +68,7 @@ class PolicyLearner(torch.nn.Module, ABC):
         super(PolicyLearner, self).__init__()
 
         self._exploration_module: ExplorationModule = (
-            options["exploration_module"]
-            if "exploration_module" in options
-            else NoExploration()
+            options.get("exploration_module", None) or NoExploration()
         )
 
         # User needs to either provide the action space or an action representation module at

@@ -35,7 +35,7 @@ class ContextualBanditBase(PolicyLearner):
     def __init__(
         self,
         feature_dim: int,
-        exploration_module: ExplorationModule,
+        exploration_module: Optional[ExplorationModule] = None,
         training_rounds: int = 100,
         batch_size: int = 128,
     ) -> None:

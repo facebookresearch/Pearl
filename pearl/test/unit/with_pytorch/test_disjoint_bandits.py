@@ -9,6 +9,7 @@ import copy
 import unittest
 
 import torch
+from parameterized import parameterized_class
 from pearl.policy_learners.contextual_bandits.disjoint_bandit import (
     DisjointBanditContainer,
 )
@@ -16,6 +17,9 @@ from pearl.policy_learners.contextual_bandits.disjoint_linear_bandit import (
     DisjointLinearBandit,
 )
 from pearl.policy_learners.contextual_bandits.linear_bandit import LinearBandit
+from pearl.policy_learners.contextual_bandits.neural_linear_bandit import (
+    NeuralLinearBandit,
+)
 from pearl.policy_learners.exploration_modules.contextual_bandits.thompson_sampling_exploration import (  # noqa E501
     ThompsonSamplingExplorationLinearDisjoint,
 )
@@ -53,8 +57,8 @@ class TestDisjointLinearBandits(unittest.TestCase):
             action=torch.tensor(
                 [[0], [0], [1], [1], [2], [2]],
             ),
-            reward=torch.tensor([3.0, 4.0, 7.0, 7.0, 7.0, 13.8]),
-            weight=torch.tensor([1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
+            reward=torch.tensor([3.0, 4.0, 7.0, 7.0, 7.0, 13.8]).unsqueeze(-1),
+            weight=torch.tensor([1.0, 1.0, 1.0, 1.0, 1.0, 1.0]).unsqueeze(-1),
         )
         for _ in range(1000):
             policy_learner.learn_batch(batch)
@@ -70,9 +74,9 @@ class TestDisjointLinearBandits(unittest.TestCase):
             self.assertTrue(
                 torch.allclose(
                     self.policy_learner._linear_regressions[action](
-                        self.batch.state[i]
+                        self.batch.state[i : i + 1]
                     ),
-                    self.batch.reward[i],
+                    self.batch.reward[i : i + 1],
                     atol=1e-1,
                 )
             )
@@ -115,8 +119,8 @@ class TestDisjointLinearBandits(unittest.TestCase):
             action=torch.tensor(
                 [[1], [2]],
             ),
-            reward=torch.tensor([2.0, 3.0]),
-            weight=torch.tensor([1.0, 1.0]),
+            reward=torch.tensor([2.0, 3.0]).unsqueeze(-1),
+            weight=torch.tensor([1.0, 1.0]).unsqueeze(-1),
         )
         for _ in range(1000):
             policy_learner.learn_batch(batch)
@@ -172,8 +176,8 @@ class TestDisjointLinearBandits(unittest.TestCase):
             action=torch.randint(
                 low=0, high=(action_count - 1), size=(batch_size, 1)
             ),  # this is action index
-            reward=torch.randn(batch_size),
-            weight=torch.ones(batch_size),
+            reward=torch.randn(batch_size, 1),
+            weight=torch.ones(batch_size, 1),
         )
         action = policy_learner.act(
             subjective_state=batch.state[0], action_space=action_space
@@ -185,23 +189,31 @@ class TestDisjointLinearBandits(unittest.TestCase):
         self.assertEqual(action.shape, torch.Size([batch_size]))
 
 
-class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
+@parameterized_class(
+    ("bandit_class", "bandit_kwargs"),
+    [(LinearBandit, {}), (NeuralLinearBandit, {"hidden_dims": [20]})],
+)
+class TestDisjointBanditContainerBandits(unittest.TestCase):
     def setUp(self) -> None:
+        self.bandit_kwargs = self.bandit_kwargs
+        self.bandit_class = self.bandit_class
         num_arms = 3
-        action_space = DiscreteActionSpace([torch.tensor([i]) for i in range(num_arms)])
+        self.action_space = DiscreteActionSpace(
+            [torch.tensor([i]) for i in range(num_arms)]
+        )
         feature_dim = 2
-        policy_learner = DisjointBanditContainer(
+        bandit_kwargs = copy.deepcopy(self.bandit_kwargs)
+        bandit_kwargs["feature_dim"] = feature_dim
+        self.policy_learner = DisjointBanditContainer(
             feature_dim=feature_dim,
-            arm_bandits=[
-                LinearBandit(feature_dim=feature_dim) for _ in range(num_arms)
-            ],
+            arm_bandits=[self.bandit_class(**bandit_kwargs) for _ in range(num_arms)],
             exploration_module=DisjointUCBExploration(alpha=0),
             state_features_only=True,
         )
         # y0 = x1  + x2
         # y1 = 2x1 + x2
         # y2 = 2x1 + 2x2
-        batch = TransitionBatch(
+        self.batch = TransitionBatch(
             state=torch.tensor(
                 [
                     [1.0, 2.0],
@@ -215,33 +227,41 @@ class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
             action=torch.tensor(
                 [[0], [0], [1], [1], [2], [2]],
             ),
-            reward=torch.tensor([3.0, 4.0, 7.0, 7.0, 7.0, 13.8]),
-            weight=torch.tensor([1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
+            reward=torch.tensor([3.0, 4.0, 7.0, 7.0, 7.0, 13.8]).unsqueeze(-1),
+            weight=torch.tensor([1.0, 1.0, 1.0, 1.0, 1.0, 1.0]).unsqueeze(-1),
         )
-        for _ in range(1000):
-            policy_learner.learn_batch(batch)
-
-        self.policy_learner = policy_learner
-        self.batch = batch
-        self.action_space = action_space
 
     def test_learn_batch(self) -> None:
+        # deep copy as we are going to change exploration module
+        policy_learner = copy.deepcopy(self.policy_learner)
+        for _ in range(1000):
+            policy_learner.learn_batch(self.batch)
+
         for i, action in enumerate(self.batch.action):
             action = action.item()
             # check if each arm model works
             self.assertTrue(
                 torch.allclose(
-                    self.policy_learner._arm_bandits[action].model(self.batch.state[i]),
-                    self.batch.reward[i],
+                    policy_learner._arm_bandits[action].model(
+                        self.batch.state[i : i + 1]
+                    ),
+                    self.batch.reward[i : i + 1],
                     atol=1e-1,
                 )
             )
 
     def test_ucb_act(self) -> None:
+        if not isinstance(self.policy_learner, LinearBandit):
+            # This test is reliable only for linear bandits. NN have too much
+            # variance during training
+            return
         # deep copy as we are going to change exploration module
         policy_learner = copy.deepcopy(self.policy_learner)
         action_space = self.action_space
         batch = self.batch
+
+        for _ in range(1000):
+            policy_learner.learn_batch(self.batch)
 
         # since alpha = 0, act should return action with highest reward
         # single state
@@ -276,8 +296,8 @@ class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
             action=torch.tensor(
                 [[1], [2]],
             ),
-            reward=torch.tensor([2.0, 3.0]),
-            weight=torch.tensor([1.0, 1.0]),
+            reward=torch.tensor([2.0, 3.0]).unsqueeze(-1),
+            weight=torch.tensor([1.0, 1.0]).unsqueeze(-1),
         )
         for _ in range(1000):
             policy_learner.learn_batch(batch)
@@ -290,6 +310,10 @@ class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
         )
 
     def test_thompson_sampling_disjoint_act(self) -> None:
+        if not isinstance(self.policy_learner, LinearBandit):
+            # This test only supports linear bandits
+            return
+
         # deep copy as we are going to change exploration module
         policy_learner = copy.deepcopy(self.policy_learner)
         policy_learner.exploration_module = ThompsonSamplingExplorationLinearDisjoint()
@@ -325,11 +349,12 @@ class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
         action_space = DiscreteActionSpace(
             [torch.tensor([i]) for i in range(action_count)]
         )
+        bandit_kwargs = copy.deepcopy(self.bandit_kwargs)
+        bandit_kwargs["feature_dim"] = state_dim + action_dim
         policy_learner = DisjointBanditContainer(
             feature_dim=state_dim + action_dim,
             arm_bandits=[
-                LinearBandit(feature_dim=state_dim + action_dim)
-                for _ in range(action_count)
+                self.bandit_class(**bandit_kwargs) for _ in range(action_count)
             ],
             exploration_module=DisjointUCBExploration(alpha=0.1),
         )
@@ -338,8 +363,8 @@ class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
             action=torch.randint(
                 low=0, high=(action_count - 1), size=(batch_size, 1)
             ),  # this is action index
-            reward=torch.randn(batch_size),
-            weight=torch.ones(batch_size),
+            reward=torch.randn(batch_size, 1),
+            weight=torch.ones(batch_size, 1),
         )
         action = policy_learner.act(
             subjective_state=batch.state[0], available_action_space=action_space
@@ -350,7 +375,7 @@ class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
         )
         self.assertEqual(action.shape, torch.Size([batch_size]))
 
-    def test_get_scores_linear(self) -> None:
+    def test_get_scores(self) -> None:
         # deep copy as we are going to change exploration module
         policy_learner = copy.deepcopy(self.policy_learner)
         alpha = 3.0
@@ -373,5 +398,5 @@ class TestDisjointBanditContainerLinearBandits(unittest.TestCase):
             mus = model(features)
             sigmas = model.calculate_sigma(features)
             expected_scores.append(mus + alpha * sigmas)
-        expected_scores = torch.stack(expected_scores, dim=1)
+        expected_scores = torch.cat(expected_scores, dim=1)
         self.assertTrue(torch.allclose(scores, expected_scores, atol=1e-1))

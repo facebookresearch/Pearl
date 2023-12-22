@@ -33,8 +33,8 @@ class TestNeuralLinearBandits(unittest.TestCase):
             use_skip_connections=True,
         )
         # assert ResidualWrapper is used in NeuralLinearBandit
-        for child in policy_learner._deep_represent_layers._model.children():
-            self.assertTrue(isinstance(child, ResidualWrapper))
+        for child in policy_learner.model._nn_layers._model.children():
+            self.assertIsInstance(child, ResidualWrapper)
 
     # pyre-fixme[3]: Return type must be annotated.
     def test_state_dict(self):
@@ -45,7 +45,7 @@ class TestNeuralLinearBandits(unittest.TestCase):
         batch_size = feature_dim * 4
         policy_learner = NeuralLinearBandit(
             feature_dim=feature_dim,
-            hidden_dims=[16, 16],
+            hidden_dims=[32, 32],
             learning_rate=0.01,
             exploration_module=UCBExploration(alpha=0.1),
         )
@@ -55,15 +55,15 @@ class TestNeuralLinearBandits(unittest.TestCase):
             state=state,
             action=action,
             # y = sum of state + sum of action
-            reward=state.sum(-1) + action.sum(-1),
-            weight=torch.ones(batch_size),
+            reward=state.sum(-1, keepdim=True) + action.sum(-1, keepdim=True),
+            weight=torch.ones(batch_size, 1),
         )
         policy_learner.learn_batch(batch)
 
         # init another policy learner and use load_state_dict to set
         copy_policy_learner = NeuralLinearBandit(
             feature_dim=feature_dim,
-            hidden_dims=[16, 16],
+            hidden_dims=[32, 32],
             learning_rate=0.01,
             exploration_module=UCBExploration(alpha=0.1),
         )
@@ -72,21 +72,21 @@ class TestNeuralLinearBandits(unittest.TestCase):
         # assert and check if they are the same
         self.assertTrue(
             torch.equal(
-                copy_policy_learner._linear_regression._A,
-                policy_learner._linear_regression._A,
+                copy_policy_learner.model._linear_regression_layer._A,
+                policy_learner.model._linear_regression_layer._A,
             )
         )
 
         self.assertTrue(
             torch.equal(
-                copy_policy_learner._linear_regression._b,
-                policy_learner._linear_regression._b,
+                copy_policy_learner.model._linear_regression_layer._b,
+                policy_learner.model._linear_regression_layer._b,
             )
         )
 
         for p1, p2 in zip(
-            copy_policy_learner._deep_represent_layers.parameters(),
-            policy_learner._deep_represent_layers.parameters(),
+            copy_policy_learner.model._nn_layers.parameters(),
+            policy_learner.model._nn_layers.parameters(),
         ):
             self.assertTrue(torch.equal(p1.to(p2.device), p2))
 
@@ -126,7 +126,7 @@ class TestNeuralLinearBandits(unittest.TestCase):
         batch_size = feature_dim * 4  # It is important to have enough data for training
         policy_learner = NeuralLinearBandit(
             feature_dim=feature_dim,
-            hidden_dims=[16, 16],
+            hidden_dims=[32, 32],
             learning_rate=0.01,
             exploration_module=UCBExploration(alpha=0.1),
             dropout_ratio=0.0001,
@@ -136,8 +136,8 @@ class TestNeuralLinearBandits(unittest.TestCase):
         self.assertEqual(feature_dim, policy_learner.feature_dim)
         state = torch.randn(batch_size, 3)
         action = torch.randn(batch_size, feature_dim - 3)
-        reward = state.sum(-1) + action.sum(
-            -1
+        reward = state.sum(-1, keepdim=True) + action.sum(
+            -1, keepdim=True
         )  # linear relation between label(reward) and feature (state,action pair)
         if output_activation_name == "sigmoid":
             reward = torch.nn.Sigmoid()(reward)
@@ -147,7 +147,7 @@ class TestNeuralLinearBandits(unittest.TestCase):
             state=state,
             action=action,
             reward=reward,
-            weight=torch.ones(batch_size),
+            weight=torch.ones(batch_size, 1),
         )
         losses = []
         for _ in range(epochs):
@@ -174,9 +174,11 @@ class TestNeuralLinearBandits(unittest.TestCase):
         action_space = DiscreteActionSpace(actions=list(batch.action))
         # act on one state
         action = policy_learner.act(
-            subjective_state=state[0], action_space=action_space
+            subjective_state=state[0], available_action_space=action_space
         )
         self.assertTrue(action in range(batch_size))  # return action index
         # act on a batch of states
-        action = policy_learner.act(subjective_state=state, action_space=action_space)
-        self.assertEqual(action.shape, batch.reward.shape)
+        action = policy_learner.act(
+            subjective_state=state, available_action_space=action_space
+        )
+        self.assertEqual(action.shape, (batch_size,))

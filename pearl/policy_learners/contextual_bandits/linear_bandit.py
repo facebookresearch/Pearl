@@ -12,6 +12,7 @@ from pearl.api.action import Action
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
+from pearl.neural_networks.contextual_bandit.linear_regression import LinearRegression
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
     DEFAULT_ACTION_SPACE,
@@ -26,7 +27,6 @@ from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.action_utils import (
     concatenate_actions_to_state,
 )
-from pearl.utils.functional_utils.learning.linear_regression import LinearRegression
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
@@ -47,8 +47,6 @@ class LinearBandit(ContextualBanditBase):
             feature_dim=feature_dim,
             training_rounds=training_rounds,
             batch_size=batch_size,
-            # pyre-fixme[6]: For 4th argument expected `ExplorationModule` but got
-            #  `Optional[ExplorationModule]`.
             exploration_module=exploration_module,
         )
         self.model = LinearRegression(
