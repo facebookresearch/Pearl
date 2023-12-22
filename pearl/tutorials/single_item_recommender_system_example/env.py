@@ -22,7 +22,7 @@ class RecEnv(Environment):
     def __init__(self, actions, model):
         self.model = model.to(device)
         self.t = 0
-        self.T = 100
+        self.T = 20
         self.raw_actions = actions
         self.actions = [
             [torch.tensor(k) for k in random.sample(actions, 2)] for _ in range(self.T)
@@ -44,10 +44,12 @@ class RecEnv(Environment):
 
     def step(self, action):
         action_rep = self.action_space.actions_batch[action]
-        reward = (
-            self.model(self.state.unsqueeze(0).to(device), action_rep.to(device)) * 3
+        reward = min(
+            self.model(self.state.unsqueeze(0).to(device), action_rep.to(device)).item()
+            * 3,
+            1.0,
         )  # To speed up learning (otherwise we need at least 100 steps per episode)
-        true_reward = np.random.binomial(1, reward.item())
+        true_reward = np.random.binomial(1, reward)
         self.state = (
             torch.cat([self.state[1:, :].to(device), action_rep.to(device)], dim=0)
             if true_reward == 1.0
