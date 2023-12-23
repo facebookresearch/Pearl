@@ -19,7 +19,7 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
     def __init__(self, capacity: int, discounted_factor: float = 1.0) -> None:
         super(OnPolicyEpisodicReplayBuffer, self).__init__(
             capacity=capacity,
-            has_next_state=False,
+            has_next_state=True,
             has_next_action=False,
             has_next_available_actions=False,
         )
@@ -49,6 +49,7 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
         )
 
         current_state = self._process_single_state(state)
+        next_state = self._process_single_state(next_state)
         current_action = self._process_single_action(action)
         next_reward = self._process_single_reward(reward)
         self.state_action_cache.append(
@@ -57,7 +58,7 @@ class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
                 action=current_action,
                 reward=next_reward,
                 cum_reward=None,
-                next_state=None,
+                next_state=next_state,
                 curr_available_actions=curr_available_actions_tensor_with_padding,
                 curr_unavailable_actions_mask=curr_unavailable_actions_mask,
                 next_available_actions=None,
