@@ -10,6 +10,7 @@ import unittest
 from pearl.action_representation_modules.one_hot_action_representation_module import (
     OneHotActionTensorRepresentationModule,
 )
+from pearl.history_summarization_modules.lstm_history_summarization_module import LSTMHistorySummarizationModule
 
 from pearl.neural_networks.common.value_networks import DuelingQValueNetwork
 from pearl.pearl_agent import PearlAgent
@@ -336,6 +337,52 @@ class IntegrationTests(unittest.TestCase):
                     max_number_actions=num_actions
                 ),
             ),
+            replay_buffer=OnPolicyEpisodicReplayBuffer(10_000),
+        )
+        self.assertTrue(
+            target_return_is_reached(
+                agent=agent,
+                env=env,
+                target_return=500,
+                max_episodes=1000,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+            )
+        )
+
+    def test_ppo_lstm(self) -> None:
+        """
+        This test is checking if PPO + LSTM using cumulated returns will eventually get to 500 return for
+        CartPole-v1
+        """
+        env = GymEnvironment("CartPole-v1")
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
+
+        history_summarization_module = (
+            LSTMHistorySummarizationModule(
+                observation_dim=env.observation_space.shape[0],
+                action_dim=num_actions,
+                hidden_dim=4,
+                history_length=4,
+            )
+        )
+
+        agent = PearlAgent(
+            policy_learner=ProximalPolicyOptimization(
+                env.observation_space.shape[0],
+                env.action_space,
+                actor_hidden_dims=[64, 64],
+                critic_hidden_dims=[64, 64],
+                training_rounds=50,
+                batch_size=64,
+                epsilon=0.1,
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
+            ),
+            history_summarization_module=history_summarization_module,
             replay_buffer=OnPolicyEpisodicReplayBuffer(10_000),
         )
         self.assertTrue(
