@@ -183,7 +183,7 @@ class PolicyLearner(torch.nn.Module, ABC):
         This function can be used to implement preprocessing steps such as
         transform the actions.
         """
-        batch.state = self._history_summarization_module(batch.state)
+        batch.state = self._history_summarization_module(batch.state).detach()
         with torch.no_grad():
             batch.next_state = self._history_summarization_module(batch.next_state)
 
