@@ -49,6 +49,9 @@ class LSTMHistorySummarizationModule(HistorySummarizationModule):
             hidden_size=self.hidden_dim,
             batch_first=True,
         )
+        # A linear layer that maps from hidden state space back to state space
+        self.hidden_to_state = nn.Linear(hidden_dim, self.observation_dim)
+
         self.register_buffer(
             "cell_representation", torch.zeros((num_layers, hidden_dim))
         )
@@ -91,6 +94,7 @@ class LSTMHistorySummarizationModule(HistorySummarizationModule):
         )
         self.hidden_representation = h
         self.cell_representation = c
+        out = self.hidden_to_state(out)
         return out.squeeze(0)
 
     def get_history(self) -> torch.Tensor:
@@ -101,6 +105,7 @@ class LSTMHistorySummarizationModule(HistorySummarizationModule):
         h0 = self.hidden_representation.unsqueeze(1).repeat(1, batch_size, 1).detach()
         c0 = self.cell_representation.unsqueeze(1).repeat(1, batch_size, 1).detach()
         out, (_, _) = self.lstm(x, (h0, c0))
+        out = self.hidden_to_state(out)
         return out[:, -1, :].view((batch_size, -1))
 
     def reset(self) -> None:
