@@ -95,8 +95,6 @@ class ProximalPolicyOptimization(ActorCriticBase):
         """
         Loss = actor loss + critic loss + entropy_bonus_scaling * entropy loss
         """
-        # TODO: change the output shape of value networks
-        vs: torch.Tensor = self._critic(batch.state).view(-1)  # shape (batch_size)
         action_probs = self._actor.get_action_prob(
             state_batch=batch.state,
             action_batch=batch.action,
@@ -124,6 +122,8 @@ class ProximalPolicyOptimization(ActorCriticBase):
         # A = sum(TD_error) = return - V(s)
         # TODO support lambda and gamma
         with torch.no_grad():
+            # TODO: change the output shape of value networks
+            vs: torch.Tensor = self._critic(batch.state).view(-1)  # shape (batch_size)
             advantage = batch.cum_reward - vs  # shape (batch_size)
 
         # entropy
