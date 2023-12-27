@@ -115,7 +115,7 @@ def online_learning(
         )
         if number_of_steps is not None and episode_total_steps > record_period:
             print(
-                f"An episode is longer than the report_period: episode length {episode_total_steps}"
+                f"An episode is longer than the record_period: episode length {episode_total_steps}"
                 f", record_period {record_period}. Try using a larger record_period."
             )
             exit(1)
