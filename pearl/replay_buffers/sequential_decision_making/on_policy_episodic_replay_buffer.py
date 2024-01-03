@@ -16,12 +16,18 @@ from pearl.replay_buffers.transition import Transition
 
 
 class OnPolicyEpisodicReplayBuffer(TensorBasedReplayBuffer):
-    def __init__(self, capacity: int, discounted_factor: float = 1.0) -> None:
+    def __init__(
+        self,
+        capacity: int,
+        discounted_factor: float = 1.0,
+        has_cost_available: bool = False,
+    ) -> None:
         super(OnPolicyEpisodicReplayBuffer, self).__init__(
             capacity=capacity,
             has_next_state=False,
             has_next_action=False,
             has_next_available_actions=False,
+            has_cost_available=has_cost_available,
         )
         # this is used to delay push SARS
         # wait for next action is available and then final push

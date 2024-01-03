@@ -97,6 +97,7 @@ class PearlAgent(Agent):
             if replay_buffer is None
             else replay_buffer
         )
+
         self.history_summarization_module: HistorySummarizationModule = (
             PearlAgent.default_history_summarization_module_type()
             if history_summarization_module is None

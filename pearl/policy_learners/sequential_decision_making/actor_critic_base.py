@@ -246,6 +246,20 @@ class ActorCriticBase(PolicyLearner):
             )
         return {}
 
+    def preprocess_batch(self, batch: TransitionBatch) -> TransitionBatch:
+        """
+        Preprocesses a batch of transitions before learning on it.
+        This method should be called in the learner process.
+        """
+        # change reward to be the lambda_constraint weighted sum of reward and cost
+        if hasattr(self.safety_module, "lambda_constraint"):
+            batch.reward = (
+                batch.reward - self.safety_module.lambda_constraint * batch.cost
+            )
+        batch = super().preprocess_batch(batch)
+
+        return batch
+
     @abstractmethod
     def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         pass
