@@ -11,10 +11,10 @@ import numpy.testing as npt
 import torch
 from pearl.neural_networks.common.epistemic_neural_networks import Ensemble
 from pearl.neural_networks.common.utils import ensemble_forward
-
-from pearl.test.utils import create_normal_pdf_training_data
 from torch import optim
 from torch.utils.data import DataLoader, TensorDataset
+
+from ...utils import create_normal_pdf_training_data
 
 
 class TestEnsembles(unittest.TestCase):
