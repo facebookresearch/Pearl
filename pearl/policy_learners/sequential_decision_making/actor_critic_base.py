@@ -6,13 +6,13 @@
 #
 
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, List, Optional, Type
+from typing import Any, cast, Dict, Iterable, List, Optional, Type, Union
 
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
 
-from pearl.neural_networks.common.value_networks import QValueNetwork
+from pearl.neural_networks.common.value_networks import QValueNetwork, ValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetwork,
     DynamicActionActorNetwork,
@@ -60,10 +60,13 @@ from torch import nn, optim
 class ActorCriticBase(PolicyLearner):
     """
     A base class for all actor-critic based policy learners.
-    Many components are common to actor-critic methods.
-        - Actor and critic (as well as target networks) network initializations.
-        - Act, reset and learn_batch methods.
-        - Utility functions used by many actor-critic methods.
+
+    Many components that are common to all actor-critic methods have been put in this base class.
+    These include:
+
+    - actor and critic network initializations (optionally with corresponding target networks).
+    - `act`, `reset` and `learn_batch` methods.
+    - Utility functions used by many actor-critic methods.
     """
 
     def __init__(
@@ -76,7 +79,9 @@ class ActorCriticBase(PolicyLearner):
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,
         actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
-        critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
+        critic_network_type: Union[
+            Type[ValueNetwork], Type[QValueNetwork]
+        ] = VanillaQValueNetwork,
         use_actor_target: bool = False,
         use_critic_target: bool = False,
         actor_soft_update_tau: float = 0.005,
@@ -194,6 +199,28 @@ class ActorCriticBase(PolicyLearner):
         available_action_space: ActionSpace,
         exploit: bool = False,
     ) -> Action:
+        """
+        Determines an action based on the policy network and optionally the exploration module.
+        This function can operate in two modes: exploit or explore. The mode is determined by the
+        `exploit` parameter.
+
+        - If `exploit` is True, the function returns an action determined solely by the policy
+        network.
+        - If `exploit` is False, the function first calculates an `exploit_action` using the policy
+        network. This action is then passed to the exploration module, along with additional
+        arguments specific to the exploration module in use. The exploration module then generates
+        an action that strikes a balance between exploration and exploitation.
+
+        Args:
+            subjective_state (SubjectiveState): Subjective state of the agent.
+            available_action_space (ActionSpace): Set of eligible actions.
+            exploit (bool, optional): Determines the mode of operation. If True, the function
+            operates in exploit mode. If False, it operates in explore mode. Defaults to False.
+        Returns:
+            Action: An action (decision made by the agent in the given subjective state)
+            that balances between exploration and exploitation, depending on the mode
+            specified by the user. The returned action is from the available action space.
+        """
         # Step 1: compute exploit_action
         # (action computed by actor network; and without any exploration)
         with torch.no_grad():
@@ -217,6 +244,7 @@ class ActorCriticBase(PolicyLearner):
         if exploit:
             return exploit_action
 
+        # TODO: carefully check if safe action space is integrated with the exploration module
         return self._exploration_module.act(
             exploit_action=exploit_action,
             action_space=available_action_space,
@@ -228,8 +256,29 @@ class ActorCriticBase(PolicyLearner):
         self._action_space = action_space
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
-        self._critic_learn_batch(batch)  # update critic
-        self._actor_learn_batch(batch)  # update actor
+        """
+        Trains the actor and critic networks using a batch of transitions.
+        This method performs the following steps:
+
+        1. Updates the actor network with the input batch of transitions.
+        2. Updates the critic network with the input batch of transitions.
+        3. If using target network for critics (i.e. `use_critic_target` argument is True), the
+        function updates the critic target network.
+        4. If using target network for policy (i.e. `use_actor_target` argument is True), the
+        function updates the actor target network.
+
+        Note: While this method provides a general approach to actor-critic methods, specific
+        algorithms may override it to introduce unique behaviors. For instance, the TD3 algorithm
+        updates the actor network less frequently than the critic network.
+
+        Args:
+            batch (TransitionBatch): Batch of transitions to use for actor and critic updates.
+        Returns:
+            Dict[str, Any]: A dictionary containing the loss reports from the critic
+            and actor updates. These can be useful to track for debugging purposes.
+        """
+        critic_loss_report = self._critic_learn_batch(batch)  # update critic
+        actor_loss_report = self._actor_learn_batch(batch)  # update actor
 
         if self._use_critic_target:
             update_critic_target_network(
@@ -244,7 +293,9 @@ class ActorCriticBase(PolicyLearner):
                 self._actor,
                 self._actor_soft_update_tau,
             )
-        return {}
+
+        loss_report = {**critic_loss_report, **actor_loss_report}
+        return loss_report
 
     def preprocess_batch(self, batch: TransitionBatch) -> TransitionBatch:
         """
@@ -262,10 +313,30 @@ class ActorCriticBase(PolicyLearner):
 
     @abstractmethod
     def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+        """
+        Abstract method for implementing the algorithm-specific logic for updating the actor
+        network. This method must be implemented by any concrete subclass to provide the specific
+        logic for updating the actor network based on the algorithm implemented by the subclass.
+        Args:
+            batch (TransitionBatch): A batch of transitions used for updating the actor network.
+        Returns:
+            Dict[str, Any]: A dictionary containing the loss report from the actor update.
+            Typically, this includes value of the actor loss.
+        """
         pass
 
     @abstractmethod
     def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+        """
+        Abstract method for implementing the algorithm-specific logic for updating the critic
+        network. This method must be implemented by any concrete subclass to provide the specific
+        logic for updating the critic network based on the algorithm implemented by the subclass.
+        Args:
+            batch (TransitionBatch): A batch of transitions used for updating the actor network.
+        Returns:
+            Dict[str, Any]: A dictionary containing the loss report from the critic update.
+            Typically, this includes value of the critic loss.
+        """
         pass
 
 
@@ -273,12 +344,20 @@ def make_critic(
     state_dim: int,
     hidden_dims: Optional[Iterable[int]],
     use_twin_critic: bool,
-    network_type: Type[QValueNetwork],
+    network_type: Union[Type[ValueNetwork], Type[QValueNetwork]],
     action_dim: Optional[int] = None,
 ) -> nn.Module:
     if use_twin_critic:
         assert action_dim is not None
         assert hidden_dims is not None
+        assert issubclass(
+            network_type, QValueNetwork
+        ), "network_type must be a subclass of QValueNetwork when use_twin_critic is True"
+
+        # cast network_type to get around static Pyre type checking; the runtime check with
+        # `issubclass` ensures the network type is a sublcass of QValueNetwork
+        network_type = cast(Type[QValueNetwork], network_type)
+
         return TwinCritic(
             state_dim=state_dim,
             action_dim=action_dim,
@@ -331,6 +410,28 @@ def single_critic_state_value_update(
     optimizer: torch.optim.Optimizer,
     critic: nn.Module,
 ) -> Dict[str, Any]:
+    """
+    Performs a single optimization step on a (value) critic network using the input batch of states.
+    This method calculates the mean squared error loss between the predicted state values from the
+    critic network and the input target estimates. It then updates the critic network using the
+    provided optimizer.
+    Args:
+        state_batch (torch.Tensor): A batch of states with expected shape
+        `(batch_size, state_dim)`.
+        expected_target_batch (torch.Tensor): The batch of target estimates
+        (i.e., RHS of the Bellman equation) with shape `(batch_size)`.
+        optimizer (torch.optim.Optimizer): The optimizer to use for updating the critic network.
+        critic (nn.Module): The critic network to update.
+    Returns:
+        Dict[str, Any]: A dictionary containing the following key:
+            - "critic_loss": The mean squared error loss between the predicted state values from
+            the critic network and the input target estimates.
+    """
+    if not isinstance(critic, ValueNetwork):
+        raise TypeError(
+            "critic in the `single_critic_state_value_update` method must be an instance of "
+            "ValueNetwork"
+        )
     vs = critic(state_batch)
     # critic loss
     criterion = torch.nn.MSELoss()
@@ -340,7 +441,7 @@ def single_critic_state_value_update(
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
-    return {"critic_loss": loss.mean().item()}
+    return {"critic_loss": loss.item()}
 
 
 def twin_critic_action_value_update(
@@ -351,16 +452,31 @@ def twin_critic_action_value_update(
     critic: TwinCritic,
 ) -> Dict[str, torch.Tensor]:
     """
-    Performs an optimization step on the twin critic networks.
+    Performs a single optimization step on the twin critic networks using the input
+    batch of states and actions.
+    This method calculates the mean squared error loss between the predicted Q-values from both
+    critic networks and the input target estimates. It then updates the critic networks using the
+    provided optimizer.
 
     Args:
-        state_batch: a batch of states with shape (batch_size, state_dim)
-        action_batch: a batch of actions with shape (batch_size, action_dim)
-        expected_target: the batch of target estimates for Bellman equation.
-        optimizer: the optimizer to use for the update.
-        critic: the critic network to update.
+        state_batch (torch.Tensor): A batch of states with expected shape
+        `(batch_size, state_dim)`.
+        action_batch (torch.Tensor): A batch of actions with expected shape
+        `(batch_size, action_dim)`.
+        expected_target_batch (torch.Tensor): The batch of target estimates
+        (i.e. RHS of the Bellman equation) with shape `(batch_size)`.
+        optimizer (torch.optim.Optimizer): The optimizer to use for updating the critic networks.
+        critic (TwinCritic): The twin critic network to update.
     Returns:
-        Dict[str, torch.Tensor]: mean loss and individual critic losses.
+        Dict[str, Any]: A dictionary containing the following keys:
+            - "critic_loss": The loss value calculated as the sum of the mean squared error loss
+            between the predicted Q-values from both critic networks and the input target estimates.
+            - "critic_1_values": The mean Q-value from the first critic network over the
+            batch of input states and actions.
+            - "critic_2_values": The mean Q-value from the second critic network over the
+            batch of input states and actions.
+            Note: "critic_1_values" and "critic_2_values" maybe useful for debugging purposes,
+            such as identifying overestimaiton bias.
     """
 
     criterion = torch.nn.MSELoss()
@@ -373,7 +489,7 @@ def twin_critic_action_value_update(
     optimizer.step()
 
     return {
-        "critic_mean_loss": loss.item(),
+        "critic_loss": loss.item(),
         "critic_1_values": q_1.mean().item(),
         "critic_2_values": q_2.mean().item(),
     }

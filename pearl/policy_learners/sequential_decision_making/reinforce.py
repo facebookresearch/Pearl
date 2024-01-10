@@ -69,9 +69,6 @@ class REINFORCE(ActorCriticBase):
             actor_learning_rate=actor_learning_rate,
             critic_learning_rate=critic_learning_rate,
             actor_network_type=actor_network_type,
-            # pyre-fixme: super class expects a QValueNetwork here,
-            # but this class apparently requires a ValueNetwork
-            # (replacing the type and default value to QValueNetworks break tests)
             critic_network_type=critic_network_type,
             use_actor_target=False,
             use_critic_target=False,
