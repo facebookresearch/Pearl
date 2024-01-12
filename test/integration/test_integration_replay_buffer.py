@@ -33,7 +33,7 @@ from pearl.utils.instantiations.environments.sparse_reward_environment import (
 from pearl.utils.tensor_like import assert_is_tensor_like
 
 
-class IntegrationReplayBufferTests(unittest.TestCase):
+class TestIntegrationReplayBuffer(unittest.TestCase):
     """
     Integration test for replay buffer
     """

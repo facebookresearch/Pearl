@@ -74,7 +74,7 @@ from pearl.utils.instantiations.environments.gym_environment import GymEnvironme
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
-class IntegrationTests(unittest.TestCase):
+class TestIntegration(unittest.TestCase):
     """
     These tests may take a long time to run.
     """
