@@ -128,4 +128,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-pearl/utils/scripts/cb_benchmark/utils/*
+pearl/utils/scripts/cb_benchmark/experiments_results/*
+pearl/utils/scripts/cb_benchmark/instantiations/*

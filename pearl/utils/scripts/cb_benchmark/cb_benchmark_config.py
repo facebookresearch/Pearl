@@ -30,7 +30,7 @@ from pearl.utils.instantiations.environments.contextual_bandit_uci_environment i
     SLCBEnvironment,
 )
 
-DATA_PATH: str = "./utils/instantiations/environments/uci_datasets"
+DATA_PATH: str = "./instantiations/environments/uci_datasets"
 
 """
 Experiment config

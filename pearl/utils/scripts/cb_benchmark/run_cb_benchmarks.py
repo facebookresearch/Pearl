@@ -6,9 +6,7 @@
 #
 
 import os
-import sys
 
-sys.path.append("/home/cryptexis/projects/open_source/Pearl/")
 import random
 from typing import Any, Dict, List, Optional
 
@@ -206,10 +204,12 @@ def run_experiments(
                 **exploration_module_dict["params"]
             )
             policy_learner_dict["params"]["exploration_module"] = exploration_module
-            action_representation_module = policy_learner_dict["params"].pop('action_representation_module')
+            action_representation_module = policy_learner_dict["params"]['action_representation_module']
+            policy_learner_dict["params"].pop('action_representation_module')
             policy_learner = policy_learner_dict["method"](
                 **policy_learner_dict["params"]
             )
+            policy_learner_dict['params']['action_representation_module'] = action_representation_module
             # override action representation module
             policy_learner._action_representation_module = action_representation_module
 
@@ -261,13 +261,13 @@ def run_experiments(
 def run_cb_benchmarks() -> None:
 
     # Download uci datasets if dont exist
-    uci_data_path = "./utils/instantiations/environments/uci_datasets"
+    uci_data_path = "./instantiations/environments/uci_datasets"
     if not os.path.exists(uci_data_path):
         os.makedirs(uci_data_path)
         download_uci_data(data_path=uci_data_path)
 
     # Path to save results
-    save_results_path: str = "./utils/scripts/cb_benchmark/experiments_results"
+    save_results_path: str = "./experiments_results"
 
     # load UCI dataset
     valid_env_dict: Dict[str, Any] = {
@@ -286,6 +286,7 @@ def run_cb_benchmarks() -> None:
         "OfflineEval": return_offline_eval_config,
     }
 
+    print(valid_env_dict)
     # run all CB algorithms on all benchmarks
     for algorithm in return_cb_config.keys():
         for dataset_name in valid_env_dict.keys():
