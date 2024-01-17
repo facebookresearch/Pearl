@@ -80,7 +80,7 @@ class UCBExploration(ScoreExplorationBase):
         # a safe check before reshape sigma into values
         sigma = sigma.view(values.shape)
         ucb_scores = values + self._alpha * sigma
-        return ucb_scores.view(-1, action_space.n)  # batch_size, action_count
+        return ucb_scores.view(-1, action_count)  # batch_size, action_count
 
 
 class DisjointUCBExploration(UCBExploration):

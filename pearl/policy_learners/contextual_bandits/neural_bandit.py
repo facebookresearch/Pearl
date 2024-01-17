@@ -9,6 +9,9 @@ from typing import Any, Dict, List, Optional
 
 import torch
 import torch.nn as nn
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -64,12 +67,14 @@ class NeuralBandit(ContextualBanditBase):
         learning_rate: float = 0.001,
         state_features_only: bool = False,
         loss_type: str = "mse",  # one of the LOSS_TYPES names, e.g., mse, mae, xentropy
+        action_representation_module: Optional[ActionRepresentationModule] = None,
     ) -> None:
         super(NeuralBandit, self).__init__(
             feature_dim=feature_dim,
             training_rounds=training_rounds,
             batch_size=batch_size,
             exploration_module=exploration_module,
+            action_representation_module=action_representation_module,
         )
         self.model = VanillaValueNetwork(
             input_dim=feature_dim,

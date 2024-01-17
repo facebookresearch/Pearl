@@ -8,6 +8,9 @@
 from typing import Any, Dict, Optional
 
 import torch
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
 from pearl.api.action import Action
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
@@ -42,12 +45,14 @@ class LinearBandit(ContextualBanditBase):
         l2_reg_lambda: float = 1.0,
         training_rounds: int = 100,
         batch_size: int = 128,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
     ) -> None:
         super(LinearBandit, self).__init__(
             feature_dim=feature_dim,
             training_rounds=training_rounds,
             batch_size=batch_size,
             exploration_module=exploration_module,
+            action_representation_module=action_representation_module,
         )
         self.model = LinearRegression(
             feature_dim=feature_dim, l2_reg_lambda=l2_reg_lambda

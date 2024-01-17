@@ -9,6 +9,9 @@ from abc import abstractmethod
 from typing import Any, Dict, Optional
 
 import torch
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
 
 from pearl.api.action import Action
 
@@ -38,6 +41,7 @@ class ContextualBanditBase(PolicyLearner):
         exploration_module: Optional[ExplorationModule] = None,
         training_rounds: int = 100,
         batch_size: int = 128,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
     ) -> None:
         super(ContextualBanditBase, self).__init__(
             training_rounds=training_rounds,
@@ -45,6 +49,7 @@ class ContextualBanditBase(PolicyLearner):
             exploration_module=exploration_module,
             on_policy=False,
             is_action_continuous=False,  # TODO change in subclasses when we add CB for continuous
+            action_representation_module=action_representation_module,
         )
         self._feature_dim = feature_dim
 

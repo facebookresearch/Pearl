@@ -134,9 +134,9 @@ def run_experiments_offline(
         batch_size=128,
         training_rounds=T,
         exploration_module=NoExploration(),
+        action_representation_module=action_representation_module,
     )
 
-    neural_greedy_policy._action_representation_module = action_representation_module
     agent = PearlAgent(
         policy_learner=neural_greedy_policy,
         replay_buffer=DiscreteContextualBanditReplayBuffer(T),
@@ -278,9 +278,8 @@ def run_cb_benchmarks() -> None:
     # load CB algorithm
     return_cb_config: Dict[str, Any] = {
         "NeuralSquareCB": return_neural_squarecb_config,
-        "NeuralFastCB": return_neural_fastcb_config,
-        "NeuralLinTS": return_neural_lin_ts_config,
         "NeuralLinUCB": return_neural_lin_ucb_config,
+        "NeuralLinTS": return_neural_lin_ts_config,
         "OfflineEval": return_offline_eval_config,
     }
 

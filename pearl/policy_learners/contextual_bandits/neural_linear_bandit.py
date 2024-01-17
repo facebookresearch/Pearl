@@ -8,6 +8,9 @@
 from typing import Any, Dict, List, Optional
 
 import torch
+from pearl.action_representation_modules.action_representation_module import (
+    ActionRepresentationModule,
+)
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -54,6 +57,7 @@ class NeuralLinearBandit(ContextualBanditBase):
         feature_dim: int,
         hidden_dims: List[int],  # last one is the input dim for linear regression
         exploration_module: Optional[ExplorationModule] = None,
+        action_representation_module: Optional[ActionRepresentationModule] = None,
         training_rounds: int = 100,
         batch_size: int = 128,
         learning_rate: float = 0.0003,
@@ -76,6 +80,7 @@ class NeuralLinearBandit(ContextualBanditBase):
             training_rounds=training_rounds,
             batch_size=batch_size,
             exploration_module=exploration_module,
+            action_representation_module=action_representation_module,
         )
         self.model = NeuralLinearRegression(
             feature_dim=feature_dim,

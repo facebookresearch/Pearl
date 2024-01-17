@@ -44,8 +44,8 @@ class ThompsonSamplingExplorationLinear(ScoreExplorationBase):
         Given the linear bandit model, sample its parameters,
         and multiplies with feature to get predicted score.
         """
+        assert isinstance(action_space, DiscreteActionSpace)
         assert representation is not None
-        batch_size = subjective_state.shape[0]
         if self._enable_efficient_sampling:
             expected_reward = representation(subjective_state)
             # batch_size, action_count, 1
@@ -65,7 +65,8 @@ class ThompsonSamplingExplorationLinear(ScoreExplorationBase):
                 LinearRegression.append_ones(subjective_state),
                 thompson_sampling_coefs.t(),
             )
-        return scores.view(batch_size, -1)
+
+        return scores.view(-1, action_space.n)
 
 
 class ThompsonSamplingExplorationLinearDisjoint(ThompsonSamplingExplorationLinear):
@@ -96,11 +97,12 @@ class ThompsonSamplingExplorationLinearDisjoint(ThompsonSamplingExplorationLinea
         scores = []
         for i, model in enumerate(representation):
             # subjective_state is in shape of batch_size, action_count, feature_dim
+            single_action_space = DiscreteActionSpace([action_space[i]])
             score = super(
                 ThompsonSamplingExplorationLinearDisjoint, self
             ).get_scores(  # call get_scores() from joint TS
                 subjective_state=subjective_state[:, i, :],
-                action_space=action_space,
+                action_space=single_action_space,
                 values=values,
                 representation=model,
                 exploit_action=exploit_action,
