@@ -108,7 +108,6 @@ class LinearRegression(MuSigmaCBModel):
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         batch_size = x.shape[0]
         if y.ndim == 1:
-            logger.warning("2D shape expected for y, got 1D shape {y.shape}")
             y = y.unsqueeze(-1)
         if weight is None:
             weight = torch.ones_like(y)
