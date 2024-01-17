@@ -256,7 +256,17 @@ def run_experiments(
         df_regrets.to_csv(file)
 
 
-def run_cb_benchmarks() -> None:
+def run_cb_benchmarks(
+    cb_algorithms_config: Dict[str, Any],
+    test_environments_config: Dict[str, Any],
+    run_config: Dict[str, Any],
+) -> None:
+    """
+    Run Contextual Bandit algorithms on environments.
+    cb_algorithms_config: dictionary with config files of the CB algorithms.
+    test_environments_config: dictionary with config files of the test environments.
+    run_config: dictionary with config files of the run parameters.
+    """
 
     # Download uci datasets if dont exist
     uci_data_path = "./utils/instantiations/environments/uci_datasets"
@@ -266,30 +276,16 @@ def run_cb_benchmarks() -> None:
 
     # Path to save results
     save_results_path: str = "./utils/scripts/cb_benchmark/experiments_results"
-
-    # load UCI dataset
-    valid_env_dict: Dict[str, Any] = {
-        "pendigits": pendigits_uci_dict,
-        "yeast": yeast_uci_dict,
-        "letter": letter_uci_dict,
-        "satimage": satimage_uci_dict,
-    }
-
-    # load CB algorithm
-    return_cb_config: Dict[str, Any] = {
-        "NeuralSquareCB": return_neural_squarecb_config,
-        "NeuralLinUCB": return_neural_lin_ucb_config,
-        "NeuralLinTS": return_neural_lin_ts_config,
-        "OfflineEval": return_offline_eval_config,
-    }
+    if not os.path.exists(save_results_path):
+        os.makedirs(save_results_path)
 
     # run all CB algorithms on all benchmarks
-    for algorithm in return_cb_config.keys():
-        for dataset_name in valid_env_dict.keys():
-            env = SLCBEnvironment(**valid_env_dict[dataset_name])
-            policy_learner_dict, exploration_module_dict = return_cb_config[algorithm](
-                env
-            )
+    for algorithm in cb_algorithms_config.keys():
+        for dataset_name in test_environments_config.keys():
+            env = SLCBEnvironment(**test_environments_config[dataset_name])
+            policy_learner_dict, exploration_module_dict = cb_algorithms_config[
+                algorithm
+            ](env)
 
             run_experiments(
                 env=env,
@@ -304,4 +300,25 @@ def run_cb_benchmarks() -> None:
 
 
 if __name__ == "__main__":
-    run_cb_benchmarks()  # pragma: no cover
+
+    # load CB algorithm
+    cb_algorithms_config: Dict[str, Any] = {
+        "NeuralSquareCB": return_neural_squarecb_config,
+        "NeuralLinUCB": return_neural_lin_ucb_config,
+        "NeuralLinTS": return_neural_lin_ts_config,
+        "OfflineEval": return_offline_eval_config,
+    }
+
+    # load UCI dataset
+    test_environments_config: Dict[str, Any] = {
+        "pendigits": pendigits_uci_dict,
+        "yeast": yeast_uci_dict,
+        "letter": letter_uci_dict,
+        "satimage": satimage_uci_dict,
+    }
+
+    run_cb_benchmarks(
+        cb_algorithms_config=cb_algorithms_config,
+        test_environments_config=test_environments_config,
+        run_config=run_config,
+    )
