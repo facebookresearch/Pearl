@@ -6,6 +6,9 @@
 #
 
 import os
+import sys
+
+sys.path.append("/home/cryptexis/projects/open_source/Pearl/")
 import random
 from typing import Any, Dict, List, Optional
 
@@ -203,13 +206,12 @@ def run_experiments(
                 **exploration_module_dict["params"]
             )
             policy_learner_dict["params"]["exploration_module"] = exploration_module
+            action_representation_module = policy_learner_dict["params"].pop('action_representation_module')
             policy_learner = policy_learner_dict["method"](
                 **policy_learner_dict["params"]
             )
             # override action representation module
-            policy_learner._action_representation_module = policy_learner_dict[
-                "params"
-            ]["action_representation_module"]
+            policy_learner._action_representation_module = action_representation_module
 
             regret_single_run = run_experiments_online(
                 env, policy_learner, T, replay_buffer_size=T
