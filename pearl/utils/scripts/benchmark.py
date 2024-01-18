@@ -34,21 +34,7 @@ from pearl.utils.scripts.benchmark_config import (  # noqa
     benchmark_halfcheetah_v4,  # noqa
     benchmark_hopper_v4,  # noqa
     benchmark_walker2d_v4,  # noqa
-    generate_rctd3_ant,  # noqa
-    generate_rctd3_half_cheetah_v1,  # noqa
-    generate_rctd3_hopper,  # noqa
-    generate_rctd3_walker,  # noqa
     get_env,
-    rctd3_ant_part_1,  # noqa
-    rctd3_ant_part_2,  # noqa
-    rctd3_ant_part_3,  # noqa
-    rctd3_ant_part_4,  # noqa
-    rctd3_half_cheetah_v1_part_1,  # noqa
-    rctd3_half_cheetah_v1_part_2,  # noqa
-    rctd3_hopper_part_1,  # noqa
-    rctd3_hopper_part_2,  # noqa
-    rctd3_walker_part_1,  # noqa
-    rctd3_walker_part_2,  # noqa
     test_dynamic_action_space,
 )
 
