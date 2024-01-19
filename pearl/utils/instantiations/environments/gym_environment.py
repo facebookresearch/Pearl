@@ -166,7 +166,10 @@ class GymEnvironment(Environment):
         self.env.close()
 
     def __str__(self) -> str:
-        return self.env.spec.id
+        if self.env.spec is not None:
+            return self.env.spec.id
+        else:
+            return "CustomGymEnvironment"
 
 
 def _get_gym_action(
