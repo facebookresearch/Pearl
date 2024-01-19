@@ -14,9 +14,30 @@ We actively welcome your pull requests.
 1. Fork the repo and create your branch from `main`.
 2. If you've added code that should be tested, add tests.
 3. If you've changed APIs, update the documentation.
-4. Ensure the test suite passes (you can run them with `python -m unittest` or `pytest` from the project root directory)
+4. Ensure the test suite passes (see [How to run tests](#how-to-run-tests) for specifics).
 5. Make sure your code lints.
 6. If you haven't already, complete the Contributor License Agreement ("CLA").
+
+## How to run tests
+You can run the test suite with the following command ran from the project root directory (the `Pearl` directory containing `pearl` and `test` subdirectories):
+```
+python -m unittest discover -t . <package to be tested>
+```
+
+The `test` package contains `unit` and `integration` subpackages. To run all tests, run:
+```
+python -m unittest discover -t . test
+```
+
+To run unit tests, run:
+```
+python -m unittest discover -t . test.unit
+```
+
+To run integration tests, run:
+```
+python -m unittest discover -t . test.integration
+```
 
 ## Contributor License Agreement ("CLA")
 In order to accept your pull request, we need you to submit a CLA. You only need
