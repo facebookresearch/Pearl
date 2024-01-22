@@ -117,7 +117,7 @@ DQN_method = {
     "action_representation_module_args": {},
 }
 DQN_LSTM_method = {
-    "name": "LSTMDQN",
+    "name": "DQN_LSTM",
     "policy_learner": DeepQLearning,
     "policy_learner_args": {
         "hidden_dims": [64, 64],
@@ -131,7 +131,11 @@ DQN_LSTM_method = {
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
     "history_summarization_module": LSTMHistorySummarizationModule,
-    "history_summarization_module_args": {"hidden_dim": 8},
+    "history_summarization_module_args": {
+        "hidden_dim": 128,
+        "history_length": 4,
+        "num_layers": 1,
+    },
 }
 CDQN_method = {
     "name": "Conservative DQN",
@@ -335,6 +339,30 @@ PPO_method = {
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
 }
+PPO_LSTM_method = {
+    "name": "PPO_LSTM",
+    "policy_learner": ProximalPolicyOptimization,
+    "policy_learner_args": {
+        "actor_hidden_dims": [64, 64],
+        "critic_hidden_dims": [64, 64],
+        "training_rounds": 10,
+        "batch_size": 32,
+        "epsilon": 0.1,
+        "actor_learning_rate": 1e-4,
+        "critic_learning_rate": 1e-4,
+        "entropy_bonus_scaling": 0.01,
+    },
+    "replay_buffer": OnPolicyEpisodicReplayBuffer,
+    "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
+    "history_summarization_module": LSTMHistorySummarizationModule,
+    "history_summarization_module_args": {
+        "hidden_dim": 128,
+        "history_length": 4,
+        "num_layers": 1,
+    },
+}
 PPO_dynamic_method = {
     "name": "PPO_dynamic",
     "policy_learner": ProximalPolicyOptimization,
@@ -366,6 +394,30 @@ SAC_method = {
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
 }
+SAC_LSTM_method = {
+    "name": "SAC_LSTM",
+    "policy_learner": SoftActorCritic,
+    "policy_learner_args": {
+        "actor_hidden_dims": [64, 64, 64],
+        "critic_hidden_dims": [64, 64, 64],
+        "training_rounds": 1,
+        "batch_size": 100,
+        "entropy_coef": 0.1,
+        "actor_learning_rate": 1e-4,
+        "critic_learning_rate": 3e-4,
+    },
+    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
+    "history_summarization_module": LSTMHistorySummarizationModule,
+    "history_summarization_module_args": {
+        "hidden_dim": 128,
+        "history_length": 4,
+        "num_layers": 1,
+    },
+}
+
 SAC_dynamic_method = {
     "name": "SAC_dynamic",
     "policy_learner": SoftActorCritic,
@@ -490,6 +542,38 @@ DDPG_method = {
     "replay_buffer": FIFOOffPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 100000},
 }
+
+DDPG_LSTM_method = {
+    "name": "DDPG_LSTM",
+    "policy_learner": DeepDeterministicPolicyGradient,
+    "policy_learner_args": {
+        "actor_hidden_dims": [256, 256],
+        "critic_hidden_dims": [256, 256],
+        "training_rounds": 1,
+        "batch_size": 50,
+        "actor_network_type": VanillaContinuousActorNetwork,
+        "critic_network_type": VanillaQValueNetwork,
+        "actor_soft_update_tau": 0.05,
+        "critic_soft_update_tau": 0.05,
+        "actor_learning_rate": 1e-3,
+        "critic_learning_rate": 1e-3,
+        "discount_factor": 0.99,
+    },
+    "exploration_module": NormalDistributionExploration,
+    "exploration_module_args": {
+        "mean": 0,
+        "std_dev": 0.1,
+    },
+    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer_args": {"capacity": 100000},
+    "history_summarization_module": LSTMHistorySummarizationModule,
+    "history_summarization_module_args": {
+        "hidden_dim": 128,
+        "history_length": 4,
+        "num_layers": 1,
+    },
+}
+
 TD3_method = {
     "name": "TD3",
     "policy_learner": TD3,
@@ -518,6 +602,40 @@ TD3_method = {
     "replay_buffer_args": {"capacity": 100000},
 }
 
+TD3_LSTM_method = {
+    "name": "TD3_LSTM",
+    "policy_learner": TD3,
+    "policy_learner_args": {
+        "actor_hidden_dims": [256, 256],
+        "critic_hidden_dims": [256, 256],
+        "training_rounds": 1,
+        "batch_size": 50,
+        "actor_network_type": VanillaContinuousActorNetwork,
+        "critic_network_type": VanillaQValueNetwork,
+        "actor_soft_update_tau": 0.05,
+        "critic_soft_update_tau": 0.05,
+        "actor_learning_rate": 1e-3,
+        "critic_learning_rate": 1e-3,
+        "discount_factor": 0.99,
+        "actor_update_freq": 2,
+        "actor_update_noise": 0.2,
+        "actor_update_noise_clip": 0.5,
+    },
+    "exploration_module": NormalDistributionExploration,
+    "exploration_module_args": {
+        "mean": 0,
+        "std_dev": 0.1,
+    },
+    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer_args": {"capacity": 100000},
+    "history_summarization_module": LSTMHistorySummarizationModule,
+    "history_summarization_module_args": {
+        "hidden_dim": 128,
+        "history_length": 4,
+        "num_layers": 1,
+    },
+}
+
 CSAC_method = {
     "name": "ContinuousSAC",
     "policy_learner": ContinuousSoftActorCritic,
@@ -537,6 +655,33 @@ CSAC_method = {
     },
     "replay_buffer": FIFOOffPolicyReplayBuffer,
     "replay_buffer_args": {"capacity": 100000},
+}
+
+CSAC_LSTM_method = {
+    "name": "ContinuousSACLSTM",
+    "policy_learner": ContinuousSoftActorCritic,
+    "policy_learner_args": {
+        "actor_hidden_dims": [256, 256],
+        "critic_hidden_dims": [256, 256],
+        "training_rounds": 1,
+        "batch_size": 256,
+        "entropy_autotune": False,
+        "entropy_coef": 0.25,
+        "critic_soft_update_tau": 0.005,
+        "actor_learning_rate": 3e-4,
+        "critic_learning_rate": 5e-4,
+        "actor_network_type": GaussianActorNetwork,
+        "critic_network_type": VanillaQValueNetwork,
+        "discount_factor": 0.99,
+    },
+    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer_args": {"capacity": 100000},
+    "history_summarization_module": LSTMHistorySummarizationModule,
+    "history_summarization_module_args": {
+        "hidden_dim": 128,
+        "history_length": 4,
+        "num_layers": 1,
+    },
 }
 
 
@@ -1222,6 +1367,25 @@ benchmark_halfcheetah_v4 = [
     ]
 ]
 
+benchmark_pendulum_v1_lstm = [
+    {
+        "exp_name": "benchmark_pendulum_v1_lstm",
+        "env_name": env_name,
+        "num_runs": 4,
+        "num_steps": 100000,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 1000,
+        "methods": [
+            DDPG_LSTM_method,
+            CSAC_LSTM_method,
+            TD3_LSTM_method,
+        ],
+        "device_id": 2,
+    }
+    for env_name in [
+        "Pendulum-v1",
+    ]
+]
 benchmark_ant_v4 = [
     {
         "exp_name": "benchmark_ant_v4",

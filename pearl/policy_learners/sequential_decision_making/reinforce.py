@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-from typing import Any, Dict, List, Optional, Type
+from typing import List, Optional, Type
 
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
@@ -34,7 +34,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 )
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
-    single_critic_state_value_update,
+    single_critic_state_value_loss,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 
@@ -86,7 +86,7 @@ class REINFORCE(ActorCriticBase):
             action_representation_module=action_representation_module,
         )
 
-    def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
         state_batch = (
             batch.state
         )  # (batch_size x state_dim) note that here batch_size = episode length
@@ -104,19 +104,13 @@ class REINFORCE(ActorCriticBase):
             loss = torch.sum(negative_log_probs * (return_batch - v.detach()))
         else:
             loss = torch.sum(negative_log_probs * return_batch)
-        self._actor_optimizer.zero_grad()
-        loss.backward()
-        self._actor_optimizer.step()
+        return loss
 
-        return {"actor_loss": loss.mean().item()}
-
-    def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
-        if self._use_critic:
-            assert batch.cum_reward is not None
-            return single_critic_state_value_update(
-                state_batch=batch.state,
-                expected_target_batch=batch.cum_reward,
-                optimizer=self._critic_optimizer,
-                critic=self._critic,
-            )
-        return {}
+    def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
+        assert self._use_critic, "can not compute critic loss without critic"
+        assert batch.cum_reward is not None
+        return single_critic_state_value_loss(
+            state_batch=batch.state,
+            expected_target_batch=batch.cum_reward,
+            critic=self._critic,
+        )

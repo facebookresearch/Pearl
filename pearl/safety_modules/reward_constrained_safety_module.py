@@ -20,7 +20,7 @@ from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCri
 from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     make_critic,
-    twin_critic_action_value_update,
+    twin_critic_action_value_loss,
     update_critic_target_network,
 )
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
@@ -172,14 +172,15 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
 
         # update twin critics towards bellman target
         assert isinstance(self.cost_critic, TwinCritic)
-        loss_critic_update = twin_critic_action_value_update(
+        loss = twin_critic_action_value_loss(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target_batch=expected_state_action_values,
-            optimizer=self.cost_critic_optimizer,
             critic=self.cost_critic,
         )
-
+        self.cost_critic_optimizer.zero_grad()
+        loss.backward()
+        self.cost_critic_optimizer.step()
         # update targets of critics using soft updates
         update_critic_target_network(
             self.target_of_cost_critic,
@@ -188,7 +189,9 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
             self.critic_soft_update_tau,
         )
 
-        return loss_critic_update
+        return {
+            "cost_critic_loss": loss.item(),
+        }
 
     def filter_action(
         self, subjective_state: SubjectiveState, action_space: ActionSpace

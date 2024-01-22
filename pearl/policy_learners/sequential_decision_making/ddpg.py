@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-from typing import Any, Dict, List, Optional, Type
+from typing import List, Optional, Type
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -30,7 +30,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 )
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
-    twin_critic_action_value_update,
+    twin_critic_action_value_loss,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 
@@ -84,7 +84,7 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
             action_representation_module=action_representation_module,
         )
 
-    def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
 
         # sample a batch of actions from the actor network; shape (batch_size, action_dim)
         action_batch = self._actor.sample_action(batch.state)
@@ -100,13 +100,9 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
         # optimization objective: optimize actor to maximize Q(s, a)
         loss = -q.mean()
 
-        self._actor_optimizer.zero_grad()
-        loss.backward()
-        self._actor_optimizer.step()
+        return loss
 
-        return {"actor_loss": loss.mean().item()}
-
-    def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
 
         with torch.no_grad():
             # sample a batch of next actions from target actor network;
@@ -132,12 +128,11 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
         assert isinstance(self._critic, TwinCritic), "DDPG requires TwinCritic critic"
 
         # update twin critics towards bellman target
-        loss_critic_update = twin_critic_action_value_update(
+        loss = twin_critic_action_value_loss(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target_batch=expected_state_action_values,
-            optimizer=self._critic_optimizer,
             critic=self._critic,
         )
 
-        return loss_critic_update
+        return loss

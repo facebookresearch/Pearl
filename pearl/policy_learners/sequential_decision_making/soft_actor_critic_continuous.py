@@ -28,7 +28,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 )
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
-    twin_critic_action_value_update,
+    twin_critic_action_value_loss,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.spaces.box import BoxSpace
@@ -126,7 +126,7 @@ class ContinuousSoftActorCritic(ActorCriticBase):
 
         return actor_critic_loss
 
-    def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
 
         reward_batch = batch.reward  # shape: (batch_size)
         done_batch = batch.done  # shape: (batch_size)
@@ -140,16 +140,15 @@ class ContinuousSoftActorCritic(ActorCriticBase):
         else:
             raise AssertionError("done_batch should not be None")
 
-        loss_critic_update = twin_critic_action_value_update(
+        loss = twin_critic_action_value_loss(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target_batch=expected_state_action_values,
-            optimizer=self._critic_optimizer,
             # pyre-fixme
             critic=self._critic,
         )
 
-        return loss_critic_update
+        return loss
 
     @torch.no_grad()
     def _get_next_state_expected_values(self, batch: TransitionBatch) -> torch.Tensor:
@@ -181,7 +180,7 @@ class ContinuousSoftActorCritic(ActorCriticBase):
 
         return next_state_action_values.view(-1)
 
-    def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
         state_batch = batch.state  # shape: (batch_size x state_dim)
 
         # shape of action_batch: (batch_size, action_dim)
@@ -199,12 +198,6 @@ class ContinuousSoftActorCritic(ActorCriticBase):
         q = torch.minimum(q1, q2)  # shape: (batch_size)
         state_action_values = q.view((self.batch_size, 1))  # shape: (batch_size x 1)
 
-        actor_loss = (
-            self._entropy_coef * action_batch_log_prob - state_action_values
-        ).mean()
+        loss = (self._entropy_coef * action_batch_log_prob - state_action_values).mean()
 
-        self._actor_optimizer.zero_grad()
-        actor_loss.backward()
-        self._actor_optimizer.step()
-
-        return {"actor_loss": actor_loss.item()}
+        return loss

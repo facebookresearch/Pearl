@@ -49,18 +49,6 @@ class LSTMHistorySummarizationModule(HistorySummarizationModule):
             hidden_size=self.hidden_dim,
             batch_first=True,
         )
-        self.register_buffer(
-            "cell_representation", torch.zeros((num_layers, hidden_dim))
-        )
-        self.register_buffer(
-            "hidden_representation", torch.zeros((num_layers, hidden_dim))
-        )
-        self.register_buffer(
-            "default_cell_representation", torch.zeros((num_layers, hidden_dim))
-        )
-        self.register_buffer(
-            "default_hidden_representation", torch.zeros((num_layers, hidden_dim))
-        )
 
     def summarize_history(
         self, observation: Observation, action: Optional[Action]
@@ -85,32 +73,18 @@ class LSTMHistorySummarizationModule(HistorySummarizationModule):
             ],
             dim=0,
         )
-        out, (h, c) = self.lstm(
-            observation_action_pair,
-            (self.hidden_representation, self.cell_representation),
-        )
-        self.hidden_representation = h
-        self.cell_representation = c
-        return out.squeeze(0)
+        out, (_, _) = self.lstm(self.history)
+        return out[-1]
 
     def get_history(self) -> torch.Tensor:
         return self.history
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        batch_size = x.shape[0]
-        h0 = self.hidden_representation.unsqueeze(1).repeat(1, batch_size, 1).detach()
-        c0 = self.cell_representation.unsqueeze(1).repeat(1, batch_size, 1).detach()
-        out, (_, _) = self.lstm(x, (h0, c0))
-        return out[:, -1, :].view((batch_size, -1))
+        out, (_, _) = self.lstm(x)
+        return out[:, -1, :]
 
     def reset(self) -> None:
         self.register_buffer(
             "history",
             torch.zeros((self.history_length, self.action_dim + self.observation_dim)),
-        )
-        self.register_buffer(
-            "cell_representation", torch.zeros((self.num_layers, self.hidden_dim))
-        )
-        self.register_buffer(
-            "hidden_representation", torch.zeros((self.num_layers, self.hidden_dim))
         )

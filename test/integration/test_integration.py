@@ -467,7 +467,7 @@ class TestIntegration(unittest.TestCase):
                 action_space=env.action_space,
                 actor_hidden_dims=[400, 300],
                 critic_hidden_dims=[400, 300],
-                critic_learning_rate=1e-2,
+                critic_learning_rate=1e-3,
                 actor_learning_rate=1e-3,
                 training_rounds=5,
                 actor_soft_update_tau=0.05,

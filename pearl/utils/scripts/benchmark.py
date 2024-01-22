@@ -33,22 +33,9 @@ from pearl.utils.scripts.benchmark_config import (  # noqa
     benchmark_cartpole_v1_part_2,  # noqa
     benchmark_halfcheetah_v4,  # noqa
     benchmark_hopper_v4,  # noqa
+    benchmark_pendulum_v1_lstm,
     benchmark_walker2d_v4,  # noqa
-    generate_rctd3_ant,  # noqa
-    generate_rctd3_half_cheetah_v1,  # noqa
-    generate_rctd3_hopper,  # noqa
-    generate_rctd3_walker,  # noqa
     get_env,
-    rctd3_ant_part_1,  # noqa
-    rctd3_ant_part_2,  # noqa
-    rctd3_ant_part_3,  # noqa
-    rctd3_ant_part_4,  # noqa
-    rctd3_half_cheetah_v1_part_1,  # noqa
-    rctd3_half_cheetah_v1_part_2,  # noqa
-    rctd3_hopper_part_1,  # noqa
-    rctd3_hopper_part_2,  # noqa
-    rctd3_walker_part_1,  # noqa
-    rctd3_walker_part_2,  # noqa
     test_dynamic_action_space,
 )
 
@@ -135,13 +122,21 @@ def evaluate_single(
         "action_representation_module" in method
         and "action_representation_module_args" in method
     ):
-        if (
-            method["action_representation_module"].__name__
-            == "OneHotActionTensorRepresentationModule"
-        ):
+        if method["action_representation_module"].__name__ in [
+            "OneHotActionTensorRepresentationModule",
+        ]:
             method["action_representation_module_args"][
                 "max_number_actions"
             ] = env.action_space.n
+        if method["action_representation_module"].__name__ in [
+            "IdentityActionRepresentationModule"
+        ]:
+            method["action_representation_module_args"][
+                "max_number_actions"
+            ] = env.action_space.n
+            method["action_representation_module_args"][
+                "representation_dim"
+            ] = env.action_space.action_dim
         policy_learner_args["action_representation_module"] = method[
             "action_representation_module"
         ](**method["action_representation_module_args"])
@@ -164,9 +159,11 @@ def evaluate_single(
             method["history_summarization_module_args"][
                 "observation_dim"
             ] = env.observation_space.shape[0]
-            method["history_summarization_module_args"][
-                "action_dim"
-            ] = env.action_space.n
+            method["history_summarization_module_args"]["action_dim"] = (
+                policy_learner_args["action_representation_module"].representation_dim
+                if "action_representation_module" in policy_learner_args
+                else env.action_space.action_dim
+            )
             policy_learner_args["state_dim"] = method[
                 "history_summarization_module_args"
             ]["hidden_dim"]
@@ -209,7 +206,6 @@ def evaluate_single(
         learn_after_episode = True
     else:
         learn_after_episode = False
-
     info = online_learning(
         agent,
         env,
@@ -278,10 +274,20 @@ def generate_one_plot(experiment, attributes):
 
 
 if __name__ == "__main__":
+    run(benchmark_pendulum_v1_lstm)
+    generate_plots(benchmark_pendulum_v1_lstm, ["return"])
+    # run(benchmark_pendulum_v1_lstm2)
+    # generate_plots(benchmark_pendulum_v1_lstm2, ["return"])
+    # run(benchmark_pendulum_v1_lstm3)
+    # generate_plots(benchmark_pendulum_v1_lstm3, ["return"])
+    # run(benchmark_pendulum_v1_lstm4)
+    # generate_plots(benchmark_pendulum_v1_lstm4, ["return"])
     # run(benchmark_cartpole_v1_part_1)
     # generate_plots(benchmark_cartpole_v1_part_1, ["return"])
     # run(benchmark_cartpole_v1_part_2)
     # generate_plots(benchmark_cartpole_v1_part_2, ["return"])
+    # run(benchmark_cartpole_v1_part_3)
+    # generate_plots(benchmark_cartpole_v1_part_3, ["return"])
     # run(benchmark_acrobot_v1_part_1)
     # generate_plots(benchmark_acrobot_v1_part_1, ["return"])
     # run(benchmark_acrobot_v1_part_2)
@@ -296,8 +302,8 @@ if __name__ == "__main__":
     # generate_plots(benchmark_walker2d_v4, ["return"])
 
     # test dynamic action spaces
-    run(test_dynamic_action_space)
-    generate_plots(test_dynamic_action_space, ["return"])
+    # run(test_dynamic_action_space)
+    # generate_plots(test_dynamic_action_space, ["return"])
 
     # test reward constraint versions of algorithms
     # run(rcddpg_ant)

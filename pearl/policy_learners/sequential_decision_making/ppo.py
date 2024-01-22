@@ -30,7 +30,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 )
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
-    single_critic_state_value_update,
+    single_critic_state_value_loss,
 )
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
@@ -88,7 +88,7 @@ class ProximalPolicyOptimization(ActorCriticBase):
         self._entropy_bonus_scaling = entropy_bonus_scaling
         self._actor_old: nn.Module = copy.deepcopy(self._actor)
 
-    def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
         """
         Loss = actor loss + critic loss + entropy_bonus_scaling * entropy loss
         """
@@ -132,18 +132,13 @@ class ProximalPolicyOptimization(ActorCriticBase):
         loss = torch.sum(
             -torch.min(r_thelta * advantage, clip * advantage)
         ) - torch.sum(self._entropy_bonus_scaling * entropy)
-        self._actor_optimizer.zero_grad()
-        loss.backward()
-        self._actor_optimizer.step()
+        return loss
 
-        return {"actor_loss": loss.mean().item()}
-
-    def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
         assert batch.cum_reward is not None
-        return single_critic_state_value_update(
+        return single_critic_state_value_loss(
             state_batch=batch.state,
             expected_target_batch=batch.cum_reward,
-            optimizer=self._critic_optimizer,
             critic=self._critic,
         )
 

@@ -8,26 +8,11 @@
 from abc import abstractmethod
 from typing import Any, cast, Dict, Iterable, List, Optional, Type, Union
 
+import torch
+
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
-
-from pearl.neural_networks.common.value_networks import QValueNetwork, ValueNetwork
-from pearl.neural_networks.sequential_decision_making.actor_networks import (
-    ActorNetwork,
-    DynamicActionActorNetwork,
-)
-
-from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
-
-from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
-
-try:
-    import gymnasium as gym
-except ModuleNotFoundError:
-    import gym
-
-import torch
 
 from pearl.api.action import Action
 
@@ -41,11 +26,16 @@ from pearl.neural_networks.common.utils import (
     update_target_network,
     update_target_networks,
 )
+
 from pearl.neural_networks.common.value_networks import (
+    QValueNetwork,
+    ValueNetwork,
     VanillaQValueNetwork,
     VanillaValueNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
+    ActorNetwork,
+    DynamicActionActorNetwork,
     VanillaActorNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
@@ -54,6 +44,8 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 )
 from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
+
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import nn, optim
 
 
@@ -277,8 +269,22 @@ class ActorCriticBase(PolicyLearner):
             Dict[str, Any]: A dictionary containing the loss reports from the critic
             and actor updates. These can be useful to track for debugging purposes.
         """
-        critic_loss_report = self._critic_learn_batch(batch)  # update critic
-        actor_loss_report = self._actor_learn_batch(batch)  # update actor
+        actor_loss = self._actor_loss(batch)
+        self._actor_optimizer.zero_grad()
+        if self._use_critic:
+            critic_loss = self._critic_loss(batch)
+            self._critic_optimizer.zero_grad()
+            (actor_loss + critic_loss).backward()
+            self._actor_optimizer.step()
+            self._critic_optimizer.step()
+            report = {
+                "actor_loss": actor_loss.item(),
+                "critic_loss": critic_loss.item(),
+            }
+        else:
+            actor_loss.backward()
+            self._actor_optimizer.step()
+            report = {"actor_loss": actor_loss.item()}
 
         if self._use_critic_target:
             update_critic_target_network(
@@ -293,9 +299,7 @@ class ActorCriticBase(PolicyLearner):
                 self._actor,
                 self._actor_soft_update_tau,
             )
-
-        loss_report = {**critic_loss_report, **actor_loss_report}
-        return loss_report
+        return report
 
     def preprocess_batch(self, batch: TransitionBatch) -> TransitionBatch:
         """
@@ -312,7 +316,7 @@ class ActorCriticBase(PolicyLearner):
         return batch
 
     @abstractmethod
-    def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
         """
         Abstract method for implementing the algorithm-specific logic for updating the actor
         network. This method must be implemented by any concrete subclass to provide the specific
@@ -320,13 +324,12 @@ class ActorCriticBase(PolicyLearner):
         Args:
             batch (TransitionBatch): A batch of transitions used for updating the actor network.
         Returns:
-            Dict[str, Any]: A dictionary containing the loss report from the actor update.
-            Typically, this includes value of the actor loss.
+            loss (Tensor): The actor loss.
         """
         pass
 
     @abstractmethod
-    def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
         """
         Abstract method for implementing the algorithm-specific logic for updating the critic
         network. This method must be implemented by any concrete subclass to provide the specific
@@ -334,8 +337,7 @@ class ActorCriticBase(PolicyLearner):
         Args:
             batch (TransitionBatch): A batch of transitions used for updating the actor network.
         Returns:
-            Dict[str, Any]: A dictionary containing the loss report from the critic update.
-            Typically, this includes value of the critic loss.
+            loss (Tensor): The critic loss.
         """
         pass
 
@@ -404,12 +406,11 @@ def update_critic_target_network(
         )
 
 
-def single_critic_state_value_update(
+def single_critic_state_value_loss(
     state_batch: torch.Tensor,
     expected_target_batch: torch.Tensor,
-    optimizer: torch.optim.Optimizer,
     critic: nn.Module,
-) -> Dict[str, Any]:
+) -> torch.Tensor:
     """
     Performs a single optimization step on a (value) critic network using the input batch of states.
     This method calculates the mean squared error loss between the predicted state values from the
@@ -420,12 +421,9 @@ def single_critic_state_value_update(
         `(batch_size, state_dim)`.
         expected_target_batch (torch.Tensor): The batch of target estimates
         (i.e., RHS of the Bellman equation) with shape `(batch_size)`.
-        optimizer (torch.optim.Optimizer): The optimizer to use for updating the critic network.
         critic (nn.Module): The critic network to update.
     Returns:
-        Dict[str, Any]: A dictionary containing the following key:
-            - "critic_loss": The mean squared error loss between the predicted state values from
-            the critic network and the input target estimates.
+        loss (torch.Tensor): The mean squared error loss for state-value prediction
     """
     if not isinstance(critic, ValueNetwork):
         raise TypeError(
@@ -433,24 +431,19 @@ def single_critic_state_value_update(
             "ValueNetwork"
         )
     vs = critic(state_batch)
-    # critic loss
     criterion = torch.nn.MSELoss()
     loss = criterion(
         vs.reshape_as(expected_target_batch), expected_target_batch.detach()
     )
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-    return {"critic_loss": loss.item()}
+    return loss
 
 
-def twin_critic_action_value_update(
+def twin_critic_action_value_loss(
     state_batch: torch.Tensor,
     action_batch: torch.Tensor,
     expected_target_batch: torch.Tensor,
-    optimizer: torch.optim.Optimizer,
     critic: TwinCritic,
-) -> Dict[str, torch.Tensor]:
+) -> torch.Tensor:
     """
     Performs a single optimization step on the twin critic networks using the input
     batch of states and actions.
@@ -465,31 +458,14 @@ def twin_critic_action_value_update(
         `(batch_size, action_dim)`.
         expected_target_batch (torch.Tensor): The batch of target estimates
         (i.e. RHS of the Bellman equation) with shape `(batch_size)`.
-        optimizer (torch.optim.Optimizer): The optimizer to use for updating the critic networks.
         critic (TwinCritic): The twin critic network to update.
     Returns:
-        Dict[str, Any]: A dictionary containing the following keys:
-            - "critic_loss": The loss value calculated as the sum of the mean squared error loss
-            between the predicted Q-values from both critic networks and the input target estimates.
-            - "critic_1_values": The mean Q-value from the first critic network over the
-            batch of input states and actions.
-            - "critic_2_values": The mean Q-value from the second critic network over the
-            batch of input states and actions.
-            Note: "critic_1_values" and "critic_2_values" maybe useful for debugging purposes,
-            such as identifying overestimaiton bias.
+        loss (torch.Tensor): The mean squared error loss for action-value prediction
     """
 
     criterion = torch.nn.MSELoss()
-    optimizer.zero_grad()
     q_1, q_2 = critic.get_q_values(state_batch, action_batch)
     loss = criterion(
         q_1.reshape_as(expected_target_batch), expected_target_batch.detach()
     ) + criterion(q_2.reshape_as(expected_target_batch), expected_target_batch.detach())
-    loss.backward()
-    optimizer.step()
-
-    return {
-        "critic_loss": loss.item(),
-        "critic_1_values": q_1.mean().item(),
-        "critic_2_values": q_2.mean().item(),
-    }
+    return loss

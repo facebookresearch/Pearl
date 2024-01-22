@@ -26,8 +26,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
-    make_critic,
-    twin_critic_action_value_update,
+    twin_critic_action_value_loss,
     update_critic_target_network,
 )
 from pearl.policy_learners.sequential_decision_making.ddpg import (
@@ -35,7 +34,6 @@ from pearl.policy_learners.sequential_decision_making.ddpg import (
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
-from torch import nn, optim
 
 
 class TD3(DeepDeterministicPolicyGradient):
@@ -92,14 +90,23 @@ class TD3(DeepDeterministicPolicyGradient):
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
-        self._critic_learn_batch(batch)  # critic update
+        critic_loss = self._critic_loss(batch)  # critic update
         self._critic_update_count += 1
 
         # delayed actor update
+        self._critic_optimizer.zero_grad()
         if self._critic_update_count % self._actor_update_freq == 0:
             # see ddpg base class for actor update details
-            self._actor_learn_batch(batch)
+            actor_loss = self._actor_loss(batch)
+            self._actor_optimizer.zero_grad()
+            (actor_loss + critic_loss).backward()
+            self._actor_optimizer.step()
+            self._critic_optimizer.step()
+        else:
+            critic_loss.backward()
+            self._critic_optimizer.step()
 
+        if self._critic_update_count % self._actor_update_freq == 0:
             # update targets of critics using soft updates
             update_critic_target_network(
                 self._critic_target,
@@ -114,7 +121,7 @@ class TD3(DeepDeterministicPolicyGradient):
 
         return {}
 
-    def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
         with torch.no_grad():
             # sample next_action from actor's target network; shape (batch_size, action_dim)
             next_action = self._actor_target.sample_action(batch.next_state)
@@ -159,11 +166,10 @@ class TD3(DeepDeterministicPolicyGradient):
 
         # update twin critics towards bellman target
         assert isinstance(self._critic, TwinCritic)
-        loss_critic_update = twin_critic_action_value_update(
+        loss = twin_critic_action_value_loss(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target_batch=expected_state_action_values,
-            optimizer=self._critic_optimizer,
             critic=self._critic,
         )
-        return loss_critic_update
+        return loss

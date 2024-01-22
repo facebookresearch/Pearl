@@ -40,7 +40,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 )
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
-    twin_critic_action_value_update,
+    twin_critic_action_value_loss,
 )
 
 from pearl.replay_buffers.transition import TransitionBatch
@@ -154,9 +154,17 @@ class ImplicitQLearning(ActorCriticBase):
         self._history_summarization_module = value
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
-
-        value_loss = self._value_learn_batch(batch)  # update value network
-        critic_loss = self._critic_learn_batch(batch)  # update critic networks
+        value_loss = self._value_loss(batch)
+        critic_loss = self._critic_loss(batch)
+        actor_loss = self._actor_loss(batch)
+        self._value_network_optimizer.zero_grad()
+        self._actor_optimizer.zero_grad()
+        self._critic_optimizer.zero_grad()
+        loss = value_loss + critic_loss + actor_loss
+        loss.backward()
+        self._value_network_optimizer.step()
+        self._actor_optimizer.step()
+        self._critic_optimizer.step()
 
         # update critic and target Twin networks;
         update_target_networks(
@@ -165,15 +173,13 @@ class ImplicitQLearning(ActorCriticBase):
             self._critic_soft_update_tau,
         )
 
-        actor_loss = self._actor_learn_batch(batch)  # update actor network
-
         return {
-            "value_loss": value_loss,
-            "actor_loss": actor_loss,
-            "critic_loss": critic_loss,
+            "value_loss": value_loss.item(),
+            "actor_loss": actor_loss.item(),
+            "critic_loss": critic_loss.item(),
         }
 
-    def _value_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _value_loss(self, batch: TransitionBatch) -> torch.Tensor:
 
         with torch.no_grad():
             q1, q2 = self._critic_target.get_q_values(batch.state, batch.action)
@@ -184,13 +190,10 @@ class ImplicitQLearning(ActorCriticBase):
         value_batch = self._value_network(batch.state).view(-1)  # shape: (batch_size)
 
         # note the change in loss function from a mean square loss to an expectile loss
-        loss_value_network = self._expectile_loss(target_q - value_batch).mean()
-        self._value_network_optimizer.zero_grad()
-        loss_value_network.backward()
-        self._value_network_optimizer.step()
-        return {"value_loss": loss_value_network.mean().item()}
+        loss = self._expectile_loss(target_q - value_batch).mean()
+        return loss
 
-    def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
         """
         Performs policy extraction using advantage weighted regression
         """
@@ -246,12 +249,9 @@ class ImplicitQLearning(ActorCriticBase):
             # advantage weighted regression for stochastic actors
             actor_loss = -(advantage * log_action_probabilities).mean()
 
-        self._actor_optimizer.zero_grad()
-        actor_loss.backward()
-        self._actor_optimizer.step()
-        return actor_loss.mean().item()
+        return actor_loss
 
-    def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
         with torch.no_grad():
             # sample values of next states
             values_next_states = self._value_network(batch.next_state).view(-1)
@@ -270,14 +270,13 @@ class ImplicitQLearning(ActorCriticBase):
         ), "Critic in ImplicitQLearning should be TwinCritic"
 
         # update twin critics towards target
-        loss_critic_update = twin_critic_action_value_update(
+        loss = twin_critic_action_value_loss(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target_batch=target,
-            optimizer=self._critic_optimizer,
             critic=self._critic,
         )
-        return loss_critic_update
+        return loss
 
     # we do not expect this method to be reused in different algorithms, so it is defined here
     # To Do: add a utils method separately if needed in future for other algorithms to reuse

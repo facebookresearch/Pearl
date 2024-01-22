@@ -5,10 +5,9 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-from typing import Any, Dict, List, Optional, Type
+from typing import List, Optional, Type
 
 import torch
-import torch.nn.functional as F
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
@@ -32,7 +31,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 )
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
-    twin_critic_action_value_update,
+    twin_critic_action_value_loss,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from torch import optim
@@ -104,7 +103,7 @@ class SoftActorCritic(ActorCriticBase):
         self._action_space = action_space
         self.scheduler.step()
 
-    def _critic_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
 
         reward_batch = batch.reward  # (batch_size)
         done_batch = batch.done  # (batch_size)
@@ -117,15 +116,14 @@ class SoftActorCritic(ActorCriticBase):
         ) + reward_batch  # (batch_size), r + gamma * V(s)
 
         assert isinstance(self._critic, TwinCritic)
-        loss_critic_update = twin_critic_action_value_update(
+        loss = twin_critic_action_value_loss(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target_batch=expected_state_action_values,
-            optimizer=self._critic_optimizer,
             critic=self._critic,
         )
 
-        return loss_critic_update
+        return loss
 
     @torch.no_grad()
     def _get_next_state_expected_values(self, batch: TransitionBatch) -> torch.Tensor:
@@ -182,7 +180,7 @@ class SoftActorCritic(ActorCriticBase):
 
         return next_state_action_values.sum(dim=1)
 
-    def _actor_learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
         state_batch = batch.state  # (batch_size x state_dim)
         state_batch_repeated = torch.repeat_interleave(
             state_batch.unsqueeze(1),
@@ -218,7 +216,7 @@ class SoftActorCritic(ActorCriticBase):
         if unavailable_actions_mask is not None:
             state_action_values[unavailable_actions_mask] = 0.0
 
-        policy_loss = (
+        loss = (
             (
                 new_policy_dist
                 * (
@@ -230,8 +228,4 @@ class SoftActorCritic(ActorCriticBase):
             .mean()
         )
 
-        self._actor_optimizer.zero_grad()
-        policy_loss.backward()
-        self._actor_optimizer.step()
-
-        return {"actor_loss": policy_loss.item()}
+        return loss
