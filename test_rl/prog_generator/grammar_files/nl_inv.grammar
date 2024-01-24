@@ -1,0 +1,9 @@
+S ::= S1 | S2
+S1 ::= ( C1 ) | ( C1 "||" C1 ) | ( C1 "||" C1 "||" C1 )
+C1 ::= p | ( p && p )
+S2 ::= ( C2 ) | ( C2 && C2 ) | ( C2 && C2 && C2 )
+C2 ::= p | ( p "||" p )
+p ::= var cmp expr
+expr ::= ( var op var ) | ( var op const ) | ( const op var ) | ( const op const ) | var | const
+cmp ::= < | > | == | <= | >=
+op ::= + | - | *

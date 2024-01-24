@@ -1,0 +1,11 @@
+{
+    "filename": "head",
+    "script": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun mem_7fffffffffefed0_1270_64 () (_ BitVec 64))\n(assert\n (not (= ((_ extract 63 63) mem_7fffffffffefed0_1270_64) (_ bv0 1))))\n(assert\n (let ((?x60185 (concat (_ bv0 64) mem_7fffffffffefed0_1270_64)))\n (let ((?x1157304 (bvmul (_ bv14757395258967641293 128) ?x60185)))\n (let ((?x47250 ((_ extract 127 67) ?x1157304)))\n (let (($x66016 (= ?x47250 (_ bv0 61))))\n (not $x66016))))))\n(assert\n (let ((?x60185 (concat (_ bv0 64) mem_7fffffffffefed0_1270_64)))\n (let ((?x1157304 (bvmul (_ bv14757395258967641293 128) ?x60185)))\n (let ((?x47250 ((_ extract 127 67) ?x1157304)))\n (let ((?x1165162 (concat (_ bv0 67) ?x47250)))\n (let ((?x406857 (bvmul (_ bv14757395258967641293 128) ?x1165162)))\n (let ((?x459195 ((_ extract 127 67) ?x406857)))\n (= ?x459195 (_ bv0 61)))))))))\n(check-sat)\n",
+    "time": 4.23286509513855,
+    "stamp": "time.struct_time(tm_year=2020, tm_mon=12, tm_mday=3, tm_hour=22, tm_min=52, tm_sec=19, tm_wday=3, tm_yday=338, tm_isdst=0)",
+    "solving_time_dic": {
+        "z3": [
+            1.0704002380371094
+        ]
+    }
+}

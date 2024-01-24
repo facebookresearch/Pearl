@@ -1,0 +1,11 @@
+{
+    "filename": "head",
+    "script": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun mem_7fffffffffefed0_1322_64 () (_ BitVec 64))\n(declare-fun unconstrained_ret_lseek_1678_64 () (_ BitVec 64))\n(declare-fun unconstrained_ret_lseek_1720_64 () (_ BitVec 64))\n(assert\n (let ((?x226446 ((_ extract 63 63) mem_7fffffffffefed0_1322_64)))\n (= ?x226446 (_ bv0 1))))\n(assert\n (let (($x45872 (= unconstrained_ret_lseek_1678_64 (_ bv18446744073709551615 64))))\n (not $x45872)))\n(assert\n (let (($x1637100 (= unconstrained_ret_lseek_1720_64 (_ bv18446744073709551615 64))))\n (not $x1637100)))\n(assert\n (let ((?x897964 (bvmul (_ bv18446744073709551615 64) unconstrained_ret_lseek_1678_64)))\n (let ((?x889940 (bvadd unconstrained_ret_lseek_1720_64 ?x897964)))\n (let ((?x1630898 ((_ extract 63 63) ?x889940)))\n (= ?x1630898 (_ bv0 1))))))\n(assert\n (let ((?x897964 (bvmul (_ bv18446744073709551615 64) unconstrained_ret_lseek_1678_64)))\n (let ((?x889940 (bvadd unconstrained_ret_lseek_1720_64 ?x897964)))\n (bvule ?x889940 mem_7fffffffffefed0_1322_64))))\n(assert\n (let ((?x75400 ((_ extract 63 21) mem_7fffffffffefed0_1322_64)))\n (= ?x75400 (_ bv0 43))))\n(assert\n (let (($x906220 (= mem_7fffffffffefed0_1322_64 (_ bv18446744073709543424 64))))\n (not $x906220)))\n(assert\n (let ((?x126141 (bvadd (_ bv8192 64) mem_7fffffffffefed0_1322_64)))\n (let ((?x230985 (concat (_ bv0 64) ?x126141)))\n (let ((?x87765 (bvudiv (_ bv18446744073709551615 128) ?x230985)))\n (let ((?x79483 ((_ extract 63 0) ?x87765)))\n (bvule (_ bv2 64) ?x79483))))))\n(assert\n (let ((?x49061 ((_ extract 20 0) mem_7fffffffffefed0_1322_64)))\n (bvule ?x49061 (_ bv1048576 21))))\n(check-sat)\n",
+    "time": 1.0970873832702637,
+    "stamp": "time.struct_time(tm_year=2020, tm_mon=12, tm_mday=4, tm_hour=1, tm_min=3, tm_sec=6, tm_wday=4, tm_yday=339, tm_isdst=0)",
+    "solving_time_dic": {
+        "z3": [
+            300.009667634964
+        ]
+    }
+}

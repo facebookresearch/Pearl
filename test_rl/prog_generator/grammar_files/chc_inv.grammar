@@ -1,0 +1,6 @@
+S ::= ( C ) | ( and ( C ) ( C ) ) | ( and ( C ) ( C ) ( C ) )
+C ::= p | or ( p ) ( p )
+p ::= cmp var expr
+expr ::= ( op var var ) | ( op var const ) | ( op const var ) | ( op const const ) | var | const
+cmp ::= < | <= | = | >= | >
+op ::= + | -

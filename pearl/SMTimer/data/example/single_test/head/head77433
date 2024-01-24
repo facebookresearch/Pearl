@@ -1,0 +1,11 @@
+{
+    "filename": "head",
+    "script": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun unconstrained_ret_strtoumax_1641_64 () (_ BitVec 64))\n(assert\n (let ((?x1329962 ((_ extract 63 63) unconstrained_ret_strtoumax_1641_64)))\n (= ?x1329962 (_ bv0 1))))\n(assert\n (let ((?x1888483 ((_ extract 63 21) unconstrained_ret_strtoumax_1641_64)))\n (= ?x1888483 (_ bv0 43))))\n(assert\n (let (($x576807 (= unconstrained_ret_strtoumax_1641_64 (_ bv18446744073709543424 64))))\n (not $x576807)))\n(assert\n (let ((?x1336787 (bvadd (_ bv8192 64) unconstrained_ret_strtoumax_1641_64)))\n (let ((?x54579 (concat (_ bv0 64) ?x1336787)))\n (let ((?x904254 (bvudiv (_ bv18446744073709551615 128) ?x54579)))\n (let ((?x1327378 ((_ extract 63 0) ?x904254)))\n (let (($x601064 (bvule (_ bv2 64) ?x1327378)))\n (not $x601064)))))))\n(assert\n (let ((?x718337 ((_ extract 20 0) unconstrained_ret_strtoumax_1641_64)))\n (bvule ?x718337 (_ bv1048576 21))))\n(check-sat)\n",
+    "time": 1.0561823844909668,
+    "stamp": "time.struct_time(tm_year=2020, tm_mon=12, tm_mday=3, tm_hour=23, tm_min=49, tm_sec=49, tm_wday=3, tm_yday=338, tm_isdst=0)",
+    "solving_time_dic": {
+        "z3": [
+            300.0088975429535
+        ]
+    }
+}

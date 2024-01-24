@@ -1,0 +1,6 @@
+S ::= ( C )
+C ::= ( p )
+p ::= var cmp expr
+expr ::= const
+cmp ::= ==
+

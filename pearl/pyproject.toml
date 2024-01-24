@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Pearl"
+version = "0.1.0"
+description = "A Production-Ready Reinforcement Learning AI Agent Library"
+readme = "README.md"
+license = { file = "LICENSE" }
+classifiers = [
+    "Scientific/Engineering :: Artificial Intelligence",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "gym",
+    "gymnasium[mujoco,atari,accept-rom-license]",
+    "numpy",
+    "matplotlib",
+    "pandas",
+    "parameterized",
+    "requests",
+    "mujoco",
+    "torch",
+    "torchvision",
+    "torchaudio",
+]
+
+[project.urls]
+homepage = "http://pearlagent.github.io"
+# documentation = "https://example.com/my_package/docs"
+repository = "http://github.com/facebookresearch/Pearl"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pearl*"]
