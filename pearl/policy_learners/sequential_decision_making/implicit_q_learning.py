@@ -57,10 +57,8 @@ class ImplicitQLearning(ActorCriticBase):
      - perform value, crtic and actor updates sequentially
      - soft update target networks of twin critics using (tau)
 
-    Notes:
-    1) Currently written for discrete action spaces. For continuous action spaces, we
-    need to implement the reparameterization trick.
-    2) This implementation uses twin critic (clipped double q learning) to reduce
+    Note:
+    This implementation uses twin critic to reduce
     overestimation bias. See TwinCritic class for implementation details.
 
     Args:
@@ -119,8 +117,8 @@ class ImplicitQLearning(ActorCriticBase):
         self._expectile = expectile
         self._is_action_continuous: bool = action_space.is_continuous
 
-        # TODO: base actor networks on a base class, and differentiate between
-        # discrete and continuous actor networks, as well as stocahstic and deterministic actors
+        # TODO: create actor network interfaces for discrete and continuous actor networks
+        # and use the continuous one in this test.
         if self._is_action_continuous:
             torch._assert(
                 actor_network_type == GaussianActorNetwork
@@ -183,7 +181,7 @@ class ImplicitQLearning(ActorCriticBase):
 
         with torch.no_grad():
             q1, q2 = self._critic_target.get_q_values(batch.state, batch.action)
-            # random ensemble distillation. TODO: clipped double q-learning
+            # random ensemble distillation.
             random_index = torch.randint(0, 2, (1,)).item()
             target_q = q1 if random_index == 0 else q2  # shape: (batch_size)
 
@@ -199,21 +197,21 @@ class ImplicitQLearning(ActorCriticBase):
         """
         with torch.no_grad():
             q1, q2 = self._critic_target.get_q_values(batch.state, batch.action)
-            # random ensemble distillation. TODO: clipped double q-learning
+            # random ensemble distillation.
             random_index = torch.randint(0, 2, (1,)).item()
             target_q = q1 if random_index == 0 else q2  # shape: (batch_size)
 
-            value_batch = self._value_network(batch.state).view(
-                -1
-            )  # shape: (batch_size)
+            value_batch = self._value_network(batch.state).view(-1)
+            # shape: (batch_size)
+
             advantage = torch.exp(
                 (target_q - value_batch)
                 * self._temperature_advantage_weighted_regression
             )  # shape: (batch_size)
             advantage = torch.clamp(advantage, max=self._advantage_clamp)
 
-        # TODO: replace VanillaContinuousActorNetwork by a base class for
-        # deterministic actors
+        # TODO: replace VanillaContinuousActorNetwork by a base interface
+        # covering all deterministic actors
         if isinstance(self._actor, VanillaContinuousActorNetwork):
             # mean square error between the actor network output and action batch
             loss = (
@@ -229,14 +227,12 @@ class ImplicitQLearning(ActorCriticBase):
             if self.is_action_continuous:
                 log_action_probabilities = self._actor.get_log_probability(
                     batch.state, batch.action
-                ).view(
-                    -1
-                )  # shape: (batch_size)
+                ).view(-1)
+                # shape: (batch_size)
 
             else:
-                action_probabilities = self._actor(
-                    batch.state
-                )  # shape: (batch_size, action_space_size)
+                action_probabilities = self._actor(batch.state)
+                # shape: (batch_size, action_space_size)
 
                 # one_hot to action indices
                 action_idx = torch.argmax(batch.action, dim=1).unsqueeze(-1)
@@ -257,7 +253,7 @@ class ImplicitQLearning(ActorCriticBase):
             values_next_states = self._value_network(batch.next_state).view(-1)
             # shape: (batch_size)
 
-            # To do: add interface to vanilla value networks
+            # TODO: add interface to vanilla value networks
             # like vanilla q value networks using the 'get' function
 
             # compute targets for batch of (state, action, next_state): target y = r + gamma * V(s')
