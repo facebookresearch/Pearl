@@ -106,6 +106,8 @@ class BootstrapReplayBuffer(FIFOOffPolicyReplayBuffer):
             )
         samples = random.sample(self.memory, batch_size)
         transition_batch = self._create_transition_batch(
+            # pyre-fixme[6]: For 1st argument expected `List[Transition]` but got
+            #  `List[Union[Transition, TransitionBatch]]`.
             transitions=samples,
             has_next_state=self._has_next_state,
             has_next_action=self._has_next_action,
@@ -113,6 +115,8 @@ class BootstrapReplayBuffer(FIFOOffPolicyReplayBuffer):
             has_next_available_actions=self._has_next_available_actions,
             has_cost_available=self.has_cost_available,
         )
+        # pyre-fixme[16]: Item `Transition` of `Union[Transition, TransitionBatch]`
+        #  has no attribute `bootstrap_mask`.
         bootstrap_mask_batch = torch.cat([x.bootstrap_mask for x in samples])
         return TransitionWithBootstrapMaskBatch(
             state=transition_batch.state,

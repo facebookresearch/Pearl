@@ -91,10 +91,13 @@ def train_via_uniform_data(
         else:
             action_ind = random.choice(range(action_space.n))
         agent._latest_action = env.action_transfomer(
-            action_ind, action_embeddings=action_embeddings
+            # pyre-fixme[6]: For 1st argument expected `int` but got `Optional[int]`.
+            action_ind,
+            action_embeddings=action_embeddings,
         )
 
         # apply action to environment
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got `Optional[int]`.
         action_result = env.step(action_ind)
         agent.observe(action_result)
 

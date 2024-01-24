@@ -154,6 +154,8 @@ class TensorBasedReplayBuffer(ReplayBuffer):
             )
         samples = random.sample(self.memory, batch_size)
         return self._create_transition_batch(
+            # pyre-fixme[6]: For 1st argument expected `List[Transition]` but got
+            #  `List[Union[Transition, TransitionBatch]]`.
             transitions=samples,
             has_next_state=self._has_next_state,
             has_next_action=self._has_next_action,
