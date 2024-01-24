@@ -18,7 +18,9 @@ from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 
 class TestNormalDistributionExploration(unittest.TestCase):
     """
-    This is to test_rl NormalDistributionExploration class.
+
+    This is to test NormalDistributionExploration class.
+
     """
 
     def test_multi_dimensional_action_space(self) -> None:

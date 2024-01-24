@@ -39,8 +39,9 @@ class TestCNNQValueNetworks(unittest.TestCase):
 
     def test_forward_pass(self) -> None:
         """
-        test_rl to check if the get_q_values method returns a scalar for a batch of
-        images (observations) and a random batch of actions
+
+        test to check if the get_q_values method returns a scalar for a batch of
+
         """
         input_width = 28  # specifications for mnist dataset
         input_height = 28  # specifications for mnist dataset
@@ -69,6 +70,10 @@ class TestCNNQValueNetworks(unittest.TestCase):
             action_batch = torch.rand((x_batch.shape[0], action_dim))
             q_values = network.get_q_values(
                 x_batch, action_batch
+<<<<<<< HEAD
             )  # test_rl get_q_values method
+=======
+            )  # test get_q_values method
+>>>>>>> acd8d5edab04f718ae531c81ff33cbadac0121b4
 
             self.assertEqual(q_values.shape[0], x_batch.shape[0])

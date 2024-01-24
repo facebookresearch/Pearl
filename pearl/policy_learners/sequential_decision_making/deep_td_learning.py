@@ -159,9 +159,6 @@ class DeepTDLearning(PolicyLearner):
                 available_action_space.actions_batch.to(states_repeated)
             )
             # (action_space_size, action_dim)
-            print('********************************************')
-            print(states_repeated.shape)
-            print(actions.shape)
             q_values = self._Q.get_q_values(states_repeated, actions)
             # this does a forward pass since all avaialble
             # actions are already stacked together

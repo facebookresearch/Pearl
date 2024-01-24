@@ -35,7 +35,9 @@ class TestFifoBuffer(unittest.TestCase):
 
     def test_on_poliy_buffer_sarsa_match(self) -> None:
         """
-        This test_rl is to ensure onpolicy buffer could correctly match SARSA pair
+
+        This test is to ensure onpolicy buffer could correctly match SARSA pair
+
         for single push
         """
         replay_buffer = FIFOOnPolicyReplayBuffer(self.batch_size * 4)
@@ -93,7 +95,9 @@ class TestFifoBuffer(unittest.TestCase):
 
     def test_on_poliy_buffer_ternimal_push(self) -> None:
         """
-        This test_rl is to ensure onpolicy buffer could push for terminal state
+
+        This test is to ensure onpolicy buffer could push for terminal state
+
         """
         replay_buffer = FIFOOnPolicyReplayBuffer(self.batch_size * 4)
         replay_buffer.push(

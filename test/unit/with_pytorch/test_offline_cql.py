@@ -35,7 +35,9 @@ from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpac
 
 class TestOfflineCQL(unittest.TestCase):
 
-    # test_rl to create and save offline data
+
+
+    # test to create and save offline data
     def test_create_offline_data_and_learn_cql(self) -> None:
         env = GymEnvironment("CartPole-v1")
         assert isinstance(env.action_space, DiscreteActionSpace)

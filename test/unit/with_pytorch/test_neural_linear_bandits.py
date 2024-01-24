@@ -90,8 +90,10 @@ class TestNeuralLinearBandits(unittest.TestCase):
         ):
             self.assertTrue(torch.equal(p1.to(p2.device), p2))
 
-    # currently test_rl support mse, mae, cross_entropy
-    # separate loss_types into inddividual test_rl cases to make it easier to debug.
+
+    # currently test support mse, mae, cross_entropy
+    # separate loss_types into inddividual test cases to make it easier to debug.
+
     def test_neural_linucb_mse_loss(self) -> None:
         for loss_type in list(LOSS_TYPES.keys()):
             if loss_type == "mse":

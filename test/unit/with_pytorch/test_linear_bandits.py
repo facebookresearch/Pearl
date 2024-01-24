@@ -95,7 +95,9 @@ class TestLinearBandits(unittest.TestCase):
         action_space = DiscreteActionSpace(actions=list(batch.action))
         # action 2 has feature vector as 3, 2, has highest sum
         self.assertEqual(policy_learner.act(batch.state[0], action_space), 2)
-        # test_rl with batch state
+
+        # test with batch state
+
         actions = policy_learner.act(batch.state, action_space)
         self.assertEqual(actions.shape, (batch.reward.shape[0],))
 
@@ -154,7 +156,9 @@ class TestLinearBandits(unittest.TestCase):
 
         policy_learner.learn_batch(batch)
 
-        # test_rl sigma of policy_learner (LinUCB)
+
+        # test sigma of policy_learner (LinUCB)
+
         features = torch.cat([batch.state, batch.action], dim=1)
         A = policy_learner.model._A
         A_inv = torch.linalg.inv(A)
@@ -185,7 +189,9 @@ class TestLinearBandits(unittest.TestCase):
         batch = self.batch
         action_space = DiscreteActionSpace(actions=list(batch.action))
 
-        # test_rl with batch state
+
+        # test with batch state
+
         selected_actions = policy_learner.act(batch.state, action_space)
         # self.assertEqual(actions.shape, batch.reward.shape)
         self.assertTrue(selected_actions.shape[0] == batch.state.shape[0])
@@ -208,7 +214,9 @@ class TestLinearBandits(unittest.TestCase):
         batch = self.batch
         action_space = DiscreteActionSpace(actions=list(batch.action))
 
-        # test_rl with batch state
+
+        # test with batch state
+
         selected_actions = policy_learner.act(batch.state, action_space)
         # self.assertEqual(actions.shape, batch.reward.shape)
         self.assertTrue(selected_actions.shape[0] == batch.state.shape[0])

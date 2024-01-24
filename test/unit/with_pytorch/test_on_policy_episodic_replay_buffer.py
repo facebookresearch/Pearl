@@ -30,7 +30,10 @@ class TestOnPolicyEpisodicReplayBuffer(unittest.TestCase):
         )
 
     def test_push_incomplete_trajectory(self) -> None:
-        # test_rl that the buffer is empty and can't be sampled
+
+
+        # test that the buffer is empty and can't be sampled
+
         # from until 1st complete trajectory is added
         replay_buffer = OnPolicyEpisodicReplayBuffer(self.capacity)
         for i in range(3):

@@ -138,7 +138,10 @@ class TestDisjointLinearBandits(unittest.TestCase):
         action_space = self.action_space
         batch = self.batch
 
-        # test_rl act
+
+
+        # test act
+
         self.assertTrue(
             policy_learner.act(
                 subjective_state=torch.tensor([2.0, 3.0]), action_space=action_space
@@ -157,7 +160,9 @@ class TestDisjointLinearBandits(unittest.TestCase):
 
     def test_ucb_action_vector(self) -> None:
         """
-        This is to test_rl discrete action space, but each action has a action vector
+
+        This is to test discrete action space, but each action has a action vector
+
         """
         state_dim = 5
         action_dim = 3
@@ -252,7 +257,9 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
 
     def test_ucb_act(self) -> None:
         if not isinstance(self.policy_learner, LinearBandit):
-            # This test_rl is reliable only for linear bandits. NN have too much
+
+            # This test is reliable only for linear bandits. NN have too much
+
             # variance during training
             return
         # deep copy as we are going to change exploration module
@@ -311,7 +318,9 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
 
     def test_thompson_sampling_disjoint_act(self) -> None:
         if not isinstance(self.policy_learner, LinearBandit):
-            # This test_rl only supports linear bandits
+
+            # This test only supports linear bandits
+
             return
 
         # deep copy as we are going to change exploration module
@@ -320,7 +329,9 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
         action_space = self.action_space
         batch = self.batch
 
-        # test_rl act
+
+        # test act
+
         self.assertTrue(
             policy_learner.act(
                 subjective_state=torch.tensor([2.0, 3.0]),
@@ -340,7 +351,9 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
 
     def test_ucb_action_vector(self) -> None:
         """
-        This is to test_rl discrete action space, but each action has a action vector
+
+        This is to test discrete action space, but each action has a action vector
+
         """
         state_dim = 5
         action_dim = 1
@@ -390,7 +403,9 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
         )
         self.assertEqual(scores.shape, torch.Size([batch_size, self.action_space.n]))
 
-        # test_rl that scores have the correct values
+
+        # test that scores have the correct values
+
         features = self.batch.state
         expected_scores = []
         for i in range(self.action_space.n):

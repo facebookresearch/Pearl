@@ -35,12 +35,16 @@ from pearl.utils.tensor_like import assert_is_tensor_like
 
 class TestIntegrationReplayBuffer(unittest.TestCase):
     """
-    Integration test_rl for replay buffer
+
+    Integration test for replay buffer
+
     """
 
     def test_her(self) -> None:
         """
-        This test_rl is to ensure HER works for sparse reward environment
+
+        This test is to ensure HER works for sparse reward environment
+
                 DQN is not able to solve this problem within 1000 episodes
         """
         env: DiscreteSparseRewardEnvironment = DiscreteSparseRewardEnvironment(
@@ -94,7 +98,9 @@ class TestIntegrationReplayBuffer(unittest.TestCase):
                 agent=agent,
                 env=env,
                 # -600 and 1000 are good enough to differ perf from DQN
-                # set it looser for HER to make test_rl faster
+
+                # set it looser for HER to make test faster
+
                 target_return=-600,
                 max_episodes=1000,
                 learn=True,

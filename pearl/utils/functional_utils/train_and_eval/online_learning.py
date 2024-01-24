@@ -241,8 +241,10 @@ def run_episode(
         # each episode has a different seed
         observation, action_space = env.reset(seed=seed + total_steps)
     agent.reset(observation, action_space)
+
     print("查看actionspace++++++++++++++++++")
     print(action_space)
+
     cum_reward = 0
     cum_cost = 0
     done = False
@@ -250,8 +252,11 @@ def run_episode(
     num_risky_sa = 0
     while not done:
         action = agent.act(exploit=exploit)
+<<<<<<< HEAD
         print("查看action++++++++++++++++++")
         print(action)
+=======
+>>>>>>> acd8d5edab04f718ae531c81ff33cbadac0121b4
         action = (
             action.cpu() if isinstance(action, torch.Tensor) else action
         )  # action can be int sometimes

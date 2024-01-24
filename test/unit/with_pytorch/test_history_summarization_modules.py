@@ -24,7 +24,9 @@ class TestHistorySummarizationModules(unittest.TestCase):
 
     def test_stacking_history_summarizer(self) -> None:
         """
-        Easy test_rl for stacking history summarization module.
+
+        Easy test for stacking history summarization module.
+
         """
         summarization_module = StackingHistorySummarizationModule(
             self.observation_dim, self.action_dim, self.history_length
@@ -42,7 +44,9 @@ class TestHistorySummarizationModules(unittest.TestCase):
 
     def test_lstm_history_summarizer(self) -> None:
         """
-        Easy test_rl for LSTM history summarization module.
+
+        Easy test for LSTM history summarization module.
+
         """
         summarization_module = LSTMHistorySummarizationModule(
             observation_dim=self.observation_dim,

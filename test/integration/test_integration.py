@@ -81,7 +81,9 @@ class TestIntegration(unittest.TestCase):
 
     def test_dqn(self) -> None:
         """
-        This test_rl is checking if DQN will eventually get to 500 return for CartPole-v1
+
+        This test is checking if DQN will eventually get to 500 return for CartPole-v1
+
         """
         env = GymEnvironment("CartPole-v1")
 
@@ -113,7 +115,8 @@ class TestIntegration(unittest.TestCase):
 
     # def test_dqn_on_frozen_lake(self) -> None:
     #     """
-    #     This test_rl is checking if DQN will eventually solve FrozenLake-v1
+
+    #     This test is checking if DQN will eventually solve FrozenLake-v1
     #     whose observations need to be wrapped in a one-hot representation.
     #     """
     #     # TODO: flaky: sometimes not even 5,000 episodes is enough for learning
@@ -148,7 +151,7 @@ class TestIntegration(unittest.TestCase):
 
     def test_double_dqn(self) -> None:
         """
-        This test_rl is checking if double DQN will eventually get to 500 return for CartPole-v1
+        This test is checking if double DQN will eventually get to 500 return for CartPole-v1
         """
         env = GymEnvironment("CartPole-v1")
 
@@ -180,7 +183,8 @@ class TestIntegration(unittest.TestCase):
 
     def test_sarsa(self) -> None:
         """
-        This test_rl is checking if SARSA will eventually get to 500 return for CartPole-v1
+
+        This test is checking if SARSA will eventually get to 500 return for CartPole-v1
         Also use network instance to specify Q network
         """
         env = GymEnvironment("CartPole-v1")
@@ -212,7 +216,7 @@ class TestIntegration(unittest.TestCase):
 
     def test_reinforce(self) -> None:
         """
-        This test_rl is checking if REINFORCE will eventually get to 500 return for CartPole-v1
+        This test is checking if REINFORCE will eventually get to 500 return for CartPole-v1
         """
         env = GymEnvironment("CartPole-v1")
         assert isinstance(env.action_space, DiscreteActionSpace)
@@ -282,7 +286,8 @@ class TestIntegration(unittest.TestCase):
 
     def test_qr_dqn(self) -> None:
         """
-        This test_rl is checking if quantile regression based DQN will eventually get to 500 return
+        This test is checking if quantile regression based DQN will eventually get to 500 return
+
         for CartPole-v1
         """
         env = GymEnvironment("CartPole-v1")
@@ -317,7 +322,8 @@ class TestIntegration(unittest.TestCase):
 
     def test_ppo(self) -> None:
         """
-        This test_rl is checking if PPO using cumulated returns will eventually get to 500 return for
+
+        This test is checking if PPO using cumulated returns will eventually get to 500 return for
         CartPole-v1
         """
         env = GymEnvironment("CartPole-v1")
@@ -352,7 +358,8 @@ class TestIntegration(unittest.TestCase):
 
     def test_sac(self) -> None:
         """
-        This test_rl is checking if SAC will eventually get to 500 return for CartPole-v1
+
+        This test is checking if SAC will eventually get to 500 return for CartPole-v1
         """
         env = GymEnvironment("CartPole-v1")
         assert isinstance(env.action_space, DiscreteActionSpace)
@@ -388,7 +395,7 @@ class TestIntegration(unittest.TestCase):
 
     def test_continuous_sac(self) -> None:
         """
-        This test_rl is checking if continuous SAC will eventually learn for Pendulum-v1.
+        This test is checking if continuous SAC will eventually learn for Pendulum-v1.
         The target is to get moving average of returns to -250 or less.
         """
         env = GymEnvironment("Pendulum-v1")
@@ -421,9 +428,10 @@ class TestIntegration(unittest.TestCase):
 
     def test_cql_online(self) -> None:
         """
-        This test_rl is checking if DQN with conservative loss will eventually get to 500 return for
+
+        This test is checking if DQN with conservative loss will eventually get to 500 return for
         CartPole-v1 when training online.
-        This is a dummy test_rl for basic sanity check as we don't expect to use conservative losses
+        This is a dummy test for basic sanity check as we don't expect to use conservative losses
         with online training.
         """
         env = GymEnvironment("CartPole-v1")
@@ -456,7 +464,8 @@ class TestIntegration(unittest.TestCase):
 
     def test_ddpg(self) -> None:
         """
-        This test_rl is checking if DDPG will eventually learn on Pendulum-v1
+
+        This test is checking if DDPG will eventually learn on Pendulum-v1
         If learns well, return will converge above -250
         Due to randomness in games, we check on moving avarage of episode returns
         """
@@ -494,7 +503,7 @@ class TestIntegration(unittest.TestCase):
 
     def test_td3(self) -> None:
         """
-        This test_rl is checking if TD3 will eventually learn on Pendulum-v1
+        This test is checking if TD3 will eventually learn on Pendulum-v1
         If learns well, return will converge above -250
         Due to randomness in games, we check on moving avarage of episode returns
         """
@@ -532,7 +541,7 @@ class TestIntegration(unittest.TestCase):
 
     def test_cql_offline_training(self) -> None:
         """
-        This test_rl is checking if DQN with conservative loss will eventually get to > 50 return for
+        This test is checking if DQN with conservative loss will eventually get to > 50 return for
         CartPole-v1 when trained with offline data.
         """
         set_seed(100)
@@ -584,7 +593,7 @@ class TestIntegration(unittest.TestCase):
 
     def test_iql_offline_training(self) -> None:
         """
-        This test_rl checks whether Implicit Q Learning will eventually get
+        This test checks whether Implicit Q Learning will eventually get
         to > 100 return for CartPole-v1 when trained with offline data.
         """
         set_seed(100)

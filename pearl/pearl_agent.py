@@ -178,11 +178,11 @@ class PearlAgent(Agent):
         assert self._action_space is not None
 
         self.replay_buffer.push(
-            # pyre-fixme[6]: this can be removed when tabular Q learning test_rl uses tensors
+            # pyre-fixme[6]: this can be removed when tabular Q learning test uses tensors
             state=current_history,
             action=self._latest_action,
             reward=action_result.reward,
-            # pyre-fixme[6]: this can be removed when tabular Q learning test_rl uses tensors
+            # pyre-fixme[6]: this can be removed when tabular Q learning test uses tensors
             next_state=new_history,
             curr_available_actions=self._action_space,  # curr_available_actions
             next_available_actions=self._action_space

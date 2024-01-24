@@ -16,7 +16,8 @@ except ModuleNotFoundError:
 
 
 class MeanVarBanditEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
-    """environment to test_rl if safe RL algorithms
+
+    """environment to test if safe RL algorithms
     prefer a policy that achieves lower variance return"""
 
     def __init__(

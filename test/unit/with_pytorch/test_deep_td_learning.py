@@ -55,7 +55,9 @@ class TestDeepTDLearning(unittest.TestCase):
 
     def test_double_dqn(self) -> None:
         """
-        For easier test_rl, just compare double has different output as vanilla version
+
+        For easier test, just compare double has different output as vanilla version
+
         both DQN start with same weights
         """
         double_dqn = DoubleDQN(
