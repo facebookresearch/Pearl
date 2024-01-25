@@ -75,7 +75,7 @@ def mlp_block(
             if input_dim_current_layer == output_dim_current_layer:
                 single_layer_model = ResidualWrapper(single_layer_model)
             else:
-                logging.warn(
+                logging.warning(
                     "Skip connections are enabled, "
                     f"but layer in_dim ({input_dim_current_layer}) != out_dim "
                     f"({output_dim_current_layer})."
@@ -92,7 +92,7 @@ def mlp_block(
         if dims[-2] == dims[-1]:
             last_layer_model = ResidualWrapper(last_layer_model)
         else:
-            logging.warn(
+            logging.warning(
                 "Skip connections are enabled, "
                 f"but layer in_dim ({dims[-2]}) != out_dim ({dims[-1]}). "
                 "Skip connection will not be added for this layer"
