@@ -325,7 +325,7 @@ if __name__ == "__main__":
     # run(rccsac_ant)
     # generate_plots(rccsac_ant, ["return", "return_cost"])
     # run(rccsac_half_cheetah)
-    # generate_plot(rccsac_half_cheetah, ["return", "return_cost"])
+    # generate_plots(rccsac_half_cheetah, ["return", "return_cost"])
     # run(rccsac_hopper)
     # generate_plots(rccsac_hopper, ["return", "return_cost"])
     # run(rccsac_walker)

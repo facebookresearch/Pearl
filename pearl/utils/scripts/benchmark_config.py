@@ -784,7 +784,7 @@ RCTD3_method_const_0_8["name"] = "RCTD3 $\\alpha$=0.8"
 RCTD3_method_const_0_8["safety_module_args"]["constraint_value"] = 0.8
 
 RCCSAC_method_const_0_2 = {
-    "name": "RCContinuousSAC $\\alpha$=0.2",
+    "name": "RCCSAC $\\alpha$=0.2",
     "policy_learner": ContinuousSoftActorCritic,
     "policy_learner_args": {
         "actor_hidden_dims": [256, 256],
