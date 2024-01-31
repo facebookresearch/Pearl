@@ -400,3 +400,28 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
             expected_scores.append(mus + alpha * sigmas)
         expected_scores = torch.cat(expected_scores, dim=1)
         self.assertTrue(torch.allclose(scores, expected_scores, atol=1e-1))
+
+    def test_learn_batch_arm_subset(self) -> None:
+        # test that learn_batch still works when the batch has a subset of arms
+
+        policy_learner = copy.deepcopy(self.policy_learner)
+
+        # action 0 is missing from the batch
+        batch = TransitionBatch(
+            state=torch.tensor(
+                [
+                    [2.0, 3.0],
+                    [1.0, 5.0],
+                    [0.5, 3.0],
+                    [1.8, 5.1],
+                ]
+            ),
+            action=torch.tensor(
+                [[1], [1], [2], [2]],
+            ),
+            reward=torch.tensor([7.0, 7.0, 7.0, 13.8]).unsqueeze(-1),
+            weight=torch.tensor([1.0, 1.0, 1.0, 1.0]).unsqueeze(-1),
+        )
+
+        # learn batch, make sure this doesn't throw an error
+        policy_learner.learn_batch(batch)

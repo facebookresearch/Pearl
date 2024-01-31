@@ -59,6 +59,7 @@ class DisjointBanditContainer(ContextualBanditBase):
         self._arm_bandits: torch.nn.ModuleList = torch.nn.ModuleList(arm_bandits)
         self._n_arms: int = len(arm_bandits)
         self._state_features_only = state_features_only
+        self._null_batch: Optional[TransitionBatch] = None
 
     @property
     def n_arms(self) -> int:
@@ -82,36 +83,60 @@ class DisjointBanditContainer(ContextualBanditBase):
             # mask of observations for this arm
             # assume action indices
             mask = batch.action[:, 0] == arm
-            if batch.state.ndim == 2:
-                # shape: (batch_size, feature_size)
-                # same features for all arms
-                state = batch.state
-            elif batch.state.ndim == 3:
-                # shape: (batch_size, num_arms, feature_size)
-                # different features for each arm
-                assert (
-                    batch.state.shape[1] == self.n_arms
-                ), "For 3D state, 2nd dimension must be equal to number of arms"
-                state = batch.state[:, arm, :]
-            batches.append(
-                TransitionBatch(
-                    state=state[mask],
-                    reward=batch.reward[mask],
-                    weight=batch.weight[mask]
-                    if batch.weight is not None
-                    else torch.ones_like(mask, dtype=torch.float),
-                    # empty action features since disjoint model used
-                    # action as index of per-arm model
-                    # if arms need different features, use 3D `state` instead
-                    action=torch.empty(
-                        int(mask.sum().item()),
-                        0,
-                        dtype=torch.float,
-                        device=batch.device,
-                    ),
-                ).to(batch.device)
-            )
+            if mask.sum().item() == 0:
+                # no observations for this arm, use null batch
+                batches.append(self._get_null_batch(batch))
+            else:
+                if batch.state.ndim == 2:
+                    # shape: (batch_size, feature_size)
+                    # same features for all arms
+                    state = batch.state
+                elif batch.state.ndim == 3:
+                    # shape: (batch_size, num_arms, feature_size)
+                    # different features for each arm
+                    assert (
+                        batch.state.shape[1] == self.n_arms
+                    ), "For 3D state, 2nd dimension must be equal to number of arms"
+                    state = batch.state[:, arm, :]
+                batches.append(
+                    TransitionBatch(
+                        state=state[mask],
+                        reward=batch.reward[mask],
+                        weight=batch.weight[mask]
+                        if batch.weight is not None
+                        else torch.ones_like(mask, dtype=torch.float),
+                        # empty action features since disjoint model used
+                        # action as index of per-arm model
+                        # if arms need different features, use 3D `state` instead
+                        action=torch.empty(
+                            int(mask.sum().item()),
+                            0,
+                            dtype=torch.float,
+                            device=batch.device,
+                        ),
+                    ).to(batch.device)
+                )
         return batches
+
+    def _get_null_batch(self, batch: TransitionBatch) -> TransitionBatch:
+        # null batch has 1 element, but 0 weight
+        if self._null_batch is None:
+            self._null_batch = TransitionBatch(
+                state=torch.zeros(
+                    1, batch.state.shape[-1], dtype=torch.float, device=batch.device
+                ),
+                reward=torch.zeros(1, 1, dtype=torch.float, device=batch.device),
+                weight=torch.zeros(1, 1, dtype=torch.float, device=batch.device),
+                action=torch.empty(
+                    1,
+                    0,
+                    dtype=torch.float,
+                    device=batch.device,
+                ),
+            ).to(batch.device)
+        null_batch = self._null_batch
+        assert null_batch is not None
+        return null_batch
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         """
@@ -124,9 +149,6 @@ class DisjointBanditContainer(ContextualBanditBase):
         for i, (arm_bandit, arm_batch) in enumerate(
             zip(self._arm_bandits, arm_batches)
         ):
-            if len(arm_batch) == 0:
-                # skip updates if batch has no observations for this arm
-                continue
             returns.update(
                 {
                     f"arm_{i}_{k}": v
