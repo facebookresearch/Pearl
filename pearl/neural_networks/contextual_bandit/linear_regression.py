@@ -112,7 +112,6 @@ class LinearRegression(MuSigmaCBModel):
         if weight is None:
             weight = torch.ones_like(y)
         if weight.ndim == 1:
-            logger.warning("2D shape expected for weight, got 1D shape {weight.shape}")
             weight = weight.unsqueeze(-1)
         assert x.shape == (
             batch_size,
