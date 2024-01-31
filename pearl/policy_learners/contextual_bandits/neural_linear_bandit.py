@@ -128,8 +128,14 @@ class NeuralLinearBandit(ContextualBanditBase):
             assert torch.all(predicted_values >= 0) and torch.all(predicted_values <= 1)
             assert isinstance(self.model.output_activation, torch.nn.Sigmoid)
 
-        # TODO: handle weight in NN training by computing weighted loss
-        loss = criterion(predicted_values.view(expected_values.shape), expected_values)
+        # don't reduce the loss, so that we can calculate weighted loss
+        loss = criterion(
+            predicted_values.view(expected_values.shape),
+            expected_values,
+            reduction="none",
+        )
+        assert loss.shape == batch_weight.shape
+        loss = (loss * batch_weight).sum() / batch_weight.sum()  # weighted average loss
 
         # Optimize the NN via backpropagation
         self._optimizer.zero_grad()

@@ -70,7 +70,6 @@ class LinearBandit(ContextualBanditBase):
             else torch.ones_like(expected_values)
         )
         x = torch.cat([batch.state, batch.action], dim=1)
-        assert batch.weight is not None
         self.model.learn_batch(
             x=x,
             y=batch.reward,

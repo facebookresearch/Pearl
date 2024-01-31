@@ -103,7 +103,15 @@ class NeuralBandit(ContextualBanditBase):
         predicted_values = self.model(input_features)
 
         criterion = LOSS_TYPES[self.loss_type]
-        loss = criterion(predicted_values.view(expected_values.shape), expected_values)
+
+        # don't reduce the loss, so that we can calculate weighted loss
+        loss = criterion(
+            predicted_values.view(expected_values.shape),
+            expected_values,
+            reduction="none",
+        )
+        assert loss.shape == batch_weight.shape
+        loss = (loss * batch_weight).sum() / batch_weight.sum()  # weighted average loss
 
         # Backward pass + optimizer step
         self.optimizer.zero_grad()
