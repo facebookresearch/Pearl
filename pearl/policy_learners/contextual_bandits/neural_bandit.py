@@ -88,23 +88,33 @@ class NeuralBandit(ContextualBanditBase):
         self.loss_type = loss_type
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+        expected_values = batch.reward
+        batch_weight = (
+            batch.weight
+            if batch.weight is not None
+            else torch.ones_like(expected_values)
+        )
         if self._state_features_only:
             input_features = batch.state
         else:
             input_features = torch.cat([batch.state, batch.action], dim=1)
 
         # forward pass
-        current_values = self.model(input_features)
-        expected_values = batch.reward
+        predicted_values = self.model(input_features)
 
         criterion = LOSS_TYPES[self.loss_type]
-        loss = criterion(current_values.view(expected_values.shape), expected_values)
+        loss = criterion(predicted_values.view(expected_values.shape), expected_values)
 
         # Backward pass + optimizer step
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        return {"loss": loss.item()}
+        return {
+            "label": expected_values,
+            "prediction": predicted_values,
+            "weight": batch_weight,
+            "loss": loss.detach(),
+        }
 
     def act(
         self,

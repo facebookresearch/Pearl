@@ -151,7 +151,7 @@ class TestNeuralLinearBandits(unittest.TestCase):
         )
         losses = []
         for _ in range(epochs):
-            losses.append(policy_learner.learn_batch(batch)["mlp_loss"])
+            losses.append(policy_learner.learn_batch(batch)["loss"])
         if epochs >= NUM_EPOCHS:
             if loss_type == "mse":
                 self.assertGreater(1e-1, losses[-1])

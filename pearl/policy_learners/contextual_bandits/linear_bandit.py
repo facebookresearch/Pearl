@@ -63,6 +63,12 @@ class LinearBandit(ContextualBanditBase):
         A <- A + x*x.t
         b <- b + r*x
         """
+        expected_values = batch.reward
+        batch_weight = (
+            batch.weight
+            if batch.weight is not None
+            else torch.ones_like(expected_values)
+        )
         x = torch.cat([batch.state, batch.action], dim=1)
         assert batch.weight is not None
         self.model.learn_batch(
@@ -70,8 +76,12 @@ class LinearBandit(ContextualBanditBase):
             y=batch.reward,
             weight=batch.weight,
         )
-        current_values = self.model(x)
-        return {"current_values": current_values.mean().item()}
+        predicted_values = self.model(x)
+        return {
+            "label": expected_values,
+            "prediction": predicted_values,
+            "weight": batch_weight,
+        }
 
     # pyre-fixme[14]: `act` overrides method defined in `ContextualBanditBase`
     #  inconsistently.

@@ -114,7 +114,11 @@ class NeuralLinearBandit(ContextualBanditBase):
         model_ret = self.model.forward_with_intermediate_values(input_features)
         predicted_values = model_ret["pred_label"]
         expected_values = batch.reward
-        batch_weight = batch.weight
+        batch_weight = (
+            batch.weight
+            if batch.weight is not None
+            else torch.ones_like(expected_values)
+        )
 
         # criterion = mae, mse, Xentropy
         # Xentropy loss apply Sigmoid, MSE or MAE apply Identiy
@@ -138,8 +142,10 @@ class NeuralLinearBandit(ContextualBanditBase):
             batch_weight,
         )
         return {
-            "mlp_loss": loss.item(),
-            "current_values": predicted_values.mean().item(),
+            "label": expected_values,
+            "prediction": predicted_values,
+            "weight": batch_weight,
+            "loss": loss.detach(),
         }
 
     def act(
