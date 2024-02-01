@@ -156,7 +156,7 @@ class TestLinearBandits(unittest.TestCase):
 
         # test sigma of policy_learner (LinUCB)
         features = torch.cat([batch.state, batch.action], dim=1)
-        A = policy_learner.model._A
+        A = policy_learner.model.A
         A_inv = torch.linalg.inv(A)
         features_with_ones = LinearRegression.append_ones(features)
         sigma = torch.sqrt(
@@ -215,4 +215,35 @@ class TestLinearBandits(unittest.TestCase):
 
         self.assertTrue(
             all(a in range(0, action_space.n) for a in selected_actions.tolist())
+        )
+
+    def test_discounting(self) -> None:
+        """
+        Test discounting
+        """
+        policy_learner = LinearBandit(
+            feature_dim=4,
+            exploration_module=UCBExploration(alpha=0),
+            l2_reg_lambda=1e-8,
+            gamma=0.95,
+            apply_discounting_interval=100.0,
+        )
+
+        num_reps = 100
+        for _ in range(num_reps):
+            policy_learner.learn_batch(self.batch)
+
+        self.assertLess(
+            policy_learner.model.A[0, 0].item(),
+            # pyre-fixme[58]: `*` is not supported for operand types `int` and
+            #  `Union[bool, float, int]`.
+            # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+            #  `Optional[Tensor]`.
+            num_reps * torch.sum(self.batch.weight).item(),
+        )
+        self.assertLess(
+            policy_learner.model._b[0].item(),
+            # pyre-fixme[58]: `*` is not supported for operand types `int` and
+            #  `Union[bool, float, int]`.
+            num_reps * torch.sum(self.batch.reward * self.batch.weight).item(),
         )

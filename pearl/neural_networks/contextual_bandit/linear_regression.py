@@ -17,7 +17,9 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class LinearRegression(MuSigmaCBModel):
-    def __init__(self, feature_dim: int, l2_reg_lambda: float = 1.0) -> None:
+    def __init__(
+        self, feature_dim: int, l2_reg_lambda: float = 1.0, gamma: float = 1.0
+    ) -> None:
         """
         A linear regression model which can estimate both point prediction and uncertainty
             (standard delivation).
@@ -30,12 +32,20 @@ class LinearRegression(MuSigmaCBModel):
 
         feature_dim: number of features
         l2_reg_lambda: L2 regularization parameter
+        gamma: discounting multiplier (A and b get multiplied by gamma periodically, the period
+            is controlled by PolicyLearner). We use a simplified implementation of
+            https://arxiv.org/pdf/1909.09146.pdf
         """
         super(LinearRegression, self).__init__(feature_dim=feature_dim)
+        self.gamma = gamma
+        self.l2_reg_lambda = l2_reg_lambda
+        assert (
+            gamma > 0 and gamma <= 1
+        ), f"gamma should be in (0, 1]. Got gamma={gamma} instead"
         self.register_buffer(
             "_A",
-            l2_reg_lambda * torch.eye(feature_dim + 1),  # +1 for intercept
-        )
+            torch.zeros(feature_dim + 1, feature_dim + 1),  # +1 for intercept
+        )  # initializing as zeros. L2 regularization will be applied separately.
         self.register_buffer("_b", torch.zeros(feature_dim + 1))
         self.register_buffer("_sum_weight", torch.zeros(1))
         self.register_buffer(
@@ -47,7 +57,10 @@ class LinearRegression(MuSigmaCBModel):
 
     @property
     def A(self) -> torch.Tensor:
-        return self._A
+        # return A with L2 regularization applied
+        return self._A + self.l2_reg_lambda * torch.eye(
+            self._feature_dim + 1, device=self._A.device
+        )
 
     @property
     def coefs(self) -> torch.Tensor:
@@ -150,6 +163,22 @@ class LinearRegression(MuSigmaCBModel):
 
         self.calculate_coefs()  # update coefs after updating A and b
 
+    def apply_discounting(self) -> None:
+        """
+        Apply gamma (discountting multiplier) to A and b.
+        Gamma is <=1, so it reduces the effect of old data points and enabled the model to
+            "forget" old data and adjust to new data distribution in non-stationary environment
+
+        A <- A * gamma
+        b <- b * gamma
+        """
+        logger.info(f"Applying discounting at sum_weight={self._sum_weight}")
+        self._A *= self.gamma
+        self._b *= self.gamma
+        # don't dicount sum_weight because it's used to determine when to apply discounting
+
+        self.calculate_coefs()  # update coefs using new A and b
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # x can be [batch_size, feature_dim] or [batch_size, num_arms, feature_dim]
         batch_size = x.shape[0]
@@ -167,7 +196,7 @@ class LinearRegression(MuSigmaCBModel):
         Calculate coefficients based on current A and b.
         Save inverted A and coefficients in buffers.
         """
-        self._inv_A = self.matrix_inv_fallback_pinv(self._A)
+        self._inv_A = self.matrix_inv_fallback_pinv(self.A)
         self._coefs = torch.matmul(self._inv_A, self._b)
 
     def calculate_sigma(self, x: torch.Tensor) -> torch.Tensor:
@@ -182,4 +211,4 @@ class LinearRegression(MuSigmaCBModel):
         return sigma.reshape(batch_size, -1)
 
     def __str__(self) -> str:
-        return f"LinearRegression(A:\n{self._A}\nb:\n{self._b})"
+        return f"LinearRegression(A:\n{self.A}\nb:\n{self._b})"

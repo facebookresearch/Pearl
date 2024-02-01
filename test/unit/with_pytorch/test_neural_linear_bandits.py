@@ -182,3 +182,47 @@ class TestNeuralLinearBandits(unittest.TestCase):
             subjective_state=state, available_action_space=action_space
         )
         self.assertEqual(action.shape, (batch_size,))
+
+    def test_discounting(self) -> None:
+        """
+        Test discounting
+        """
+        feature_dim = 10
+        batch_size = 100
+        policy_learner = NeuralLinearBandit(
+            feature_dim=feature_dim,
+            hidden_dims=[16, 16],
+            learning_rate=0.01,
+            exploration_module=UCBExploration(alpha=0.1),
+            use_skip_connections=True,
+            gamma=0.95,
+            apply_discounting_interval=100.0,
+        )
+        state = torch.randn(batch_size, 3)
+        action = torch.randn(batch_size, feature_dim - 3)
+        batch = TransitionBatch(
+            state=state,
+            action=action,
+            # y = sum of state + sum of action
+            reward=state.sum(-1, keepdim=True) + action.sum(-1, keepdim=True),
+            weight=torch.ones(batch_size, 1),
+        )
+
+        num_reps = 100
+        for _ in range(num_reps):
+            policy_learner.learn_batch(batch)
+
+        self.assertLess(
+            policy_learner.model._linear_regression_layer.A[0, 0].item(),
+            # pyre-fixme[58]: `*` is not supported for operand types `int` and
+            #  `Union[bool, float, int]`.
+            # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+            #  `Optional[Tensor]`.
+            num_reps * torch.sum(batch.weight).item(),
+        )
+        self.assertLess(
+            policy_learner.model._linear_regression_layer._b[0].item(),
+            # pyre-fixme[58]: `*` is not supported for operand types `int` and
+            #  `Union[bool, float, int]`.
+            num_reps * torch.sum(batch.reward * batch.weight).item(),
+        )

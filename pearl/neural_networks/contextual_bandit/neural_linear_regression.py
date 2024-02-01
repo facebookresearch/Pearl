@@ -26,6 +26,7 @@ class NeuralLinearRegression(MuSigmaCBModel):
         feature_dim: int,
         hidden_dims: List[int],  # last one is the input dim for linear regression
         l2_reg_lambda_linear: float = 1.0,
+        gamma: float = 1.0,
         output_activation_name: str = "linear",
         use_batch_norm: bool = False,
         use_layer_norm: bool = False,
@@ -43,6 +44,7 @@ class NeuralLinearRegression(MuSigmaCBModel):
             feature_dim: number of features
             hidden_dims: size of hidden layers in the network
             l2_reg_lambda_linear: L2 regularization parameter for the linear regression layer
+            gamma: discounting multiplier for the linear regression layer
             output_activation_name: output activation function name (see ACTIVATION_MAP)
             use_batch_norm: whether to use batch normalization
             use_layer_norm: whether to use layer normalization
@@ -66,6 +68,7 @@ class NeuralLinearRegression(MuSigmaCBModel):
         self._linear_regression_layer = LinearRegression(
             feature_dim=hidden_dims[-1],
             l2_reg_lambda=l2_reg_lambda_linear,
+            gamma=gamma,
         )
         self.output_activation: Union[
             LeakyReLU, ReLU, Sigmoid, Softplus, Tanh, nn.Identity

@@ -62,6 +62,8 @@ class NeuralLinearBandit(ContextualBanditBase):
         batch_size: int = 128,
         learning_rate: float = 0.0003,
         l2_reg_lambda_linear: float = 1.0,
+        gamma: float = 1.0,
+        apply_discounting_interval: float = 0.0,  # set to 0 to disable
         state_features_only: bool = False,
         loss_type: str = "mse",  # one of the LOSS_TYPES names: [mse, mae, cross_entropy]
         output_activation_name: str = "linear",
@@ -86,6 +88,7 @@ class NeuralLinearBandit(ContextualBanditBase):
             feature_dim=feature_dim,
             hidden_dims=hidden_dims,
             l2_reg_lambda_linear=l2_reg_lambda_linear,
+            gamma=gamma,
             output_activation_name=output_activation_name,
             use_batch_norm=use_batch_norm,
             use_layer_norm=use_layer_norm,
@@ -99,6 +102,27 @@ class NeuralLinearBandit(ContextualBanditBase):
         )
         self._state_features_only = state_features_only
         self.loss_type = loss_type
+        self.apply_discounting_interval = apply_discounting_interval
+        self.last_sum_weight_when_discounted = 0.0
+
+    def _maybe_apply_discounting(self) -> None:
+        """
+        Check if it's time to apply discounting and do so if it's time.
+        Discounting is applied after every N data points (weighted) are processed.
+
+        `self.last_sum_weight_when_discounted` stores the data point counter when discounting was
+            last applied.
+        `self.model._linear_regression_layer._sum_weight.item()` is the current data point counter
+        """
+        if (self.apply_discounting_interval > 0) and (
+            self.model._linear_regression_layer._sum_weight.item()
+            - self.last_sum_weight_when_discounted
+            >= self.apply_discounting_interval
+        ):
+            self.model._linear_regression_layer.apply_discounting()
+            self.last_sum_weight_when_discounted = (
+                self.model._linear_regression_layer._sum_weight.item()
+            )
 
     @property
     def optimizer(self) -> torch.optim.Optimizer:
@@ -147,6 +171,7 @@ class NeuralLinearBandit(ContextualBanditBase):
             expected_values,
             batch_weight,
         )
+        self._maybe_apply_discounting()
         return {
             "label": expected_values,
             "prediction": predicted_values,
