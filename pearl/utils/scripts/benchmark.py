@@ -35,11 +35,28 @@ from pearl.utils.scripts.benchmark_config import (  # noqa
     benchmark_hopper_v4,  # noqa
     benchmark_pendulum_v1_lstm,
     benchmark_walker2d_v4,  # noqa
-    get_env,
-    test_dynamic_action_space,
+    get_env,  # noqa
+    rccsac_ant,  # noqa
+    rccsac_half_cheetah,  # noqa
+    rccsac_hopper,  # noqa
+    rccsac_walker,  # noqa
+    rcddpg_ant,  # noqa
+    rcddpg_half_cheetah,  # noqa
+    rcddpg_hopper,  # noqa
+    rcddpg_walker,  # noqa
+    rctd3_ant,  # noqa
+    rctd3_half_cheetah,  # noqa
+    rctd3_hopper,  # noqa
+    rctd3_walker,  # noqa
+    test_dynamic_action_space,  # noqa
 )
 
 warnings.filterwarnings("ignore")
+attr_to_title = {
+    "return": "return",
+    "return_cost": "cummulative cost",
+    "risk_sa": "risk_sa",
+}
 
 
 def run(experiments) -> None:
@@ -230,6 +247,7 @@ def generate_plots(experiments, attributes) -> None:
 
 def generate_one_plot(experiment, attributes):
     """Generating learning curves for all tested methods in one environment."""
+    plt.rcParams.update({"font.size": 15})
     env_name = experiment["env_name"]
     exp_name = experiment["exp_name"]
     num_runs = experiment["num_runs"]
@@ -262,12 +280,14 @@ def generate_one_plot(experiment, attributes):
                     mean + std_error,
                     alpha=0.2,
                 )
-        plt.title(env_name)
+        plt.title(env_name.replace("_", "-"))
+        plt.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
+        plt.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
         if "num_steps" in experiment:
             plt.xlabel("Steps")
         else:
             plt.xlabel("Episodes")
-        plt.ylabel(attr)
+        plt.ylabel(attr_to_title[attr])
         plt.legend()
         plt.savefig(f"outputs/{exp_name}_{env_name}_{attr}.png")
         plt.close()
