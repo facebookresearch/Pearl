@@ -35,7 +35,7 @@ DATA_PATH: str = "./utils/instantiations/environments/uci_datasets"
 """
 Experiment config
 """
-run_config: Dict[str, Any] = {
+run_config_def: Dict[str, Any] = {
     "T": 10000,
     "training_rounds": 10,
     "num_of_experiments": 5,
@@ -87,7 +87,7 @@ CB config
 
 def return_neural_squarecb_config(
     env: SLCBEnvironment,
-    run_config: Dict[str, Any] = run_config,
+    run_config: Dict[str, Any] = run_config_def,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 
     feature_dim: int = env.observation_dim
@@ -123,7 +123,7 @@ def return_neural_squarecb_config(
 
 def return_neural_lin_ucb_config(
     env: SLCBEnvironment,
-    run_config: Dict[str, Any] = run_config,
+    run_config: Dict[str, Any] = run_config_def,
     alpha: float = 1.0,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 
@@ -156,7 +156,7 @@ def return_neural_lin_ucb_config(
 
 def return_neural_lin_ts_config(
     env: SLCBEnvironment,
-    run_config: Dict[str, Any] = run_config,
+    run_config: Dict[str, Any] = run_config_def,
     alpha: float = 0.25,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 
@@ -208,7 +208,7 @@ def return_offline_eval_config(
 
 def return_neural_fastcb_config(
     env: SLCBEnvironment,
-    run_config: Dict[str, Any] = run_config,
+    run_config: Dict[str, Any] = run_config_def,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 
     feature_dim: int = env.observation_dim

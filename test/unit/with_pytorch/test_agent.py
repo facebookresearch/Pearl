@@ -260,7 +260,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
         # CB Algorithms are the neural versions of LinUCB, LinTS, and SquareCB with shared models.
 
         # set number of time steps to be small, just for unit testing purposes
-        run_config: Dict[str, Any] = {
+        run_config_test: Dict[str, Any] = {
             "T": 300,
             "training_rounds": 1,
             "num_of_experiments": 1,
@@ -281,5 +281,5 @@ class TestAgentWithPyTorch(unittest.TestCase):
         run_cb_benchmarks(
             cb_algorithms_config=cb_algorithms_config,
             test_environments_config=test_environments_config,
-            run_config=run_config,
+            run_config=run_config_test,
         )

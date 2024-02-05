@@ -41,7 +41,7 @@ from pearl.utils.scripts.cb_benchmark.cb_benchmark_config import (
     return_neural_lin_ucb_config,
     return_neural_squarecb_config,
     return_offline_eval_config,
-    run_config,
+    run_config_def,
     satimage_uci_dict,
     yeast_uci_dict,
 )
@@ -181,6 +181,7 @@ def run_experiments(
     num_of_experiments: int,
     policy_learner_dict: Dict[str, Any],
     exploration_module_dict: Dict[str, Any],
+    run_config: Dict[str, Any],
     save_results_path: str,
     dataset_name: str,
     run_offline: bool = False,
@@ -296,6 +297,7 @@ def run_cb_benchmarks(
                 num_of_experiments=run_config["num_of_experiments"],
                 policy_learner_dict=policy_learner_dict,
                 exploration_module_dict=exploration_module_dict,
+                run_config=run_config,
                 save_results_path=save_results_path,
                 dataset_name=dataset_name,
                 run_offline=algorithm == "OfflineEval",
@@ -323,5 +325,5 @@ if __name__ == "__main__":
     run_cb_benchmarks(
         cb_algorithms_config=cb_algorithms_config,
         test_environments_config=test_environments_config,
-        run_config=run_config,
+        run_config=run_config_def,
     )
