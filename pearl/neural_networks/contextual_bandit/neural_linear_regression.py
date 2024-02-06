@@ -34,6 +34,7 @@ class NeuralLinearRegression(MuSigmaCBModel):
         last_activation: Optional[str] = None,
         dropout_ratio: float = 0.0,
         use_skip_connections: bool = True,
+        nn_e2e: bool = True,
     ) -> None:
         """
         A model for Neural LinUCB (can also be used for Neural LinTS).
@@ -52,6 +53,9 @@ class NeuralLinearRegression(MuSigmaCBModel):
             last_activation: activation function for the last layer
             dropout_ratio: dropout ratio
             use_skip_connections: whether to use skip connections
+            nn_e2e: If True, we use a Linear NN layer to generate mu instead of getting it from
+                LinUCB. This can improve learning stability. Sigma is still generated from LinUCB.
+
         """
         super(NeuralLinearRegression, self).__init__(feature_dim=feature_dim)
         self._nn_layers = VanillaValueNetwork(
@@ -73,6 +77,10 @@ class NeuralLinearRegression(MuSigmaCBModel):
         self.output_activation: Union[
             LeakyReLU, ReLU, Sigmoid, Softplus, Tanh, nn.Identity
         ] = ACTIVATION_MAP[output_activation_name]()
+        self.linear_layer_e2e = nn.Linear(
+            in_features=hidden_dims[-1], out_features=1, bias=False
+        )  # used only if nn_e2e is True
+        self.nn_e2e = nn_e2e
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # x can be [batch_size, feature_dim] or [batch_size, num_arms, feature_dim]
@@ -84,7 +92,14 @@ class NeuralLinearRegression(MuSigmaCBModel):
 
         # dim: [batch_size * num_arms, 1]
         x = self._nn_layers(x)  # apply NN layers
-        x = self._linear_regression_layer(x)  # apply linear regression to NN output
+
+        if self.nn_e2e:
+            # get mu from end-to-end NN
+            x = self.linear_layer_e2e(x)  # apply linear layer to NN output
+        else:
+            # get mu from LinUCB
+            x = self._linear_regression_layer(x)  # apply linear regression to NN output
+
         x = self.output_activation(x)  # apply output activation
 
         # dim: [batch_size, num_arms]
@@ -120,7 +135,14 @@ class NeuralLinearRegression(MuSigmaCBModel):
         nn_output = self._nn_layers(x)
 
         # dim: [batch_size * num_arms, 1]
-        x = self._linear_regression_layer(nn_output)
+        if self.nn_e2e:
+            # get mu from end-to-end NN
+            x = self.linear_layer_e2e(nn_output)  # apply linear layer to NN output
+        else:
+            # get mu from LinUCB
+            x = self._linear_regression_layer(
+                nn_output
+            )  # apply linear regression to NN output
 
         # dim: [batch_size, num_arms]
         return {

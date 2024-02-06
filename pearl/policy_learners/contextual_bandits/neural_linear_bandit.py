@@ -73,6 +73,7 @@ class NeuralLinearBandit(ContextualBanditBase):
         last_activation: Optional[str] = None,
         dropout_ratio: float = 0.0,
         use_skip_connections: bool = False,
+        nn_e2e: bool = True,
     ) -> None:
         assert (
             len(hidden_dims) >= 1
@@ -96,6 +97,7 @@ class NeuralLinearBandit(ContextualBanditBase):
             last_activation=last_activation,
             dropout_ratio=dropout_ratio,
             use_skip_connections=use_skip_connections,
+            nn_e2e=nn_e2e,
         )
         self._optimizer: torch.optim.Optimizer = optim.AdamW(
             self.model.parameters(), lr=learning_rate, amsgrad=True

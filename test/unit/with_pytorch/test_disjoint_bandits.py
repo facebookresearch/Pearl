@@ -191,7 +191,10 @@ class TestDisjointLinearBandits(unittest.TestCase):
 
 @parameterized_class(
     ("bandit_class", "bandit_kwargs"),
-    [(LinearBandit, {}), (NeuralLinearBandit, {"hidden_dims": [20]})],
+    [
+        (LinearBandit, {}),
+        (NeuralLinearBandit, {"hidden_dims": [20], "learning_rate": 3e-3}),
+    ],
 )
 class TestDisjointBanditContainerBandits(unittest.TestCase):
     def setUp(self) -> None:
