@@ -1,6 +1,5 @@
 import os
 import zipfile
-from typing import Any, Dict
 
 from pearl.utils.functional_utils.requests_get import requests_get
 

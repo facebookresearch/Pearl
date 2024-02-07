@@ -6,14 +6,13 @@
 #
 
 from abc import abstractmethod
-from typing import Optional
 
 import torch
 from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
-from pearl.neural_networks.sequential_decision_making.q_value_network import (
+from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     DistributionalQValueNetwork,
 )
 from pearl.policy_learners.policy_learner import PolicyLearner

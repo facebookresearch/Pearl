@@ -13,13 +13,13 @@ from pearl.action_representation_modules.action_representation_module import (
 )
 from pearl.api.action_space import ActionSpace
 
-from pearl.neural_networks.common.value_networks import VanillaQValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetwork,
     VanillaContinuousActorNetwork,
 )
-from pearl.neural_networks.sequential_decision_making.q_value_network import (
+from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     QValueNetwork,
+    VanillaQValueNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.policy_learners.exploration_modules.common.normal_distribution_exploration import (  # noqa E501

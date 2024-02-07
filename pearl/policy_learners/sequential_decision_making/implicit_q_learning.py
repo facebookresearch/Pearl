@@ -17,18 +17,20 @@ from pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
 )
 from pearl.neural_networks.common.utils import update_target_networks
-
 from pearl.neural_networks.common.value_networks import (
-    QValueNetwork,
     ValueNetwork,
-    VanillaQValueNetwork,
     VanillaValueNetwork,
 )
+
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetwork,
     GaussianActorNetwork,
     VanillaActorNetwork,
     VanillaContinuousActorNetwork,
+)
+from pearl.neural_networks.sequential_decision_making.q_value_networks import (
+    QValueNetwork,
+    VanillaQValueNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.policy_learners.exploration_modules.common.no_exploration import (

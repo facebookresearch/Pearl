@@ -14,7 +14,9 @@ from pearl.action_representation_modules.action_representation_module import (
 
 # import torch.optim as optim
 from pearl.api.action_space import ActionSpace
-from pearl.neural_networks.common.value_networks import QuantileQValueNetwork
+from pearl.neural_networks.sequential_decision_making.q_value_networks import (
+    QuantileQValueNetwork,
+)
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
     EGreedyExploration,
 )

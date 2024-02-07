@@ -11,7 +11,9 @@ from pearl.action_representation_modules.one_hot_action_representation_module im
     OneHotActionTensorRepresentationModule,
 )
 
-from pearl.neural_networks.common.value_networks import DuelingQValueNetwork
+from pearl.neural_networks.sequential_decision_making.q_value_networks import (
+    DuelingQValueNetwork,
+)
 from pearl.pearl_agent import PearlAgent
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
     EGreedyExploration,

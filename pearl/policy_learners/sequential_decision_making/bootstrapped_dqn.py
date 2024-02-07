@@ -15,7 +15,9 @@ from pearl.action_representation_modules.action_representation_module import (
 
 from pearl.api.action_space import ActionSpace
 from pearl.neural_networks.common.utils import update_target_network
-from pearl.neural_networks.common.value_networks import EnsembleQValueNetwork
+from pearl.neural_networks.sequential_decision_making.q_value_networks import (
+    EnsembleQValueNetwork,
+)
 from pearl.policy_learners.exploration_modules.sequential_decision_making.deep_exploration import (
     DeepExploration,
 )

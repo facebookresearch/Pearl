@@ -36,7 +36,6 @@ from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpac
 from pearl.utils.scripts.cb_benchmark.cb_benchmark_config import (
     letter_uci_dict,
     pendigits_uci_dict,
-    return_neural_fastcb_config,
     return_neural_lin_ts_config,
     return_neural_lin_ucb_config,
     return_neural_squarecb_config,

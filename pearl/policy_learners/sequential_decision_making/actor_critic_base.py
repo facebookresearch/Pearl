@@ -26,17 +26,18 @@ from pearl.neural_networks.common.utils import (
     update_target_network,
     update_target_networks,
 )
-
 from pearl.neural_networks.common.value_networks import (
-    QValueNetwork,
     ValueNetwork,
-    VanillaQValueNetwork,
     VanillaValueNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetwork,
     DynamicActionActorNetwork,
     VanillaActorNetwork,
+)
+from pearl.neural_networks.sequential_decision_making.q_value_networks import (
+    QValueNetwork,
+    VanillaQValueNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.policy_learners.exploration_modules.exploration_module import (

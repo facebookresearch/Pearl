@@ -11,7 +11,9 @@ import numpy as np
 
 import torch
 import torchvision
-from pearl.neural_networks.common.value_networks import CNNQValueNetwork
+from pearl.neural_networks.sequential_decision_making.q_value_networks import (
+    CNNQValueNetwork,
+)
 
 from torch.utils.data import DataLoader, Subset
 from torchvision import transforms

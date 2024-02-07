@@ -12,9 +12,9 @@ from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
-from pearl.neural_networks.common.value_networks import VanillaQValueNetwork
-from pearl.neural_networks.sequential_decision_making.q_value_network import (
+from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     QValueNetwork,
+    VanillaQValueNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.policy_learners.policy_learner import PolicyLearner

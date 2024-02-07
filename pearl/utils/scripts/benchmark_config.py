@@ -15,17 +15,17 @@ from pearl.action_representation_modules.one_hot_action_representation_module im
 from pearl.history_summarization_modules.lstm_history_summarization_module import (
     LSTMHistorySummarizationModule,
 )
-from pearl.neural_networks.common.value_networks import (
-    DuelingQValueNetwork,
-    EnsembleQValueNetwork,
-    VanillaQValueNetwork,
-    VanillaValueNetwork,
-)
+from pearl.neural_networks.common.value_networks import VanillaValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
     DynamicActionActorNetwork,
     GaussianActorNetwork,
     VanillaActorNetwork,
     VanillaContinuousActorNetwork,
+)
+from pearl.neural_networks.sequential_decision_making.q_value_networks import (
+    DuelingQValueNetwork,
+    EnsembleQValueNetwork,
+    VanillaQValueNetwork,
 )
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (  # noqa E501
     EGreedyExploration,

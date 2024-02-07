@@ -12,12 +12,13 @@ import torch
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
-from pearl.neural_networks.common.value_networks import EnsembleQValueNetwork
+from pearl.neural_networks.sequential_decision_making.q_value_networks import (
+    EnsembleQValueNetwork,
+)
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
-from torch.nn import functional as F
 
 
 class DeepExploration(ExplorationModule):
