@@ -10,8 +10,7 @@ from .contextual_bandit_linear_synthetic_environment import (
 )
 from .contextual_bandit_uci_environment import SLCBEnvironment
 from .environments import (
-    BoxObservationsEnvironmentBase,
-    BoxObservationsFromDiscrete,
+    ObservationTransformationEnvironmentAdapterBase,
     FixedNumberOfStepsEnvironment,
     OneHotObservationsFromDiscrete,
 )
@@ -27,8 +26,7 @@ from .sparse_reward_environment import (
 
 
 __all__ = [
-    "BoxObservationsEnvironmentBase",
-    "BoxObservationsFromDiscrete",
+    "ObservationTransformationEnvironmentAdapterBase",
     "ContinuousSparseRewardEnvironment",
     "ContextualBanditEnvironment",
     "ContextualBanditLinearSyntheticEnvironment",
