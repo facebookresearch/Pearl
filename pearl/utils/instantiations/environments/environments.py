@@ -17,9 +17,8 @@ from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpac
 try:
     import gymnasium as gym
 except ModuleNotFoundError:
-    import gym
+    import gym  # noqa
 
-import numpy as np
 import torch
 import torch.nn.functional as F
 from pearl.api.action import Action
@@ -60,11 +59,9 @@ class FixedNumberOfStepsEnvironment(Environment):
         return type(self).__name__
 
 
-class BoxObservationsEnvironmentBase(Environment, ABC):
+class ObservationTransformationEnvironmentAdapterBase(Environment, ABC):
     """
-    An environment adapter mapping a Discrete observation space into
-    a Box observation space with dimension 1.
-    This is useful to use with agents expecting tensor observations.
+    A base for environment adapters tranforming observations.
     """
 
     def __init__(
@@ -106,33 +103,7 @@ class BoxObservationsEnvironmentBase(Environment, ABC):
         return self.__class__.__name__
 
 
-class BoxObservationsFromDiscrete(BoxObservationsEnvironmentBase):
-    """
-    An environment adapter mapping a Discrete observation space into
-    a Box observation space with dimension 1.
-    The observations are tensors of length 1 containing the original observations.
-
-    This is useful to use with agents expecting tensor observations.
-    """
-
-    def __init__(self, base_environment: Environment) -> None:
-        super(BoxObservationsFromDiscrete, self).__init__(base_environment)
-
-    @staticmethod
-    def make_observation_space(base_environment: Environment) -> Space:
-        low_action = np.array([0])
-        # pyre-fixme: need to add this property in Environment
-        # and implement it in all concrete subclasses
-        assert isinstance(base_environment.observation_space, DiscreteSpace)
-        high_action = np.array([base_environment.observation_space.n - 1])
-        # pyre-fixme: returning Gym Box but needs to return Pearl Space
-        return gym.spaces.Box(low=low_action, high=high_action, shape=(1,))
-
-    def compute_tensor_observation(self, observation: Observation) -> torch.Tensor:
-        return torch.tensor([observation])
-
-
-class OneHotObservationsFromDiscrete(BoxObservationsEnvironmentBase):
+class OneHotObservationsFromDiscrete(ObservationTransformationEnvironmentAdapterBase):
     """
     An environment adapter mapping a Discrete observation space into
     a Box observation space with dimension 1
@@ -146,28 +117,26 @@ class OneHotObservationsFromDiscrete(BoxObservationsEnvironmentBase):
 
     @staticmethod
     def make_observation_space(base_environment: Environment) -> Space:
-        # pyre-fixme: need to add this property in Environment
+        # pyre-fixme: need to add `observation_space` property in Environment
         # and implement it in all concrete subclasses
         assert isinstance(base_environment.observation_space, DiscreteSpace)
         n = base_environment.observation_space.n
-        low = np.full((n,), 0)
-        high = np.full((n,), 1)
-        # pyre-fixme: returning Gym Box but needs to return Pearl Space
-        return gym.spaces.Box(low=low, high=high, shape=(n,))
+        elements = [F.one_hot(torch.tensor(i), n).float() for i in range(n)]
+        return DiscreteSpace(elements)
 
     def compute_tensor_observation(self, observation: Observation) -> torch.Tensor:
         if isinstance(observation, torch.Tensor):
             observation_tensor = observation
         else:
             observation_tensor = torch.tensor(observation)
-        # pyre-fixme: need to add this property in Environment
+        # pyre-fixme: need to add `observation_space` property in Environment
         # and implement it in all concrete subclasses
         assert isinstance(self.base_environment.observation_space, DiscreteSpace)
         return F.one_hot(
             observation_tensor,
             self.base_environment.observation_space.n,
-        )
+        ).float()
 
     @property
     def short_description(self) -> str:
-        return "One-hot observations"
+        return f"One-hot observations on {self.base_environment}"

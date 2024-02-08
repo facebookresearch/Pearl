@@ -5,7 +5,16 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
+
+try:
+    import gymnasium as gym
+except ModuleNotFoundError:
+    import gym  # noqa
+
 import unittest
+
+from gym.envs.toy_text.frozen_lake import generate_random_map
 
 from pearl.action_representation_modules.one_hot_action_representation_module import (
     OneHotActionTensorRepresentationModule,
@@ -72,6 +81,10 @@ from pearl.utils.functional_utils.train_and_eval.online_learning import (
     target_return_is_reached,
 )
 
+from pearl.utils.instantiations.environments.environments import (
+    OneHotObservationsFromDiscrete,
+)
+
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
@@ -113,40 +126,40 @@ class TestIntegration(unittest.TestCase):
             )
         )
 
-    # def test_dqn_on_frozen_lake(self) -> None:
-    #     """
-    #     This test is checking if DQN will eventually solve FrozenLake-v1
-    #     whose observations need to be wrapped in a one-hot representation.
-    #     """
-    #     # TODO: flaky: sometimes not even 5,000 episodes is enough for learning
-    #     # Need to debug.
-    #
-    #     environment = OneHotObservationsFromDiscrete(
-    #         GymEnvironment("FrozenLake-v1", is_slippery=False)
-    #     )
-    #     state_dim = environment.observation_space.shape[0]
-    #     agent = PearlAgent(
-    #         policy_learner=DeepQLearning(
-    #             state_dim=state_dim,
-    #             action_space=environment.action_space,
-    #             hidden_dims=[state_dim // 2, state_dim // 2],
-    #             training_rounds=40,
-    #         ),
-    #         replay_buffer=FIFOOffPolicyReplayBuffer(1000),
-    #     )
+    def test_dqn_on_frozen_lake(self) -> None:
+        """
+        This test is checking if DQN will eventually solve FrozenLake-v1
+        whose observations need to be wrapped in a one-hot representation.
+        """
+        environment = OneHotObservationsFromDiscrete(
+            GymEnvironment(
+                "FrozenLake-v1", is_slippery=False, desc=generate_random_map(size=4)
+            )
+        )
+        assert isinstance(environment.action_space, DiscreteSpace)
+        state_dim = environment.observation_space.n
+        agent = PearlAgent(
+            policy_learner=DeepQLearning(
+                state_dim=state_dim,
+                action_space=environment.action_space,
+                hidden_dims=[64],
+                training_rounds=20,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(1000),
+        )
 
-    #     self.assertTrue(
-    #         target_return_is_reached(
-    #             target_return=1.0,
-    #             required_target_returns_in_a_row=5,
-    #             max_episodes=1000,
-    #             agent=agent,
-    #             env=environment,
-    #             learn=True,
-    #             learn_after_episode=True,
-    #             exploit=False,
-    #         )
-    #     )
+        self.assertTrue(
+            target_return_is_reached(
+                target_return=1.0,
+                required_target_returns_in_a_row=5,
+                max_episodes=1000,
+                agent=agent,
+                env=environment,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+            )
+        )
 
     def test_double_dqn(self) -> None:
         """
