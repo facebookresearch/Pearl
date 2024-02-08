@@ -15,9 +15,9 @@ from typing import Any, List, Optional
 
 import torch
 import torch.nn as nn
-from torch import Tensor
 
-from .utils import conv_block, mlp_block
+from pearl.neural_networks.common.utils import conv_block, mlp_block
+from torch import Tensor
 
 
 class ValueNetwork(nn.Module, ABC):

@@ -6,16 +6,14 @@
 #
 
 import logging
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 import torch
 import torch.nn as nn
+from pearl.neural_networks.common.utils import ACTIVATION_MAP
 from pearl.neural_networks.common.value_networks import VanillaValueNetwork
 from pearl.neural_networks.contextual_bandit.base_cb_model import MuSigmaCBModel
 from pearl.neural_networks.contextual_bandit.linear_regression import LinearRegression
-from pearl.policy_learners.contextual_bandits.neural_bandit import ACTIVATION_MAP
-from torch.nn.modules.activation import LeakyReLU, ReLU, Sigmoid, Softplus, Tanh
-
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -74,9 +72,7 @@ class NeuralLinearRegression(MuSigmaCBModel):
             l2_reg_lambda=l2_reg_lambda_linear,
             gamma=gamma,
         )
-        self.output_activation: Union[
-            LeakyReLU, ReLU, Sigmoid, Softplus, Tanh, nn.Identity
-        ] = ACTIVATION_MAP[output_activation_name]()
+        self.output_activation: nn.Module = ACTIVATION_MAP[output_activation_name]()
         self.linear_layer_e2e = nn.Linear(
             in_features=hidden_dims[-1], out_features=1, bias=False
         )  # used only if nn_e2e is True

@@ -18,6 +18,7 @@ from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
+from pearl.neural_networks.common.utils import LOSS_TYPES
 from pearl.neural_networks.contextual_bandit.neural_linear_regression import (
     NeuralLinearRegression,
 )
@@ -25,7 +26,6 @@ from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
     DEFAULT_ACTION_SPACE,
 )
-from pearl.policy_learners.contextual_bandits.neural_bandit import LOSS_TYPES
 from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
     UCBExploration,
 )

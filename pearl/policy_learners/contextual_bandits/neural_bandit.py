@@ -8,7 +8,6 @@
 from typing import Any, Dict, List, Optional
 
 import torch
-import torch.nn as nn
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
@@ -19,6 +18,7 @@ from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
+from pearl.neural_networks.common.utils import LOSS_TYPES
 from pearl.neural_networks.common.value_networks import VanillaValueNetwork
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
@@ -33,21 +33,6 @@ from pearl.utils.functional_utils.learning.action_utils import (
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import optim
-
-LOSS_TYPES = {
-    "mse": torch.nn.functional.mse_loss,
-    "mae": torch.nn.functional.l1_loss,
-    "cross_entropy": torch.nn.functional.binary_cross_entropy,
-}  # loss func for neural bandits algorithms
-
-ACTIVATION_MAP = {
-    "tanh": nn.Tanh,
-    "relu": nn.ReLU,
-    "leaky_relu": nn.LeakyReLU,
-    "linear": nn.Identity,
-    "sigmoid": nn.Sigmoid,
-    "softplus": nn.Softplus,
-}
 
 
 class NeuralBandit(ContextualBanditBase):

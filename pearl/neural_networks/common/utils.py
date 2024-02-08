@@ -11,10 +11,12 @@ from typing import Any, Dict, List, Optional, Union
 import torch
 import torch.nn as nn
 
+from pearl.neural_networks.common.residual_wrapper import ResidualWrapper
+
 from torch.func import stack_module_state
 
-from .residual_wrapper import ResidualWrapper
-
+# Activations and loss functions
+# TODO: Make these into Enums
 ACTIVATION_MAP = {
     "tanh": nn.Tanh,
     "relu": nn.ReLU,
@@ -23,6 +25,12 @@ ACTIVATION_MAP = {
     "sigmoid": nn.Sigmoid,
     "softplus": nn.Softplus,
     "softmax": nn.Softmax,
+}
+
+LOSS_TYPES = {
+    "mse": nn.functional.mse_loss,
+    "mae": nn.functional.l1_loss,
+    "cross_entropy": nn.functional.binary_cross_entropy,
 }
 
 
