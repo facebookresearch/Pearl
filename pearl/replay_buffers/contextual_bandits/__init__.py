@@ -3,8 +3,11 @@
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
-#
 
-from .bandit import MeanVarBanditEnv
+from .discrete_contextual_bandit_replay_buffer import (
+    DiscreteContextualBanditReplayBuffer,
+)
 
-__all__ = ["MeanVarBanditEnv"]
+__all__ = [
+    "DiscreteContextualBanditReplayBuffer",
+]
