@@ -25,30 +25,30 @@ from pearl.pearl_agent import PearlAgent
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
-from pearl.utils.scripts.benchmark_config import (  # noqa
-    benchmark_acrobot_v1_part_1,  # noqa
-    benchmark_acrobot_v1_part_2,  # noqa
-    benchmark_ant_v4,  # noqa
-    benchmark_cartpole_v1_part_1,  # noqa
-    benchmark_cartpole_v1_part_2,  # noqa
-    benchmark_halfcheetah_v4,  # noqa
-    benchmark_hopper_v4,  # noqa
+from pearl.utils.scripts.benchmark_config import (  # noqa: F401
+    benchmark_acrobot_v1_part_1,
+    benchmark_acrobot_v1_part_2,
+    benchmark_ant_v4,
+    benchmark_cartpole_v1_part_1,
+    benchmark_cartpole_v1_part_2,
+    benchmark_halfcheetah_v4,
+    benchmark_hopper_v4,
     benchmark_pendulum_v1_lstm,
-    benchmark_walker2d_v4,  # noqa
-    get_env,  # noqa
-    rccsac_ant,  # noqa
-    rccsac_half_cheetah,  # noqa
-    rccsac_hopper,  # noqa
-    rccsac_walker,  # noqa
-    rcddpg_ant,  # noqa
-    rcddpg_half_cheetah,  # noqa
-    rcddpg_hopper,  # noqa
-    rcddpg_walker,  # noqa
-    rctd3_ant,  # noqa
-    rctd3_half_cheetah,  # noqa
-    rctd3_hopper,  # noqa
-    rctd3_walker,  # noqa
-    test_dynamic_action_space,  # noqa
+    benchmark_walker2d_v4,  # noqa: F401
+    get_env,
+    rccsac_ant,
+    rccsac_half_cheetah,
+    rccsac_hopper,
+    rccsac_walker,
+    rcddpg_ant,
+    rcddpg_half_cheetah,
+    rcddpg_hopper,
+    rcddpg_walker,
+    rctd3_ant,
+    rctd3_half_cheetah,
+    rctd3_hopper,
+    rctd3_walker,
+    test_dynamic_action_space,
 )
 
 warnings.filterwarnings("ignore")
