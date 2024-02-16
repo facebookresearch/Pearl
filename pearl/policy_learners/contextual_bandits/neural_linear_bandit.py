@@ -50,6 +50,9 @@ class NeuralLinearBandit(ContextualBanditBase):
     Here _deep_represent_layers can be treated as featuer processing,
     and then processed features are fed into a linear regression layer to output predicted score.
     For example : features --> neural networks --> LinUCB --> UCB score
+
+    The implementation of LinearBandit refers to https://arxiv.org/pdf/1003.0146.pdf
+    The implementation of NeuralLinearBandit refers to https://arxiv.org/pdf/2012.01780.pdf
     """
 
     def __init__(
