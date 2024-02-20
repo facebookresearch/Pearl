@@ -241,7 +241,7 @@ def evaluate_offline_rl(
 
 
 if __name__ == "__main__":
-    device_id = 1  # use -1 for CPU, 0, 1, for cuda
+    device_id = 0  # use -1 for CPU, 0, 1, for cuda
     experiment_seed = 100
     env_name = "HalfCheetah-v4"
     env = GymEnvironment(env_name)
