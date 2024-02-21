@@ -7,6 +7,7 @@
 
 import torch
 from pearl.neural_networks.sequential_decision_making.q_value_networks import (
+from Pearl.pearl.neural_networks.sequential_decision_making.q_value_network import (
     QValueNetwork,
 )
 from Pearl.pearl.replay_buffers.transition import TransitionBatch

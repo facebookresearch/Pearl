@@ -14,6 +14,8 @@ from Pearl.pearl.action_representation_modules.action_representation_module impo
 from Pearl.pearl.api.action_space import ActionSpace
 
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
+from Pearl.pearl.neural_networks.common.value_networks import VanillaQValueNetwork
+from Pearl.pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetwork,
     VanillaContinuousActorNetwork,
 )

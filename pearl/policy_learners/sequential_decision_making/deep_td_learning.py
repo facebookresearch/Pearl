@@ -10,6 +10,7 @@ from abc import abstractmethod
 from typing import Any, Dict, List, Optional, Type
 
 import torch
+
 from Pearl.pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
@@ -17,9 +18,14 @@ from Pearl.pearl.action_representation_modules.action_representation_module impo
 from Pearl.pearl.api.action import Action
 from Pearl.pearl.api.action_space import ActionSpace
 from Pearl.pearl.api.state import SubjectiveState
+from Pearl.pearl.api.action import Action
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.api.state import SubjectiveState
 from Pearl.pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
 )
+from Pearl.pearl.neural_networks.common.utils import update_target_network
+
 from pearl.neural_networks.common.utils import update_target_network
 from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     DuelingQValueNetwork,
@@ -27,7 +33,9 @@ from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     TwoTowerQValueNetwork,
     VanillaQValueNetwork,
 )
-
+from pearl.neural_networks.sequential_decision_making.q_value_network import (
+    QValueNetwork,
+)
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )

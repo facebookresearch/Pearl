@@ -27,6 +27,10 @@ from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.safety_modules.safety_module import SafetyModule
 from torch import nn, optim
+from Pearl.pearl.policy_learners.policy_learner import PolicyLearner
+from Pearl.pearl.replay_buffers.replay_buffer import ReplayBuffer
+from Pearl.pearl.replay_buffers.transition import TransitionBatch
+from Pearl.pearl.safety_modules.safety_module import SafetyModule
 
 
 class RCSafetyModuleCostCriticContinuousAction(SafetyModule):

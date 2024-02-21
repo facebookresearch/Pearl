@@ -9,8 +9,8 @@ from abc import ABC, abstractmethod
 
 import torch
 
-from pearl.api.action_space import ActionSpace
-from pearl.history_summarization_modules.history_summarization_module import (
+from Pearl.pearl.api.action_space import ActionSpace
+from Pearl.pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
 from Pearl.pearl.policy_learners.policy_learner import PolicyLearner

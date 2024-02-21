@@ -12,6 +12,13 @@ from Pearl.pearl.policy_learners.policy_learner import (
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.safety_modules.risk_sensitive_safety_modules import RiskSensitiveSafetyModule
 from pearl.safety_modules.safety_module import SafetyModule
+from Pearl.pearl.policy_learners.sequential_decision_making.td3 import RCTD3
+from Pearl.pearl.replay_buffers.replay_buffer import ReplayBuffer
+from Pearl.pearl.safety_modules.reward_constrained_safety_module import (
+    RewardConstrainedSafetyModule,
+)
+from Pearl.pearl.safety_modules.risk_sensitive_safety_modules import RiskSensitiveSafetyModule
+from Pearl.pearl.safety_modules.safety_module import SafetyModule
 
 
 def pearl_agent_compatibility_check(

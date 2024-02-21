@@ -8,10 +8,7 @@
 from typing import Optional
 
 import torch
-from pearl.action_representation_modules.action_representation_module import (
-    ActionRepresentationModule,
-)
-from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from Pearl.pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import Tensor
 
 
