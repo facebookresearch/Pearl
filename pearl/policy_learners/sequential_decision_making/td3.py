@@ -89,6 +89,8 @@ class TD3(DeepDeterministicPolicyGradient):
         self._critic_update_count = 0
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+        # TODO: this method is very similar to that of ActorCriticBase.
+        # Can we refactor?
 
         critic_loss = self._critic_loss(batch)  # critic update
         self._critic_update_count += 1
@@ -102,9 +104,14 @@ class TD3(DeepDeterministicPolicyGradient):
             (actor_loss + critic_loss).backward()
             self._actor_optimizer.step()
             self._critic_optimizer.step()
+            report = {
+                "actor_loss": actor_loss.item(),
+                "critic_loss": critic_loss.item(),
+            }
         else:
             critic_loss.backward()
             self._critic_optimizer.step()
+            report = {"critic_loss": critic_loss.item()}
 
         if self._critic_update_count % self._actor_update_freq == 0:
             # update targets of critics using soft updates
@@ -119,7 +126,7 @@ class TD3(DeepDeterministicPolicyGradient):
                 self._actor_target, self._actor, self._actor_soft_update_tau
             )
 
-        return {}
+        return report
 
     def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
         with torch.no_grad():
