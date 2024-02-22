@@ -44,7 +44,7 @@ from pearl.utils.scripts.cb_benchmark.cb_benchmark_config import (
     satimage_uci_dict,
     yeast_uci_dict,
 )
-from pearl.utils.scripts.cb_benchmark.cb_download_benchmarks import download_uci_data
+from pearl.utils.uci_data import download_uci_data
 
 
 def online_evaluation(
