@@ -168,9 +168,7 @@ class ContinuousSoftActorCritic(ActorCriticBase):
 
         # clipped double q-learning (reduce overestimation bias)
         next_q = torch.minimum(next_q1, next_q2)  # shape: (batch_size)
-        next_state_action_values = next_q.view(
-            self.batch_size, 1
-        )  # shape: (batch_size x 1)
+        next_state_action_values = next_q.unsqueeze(-1)  # shape: (batch_size x 1)
 
         # add entropy regularization
         next_state_action_values = next_state_action_values - (
@@ -196,7 +194,7 @@ class ContinuousSoftActorCritic(ActorCriticBase):
 
         # clipped double q learning (reduce overestimation bias)
         q = torch.minimum(q1, q2)  # shape: (batch_size)
-        state_action_values = q.view((self.batch_size, 1))  # shape: (batch_size x 1)
+        state_action_values = q.unsqueeze(-1)  # shape: (batch_size x 1)
 
         loss = (self._entropy_coef * action_batch_log_prob - state_action_values).mean()
 

@@ -157,7 +157,7 @@ class SoftActorCritic(ActorCriticBase):
         # next_q = next_q1 if random_index == 0 else next_q2
 
         next_state_action_values = next_q.view(
-            self.batch_size, -1
+            next_state_batch.shape[0], -1
         )  # (batch_size x action_space_size)
 
         # Make sure that unavailable actions' Q values are assigned to 0.0
@@ -210,7 +210,7 @@ class SoftActorCritic(ActorCriticBase):
         )  # (batch_size x action_space_size)
 
         state_action_values = q.view(
-            (self.batch_size, self.action_representation_module.max_number_actions)
+            (state_batch.shape[0], self.action_representation_module.max_number_actions)
         )  # (batch_size x action_space_size)
 
         if unavailable_actions_mask is not None:

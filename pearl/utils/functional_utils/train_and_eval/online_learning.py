@@ -73,12 +73,10 @@ def online_learning(
     number_of_episodes: Optional[int] = None,
     number_of_steps: Optional[int] = None,
     learn_after_episode: bool = False,
+    learn_every_k_steps: int = 1,
     print_every_x_episodes: Optional[int] = None,
     print_every_x_steps: Optional[int] = None,
     seed: Optional[int] = None,
-    # if number_of_episodes is used, report every record_period episodes
-    # if number_of_steps is used, report every record_period steps
-    # episodic stats collected within the period are averaged and then reported
     record_period: int = 1,
 ) -> Dict[str, Any]:
     """
@@ -90,6 +88,12 @@ def online_learning(
         number_of_episodes (int, optional): the number of episodes to run. Defaults to 1000.
         learn_after_episode (bool, optional): asks the agent to only learn after every episode.
         Defaults to False.
+        learn_every_k_steps (int, optional): number of environment steps
+        between two calls of agent.learn().
+        record_period int: number of episodes/steps between two records. Defaults to 1.
+        If number_of_episodes is used, report every record_period episodes.
+        If number_of_steps is used, report every record_period steps
+        Episodic statistics collected within this period are averaged and then recorded.
     """
     assert (number_of_episodes is None and number_of_steps is not None) or (
         number_of_episodes is not None and number_of_steps is None
@@ -110,6 +114,7 @@ def online_learning(
             learn=True,
             exploit=False,
             learn_after_episode=learn_after_episode,
+            learn_every_k_steps=learn_every_k_steps,
             total_steps=old_total_steps,
             seed=seed,
         )
@@ -161,6 +166,7 @@ def target_return_is_reached(
     learn: bool,
     learn_after_episode: bool,
     exploit: bool,
+    learn_every_k_steps: int = 1,
     required_target_returns_in_a_row: int = 1,
     check_moving_average: bool = False,
 ) -> bool:
@@ -174,6 +180,8 @@ def target_return_is_reached(
         env (Environment): the environment.
         learn (bool): whether to learn.
         learn_after_episode (bool): whether to learn after every episode.
+        learn_every_k_steps (int): number of environment steps between two calls of agent.learn(),
+        only making an effect when learn_after_episode is False.
         exploit (bool): whether to exploit.
         required_target_returns_in_a_row (int, optional): how many times we must hit the target
         to succeed.
@@ -194,7 +202,9 @@ def target_return_is_reached(
             env=env,
             learn=learn,
             learn_after_episode=learn_after_episode,
+            learn_every_k_steps=learn_every_k_steps,
             exploit=exploit,
+            total_steps=total_steps,
         )
         total_steps += episode_total_steps
         returns.append(episode_info["return"])
@@ -218,6 +228,7 @@ def run_episode(
     learn: bool = False,
     exploit: bool = True,
     learn_after_episode: bool = False,
+    learn_every_k_steps: int = 1,
     total_steps: int = 0,
     seed: Optional[int] = None,
 ) -> Tuple[Dict[str, Any], int]:
@@ -231,7 +242,9 @@ def run_episode(
         exploit (bool, optional): asks the agent to only exploit. Defaults to False.
         learn_after_episode (bool, optional): asks the agent to only learn at
                                               the end of the episode. Defaults to False.
-
+        learn_every_k_steps (int, optional): asks the agent to learn every k steps.
+        total_steps (int, optional): the total number of steps taken so far. Defaults to 0.
+        seed (int, optional): the seed for the environment. Defaults to None.
     Returns:
         Tuple[Dict[str, Any], int]: the return of the episode and the number of steps taken.
     """
@@ -266,13 +279,18 @@ def run_episode(
         else:
             cum_cost = None
         agent.observe(action_result)
-        if learn and not learn_after_episode:
-            agent.learn()
         done = action_result.done
         episode_steps += 1
-
-    if learn and learn_after_episode:
-        agent.learn()
+        if learn:
+            if learn_after_episode:
+                # when learn_after_episode is True, we learn only at the end of the episode,
+                # regardless of the value of learn_every_k_steps.
+                if done:
+                    agent.learn()
+            else:
+                assert learn_every_k_steps > 0, "learn_every_k_steps must be positive"
+                if (total_steps + episode_steps) % learn_every_k_steps == 0:
+                    agent.learn()
 
     info = {"return": cum_reward}
     if num_risky_sa is not None:

@@ -65,8 +65,8 @@ from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buff
 from pearl.replay_buffers.sequential_decision_making.fifo_on_policy_replay_buffer import (
     FIFOOnPolicyReplayBuffer,
 )
-from pearl.replay_buffers.sequential_decision_making.on_policy_episodic_replay_buffer import (
-    OnPolicyEpisodicReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.on_policy_replay_buffer import (
+    OnPolicyReplayBuffer,
 )
 from pearl.safety_modules.risk_sensitive_safety_modules import (
     QuantileNetworkMeanVarianceSafetyModule,
@@ -238,12 +238,13 @@ class TestIntegration(unittest.TestCase):
                 action_space=env.action_space,
                 actor_hidden_dims=[64, 64],
                 critic_hidden_dims=[64, 64],
-                training_rounds=1,
+                training_rounds=8,
+                batch_size=64,
                 action_representation_module=OneHotActionTensorRepresentationModule(
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=OnPolicyEpisodicReplayBuffer(10_000),
+            replay_buffer=OnPolicyReplayBuffer(10_000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -344,14 +345,14 @@ class TestIntegration(unittest.TestCase):
                 env.action_space,
                 actor_hidden_dims=[64, 64],
                 critic_hidden_dims=[64, 64],
-                training_rounds=50,
-                batch_size=64,
+                training_rounds=20,
+                batch_size=32,
                 epsilon=0.1,
                 action_representation_module=OneHotActionTensorRepresentationModule(
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=OnPolicyEpisodicReplayBuffer(10_000),
+            replay_buffer=OnPolicyReplayBuffer(10_000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -360,7 +361,8 @@ class TestIntegration(unittest.TestCase):
                 target_return=500,
                 max_episodes=1000,
                 learn=True,
-                learn_after_episode=True,
+                learn_every_k_steps=200,
+                learn_after_episode=False,
                 exploit=False,
             )
         )
