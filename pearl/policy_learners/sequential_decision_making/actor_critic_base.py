@@ -182,8 +182,6 @@ class ActorCriticBase(PolicyLearner):
         self, value: HistorySummarizationModule
     ) -> None:
         self._actor_optimizer.add_param_group({"params": value.parameters()})
-        if self._use_critic:
-            self._critic_optimizer.add_param_group({"params": value.parameters()})
         self._history_summarization_module = value
 
     def act(
@@ -272,10 +270,24 @@ class ActorCriticBase(PolicyLearner):
         """
         actor_loss = self._actor_loss(batch)
         self._actor_optimizer.zero_grad()
+        """
+        If the history summarization module is a neural network,
+        the computation graph of this neural network is used
+        to obtain both actor and critic losses.
+        Without retain_graph=True, after actor_loss.backward(), the computation graph is cleared.
+        After the graph is cleared, critic_loss.backward() fails.
+        """
+        actor_loss.backward(retain_graph=True)
         if self._use_critic:
-            critic_loss = self._critic_loss(batch)
             self._critic_optimizer.zero_grad()
-            (actor_loss + critic_loss).backward()
+            critic_loss = self._critic_loss(batch)
+            """
+            This backward operation needs to happen before the actor_optimizer.step().
+            This is because actor_optimizer.step() updates the history summarization neural network
+            and critic_loss.backward() fails
+            once parameters involved in critic_loss's computational graph change.
+            """
+            critic_loss.backward()
             self._actor_optimizer.step()
             self._critic_optimizer.step()
             report = {
@@ -283,7 +295,6 @@ class ActorCriticBase(PolicyLearner):
                 "critic_loss": critic_loss.item(),
             }
         else:
-            actor_loss.backward()
             self._actor_optimizer.step()
             report = {"actor_loss": actor_loss.item()}
 

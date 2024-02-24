@@ -149,8 +149,6 @@ class ImplicitQLearning(ActorCriticBase):
         self, value: HistorySummarizationModule
     ) -> None:
         self._actor_optimizer.add_param_group({"params": value.parameters()})
-        self._critic_optimizer.add_param_group({"params": value.parameters()})
-        self._value_network_optimizer.add_param_group({"params": value.parameters()})
         self._history_summarization_module = value
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
