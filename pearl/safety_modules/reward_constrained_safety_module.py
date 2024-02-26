@@ -61,7 +61,7 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
         self.lr_lambda = lr_lambda
         self.lambda_constraint_ub_value = lambda_constraint_ub_value
         self.lambda_constraint = lambda_constraint_init_value
-        self.batch_size = batch_size
+        self._batch_size = batch_size
 
         # initialize parameters of cost critic
         assert hasattr(action_space, "action_dim")
