@@ -50,7 +50,7 @@ class DeepSARSA(DeepTDLearning):
         )
 
     @torch.no_grad()
-    def _get_next_state_values(
+    def get_next_state_values(
         self, batch: TransitionBatch, batch_size: int
     ) -> torch.Tensor:
         """

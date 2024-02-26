@@ -44,7 +44,7 @@ from torch import optim
 # of production stack on this param.
 class DeepTDLearning(PolicyLearner):
     """
-    An Abstract Class for Deep Temporal Difference learning policy learner.
+    An Abstract Class for Deep Temporal Difference learning.
     """
 
     def __init__(
@@ -71,6 +71,46 @@ class DeepTDLearning(PolicyLearner):
         action_representation_module: Optional[ActionRepresentationModule] = None,
         **kwargs: Any,
     ) -> None:
+        """Constructs a DeepTDLearning based policy learner. DeepTDLearning is the base class
+        for all value based (i.e. temporal difference learning based) algorithms.
+
+        Args:
+            state_dim: Dimension of the state space.
+            exploration_module (ExplorationModule, optional): Optional exploration module used by
+                the `act` function to trade-off between exploitation and exploration.
+                Defaults to None.
+            action_space (ActionSpace, optional): Action space of the problem. It is kept optional
+                to allow for the use of dynamic action spaces (see `learn_batch` and `act`
+                functions). Defaults to None.
+            hidden_dims (List[int], optional): Hidden dimensions of the default `QValueNetwork`
+                (taken to be `VanillaQValueNetwork`). Defaults to None.
+            learning_rate (float): Learning rate for the optimizer. Defaults to 0.001.
+                Note: We use AdamW as default for all value based methods.
+            discount_factor (float): Discount factor for TD updates. Defaults to 0.99.
+            training_rounds (int): Number of gradient updates per environment step.
+                Defaults to 100.
+            batch_size (int): Sample size for mini-batch gradient updates. Defaults to 128.
+            target_update_freq (int): Frequency at which the target network is updated.
+                Defaults to 100.
+            soft_update_tau (float): Coefficient for soft updates to the target networks.
+                Defaults to 0.01.
+            is_conservative (bool): Whether to use conservative updates for offline learning.
+                Defaults to False.
+            conservative_alpha (float, optional): Alpha parameter for conservative updates.
+                Defaults to 2.0.
+            network_type (Type[QValueNetwork]): Network type for the Q-value network. Defaults to
+                `VanillaQValueNetwork`. This means that by default, an instance of the class
+                `VanillaQValueNetwork` (or the specified `network_type` class) is created and used
+                for learning.
+            network_instance (QValueNetwork, optional): A network instance to be used as the
+                Q-value network. Defaults to None.
+                Note: This is an alternative to specifying a `network_type`. If provided, the
+                specified `network_type` is ignored and the input `network_instance` is used for
+                learning. Allows for custom implementations of Q-value networks.
+            action_representation_module (ActionRepresentationModule, optional): Optional module to
+                represent actions as a feature vector. Typically specified at the agent level.
+                Defaults to None.
+        """
         super(DeepTDLearning, self).__init__(
             training_rounds=training_rounds,
             batch_size=batch_size,
@@ -142,6 +182,23 @@ class DeepTDLearning(PolicyLearner):
         available_action_space: ActionSpace,
         exploit: bool = False,
     ) -> Action:
+        """
+        Selects an action from the available action space balancing between exploration and
+        exploitation.
+        This action can be (i) an 'exploit action', i.e. the optimal action given estimate of the
+        Q values or (ii) an 'exploratory action' obtained using the specified `exploration_module`.
+
+        Args:
+            subjective_state (SubjectiveState): Current subjective state.
+            available_action_space (ActionSpace): Available action space at the current state.
+                Note that Pearl allows for action spaces to change dynamically.
+            exploit (bool): When set to True, we output the exploit action (no exploration).
+                When set to False, the specified `exploration_module` is used to balance
+                between exploration and exploitation. Defaults to False.
+
+        Returns:
+            Action: An action from the available action space.
+        """
         # TODO: Assumes gym action space.
         # Fix the available action space.
         assert isinstance(available_action_space, DiscreteActionSpace)
@@ -167,23 +224,40 @@ class DeepTDLearning(PolicyLearner):
         if exploit:
             return exploit_action
 
+        assert self._exploration_module is not None
         return self._exploration_module.act(
-            subjective_state,
-            available_action_space,
-            exploit_action,
-            q_values,
+            subjective_state=subjective_state,
+            action_space=available_action_space,
+            exploit_action=exploit_action,
+            values=q_values,
         )
 
     @abstractmethod
-    def _get_next_state_values(
+    def get_next_state_values(
         self, batch: TransitionBatch, batch_size: int
     ) -> torch.Tensor:
+        """
+        For a given batch of transitions, returns Q-value targets for the Bellman equation.
+        Child classes should implement this method.
+
+        For example, this method in DQN returns
+        "max_{action in available_action_space} Q(next_state, action)".
+        """
         pass
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+        """
+        Batch learning with TD(0) style updates. Different implementations of the
+        `get_next_state_values` function correspond to the different RL algorithm implementations,
+        for example TD learning, DQN, Double DQN, Duelling DQN etc.
+
+        Args:
+            batch (TransitionBatch): batch of transitions
+        Returns:
+            Dict[str, Any]: dictionary with loss as the mean bellman error (across the batch).
+        """
         state_batch = batch.state  # (batch_size x state_dim)
-        action_batch = batch.action
-        # (batch_size x action_dim)
+        action_batch = batch.action  # (batch_size x action_dim)
         reward_batch = batch.reward  # (batch_size)
         done_batch = batch.done  # (batch_size)
 
@@ -191,21 +265,26 @@ class DeepTDLearning(PolicyLearner):
         # sanity check they have same batch_size
         assert reward_batch.shape[0] == batch_size
         assert done_batch.shape[0] == batch_size
+
         state_action_values = self._Q.get_q_values(
             state_batch=state_batch,
             action_batch=action_batch,
             curr_available_actions_batch=batch.curr_available_actions,
-        )  # for duelling, this takes care of the mean subtraction for advantage estimation
+        )
+        # for duelling dqn, specifying the `curr_available_actions_batch` field takes care of
+        # the mean subtraction for advantage estimation
 
         # Compute the Bellman Target
         expected_state_action_values = (
-            self._get_next_state_values(batch, batch_size)
+            self.get_next_state_values(batch, batch_size)
             * self._discount_factor
             * (1 - done_batch.float())
         ) + reward_batch  # (batch_size), r + gamma * V(s)
 
         criterion = torch.nn.MSELoss()
         bellman_loss = criterion(state_action_values, expected_state_action_values)
+
+        # Conservative TD updates for offline learning.
         if self._is_conservative:
             cql_loss = compute_cql_loss(self._Q, batch, batch_size)
             loss = self._conservative_alpha * cql_loss + bellman_loss
@@ -217,7 +296,7 @@ class DeepTDLearning(PolicyLearner):
         loss.backward()
         self._optimizer.step()
 
-        # Target Network Update
+        # Target network update
         if (self._training_steps + 1) % self._target_update_freq == 0:
             update_target_network(self._Q_target, self._Q, self._soft_update_tau)
 

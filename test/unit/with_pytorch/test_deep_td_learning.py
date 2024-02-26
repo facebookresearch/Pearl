@@ -79,11 +79,11 @@ class TestDeepTDLearning(unittest.TestCase):
             batch2 = dqn.preprocess_batch(copy.deepcopy(self.batch))
             double_dqn._Q.apply(init_weights)
             double_dqn._Q_target.apply(init_weights)
-            double_value = double_dqn._get_next_state_values(batch1, self.batch_size)
+            double_value = double_dqn.get_next_state_values(batch1, self.batch_size)
 
             dqn._Q.load_state_dict(double_dqn._Q.state_dict())
             dqn._Q_target.load_state_dict(double_dqn._Q_target.state_dict())
-            vanilla_value = dqn._get_next_state_values(batch2, self.batch_size)
+            vanilla_value = dqn.get_next_state_values(batch2, self.batch_size)
             self.assertEqual(double_value.shape, vanilla_value.shape)
             differ = torch.any(double_value != vanilla_value)
             if differ:
@@ -99,7 +99,7 @@ class TestDeepTDLearning(unittest.TestCase):
             exploration_module=EGreedyExploration(0.05),
             action_representation_module=self.action_representation_module,
         )
-        sa_value = sarsa._get_next_state_values(
+        sa_value = sarsa.get_next_state_values(
             batch=sarsa.preprocess_batch(self.batch), batch_size=self.batch_size
         )
         self.assertEqual(sa_value.shape, (self.batch_size,))

@@ -265,17 +265,22 @@ class TestIntegration(unittest.TestCase):
         env = GymEnvironment("CartPole-v1")
         assert isinstance(env.action_space, DiscreteActionSpace)
         num_actions = env.action_space.n
+        # We use a one hot representation for representing actions. So take
+        # action_dim = num_actions.
         q_network = DuelingQValueNetwork(
-            state_dim=env.observation_space.shape[0],
-            action_dim=num_actions,
-            hidden_dims=[64],
-            output_dim=1,
+            state_dim=env.observation_space.shape[
+                0
+            ],  # dimension of state representation
+            action_dim=num_actions,  # dimension of the action representation
+            hidden_dims=[64, 64],  # dimensions of the intermediate layers
+            output_dim=1,  # set to 1 (Q values are scalars)
         )
         agent = PearlAgent(
             policy_learner=DeepQLearning(
                 state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
-                training_rounds=20,
+                training_rounds=10,
+                soft_update_tau=0.75,
                 network_instance=q_network,
                 batch_size=batch_size,
                 action_representation_module=OneHotActionTensorRepresentationModule(
