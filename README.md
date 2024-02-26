@@ -72,9 +72,9 @@ while not done:
 Users can replace the environment with any real-world problems.
 
 ## Tutorials
-1. The first tutorial of Pearl focuses on recommender systems. We derived a small contrived recommender system environment using the MIND dataset (Wu et al. 2020). More details in https://github.com/facebookresearch/Pearl/tree/main/pearl/tutorials/single_item_recommender_system_example/demo.ipynb
+1. The first tutorial of Pearl focuses on recommender systems. We derived a small contrived recommender system environment using the MIND dataset (Wu et al. 2020). More details in https://github.com/facebookresearch/Pearl/tree/main/tutorials/single_item_recommender_system_example/single_item_recommender_system.ipynb
 
-2. The second tutorial of Pearl focuses on contextual bandit algorithms and their implementation using Pearl library. We designed a contextual bandit environment based on UCI dataset and tested the performance of neural implementations of SquareCB, LinUCB, and LinTS. More details in https://github.com/facebookresearch/Pearl/tree/main/pearl/tutorials/contextual_bandits/contextual_bandits_tutorial.ipynb
+2. The second tutorial of Pearl focuses on contextual bandit algorithms and their implementation using Pearl library. We designed a contextual bandit environment based on UCI dataset and tested the performance of neural implementations of SquareCB, LinUCB, and LinTS. More details in https://github.com/facebookresearch/Pearl/tree/main/tutorials/contextual_bandits/contextual_bandits_tutorial.ipynb
 
 More tutorials coming in 2024.
 
