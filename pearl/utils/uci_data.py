@@ -29,19 +29,27 @@ def download_uci_data(data_path: str) -> None:
     """
 
     for dataset_name in uci_urls.keys():
-        url = os.path.join(
-            uci_urls[dataset_name]["url"], uci_urls[dataset_name]["file_name"]
-        )
+        url = uci_urls[dataset_name]["url"] + "/" + uci_urls[dataset_name]["file_name"]
         filename = os.path.join(data_path, uci_urls[dataset_name]["file_name"])
 
         # Download the zip file
+        response = requests_get(url)
+        if response.status_code != 200:
+            raise Exception(f"Failed to download {dataset_name} dataset from {url}.")
+
+        # Locally save the zip file
         with open(filename, "wb") as f:
-            f.write(requests_get(url).content)
+            f.write(response.content)
 
         # Unzip the file
         unzip_filepath = os.path.join(data_path, dataset_name)
-        with zipfile.ZipFile(filename, "r") as z:
-            z.extractall(unzip_filepath)
+        try:
+            with zipfile.ZipFile(filename, "r") as z:
+                z.extractall(unzip_filepath)
+        except zipfile.BadZipFile:
+            raise zipfile.BadZipFile(
+                f"Bad zip file: {filename}. Please delete corrupt file and run again."
+            )
 
         # Delete the zip file
         os.remove(filename)
