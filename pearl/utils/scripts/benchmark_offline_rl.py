@@ -54,7 +54,6 @@ def get_random_agent_returns(
     evaluation_episodes: int = 500,
     seed: Optional[int] = None,
 ) -> List[float]:
-
     """
     This function returns a list of episode returns of a Pearl Agent interacting with the input
     environment using a randomly instantiated policy learner. This is needed to compute
@@ -128,7 +127,6 @@ def evaluate_offline_rl(
     data_size: int = 1000000,
     seed: Optional[int] = None,
 ) -> List[float]:
-
     """
     This function trains and evaluates an offline RL agent on the given environment. Training data
     can be provided through a url or by specifying a local file path. If neither are provided,

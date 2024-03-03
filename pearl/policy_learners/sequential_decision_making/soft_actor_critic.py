@@ -40,6 +40,7 @@ from torch import optim
 # Currently available actions is not used. Needs to be updated once we know the input
 # structure of production stack on this param.
 
+
 # TODO: to make things easier with a single optimizer, we need to polish this method.
 class SoftActorCritic(ActorCriticBase):
     """
@@ -78,9 +79,11 @@ class SoftActorCritic(ActorCriticBase):
             actor_soft_update_tau=0.0,  # not used
             critic_soft_update_tau=critic_soft_update_tau,
             use_twin_critic=True,
-            exploration_module=exploration_module
-            if exploration_module is not None
-            else PropensityExploration(),
+            exploration_module=(
+                exploration_module
+                if exploration_module is not None
+                else PropensityExploration()
+            ),
             discount_factor=discount_factor,
             training_rounds=training_rounds,
             batch_size=batch_size,

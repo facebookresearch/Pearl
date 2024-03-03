@@ -285,9 +285,9 @@ class DuelingQValueNetwork(QValueNetwork):
         # advantage architecture
         self.advantage_arch = VanillaValueNetwork(
             input_dim=hidden_dims[-1] + action_dim,  # state_arch out dim + action_dim
-            hidden_dims=hidden_dims
-            if advantage_hidden_dims is None
-            else advantage_hidden_dims,
+            hidden_dims=(
+                hidden_dims if advantage_hidden_dims is None else advantage_hidden_dims
+            ),
             output_dim=output_dim,  # output_dim=1
         )
 
@@ -481,12 +481,12 @@ class TwoTowerQValueNetwork(TwoTowerNetwork):
         super().__init__(
             state_input_dim=state_dim,
             action_input_dim=action_dim,
-            state_output_dim=state_dim
-            if state_output_dim is None
-            else state_output_dim,
-            action_output_dim=action_dim
-            if action_output_dim is None
-            else action_output_dim,
+            state_output_dim=(
+                state_dim if state_output_dim is None else state_output_dim
+            ),
+            action_output_dim=(
+                action_dim if action_output_dim is None else action_output_dim
+            ),
             state_hidden_dims=[] if state_hidden_dims is None else state_hidden_dims,
             action_hidden_dims=[] if action_hidden_dims is None else action_hidden_dims,
             hidden_dims=hidden_dims,

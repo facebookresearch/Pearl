@@ -110,13 +110,17 @@ class ActorCriticBase(PolicyLearner):
 
         # actor network takes state as input and outputs an action vector
         self._actor: nn.Module = actor_network_type(
-            input_dim=state_dim + self._action_dim
-            if actor_network_type is DynamicActionActorNetwork
-            else state_dim,
+            input_dim=(
+                state_dim + self._action_dim
+                if actor_network_type is DynamicActionActorNetwork
+                else state_dim
+            ),
             hidden_dims=actor_hidden_dims,
-            output_dim=1
-            if actor_network_type is DynamicActionActorNetwork
-            else self._action_dim,
+            output_dim=(
+                1
+                if actor_network_type is DynamicActionActorNetwork
+                else self._action_dim
+            ),
             action_space=action_space,
         )
         self._actor.apply(init_weights)
@@ -132,13 +136,17 @@ class ActorCriticBase(PolicyLearner):
         self._actor_soft_update_tau = actor_soft_update_tau
         if self._use_actor_target:
             self._actor_target: nn.Module = actor_network_type(
-                input_dim=state_dim + self._action_dim
-                if actor_network_type is DynamicActionActorNetwork
-                else state_dim,
+                input_dim=(
+                    state_dim + self._action_dim
+                    if actor_network_type is DynamicActionActorNetwork
+                    else state_dim
+                ),
                 hidden_dims=actor_hidden_dims,
-                output_dim=1
-                if actor_network_type is DynamicActionActorNetwork
-                else self._action_dim,
+                output_dim=(
+                    1
+                    if actor_network_type is DynamicActionActorNetwork
+                    else self._action_dim
+                ),
                 action_space=action_space,
             )
             update_target_network(self._actor_target, self._actor, tau=1)

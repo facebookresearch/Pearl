@@ -73,9 +73,11 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
             actor_soft_update_tau=actor_soft_update_tau,
             critic_soft_update_tau=critic_soft_update_tau,
             use_twin_critic=True,  # we need to make this optional to users
-            exploration_module=exploration_module
-            if exploration_module is not None
-            else NormalDistributionExploration(mean=0.0, std_dev=0.1),
+            exploration_module=(
+                exploration_module
+                if exploration_module is not None
+                else NormalDistributionExploration(mean=0.0, std_dev=0.1)
+            ),
             discount_factor=discount_factor,
             training_rounds=training_rounds,
             batch_size=batch_size,

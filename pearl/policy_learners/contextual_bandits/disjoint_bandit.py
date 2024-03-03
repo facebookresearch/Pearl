@@ -102,9 +102,11 @@ class DisjointBanditContainer(ContextualBanditBase):
                     TransitionBatch(
                         state=state[mask],
                         reward=batch.reward[mask],
-                        weight=batch.weight[mask]
-                        if batch.weight is not None
-                        else torch.ones_like(mask, dtype=torch.float),
+                        weight=(
+                            batch.weight[mask]
+                            if batch.weight is not None
+                            else torch.ones_like(mask, dtype=torch.float)
+                        ),
                         # empty action features since disjoint model used
                         # action as index of per-arm model
                         # if arms need different features, use 3D `state` instead

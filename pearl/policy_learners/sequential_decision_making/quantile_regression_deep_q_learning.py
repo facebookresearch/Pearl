@@ -62,9 +62,11 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
             state_dim=state_dim,
             action_space=action_space,
             on_policy=on_policy,
-            exploration_module=exploration_module
-            if exploration_module is not None
-            else EGreedyExploration(0.10),
+            exploration_module=(
+                exploration_module
+                if exploration_module is not None
+                else EGreedyExploration(0.10)
+            ),
             hidden_dims=hidden_dims,
             num_quantiles=num_quantiles,
             learning_rate=learning_rate,

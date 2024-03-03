@@ -79,9 +79,11 @@ class PolicyLearner(torch.nn.Module, ABC):
                 # the agent does not need dynamic action space support.
                 self._action_representation_module: ActionRepresentationModule = (
                     IdentityActionRepresentationModule(
-                        max_number_actions=action_space.n
-                        if isinstance(action_space, DiscreteActionSpace)
-                        else -1,
+                        max_number_actions=(
+                            action_space.n
+                            if isinstance(action_space, DiscreteActionSpace)
+                            else -1
+                        ),
                         representation_dim=action_space.action_dim,
                     )
                 )

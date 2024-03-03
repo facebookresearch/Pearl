@@ -130,7 +130,6 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
         policy_learner: PolicyLearner,
         cost_critic: nn.Module,
     ) -> None:
-
         """
         Update the lambda constraint based on the cost critic via a projected gradient descent update rule.
         """

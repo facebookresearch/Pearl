@@ -28,7 +28,6 @@ def create_offline_data(
     evaluation_episodes: int = 100,
     seed: Optional[int] = None,
 ) -> List[Value]:
-
     """
     This function creates offline data by interacting with a given environment using a specified
     Pearl Agent. This is mostly for illustration with standard benchmark environments only.
@@ -73,9 +72,11 @@ def create_offline_data(
                 "curr_available_actions": env.action_space,
                 "next_available_actions": env.action_space,
                 "done": action_result.done,
-                "max_number_actions": env.action_space.n
-                if isinstance(env.action_space, DiscreteActionSpace)
-                else None,
+                "max_number_actions": (
+                    env.action_space.n
+                    if isinstance(env.action_space, DiscreteActionSpace)
+                    else None
+                ),
             }
 
             observation = action_result.observation
@@ -146,7 +147,6 @@ def get_data_collection_agent_returns(
     data_path: str,
     returns_file_path: Optional[str] = None,
 ) -> List[Value]:
-
     """
     This function returns episode returns of a Pearl Agent using for offline data collection.
     The returns file can be directly provided or we can stitch together trajectories in the offline

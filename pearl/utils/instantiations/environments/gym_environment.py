@@ -41,7 +41,7 @@ def tensor_to_numpy(x: Tensor) -> np.ndarray:
 
 GYM_TO_PEARL_ACTION_SPACE = {
     "Discrete": DiscreteActionSpace,
-    "Box": BoxActionSpace
+    "Box": BoxActionSpace,
     # Add more here as needed
 }
 GYM_TO_PEARL_OBSERVATION_SPACE = {

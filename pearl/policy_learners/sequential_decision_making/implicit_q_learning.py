@@ -105,9 +105,11 @@ class ImplicitQLearning(ActorCriticBase):
             use_critic_target=True,
             critic_soft_update_tau=critic_soft_update_tau,
             use_twin_critic=True,
-            exploration_module=exploration_module
-            if exploration_module is not None
-            else NoExploration(),
+            exploration_module=(
+                exploration_module
+                if exploration_module is not None
+                else NoExploration()
+            ),
             discount_factor=discount_factor,
             training_rounds=training_rounds,
             batch_size=batch_size,

@@ -118,9 +118,9 @@ class TensorBasedReplayBuffer(ReplayBuffer):
             dtype=torch.float32,
         )  # (1 x action_space_size x action_dim)
         available_actions_tensor = available_action_space.actions_batch
-        available_actions_tensor_with_padding[
-            0, : available_action_space.n, :
-        ] = available_actions_tensor
+        available_actions_tensor_with_padding[0, : available_action_space.n, :] = (
+            available_actions_tensor
+        )
 
         unavailable_actions_mask = torch.zeros(
             (1, max_number_actions), device=self._device

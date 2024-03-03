@@ -19,7 +19,6 @@ from torch import Tensor
 def compute_cql_loss(
     q_network: QValueNetwork, batch: TransitionBatch, batch_size: int
 ) -> torch.Tensor:
-
     """
     Compute CQL loss for a batch of data.
 

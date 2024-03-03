@@ -38,9 +38,11 @@ MA_WINDOW_SIZE = 100.0
 
 def moving_average(data: List[Value]) -> Value:
     return [
-        sum(data[int(i - MA_WINDOW_SIZE + 1) : i + 1]) / MA_WINDOW_SIZE  # pyre-ignore
-        if i >= MA_WINDOW_SIZE
-        else sum(data[: i + 1]) * 1.0 / (i + 1)  # pyre-ignore
+        (
+            sum(data[int(i - MA_WINDOW_SIZE + 1) : i + 1]) / MA_WINDOW_SIZE  # pyre-ignore
+            if i >= MA_WINDOW_SIZE
+            else sum(data[: i + 1]) * 1.0 / (i + 1)
+        )  # pyre-ignore
         for i in range(len(data))
     ]
 

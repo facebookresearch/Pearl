@@ -41,9 +41,11 @@ class DeepSARSA(DeepTDLearning):
         super(DeepSARSA, self).__init__(
             state_dim=state_dim,
             action_space=action_space,
-            exploration_module=exploration_module
-            if exploration_module is not None
-            else EGreedyExploration(0.05),
+            exploration_module=(
+                exploration_module
+                if exploration_module is not None
+                else EGreedyExploration(0.05)
+            ),
             on_policy=True,
             action_representation_module=action_representation_module,
             **kwargs,
