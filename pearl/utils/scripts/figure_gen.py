@@ -41,8 +41,9 @@ def moving_average(data: List[Value]) -> Value:
         (
             sum(data[int(i - MA_WINDOW_SIZE + 1) : i + 1]) / MA_WINDOW_SIZE  # pyre-ignore
             if i >= MA_WINDOW_SIZE
+            # pyre-fixme[6]: For 1st argument expected `Iterable[Union[typing_extensi...
             else sum(data[: i + 1]) * 1.0 / (i + 1)
-        )  # pyre-ignore
+        )
         for i in range(len(data))
     ]
 
