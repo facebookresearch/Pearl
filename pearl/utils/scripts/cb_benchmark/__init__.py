@@ -4,6 +4,8 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+# pyre-strict
+
 from pearl.utils.uci_data import download_uci_data
 
 from .cb_benchmark_config import (

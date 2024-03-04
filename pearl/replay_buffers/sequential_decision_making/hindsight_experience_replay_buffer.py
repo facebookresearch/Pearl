@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+# pyre-strict
+
 from typing import Callable, List, Optional, Tuple
 
 from pearl.api.action import Action

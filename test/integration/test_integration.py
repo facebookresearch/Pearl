@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+# pyre-strict
+
 from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
 
 try:

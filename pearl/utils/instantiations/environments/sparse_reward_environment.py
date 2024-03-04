@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+# pyre-strict
+
 """
 This file contains environment to simulate sparse rewards
 Also contains history summarization module that needs to be used together

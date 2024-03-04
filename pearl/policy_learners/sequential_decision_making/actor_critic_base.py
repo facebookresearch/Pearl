@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+# pyre-strict
+
 from abc import abstractmethod
 from typing import Any, cast, Dict, Iterable, List, Optional, Type, Union
 

@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+# pyre-strict
+
 from .dynamic_action_env import DynamicActionSpaceWrapper
 from .gym_avg_torque_cost import GymAvgTorqueWrapper
 from .partial_observability import (

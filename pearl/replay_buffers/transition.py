@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+# pyre-strict
+
 import dataclasses
 from dataclasses import dataclass
 from typing import Optional, TypeVar

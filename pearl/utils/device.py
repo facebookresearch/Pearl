@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+# pyre-strict
+
 import torch
 import torch.distributed as dist
 from pearl.utils.functional_utils.python_utils import value_of_first_item

@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+# pyre-strict
+
 from torch import Tensor
 
 # An `Action` is expected to be a 1-dim Tensor of shape `(d,)`, where `d` is the

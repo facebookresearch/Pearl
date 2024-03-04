@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+# pyre-strict
+
 from .bandit import MeanVarBanditEnv
 
 __all__ = ["MeanVarBanditEnv"]

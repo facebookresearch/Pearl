@@ -1,3 +1,4 @@
+# pyre-strict
 import os
 import zipfile
 

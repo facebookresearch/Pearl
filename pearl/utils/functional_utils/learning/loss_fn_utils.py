@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+# pyre-strict
+
 import torch
 from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     QValueNetwork,

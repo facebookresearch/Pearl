@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+# pyre-strict
+
 import torch
 from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,

@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+# pyre-strict
+
 import inspect
 from typing import Callable, Iterable, Tuple, Type
 

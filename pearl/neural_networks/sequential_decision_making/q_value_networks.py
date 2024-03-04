@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+# pyre-strict
+
 """
 This file defines PEARL neural network interafaces
 User is free to define their own Q(s, a), but would need to inherit from this interface

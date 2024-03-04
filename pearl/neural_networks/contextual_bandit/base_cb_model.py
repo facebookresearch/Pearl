@@ -1,3 +1,4 @@
+# pyre-strict
 from abc import abstractmethod
 
 import torch
