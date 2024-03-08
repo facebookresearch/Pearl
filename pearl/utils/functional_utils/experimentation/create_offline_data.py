@@ -16,7 +16,6 @@ from pearl.api.environment import Environment
 from pearl.api.reward import Value
 from pearl.pearl_agent import PearlAgent
 from pearl.utils.functional_utils.train_and_eval.online_learning import run_episode
-from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 def create_offline_data(
@@ -26,28 +25,45 @@ def create_offline_data(
     file_name: str,
     max_len_offline_data: int = 50000,
     learn: bool = True,
+    exploit: bool = False,
     learn_after_episode: bool = True,
     evaluation_episodes: int = 100,
     seed: Optional[int] = None,
 ) -> List[Value]:
     """
     This function creates offline data by interacting with a given environment using a specified
-    Pearl Agent. This is mostly for illustration with standard benchmark environments only.
-    For most practical use cases, offline data collection will use custom pipelines.
+    agent. This is mostly for illustration with standard benchmark environments. For most
+    practical use cases, offline data collection will use custom pipelines.
+
+    Transition tuples are stored in .pt file in the specified path. Training returns
+    (episodic returns during training) of the agent are saved in a pickle file. At the end of data
+    collection, evaluation returns of the final agent are also saved in a pickle file. This
+    approximates the performance of the best learned policy in the offline data.
+
+    Note: Much of this function overlaps with `run_episode` function in
+        `pearl/utils/functional_utils/train_and_eval/online_learning.py`.
 
     Args:
-        agent: a pearl agent with policy learner, exploration module and replay buffer specified
-               (e.g. a DQN agent).
-        env: an environment to collect data from (e.g. GymEnvironment)
-        number_of_episodes: number of episodes for which data is to be collected.
-        learn: whether to learn after each episode (depends on the policy learner used by agent).
-        exploit: set as default to False as we want exploration during data collection.
-        learn_after_episode: whether to learn after each episode
-        (depends on the policy learner used by agent).
-    """
+        agent (PearlAgent): A pearl agent with policy learner, exploration module and replay buffer
+            specified. For e.g. a DQN agent.
+        env (Environment): An environment to collect data from (e.g. `GymEnvironment`).
+        save_path (str): Path to save the offline data.
+        file_name (str): Name of the file to save the raw transition tuples.
+        max_len_offline_data (int): Number of the transition tuples to be collected in offline data.
+        learn (bool): When set to True, the agent learns after each environment interaction.
+            Defaults to True.
+        exploit (bool): When set to True, the agent does not explore and acts greedily with respect
+            to the current estimate of the optimal policy. Defaults to False as we want the agent
+            to explore during data collection for standard benchmarks.
+        learn_after_episode (bool): When set to True, the agent learns after each episode.
+            Defaults to False.
+        evaluation_episodes (int): The number of episodes to evaluate the trained agent on.
+            Defaults to 100.
+        seed (int, optional): Environment seed for reproducibility.
 
-    # much of this function overlaps with episode return function but i think writing it
-    # like this is cleaner
+    Returns:
+        returns_offline_agent: a list of returns for each evaluation episode.
+    """
 
     print(f"collecting data from env: {env} using agent: {agent}")
 
@@ -60,9 +76,11 @@ def create_offline_data(
         agent.reset(observation, action_space)
         done = False
         while not done:
-            action = agent.act(
-                exploit=False
-            )  # exploit is explicitly set to False as we want exploration during data collection.
+
+            # exploit is explicitly set to False as we want exploration during data collection with
+            # standard benchmark environments like Gym, MuJoCo etc.
+            action = agent.act(exploit=False)
+
             action_result = env.step(action)
             g += action_result.reward
             agent.observe(action_result)
@@ -74,11 +92,6 @@ def create_offline_data(
                 "curr_available_actions": env.action_space,
                 "next_available_actions": env.action_space,
                 "done": action_result.done,
-                "max_number_actions": (
-                    env.action_space.n
-                    if isinstance(env.action_space, DiscreteActionSpace)
-                    else None
-                ),
             }
 
             observation = action_result.observation

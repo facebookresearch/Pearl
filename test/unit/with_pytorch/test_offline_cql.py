@@ -36,15 +36,27 @@ from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpac
 
 
 class TestOfflineCQL(unittest.TestCase):
+    """
+    End to end test for the offline learning pipeline. It tests the following components:
+    1) Creating offline data.
+    2) Loading offline data into a replay buffer.
+    3) Training an offline agent (in this case CQL).
+    4) Evaluating the offline agent using environment interactions.
+    """
 
-    # test to create and save offline data
     def test_create_offline_data_and_learn_cql(self) -> None:
+
+        # Cartpole environment
         env = GymEnvironment("CartPole-v1")
         assert isinstance(env.action_space, DiscreteActionSpace)
+        max_number_actions = env.action_space.n
+
+        # One hot representations for discrete actions
         action_representation_module = OneHotActionTensorRepresentationModule(
-            max_number_actions=env.action_space.n
+            max_number_actions=max_number_actions
         )
 
+        # Data collection agent that collects and stores data from environment interactions.
         onlineDQN_agent = PearlAgent(
             policy_learner=DeepQLearning(
                 state_dim=env.observation_space.shape[0],
@@ -59,6 +71,7 @@ class TestOfflineCQL(unittest.TestCase):
 
         max_len_offline_data = 500
 
+        # Collect offline data using the data collection agent
         create_offline_data(
             agent=onlineDQN_agent,
             env=env,
@@ -70,20 +83,26 @@ class TestOfflineCQL(unittest.TestCase):
             evaluation_episodes=50,
         )
 
+        # Load offline data into a Pearl replay buffer
         offline_data_replay_buffer = FIFOOffPolicyReplayBuffer(max_len_offline_data)
         raw_transitions_buffer = torch.load("offline_raw_transitions_dict.pt")
         for transition in raw_transitions_buffer:
             offline_data_replay_buffer.push(
-                transition["observation"],
-                transition["action"],
-                transition["reward"],
-                transition["next_observation"],
-                transition["curr_available_actions"],  # curr_available_actions
-                transition["next_available_actions"],  # next_available_actions
-                transition["done"],
-                transition["max_number_actions"],
+                state=transition["observation"],
+                action=transition["action"],
+                reward=transition["reward"],
+                next_state=transition["next_observation"],
+                curr_available_actions=transition[
+                    "curr_available_actions"
+                ],  # curr_available_actions
+                next_available_actions=transition[
+                    "next_available_actions"
+                ],  # next_available_actions
+                done=transition["done"],
+                max_number_actions=max_number_actions,
             )
 
+        # An offline RL agent (in this case, CQL)
         conservative_agent = PearlAgent(
             policy_learner=DeepQLearning(
                 state_dim=env.observation_space.shape[0],
@@ -98,12 +117,15 @@ class TestOfflineCQL(unittest.TestCase):
             replay_buffer=offline_data_replay_buffer,
         )
 
+        # Run training for the CQL based agent using offline data
         offline_learning(
             offline_agent=conservative_agent,
             data_buffer=offline_data_replay_buffer,
             training_epochs=10,
         )
 
+        # Run evaluation for trained agent with environment interactions
+        # Note: Pearl does not have off policy evaluation (OPE) algorithms implemented yet.
         offline_evaluation(
             offline_agent=conservative_agent,
             env=env,

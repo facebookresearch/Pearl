@@ -35,7 +35,9 @@ def get_offline_data_in_buffer(
     is_action_continuous: bool,
     url: Optional[str] = None,
     data_path: Optional[str] = None,
+    max_number_actions_if_discrete: Optional[int] = None,
     size: int = 1000000,
+    device: str = "cpu",
 ) -> ReplayBuffer:
     """
     Fetches offline data from a url and returns a replay buffer which can be sampled
@@ -49,22 +51,51 @@ def get_offline_data_in_buffer(
         csv file can also be added later.
 
     Args:
-        is_action_continuous: whether the action space is continuous or discrete.
+        is_action_continuous (bool): whether the action space is continuous or discrete.
             for continuous actions spaces, we need to set this flag; see 'push' method
             in FIFOOffPolicyReplayBuffer class
-        url: from where offline data needs to be fetched from
-        data_path: local path to the offline data
-        size: size of the replay buffer
+        url (str, optional): from where offline data needs to be fetched from
+        data_path (str, optional): local path to the offline data
+        max_number_actions_if_discrete (int, optional): To work with a discrete action space in
+            Pearl, each transition tuple requires specifying the maximum number of actions in the
+            action space. For offline learning, we expect users to know the maximum number of
+            actions in the discrete action space.
+            For continuous action spaces, we do not need to specify this parameter. Hence it is
+            optional and defaults to None.
+        size (int): Size of the replay buffer. Defaults to 1000000.
+        device (cpu): Device to load the data onto. If no device is specified, defaults to cpu.
 
     Returns:
         ReplayBuffer: a FIFOOffPolicyReplayBuffer containing offline data of transition tuples.
+            The transition tuples are in the format as expected by a Pearl agent.
     """
+
+    if is_action_continuous:
+        if max_number_actions_if_discrete is not None:
+            raise ValueError(
+                "get_offline_data: is_action_continuous = True requires \
+                max_number_actions to be None"
+            )
+    elif max_number_actions_if_discrete is None:
+        raise ValueError(
+            "get_offline_data: is_action_continuous = False requires \
+            max_number_actions to be an integer value"
+        )
+
     if url is not None:
         offline_transitions_data = requests_get(url)
         stream = io.BytesIO(offline_transitions_data.content)  # implements seek()
-        raw_transitions_buffer = torch.load(stream)
+        raw_transitions_buffer = torch.load(stream, map_location=torch.device(device))
     else:
-        raw_transitions_buffer = torch.load(data_path)  # pyre-ignore
+        if data_path is None:
+            raise ValueError(
+                "provide either a data_path or a url to fetch offline data"
+            )
+
+        # loads data on the specified device
+        raw_transitions_buffer = torch.load(
+            data_path, map_location=torch.device(device)
+        )
 
     offline_data_replay_buffer = FIFOOffPolicyReplayBuffer(size)
     if is_action_continuous:
@@ -83,20 +114,16 @@ def get_offline_data_in_buffer(
                     torch.arange(transition["next_available_actions"].n).view(-1, 1)
                 )
             )
-        if transition["action_space"].__class__.__name__ == "Discrete":
-            transition["action_space"] = DiscreteActionSpace(
-                actions=list(torch.arange(transition["action_space"].n).view(-1, 1))
-            )
 
         offline_data_replay_buffer.push(
-            transition["observation"],
-            transition["action"],
-            transition["reward"],
-            transition["next_observation"],
-            transition["curr_available_actions"],
-            transition["next_available_actions"],
-            transition["done"],
-            transition["action_space"].n,
+            state=transition["observation"],
+            action=transition["action"],
+            reward=transition["reward"],
+            next_state=transition["next_observation"],
+            curr_available_actions=transition["curr_available_actions"],
+            next_available_actions=transition["next_available_actions"],
+            done=transition["done"],
+            max_number_actions=max_number_actions_if_discrete,
         )
 
     return offline_data_replay_buffer
@@ -149,7 +176,7 @@ def offline_evaluation(
         returns_offline_agent: a list of returns for each evaluation episode.
     """
 
-    # check: during offline evaluation, the agent should not learn or explore.
+    # sanity check: during offline evaluation, the agent should not learn or explore.
     learn = False
     exploit = True
     learn_after_episode = False

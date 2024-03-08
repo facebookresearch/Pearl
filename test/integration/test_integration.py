@@ -585,8 +585,11 @@ class TestIntegration(unittest.TestCase):
         # get offline data from the specified path in a replay buffer
         is_action_continuous = False
         print(f"Loading offline data from {url}")
+
         offline_data_replay_buffer = get_offline_data_in_buffer(
-            is_action_continuous, url
+            is_action_continuous=is_action_continuous,
+            url=url,
+            max_number_actions_if_discrete=num_actions,
         )
 
         # train conservative agent with offline data
@@ -641,8 +644,11 @@ class TestIntegration(unittest.TestCase):
         # get offline data from the specified path in a replay buffer
         is_action_continuous = False
         print(f"Loading offline data from {url}")
+
         offline_data_replay_buffer = get_offline_data_in_buffer(
-            is_action_continuous, url
+            is_action_continuous=is_action_continuous,
+            url=url,
+            max_number_actions_if_discrete=num_actions,
         )
 
         # train conservative agent with offline data
