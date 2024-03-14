@@ -46,5 +46,8 @@ class EGreedyExploration(UniformExplorationBase):
         if not isinstance(action_space, DiscreteActionSpace):
             raise TypeError("action space must be discrete")
         if random.random() < self.epsilon:
-            return torch.randint(action_space.n, (1,))
-        return exploit_action
+            return action_space.sample(action_availability_mask).to(
+                exploit_action.device
+            )
+        else:
+            return exploit_action
