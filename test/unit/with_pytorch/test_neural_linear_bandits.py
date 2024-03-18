@@ -51,13 +51,12 @@ class TestNeuralLinearBandits(unittest.TestCase):
             learning_rate=0.01,
             exploration_module=UCBExploration(alpha=0.1),
         )
-        state = torch.randn(batch_size, 3)
-        action = torch.randn(batch_size, feature_dim - 3)
+        state = torch.randn(batch_size, feature_dim)
         batch = TransitionBatch(
             state=state,
-            action=action,
-            # y = sum of state + sum of action
-            reward=state.sum(-1, keepdim=True) + action.sum(-1, keepdim=True),
+            action=torch.zeros_like(state[:, -1:]),  # empty dummy values, not used
+            # y = sum of state
+            reward=state.sum(-1, keepdim=True),
             weight=torch.ones(batch_size, 1),
         )
         policy_learner.learn_batch(batch)
@@ -136,18 +135,16 @@ class TestNeuralLinearBandits(unittest.TestCase):
             output_activation_name=output_activation_name,
         )
         self.assertEqual(feature_dim, policy_learner.feature_dim)
-        state = torch.randn(batch_size, 3)
-        action = torch.randn(batch_size, feature_dim - 3)
-        reward = state.sum(-1, keepdim=True) + action.sum(
-            -1, keepdim=True
-        )  # linear relation between label(reward) and feature (state,action pair)
+        state = torch.randn(batch_size, feature_dim)
+        reward = state.sum(-1, keepdim=True)
+        # linear relation between label(reward) and feature (state,action pair)
         if output_activation_name == "sigmoid":
             reward = torch.nn.Sigmoid()(reward)
             assert torch.all(reward >= 0) and torch.all(reward <= 1)
 
         batch = TransitionBatch(
             state=state,
-            action=action,
+            action=torch.zeros_like(state[:, -1:]),  # empty dummy values, not used
             reward=reward,
             weight=torch.ones(batch_size, 1),
         )
@@ -204,7 +201,7 @@ class TestNeuralLinearBandits(unittest.TestCase):
         action = torch.randn(batch_size, feature_dim - 3)
         batch = TransitionBatch(
             state=state,
-            action=action,
+            action=torch.zeros_like(state[:, -1:]),  # empty dummy values, not used
             # y = sum of state + sum of action
             reward=state.sum(-1, keepdim=True) + action.sum(-1, keepdim=True),
             weight=torch.ones(batch_size, 1),

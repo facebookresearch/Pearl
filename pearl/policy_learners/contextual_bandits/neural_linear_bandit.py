@@ -69,7 +69,7 @@ class NeuralLinearBandit(ContextualBanditBase):
         l2_reg_lambda_linear: float = 1.0,
         gamma: float = 1.0,
         apply_discounting_interval: float = 0.0,  # set to 0 to disable
-        state_features_only: bool = False,
+        state_features_only: bool = True,
         loss_type: str = "mse",  # one of the LOSS_TYPES names: [mse, mae, cross_entropy]
         output_activation_name: str = "linear",
         use_batch_norm: bool = False,
