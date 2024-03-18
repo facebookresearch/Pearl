@@ -29,7 +29,7 @@ from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     DEFAULT_ACTION_SPACE,
 )
 from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
-    UCBExploration,
+    ScoreExplorationBase,
 )
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
@@ -151,6 +151,9 @@ class NeuralLinearBandit(ContextualBanditBase):
             else torch.ones_like(expected_values)
         )
 
+        # get scores for logging
+        ucb_scores = self.get_scores(input_features).mean()
+
         # criterion = mae, mse, Xentropy
         # Xentropy loss apply Sigmoid, MSE or MAE apply Identiy
         criterion = LOSS_TYPES[self.loss_type]
@@ -179,11 +182,14 @@ class NeuralLinearBandit(ContextualBanditBase):
             batch_weight,
         )
         self._maybe_apply_discounting()
+        predicted_values = predicted_values.detach()  # detach for logging
         return {
             "label": expected_values,
             "prediction": predicted_values,
             "weight": batch_weight,
             "loss": loss.detach(),
+            "scores:ucb": ucb_scores,
+            "scores:mu": predicted_values.mean(),
         }
 
     def act(
@@ -219,6 +225,7 @@ class NeuralLinearBandit(ContextualBanditBase):
             representation=self.model._linear_regression_layer,
         )
 
+    @torch.no_grad()  # the UCB scores don't need the gradients
     def get_scores(
         self,
         subjective_state: SubjectiveState,
@@ -238,7 +245,7 @@ class NeuralLinearBandit(ContextualBanditBase):
         # dim: [batch_size, num_arms, feature_dim]
         model_ret = self.model.forward_with_intermediate_values(feature)
         # dim: [batch_size * num_arms, 1]
-        assert isinstance(self._exploration_module, UCBExploration)
+        assert isinstance(self._exploration_module, ScoreExplorationBase)
         scores = self._exploration_module.get_scores(
             subjective_state=model_ret["nn_output"],
             values=model_ret["pred_label"],

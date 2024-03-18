@@ -153,7 +153,6 @@ class LinearBandit(ContextualBanditBase):
             UCB scores when exploration module is UCB
             Shape is (batch)
         """
-        assert isinstance(self._exploration_module, ScoreExplorationBase)
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
             action_space=action_space,
