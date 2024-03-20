@@ -222,7 +222,7 @@ class DisjointBanditContainer(ContextualBanditBase):
             values=ensemble_forward(self.models, feature, use_for_loop=True),
             action_space=action_space,
             representation=self.models,  # pyre-fixme[6]: unexpected type
-        ).squeeze()
+        )
 
     @property
     def optimizer(self) -> torch.optim.Optimizer:

@@ -67,7 +67,7 @@ class ScoreExplorationBase(ExplorationModule):
         )  # shape: (batch_size, action_count)
         scores = assert_is_tensor_like(scores)
         selected_action = get_model_actions(scores, action_availability_mask)
-        return selected_action.squeeze()
+        return selected_action.squeeze(-1)
 
     @abstractmethod
     def get_scores(

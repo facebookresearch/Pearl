@@ -92,7 +92,7 @@ class SquareCBExploration(ScoreExplorationBase):
             dist_policy = Categorical(prob_policy[batch_ind, :])
             selected_actions[batch_ind] = dist_policy.sample()
 
-        return selected_actions.squeeze()
+        return selected_actions.squeeze(-1)
 
     def clamp(self, values: torch.Tensor) -> torch.Tensor:
         """

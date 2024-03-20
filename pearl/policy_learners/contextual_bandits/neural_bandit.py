@@ -134,7 +134,7 @@ class NeuralBandit(ContextualBanditBase):
             state_features_only=self._state_features_only,
             action_representation_module=self._action_representation_module,
         )
-        values = self.model(new_feature).squeeze()
+        values = self.model(new_feature).squeeze(-1)
         # batch_size * action_count
         assert values.numel() == new_feature.shape[0] * action_count
         return self._exploration_module.act(
@@ -169,7 +169,7 @@ class NeuralBandit(ContextualBanditBase):
         # dim: [batch_size * num_arms, feature_dim]
         feature = feature.reshape(-1, feature_dim)
         # dim: [batch_size, num_arms] (or [batch_size] if num_arms==1)
-        return self.model(feature).reshape(batch_size, -1).squeeze()
+        return self.model(feature).reshape(batch_size, -1).squeeze(-1)
 
     @property
     def optimizer(self) -> torch.optim.Optimizer:

@@ -164,4 +164,4 @@ class LinearBandit(ContextualBanditBase):
             values=self.model(feature),
             action_space=action_space,
             representation=self.model,
-        ).squeeze()
+        ).squeeze(-1)

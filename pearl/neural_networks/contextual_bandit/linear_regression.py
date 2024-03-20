@@ -151,7 +151,7 @@ class LinearRegression(MuSigmaCBModel):
         x, y, weight = self._validate_train_inputs(x, y, weight)
 
         delta_A = torch.matmul(x.t(), x * weight)
-        delta_b = torch.matmul(x.t(), y * weight).squeeze()
+        delta_b = torch.matmul(x.t(), y * weight).squeeze(-1)
         delta_sum_weight = weight.sum()
 
         if self.distribution_enabled:

@@ -254,4 +254,4 @@ class NeuralLinearBandit(ContextualBanditBase):
         )
         # dim: [batch_size, num_arms] or [batch_size]
         scores = self.model.output_activation(scores)
-        return scores.reshape(batch_size, -1).squeeze()
+        return scores.reshape(batch_size, -1).squeeze(-1)
