@@ -197,13 +197,12 @@ class TestNeuralLinearBandits(unittest.TestCase):
             gamma=0.95,
             apply_discounting_interval=100.0,
         )
-        state = torch.randn(batch_size, 3)
-        action = torch.randn(batch_size, feature_dim - 3)
+        state = torch.randn(batch_size, feature_dim)
         batch = TransitionBatch(
             state=state,
             action=torch.zeros_like(state[:, -1:]),  # empty dummy values, not used
             # y = sum of state + sum of action
-            reward=state.sum(-1, keepdim=True) + action.sum(-1, keepdim=True),
+            reward=torch.exp(state.sum(-1, keepdim=True)),
             weight=torch.ones(batch_size, 1),
         )
 
