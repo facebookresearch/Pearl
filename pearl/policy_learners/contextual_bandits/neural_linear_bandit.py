@@ -210,7 +210,7 @@ class NeuralLinearBandit(ContextualBanditBase):
             action_representation_module=self._action_representation_module,
         )
         model_ret = self.model.forward_with_intermediate_values(new_feature)
-        values = model_ret["pred_label"]
+        values = model_ret["pred_label_pre_activation"]
 
         # batch_size * action_count
         assert values.numel() == new_feature.shape[0] * available_action_space.n
@@ -248,7 +248,9 @@ class NeuralLinearBandit(ContextualBanditBase):
         assert isinstance(self._exploration_module, ScoreExplorationBase)
         scores = self._exploration_module.get_scores(
             subjective_state=model_ret["nn_output"],
-            values=model_ret["pred_label"],
+            values=model_ret[
+                "pred_label_pre_activation"
+            ],  # using pre-activation values here because activation will be applied afterwards
             action_space=action_space,
             representation=self.model._linear_regression_layer,
         )
