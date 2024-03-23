@@ -7,6 +7,17 @@
 
 # pyre-strict
 
+from pearl.neural_networks.common.utils import init_weights
+from pearl.neural_networks.common.value_networks import VanillaValueNetwork
+from pearl.neural_networks.sequential_decision_making.actor_networks import (
+    GaussianActorNetwork,
+    VanillaActorNetwork,
+    VanillaContinuousActorNetwork,
+)
+from pearl.neural_networks.sequential_decision_making.q_value_networks import (
+    VanillaQValueNetwork,
+)
+from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
 
 try:
@@ -239,12 +250,66 @@ class TestIntegration(unittest.TestCase):
                 state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 actor_hidden_dims=[64, 64],
+                use_critic=True,
                 critic_hidden_dims=[64, 64],
                 training_rounds=8,
                 batch_size=64,
                 action_representation_module=OneHotActionTensorRepresentationModule(
                     max_number_actions=num_actions
                 ),
+            ),
+            replay_buffer=OnPolicyReplayBuffer(10_000),
+        )
+        self.assertTrue(
+            target_return_is_reached(
+                target_return=500,
+                max_episodes=10_000,
+                agent=agent,
+                env=env,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+            )
+        )
+
+    def test_reinforce_network_instance(self) -> None:
+        """
+        This test checks for performance of REINFORCE when actor and critic network instances are
+        passed as input arguments. The performance metric is if REINFORCE will eventually obtain
+        an episodic return of 500 for CartPole-v1.
+        """
+        env = GymEnvironment("CartPole-v1")
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
+        action_representation_module = OneHotActionTensorRepresentationModule(
+            max_number_actions=num_actions
+        )
+
+        # VanillaActorNetwork outputs a probability distribution over all actions,
+        # so the output_dim is taken to be num_actions.
+        actor_network_instance = VanillaActorNetwork(
+            input_dim=env.observation_space.shape[0],
+            hidden_dims=[64, 64],
+            output_dim=num_actions,
+        )
+
+        # REINFORCE uses a VanillaValueNetwork by default
+        critic_network_instance = VanillaValueNetwork(
+            input_dim=env.observation_space.shape[0],
+            hidden_dims=[64, 64],
+            output_dim=1,
+        )
+
+        agent = PearlAgent(
+            policy_learner=REINFORCE(
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                use_critic=True,
+                training_rounds=8,
+                batch_size=64,
+                action_representation_module=action_representation_module,
+                actor_network_instance=actor_network_instance,
+                critic_network_instance=critic_network_instance,
             ),
             replay_buffer=OnPolicyReplayBuffer(10_000),
         )
@@ -351,6 +416,7 @@ class TestIntegration(unittest.TestCase):
                 env.observation_space.shape[0],
                 env.action_space,
                 actor_hidden_dims=[64, 64],
+                use_critic=True,
                 critic_hidden_dims=[64, 64],
                 training_rounds=20,
                 batch_size=32,
@@ -358,6 +424,63 @@ class TestIntegration(unittest.TestCase):
                 action_representation_module=OneHotActionTensorRepresentationModule(
                     max_number_actions=num_actions
                 ),
+            ),
+            replay_buffer=OnPolicyReplayBuffer(10_000),
+        )
+        self.assertTrue(
+            target_return_is_reached(
+                agent=agent,
+                env=env,
+                target_return=500,
+                max_episodes=1000,
+                learn=True,
+                learn_every_k_steps=200,
+                learn_after_episode=False,
+                exploit=False,
+            )
+        )
+
+    def test_ppo_network_instance(self) -> None:
+        """
+        This test checks for performance of PPO when instances of actor and critic networks are
+        passed as input arguments. The performance metric is if PPO can eventually attain an
+        episodic return of 500.
+
+        Note: Pearl currently only supports PPO for discrete action spaces.
+        """
+        env = GymEnvironment("CartPole-v1")
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
+        action_representation_module = OneHotActionTensorRepresentationModule(
+            max_number_actions=num_actions
+        )
+
+        # VanillaActorNetwork outputs a probability distribution over all actions,
+        # so the output_dim is taken to be num_actions.
+        actor_network_instance = VanillaActorNetwork(
+            input_dim=env.observation_space.shape[0],
+            hidden_dims=[64, 64],
+            output_dim=num_actions,
+        )
+
+        # PPO uses a VanillaValueNetwork by default
+        critic_network_instance = VanillaValueNetwork(
+            input_dim=env.observation_space.shape[0],
+            hidden_dims=[64, 64],
+            output_dim=1,
+        )
+
+        agent = PearlAgent(
+            policy_learner=ProximalPolicyOptimization(
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                use_critic=True,
+                training_rounds=20,
+                batch_size=32,
+                epsilon=0.1,
+                action_representation_module=action_representation_module,
+                actor_network_instance=actor_network_instance,
+                critic_network_instance=critic_network_instance,
             ),
             replay_buffer=OnPolicyReplayBuffer(10_000),
         )
@@ -403,7 +526,67 @@ class TestIntegration(unittest.TestCase):
                 agent=agent,
                 env=env,
                 target_return=500,
-                max_episodes=1_000,
+                max_episodes=1000,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+            )
+        )
+
+    def test_sac_network_instance(self) -> None:
+        """
+        This test checks the performance of discrete SAC when actor and critic network instances
+        are passed as arguments. The performance metric is if SAC is able to eventually get to
+        episodic return of 500 for CartPole-v1.
+
+        In this test, we use a discrete policy network (which outputs action probabilities)
+        and twin critics.
+        """
+        env = GymEnvironment("CartPole-v1")
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
+        action_representation_module = OneHotActionTensorRepresentationModule(
+            max_number_actions=num_actions
+        )
+
+        # VanillaActorNetwork outputs a probability distribution over all actions,
+        # so the output_dim is taken to be num_actions.
+        actor_network = VanillaActorNetwork(
+            input_dim=env.observation_space.shape[0],
+            hidden_dims=[64, 64, 64],
+            output_dim=num_actions,
+        )
+
+        # we use twin critics of the type VanillaQValueNetwork.
+        twin_critic_network = TwinCritic(
+            state_dim=env.observation_space.shape[0],
+            action_dim=action_representation_module.max_number_actions,
+            hidden_dims=[64, 64, 64],
+            network_type=VanillaQValueNetwork,
+            init_fn=init_weights,
+        )
+
+        agent = PearlAgent(
+            policy_learner=SoftActorCritic(
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                training_rounds=100,
+                batch_size=100,
+                entropy_coef=0.1,
+                actor_learning_rate=0.0001,
+                critic_learning_rate=0.0003,
+                action_representation_module=action_representation_module,
+                actor_network_instance=actor_network,
+                critic_network_instance=twin_critic_network,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(50000),
+        )
+        self.assertTrue(
+            target_return_is_reached(
+                agent=agent,
+                env=env,
+                target_return=500,
+                max_episodes=1000,
                 learn=True,
                 learn_after_episode=True,
                 exploit=False,
@@ -428,6 +611,62 @@ class TestIntegration(unittest.TestCase):
                 entropy_coef=0.1,
                 actor_learning_rate=0.001,
                 critic_learning_rate=0.001,
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(100000),
+        )
+        self.assertTrue(
+            target_return_is_reached(
+                agent=agent,
+                env=env,
+                target_return=-250,
+                max_episodes=1500,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+            )
+        )
+
+    def test_continuous_sac_network_instance(self) -> None:
+        """
+        This test checks the performance of continuous SAC when actor and critic network instances
+        are passed as arguments. The performance metric is if SAC is able to eventually get to
+        a moving average episodic return -250 or less for Pendulum-v1.
+
+        This test uses a Gaussian policy network and twin critics.
+        """
+        env = GymEnvironment("Pendulum-v1")
+
+        # for continuous action spaces, Pearl currently only supports
+        # IdentityActionRepresentationModule as the action representation module. So, the output_dim
+        # argument of the GaussianActorNetwork is the same as the action space dimension. Also,
+        # the action_dim argument for critic networks is the same as the action space dimension.
+        actor_network_instance = GaussianActorNetwork(
+            input_dim=env.observation_space.shape[0],
+            hidden_dims=[64, 64],
+            output_dim=env.action_space.action_dim,
+            action_space=env.action_space,
+        )
+
+        # SAC uses twin critics of the type VanillaQValueNetwork by default.
+        twin_critic_network = TwinCritic(
+            state_dim=env.observation_space.shape[0],
+            action_dim=env.action_space.action_dim,
+            hidden_dims=[64, 64],
+            network_type=VanillaQValueNetwork,
+            init_fn=init_weights,
+        )
+
+        agent = PearlAgent(
+            policy_learner=ContinuousSoftActorCritic(
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                training_rounds=50,
+                batch_size=100,
+                entropy_coef=0.1,
+                actor_learning_rate=0.001,
+                critic_learning_rate=0.001,
+                actor_network_instance=actor_network_instance,
+                critic_network_instance=twin_critic_network,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(100000),
         )
@@ -538,6 +777,71 @@ class TestIntegration(unittest.TestCase):
                     mean=0,
                     std_dev=0.2,
                 ),
+            ),
+            replay_buffer=FIFOOffPolicyReplayBuffer(50000),
+        )
+        self.assertTrue(
+            target_return_is_reached(
+                agent=agent,
+                env=env,
+                target_return=-250,
+                max_episodes=1000,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+                check_moving_average=True,
+            )
+        )
+
+    def test_td3_network_instance(self) -> None:
+        """
+        This test checks the performance of TD3 when instances of actor and critic networks are
+        passed as input arguments. The performance metric is if TD3 is able to eventually get to
+        a moving average episodic return of -250 or less for Pendulum-v1.
+
+        This test uses a deterministic policy network and twin critics.
+        """
+        env = GymEnvironment("Pendulum-v1")
+
+        # Note: for continuous action spaces, Pearl currently only supports
+        # IdentityActionRepresentationModule as the action representation module. So, the output_dim
+        # argument of the VanillaContinuousActorNetwork is the same as the action space dimension.
+        # For this reason, the action_dim argument for critic networks is the same as the action
+        # space dimension.
+
+        # td3 uses a deterministic policy network (e.g. VanillaContinuousActorNetwork) by default.
+        actor_network_instance = VanillaContinuousActorNetwork(
+            input_dim=env.observation_space.shape[0],
+            hidden_dims=[400, 300],
+            output_dim=env.action_space.action_dim,
+            action_space=env.action_space,
+        )
+
+        twin_critic_network = TwinCritic(
+            state_dim=env.observation_space.shape[0],
+            action_dim=env.action_space.action_dim,
+            hidden_dims=[400, 300],
+            network_type=VanillaQValueNetwork,
+            init_fn=init_weights,
+        )
+
+        agent = PearlAgent(
+            policy_learner=TD3(
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                actor_hidden_dims=[400, 300],
+                critic_hidden_dims=[400, 300],
+                critic_learning_rate=1e-2,
+                actor_learning_rate=1e-3,
+                training_rounds=5,
+                actor_soft_update_tau=0.05,
+                critic_soft_update_tau=0.05,
+                exploration_module=NormalDistributionExploration(
+                    mean=0,
+                    std_dev=0.2,
+                ),
+                actor_network_instance=actor_network_instance,
+                critic_network_instance=twin_critic_network,
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(50000),
         )

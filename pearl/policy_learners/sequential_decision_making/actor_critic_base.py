@@ -7,6 +7,7 @@
 
 # pyre-strict
 
+import copy
 from abc import abstractmethod
 from typing import Any, cast, Dict, Iterable, List, Optional, Type, Union
 
@@ -68,7 +69,8 @@ class ActorCriticBase(PolicyLearner):
         self,
         state_dim: int,
         exploration_module: ExplorationModule,
-        actor_hidden_dims: List[int],
+        actor_hidden_dims: Optional[List[int]] = None,
+        use_critic: bool = True,
         critic_hidden_dims: Optional[List[int]] = None,
         action_space: Optional[ActionSpace] = None,
         actor_learning_rate: float = 1e-3,
@@ -88,6 +90,10 @@ class ActorCriticBase(PolicyLearner):
         is_action_continuous: bool = False,
         on_policy: bool = False,
         action_representation_module: Optional[ActionRepresentationModule] = None,
+        actor_network_instance: Optional[ActorNetwork] = None,
+        critic_network_instance: Optional[
+            Union[ValueNetwork, QValueNetwork, nn.Module]
+        ] = None,
     ) -> None:
         super(ActorCriticBase, self).__init__(
             on_policy=on_policy,
@@ -98,11 +104,15 @@ class ActorCriticBase(PolicyLearner):
             action_representation_module=action_representation_module,
             action_space=action_space,
         )
+        """
+        Constructs a base actor-critic policy learner.
+        """
+
         self._state_dim = state_dim
         self._use_actor_target = use_actor_target
         self._use_critic_target = use_critic_target
         self._use_twin_critic = use_twin_critic
-        self._use_critic: bool = critic_hidden_dims is not None
+        self._use_critic: bool = use_critic
 
         self._action_dim: int = (
             self.action_representation_module.representation_dim
@@ -110,34 +120,16 @@ class ActorCriticBase(PolicyLearner):
             else self.action_representation_module.max_number_actions
         )
 
-        # actor network takes state as input and outputs an action vector
-        self._actor: nn.Module = actor_network_type(
-            input_dim=(
-                state_dim + self._action_dim
-                if actor_network_type is DynamicActionActorNetwork
-                else state_dim
-            ),
-            hidden_dims=actor_hidden_dims,
-            output_dim=(
-                1
-                if actor_network_type is DynamicActionActorNetwork
-                else self._action_dim
-            ),
-            action_space=action_space,
-        )
-        self._actor.apply(init_weights)
-        self._actor_optimizer = optim.AdamW(
-            [
-                {
-                    "params": self._actor.parameters(),
-                    "lr": actor_learning_rate,
-                    "amsgrad": True,
-                },
-            ]
-        )
-        self._actor_soft_update_tau = actor_soft_update_tau
-        if self._use_actor_target:
-            self._actor_target: nn.Module = actor_network_type(
+        if actor_network_instance is not None:
+            self._actor: nn.Module = actor_network_instance
+        else:
+            assert (
+                actor_hidden_dims is not None
+            ), f"{self.__class__.__name__} requires parameter actor_hidden_dims if a parameter \
+            action_network_instance has not been provided."
+
+            # actor network takes state as input and outputs an action vector
+            self._actor: nn.Module = actor_network_type(
                 input_dim=(
                     state_dim + self._action_dim
                     if actor_network_type is DynamicActionActorNetwork
@@ -151,17 +143,41 @@ class ActorCriticBase(PolicyLearner):
                 ),
                 action_space=action_space,
             )
+        self._actor.apply(init_weights)
+        self._actor_optimizer = optim.AdamW(
+            [
+                {
+                    "params": self._actor.parameters(),
+                    "lr": actor_learning_rate,
+                    "amsgrad": True,
+                },
+            ]
+        )
+        self._actor_soft_update_tau = actor_soft_update_tau
+
+        # make a copy of the actor network to be used as the actor target network
+        if self._use_actor_target:
+            self._actor_target: nn.Module = copy.deepcopy(self._actor)
             update_target_network(self._actor_target, self._actor, tau=1)
 
         self._critic_soft_update_tau = critic_soft_update_tau
         if self._use_critic:
-            self._critic: nn.Module = make_critic(
-                state_dim=self._state_dim,
-                action_dim=self._action_dim,
-                hidden_dims=critic_hidden_dims,
-                use_twin_critic=use_twin_critic,
-                network_type=critic_network_type,
-            )
+            if critic_network_instance is not None:
+                self._critic: nn.Module = critic_network_instance
+            else:
+                assert (
+                    critic_hidden_dims is not None
+                ), f"{self.__class__.__name__} requires parameter critic_hidden_dims if a \
+                parameter critic_network_instance has not been provided."
+
+                self._critic: nn.Module = make_critic(
+                    state_dim=self._state_dim,
+                    action_dim=self._action_dim,
+                    hidden_dims=critic_hidden_dims,
+                    use_twin_critic=use_twin_critic,
+                    network_type=critic_network_type,
+                )
+
             self._critic_optimizer: optim.Optimizer = optim.AdamW(
                 [
                     {
@@ -172,13 +188,7 @@ class ActorCriticBase(PolicyLearner):
                 ]
             )
             if self._use_critic_target:
-                self._critic_target: nn.Module = make_critic(
-                    state_dim=self._state_dim,
-                    action_dim=self._action_dim,
-                    hidden_dims=critic_hidden_dims,
-                    use_twin_critic=use_twin_critic,
-                    network_type=critic_network_type,
-                )
+                self._critic_target: nn.Module = copy.deepcopy(self._critic)
                 update_critic_target_network(
                     self._critic_target,
                     self._critic,
@@ -407,7 +417,7 @@ def make_critic(
             )
         else:
             raise NotImplementedError(
-                "Unknown network type. The code needs to be refactored to support this."
+                f"Type {network_type} cannot be used to instantiate a critic network."
             )
 
 

@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, Union
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -36,6 +36,7 @@ from pearl.policy_learners.sequential_decision_making.ddpg import (
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
+from torch import nn
 
 
 class TD3(DeepDeterministicPolicyGradient):
@@ -49,8 +50,8 @@ class TD3(DeepDeterministicPolicyGradient):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        actor_hidden_dims: List[int],
-        critic_hidden_dims: List[int],
+        actor_hidden_dims: Optional[List[int]] = None,
+        critic_hidden_dims: Optional[List[int]] = None,
         exploration_module: Optional[ExplorationModule] = None,
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,
@@ -65,6 +66,8 @@ class TD3(DeepDeterministicPolicyGradient):
         actor_update_noise: float = 0.2,
         actor_update_noise_clip: float = 0.5,
         action_representation_module: Optional[ActionRepresentationModule] = None,
+        actor_network_instance: Optional[ActorNetwork] = None,
+        critic_network_instance: Optional[Union[QValueNetwork, nn.Module]] = None,
     ) -> None:
         assert isinstance(action_space, BoxActionSpace)
         super(TD3, self).__init__(
@@ -83,6 +86,8 @@ class TD3(DeepDeterministicPolicyGradient):
             training_rounds=training_rounds,
             batch_size=batch_size,
             action_representation_module=action_representation_module,
+            actor_network_instance=actor_network_instance,
+            critic_network_instance=critic_network_instance,
         )
         self._action_space: BoxActionSpace = action_space
         self._actor_update_freq = actor_update_freq

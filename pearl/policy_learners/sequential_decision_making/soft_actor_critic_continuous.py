@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, Union
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -34,7 +34,7 @@ from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.spaces.box import BoxSpace
-from torch import optim
+from torch import nn, optim
 
 
 class ContinuousSoftActorCritic(ActorCriticBase):
@@ -46,8 +46,8 @@ class ContinuousSoftActorCritic(ActorCriticBase):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        actor_hidden_dims: List[int],
-        critic_hidden_dims: List[int],
+        actor_hidden_dims: Optional[List[int]] = None,
+        critic_hidden_dims: Optional[List[int]] = None,
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,
         actor_network_type: Type[ActorNetwork] = GaussianActorNetwork,
@@ -60,6 +60,8 @@ class ContinuousSoftActorCritic(ActorCriticBase):
         entropy_coef: float = 0.2,
         entropy_autotune: bool = True,
         action_representation_module: Optional[ActionRepresentationModule] = None,
+        actor_network_instance: Optional[ActorNetwork] = None,
+        critic_network_instance: Optional[Union[QValueNetwork, nn.Module]] = None,
     ) -> None:
         super(ContinuousSoftActorCritic, self).__init__(
             state_dim=state_dim,
@@ -86,6 +88,8 @@ class ContinuousSoftActorCritic(ActorCriticBase):
             is_action_continuous=True,
             on_policy=False,
             action_representation_module=action_representation_module,
+            actor_network_instance=actor_network_instance,
+            critic_network_instance=critic_network_instance,
         )
 
         self._entropy_autotune = entropy_autotune

@@ -30,7 +30,6 @@ from pearl.replay_buffers.sequential_decision_making.on_policy_replay_buffer imp
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
-from pearl.utils.instantiations.spaces.box import BoxSpace
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
@@ -78,6 +77,7 @@ class TestGPUUsage(unittest.TestCase):
                 state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 actor_hidden_dims=[64, 64],
+                use_critic=True,
                 critic_hidden_dims=[64, 64],
                 training_rounds=20,
                 batch_size=500,

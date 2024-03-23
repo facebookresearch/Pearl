@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, Union
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -40,6 +40,7 @@ from pearl.replay_buffers.sequential_decision_making.on_policy_replay_buffer imp
     OnPolicyTransitionBatch,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from torch import nn
 
 
 class ProximalPolicyOptimization(ActorCriticBase):
@@ -51,8 +52,9 @@ class ProximalPolicyOptimization(ActorCriticBase):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        actor_hidden_dims: List[int],
-        critic_hidden_dims: Optional[List[int]],
+        use_critic: bool,
+        actor_hidden_dims: Optional[List[int]] = None,
+        critic_hidden_dims: Optional[List[int]] = None,
         actor_learning_rate: float = 1e-4,
         critic_learning_rate: float = 1e-4,
         exploration_module: Optional[ExplorationModule] = None,
@@ -65,11 +67,14 @@ class ProximalPolicyOptimization(ActorCriticBase):
         trace_decay_param: float = 0.95,
         entropy_bonus_scaling: float = 0.01,
         action_representation_module: Optional[ActionRepresentationModule] = None,
+        actor_network_instance: Optional[ActorNetwork] = None,
+        critic_network_instance: Optional[Union[ValueNetwork, nn.Module]] = None,
     ) -> None:
         super(ProximalPolicyOptimization, self).__init__(
             state_dim=state_dim,
             action_space=action_space,
             actor_hidden_dims=actor_hidden_dims,
+            use_critic=use_critic,
             critic_hidden_dims=critic_hidden_dims,
             actor_learning_rate=actor_learning_rate,
             critic_learning_rate=critic_learning_rate,
@@ -91,6 +96,8 @@ class ProximalPolicyOptimization(ActorCriticBase):
             is_action_continuous=False,
             on_policy=True,
             action_representation_module=action_representation_module,
+            actor_network_instance=actor_network_instance,
+            critic_network_instance=critic_network_instance,
         )
         self._epsilon = epsilon
         self._trace_decay_param = trace_decay_param

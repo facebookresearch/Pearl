@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import List, Optional, Type
+from typing import List, Optional, Type, Union
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -36,7 +36,7 @@ from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     twin_critic_action_value_loss,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-from torch import optim
+from torch import nn, optim
 
 
 # Currently available actions is not used. Needs to be updated once we know the input
@@ -53,8 +53,8 @@ class SoftActorCritic(ActorCriticBase):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        actor_hidden_dims: List[int],
-        critic_hidden_dims: List[int],
+        actor_hidden_dims: Optional[List[int]] = None,
+        critic_hidden_dims: Optional[List[int]] = None,
         actor_learning_rate: float = 1e-4,
         critic_learning_rate: float = 1e-4,
         actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
@@ -66,6 +66,8 @@ class SoftActorCritic(ActorCriticBase):
         batch_size: int = 128,
         entropy_coef: float = 0.2,
         action_representation_module: Optional[ActionRepresentationModule] = None,
+        actor_network_instance: Optional[ActorNetwork] = None,
+        critic_network_instance: Optional[Union[QValueNetwork, nn.Module]] = None,
     ) -> None:
         super(SoftActorCritic, self).__init__(
             state_dim=state_dim,
@@ -92,6 +94,8 @@ class SoftActorCritic(ActorCriticBase):
             is_action_continuous=False,
             on_policy=False,
             action_representation_module=action_representation_module,
+            actor_network_instance=actor_network_instance,
+            critic_network_instance=critic_network_instance,
         )
 
         # This is needed to avoid actor softmax overflow issue.

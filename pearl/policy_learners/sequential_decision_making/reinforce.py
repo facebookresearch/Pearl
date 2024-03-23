@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, Union
 
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
@@ -16,6 +16,7 @@ from pearl.action_representation_modules.action_representation_module import (
 from pearl.neural_networks.common.value_networks import ValueNetwork
 
 from pearl.neural_networks.sequential_decision_making.actor_networks import ActorNetwork
+from torch import nn
 
 try:
     import gymnasium as gym
@@ -57,7 +58,8 @@ class REINFORCE(ActorCriticBase):
     def __init__(
         self,
         state_dim: int,
-        actor_hidden_dims: List[int],
+        actor_hidden_dims: Optional[List[int]] = None,
+        use_critic: bool = False,
         critic_hidden_dims: Optional[List[int]] = None,
         action_space: Optional[ActionSpace] = None,
         actor_learning_rate: float = 1e-4,
@@ -69,11 +71,14 @@ class REINFORCE(ActorCriticBase):
         training_rounds: int = 8,
         batch_size: int = 64,
         action_representation_module: Optional[ActionRepresentationModule] = None,
+        actor_network_instance: Optional[ActorNetwork] = None,
+        critic_network_instance: Optional[Union[ValueNetwork, nn.Module]] = None,
     ) -> None:
         super(REINFORCE, self).__init__(
             state_dim=state_dim,
             action_space=action_space,
             actor_hidden_dims=actor_hidden_dims,
+            use_critic=use_critic,
             critic_hidden_dims=critic_hidden_dims,
             actor_learning_rate=actor_learning_rate,
             critic_learning_rate=critic_learning_rate,
@@ -95,6 +100,8 @@ class REINFORCE(ActorCriticBase):
             is_action_continuous=False,
             on_policy=True,
             action_representation_module=action_representation_module,
+            actor_network_instance=actor_network_instance,
+            critic_network_instance=critic_network_instance,
         )
 
     def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
