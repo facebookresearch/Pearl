@@ -27,14 +27,14 @@ from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCri
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
-from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
-    twin_critic_action_value_loss,
-    update_critic_target_network,
-)
 from pearl.policy_learners.sequential_decision_making.ddpg import (
     DeepDeterministicPolicyGradient,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.functional_utils.learning.critic_utils import (
+    twin_critic_action_value_loss,
+    update_critic_target_network,
+)
 from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 from torch import nn
 
@@ -122,7 +122,6 @@ class TD3(DeepDeterministicPolicyGradient):
             update_critic_target_network(
                 self._critic_target,
                 self._critic,
-                self._use_twin_critic,
                 self._critic_soft_update_tau,
             )
             # update target of actor network using soft updates

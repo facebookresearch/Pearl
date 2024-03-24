@@ -9,7 +9,7 @@
 
 import copy
 from abc import abstractmethod
-from typing import Any, cast, Dict, Iterable, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Type, Union
 
 import torch
 
@@ -24,15 +24,8 @@ from pearl.api.state import SubjectiveState
 from pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
 )
-from pearl.neural_networks.common.utils import (
-    init_weights,
-    update_target_network,
-    update_target_networks,
-)
-from pearl.neural_networks.common.value_networks import (
-    ValueNetwork,
-    VanillaValueNetwork,
-)
+from pearl.neural_networks.common.utils import init_weights, update_target_network
+from pearl.neural_networks.common.value_networks import ValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetwork,
     DynamicActionActorNetwork,
@@ -42,12 +35,16 @@ from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     QValueNetwork,
     VanillaQValueNetwork,
 )
-from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
+
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.functional_utils.learning.critic_utils import (
+    make_critic,
+    update_critic_target_network,
+)
 
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import nn, optim
@@ -192,7 +189,6 @@ class ActorCriticBase(PolicyLearner):
                 update_critic_target_network(
                     self._critic_target,
                     self._critic,
-                    use_twin_critic,
                     1,
                 )
 
@@ -322,7 +318,6 @@ class ActorCriticBase(PolicyLearner):
             update_critic_target_network(
                 self._critic_target,
                 self._critic,
-                self._use_twin_critic,
                 self._critic_soft_update_tau,
             )
         if self._use_actor_target:
@@ -372,132 +367,3 @@ class ActorCriticBase(PolicyLearner):
             loss (Tensor): The critic loss.
         """
         pass
-
-
-def make_critic(
-    state_dim: int,
-    hidden_dims: Optional[Iterable[int]],
-    use_twin_critic: bool,
-    network_type: Union[Type[ValueNetwork], Type[QValueNetwork]],
-    action_dim: Optional[int] = None,
-) -> nn.Module:
-    if use_twin_critic:
-        assert action_dim is not None
-        assert hidden_dims is not None
-        assert issubclass(
-            network_type, QValueNetwork
-        ), "network_type must be a subclass of QValueNetwork when use_twin_critic is True"
-
-        # cast network_type to get around static Pyre type checking; the runtime check with
-        # `issubclass` ensures the network type is a sublcass of QValueNetwork
-        network_type = cast(Type[QValueNetwork], network_type)
-
-        return TwinCritic(
-            state_dim=state_dim,
-            action_dim=action_dim,
-            hidden_dims=hidden_dims,
-            network_type=network_type,
-            init_fn=init_weights,
-        )
-    else:
-        if network_type == VanillaQValueNetwork:
-            # pyre-ignore[45]:
-            # Pyre does not know that `network_type` is asserted to be concrete
-            return network_type(
-                state_dim=state_dim,
-                action_dim=action_dim,
-                hidden_dims=hidden_dims,
-                output_dim=1,
-            )
-        elif network_type == VanillaValueNetwork:
-            # pyre-ignore[45]:
-            # Pyre does not know that `network_type` is asserted to be concrete
-            return network_type(
-                input_dim=state_dim, hidden_dims=hidden_dims, output_dim=1
-            )
-        else:
-            raise NotImplementedError(
-                f"Type {network_type} cannot be used to instantiate a critic network."
-            )
-
-
-def update_critic_target_network(
-    target_network: nn.Module, network: nn.Module, use_twin_critic: bool, tau: float
-) -> None:
-    if use_twin_critic:
-        update_target_networks(
-            target_network._critic_networks_combined,
-            network._critic_networks_combined,
-            tau=tau,
-        )
-    else:
-        update_target_network(
-            target_network._model,
-            network._model,
-            tau=tau,
-        )
-
-
-def single_critic_state_value_loss(
-    state_batch: torch.Tensor,
-    expected_target_batch: torch.Tensor,
-    critic: nn.Module,
-) -> torch.Tensor:
-    """
-    Performs a single optimization step on a (value) critic network using the input batch of states.
-    This method calculates the mean squared error loss between the predicted state values from the
-    critic network and the input target estimates. It then updates the critic network using the
-    provided optimizer.
-    Args:
-        state_batch (torch.Tensor): A batch of states with expected shape
-        `(batch_size, state_dim)`.
-        expected_target_batch (torch.Tensor): The batch of target estimates
-        (i.e., RHS of the Bellman equation) with shape `(batch_size)`.
-        critic (nn.Module): The critic network to update.
-    Returns:
-        loss (torch.Tensor): The mean squared error loss for state-value prediction
-    """
-    if not isinstance(critic, ValueNetwork):
-        raise TypeError(
-            "critic in the `single_critic_state_value_update` method must be an instance of "
-            "ValueNetwork"
-        )
-    vs = critic(state_batch)
-    criterion = torch.nn.MSELoss()
-    loss = criterion(
-        vs.reshape_as(expected_target_batch), expected_target_batch.detach()
-    )
-    return loss
-
-
-def twin_critic_action_value_loss(
-    state_batch: torch.Tensor,
-    action_batch: torch.Tensor,
-    expected_target_batch: torch.Tensor,
-    critic: TwinCritic,
-) -> torch.Tensor:
-    """
-    Performs a single optimization step on the twin critic networks using the input
-    batch of states and actions.
-    This method calculates the mean squared error loss between the predicted Q-values from both
-    critic networks and the input target estimates. It then updates the critic networks using the
-    provided optimizer.
-
-    Args:
-        state_batch (torch.Tensor): A batch of states with expected shape
-        `(batch_size, state_dim)`.
-        action_batch (torch.Tensor): A batch of actions with expected shape
-        `(batch_size, action_dim)`.
-        expected_target_batch (torch.Tensor): The batch of target estimates
-        (i.e. RHS of the Bellman equation) with shape `(batch_size)`.
-        critic (TwinCritic): The twin critic network to update.
-    Returns:
-        loss (torch.Tensor): The mean squared error loss for action-value prediction
-    """
-
-    criterion = torch.nn.MSELoss()
-    q_1, q_2 = critic.get_q_values(state_batch, action_batch)
-    loss = criterion(
-        q_1.reshape_as(expected_target_batch), expected_target_batch.detach()
-    ) + criterion(q_2.reshape_as(expected_target_batch), expected_target_batch.detach())
-    return loss

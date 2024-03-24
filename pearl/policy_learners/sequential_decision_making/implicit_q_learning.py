@@ -44,10 +44,12 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 )
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
-    twin_critic_action_value_loss,
 )
 
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.functional_utils.learning.critic_utils import (
+    twin_critic_action_value_loss,
+)
 from torch import optim
 
 

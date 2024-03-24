@@ -20,14 +20,14 @@ from pearl.neural_networks.sequential_decision_making.q_value_networks import (
 )
 from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.policy_learners.policy_learner import PolicyLearner
-from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
+from pearl.replay_buffers.replay_buffer import ReplayBuffer
+from pearl.replay_buffers.transition import TransitionBatch
+from pearl.safety_modules.safety_module import SafetyModule
+from pearl.utils.functional_utils.learning.critic_utils import (
     make_critic,
     twin_critic_action_value_loss,
     update_critic_target_network,
 )
-from pearl.replay_buffers.replay_buffer import ReplayBuffer
-from pearl.replay_buffers.transition import TransitionBatch
-from pearl.safety_modules.safety_module import SafetyModule
 from torch import nn, optim
 
 
@@ -103,7 +103,6 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
         update_critic_target_network(
             self.target_of_cost_critic,
             self.cost_critic,
-            self.use_twin_critic,
             1,
         )
 
@@ -133,7 +132,8 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
         cost_critic: nn.Module,
     ) -> None:
         """
-        Update the lambda constraint based on the cost critic via a projected gradient descent update rule.
+        Update the lambda constraint based on the cost critic via a projected gradient descent
+        update rule.
         """
 
         with torch.no_grad():
@@ -191,7 +191,6 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
         update_critic_target_network(
             self.target_of_cost_critic,
             self.cost_critic,
-            self.use_twin_critic,
             self.critic_soft_update_tau,
         )
 

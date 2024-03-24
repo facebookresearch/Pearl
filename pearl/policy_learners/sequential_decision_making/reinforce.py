@@ -37,7 +37,6 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 )
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
-    single_critic_state_value_loss,
 )
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.sequential_decision_making.on_policy_replay_buffer import (
@@ -46,6 +45,9 @@ from pearl.replay_buffers.sequential_decision_making.on_policy_replay_buffer imp
     OnPolicyTransitionBatch,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.functional_utils.learning.critic_utils import (
+    single_critic_state_value_loss,
+)
 
 
 class REINFORCE(ActorCriticBase):
