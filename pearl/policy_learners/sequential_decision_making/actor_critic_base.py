@@ -129,13 +129,13 @@ class ActorCriticBase(PolicyLearner):
             self._actor: nn.Module = actor_network_type(
                 input_dim=(
                     state_dim + self._action_dim
-                    if actor_network_type is DynamicActionActorNetwork
+                    if issubclass(actor_network_type, DynamicActionActorNetwork)
                     else state_dim
                 ),
                 hidden_dims=actor_hidden_dims,
                 output_dim=(
                     1
-                    if actor_network_type is DynamicActionActorNetwork
+                    if issubclass(actor_network_type, DynamicActionActorNetwork)
                     else self._action_dim
                 ),
                 action_space=action_space,
