@@ -73,8 +73,8 @@ class TensorBasedReplayBuffer(ReplayBuffer):
             return None
         return torch.tensor([cost], device=self._device)
 
-    def _process_single_done(self, done: bool) -> torch.Tensor:
-        return torch.tensor([done], device=self._device)  # (1,)
+    def _process_single_terminated(self, terminated: bool) -> torch.Tensor:
+        return torch.tensor([terminated], device=self._device)  # (1,)
 
     """
     This function is only used for discrete action space.
@@ -146,7 +146,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
           curr_available_actions_mask = tensor(batch_size, action_dim),
           next_available_actions = tensor(batch_size, action_dim, action_dim),
           next_available_actions_mask = tensor(batch_size, action_dim),
-          done = tensor(batch_size, ),
+          terminated = tensor(batch_size, ),
         )
         """
         if batch_size > len(self):
@@ -185,7 +185,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         action_list = []
         reward_list = []
         cost_list = []
-        done_list = []
+        terminated_list = []
         next_state_list = []
         next_action_list = []
         curr_available_actions_list = []
@@ -196,7 +196,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
             state_list.append(x.state)
             action_list.append(x.action)
             reward_list.append(x.reward)
-            done_list.append(x.done)
+            terminated_list.append(x.terminated)
             if has_cost_available:
                 cost_list.append(x.cost)
             if has_next_state:
@@ -218,7 +218,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         state_batch = torch.cat(state_list)
         action_batch = torch.cat(action_list)
         reward_batch = torch.cat(reward_list)
-        done_batch = torch.cat(done_list)
+        terminated_batch = torch.cat(terminated_list)
         if has_cost_available:
             cost_batch = torch.cat(cost_list)
         else:
@@ -251,6 +251,6 @@ class TensorBasedReplayBuffer(ReplayBuffer):
             curr_unavailable_actions_mask=curr_unavailable_actions_mask_batch,
             next_available_actions=next_available_actions_batch,
             next_unavailable_actions_mask=next_unavailable_actions_mask_batch,
-            done=done_batch,
+            terminated=terminated_batch,
             cost=cost_batch,
         ).to(self.device)

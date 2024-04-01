@@ -208,14 +208,14 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
 
         """
         Step 2: compute Bellman target for each quantile location
-            - add a dimension to the reward and (1-done) vectors so they
+            - add a dimension to the reward and (1-terminated) vectors so they
               can be broadcasted with the next state quantiles
         """
 
         with torch.no_grad():
             quantile_next_state_greedy_action_values = self._get_next_state_quantiles(
                 batch, batch_size
-            ) * self._discount_factor * (1 - batch.done.float()).unsqueeze(
+            ) * self._discount_factor * (1 - batch.terminated.float()).unsqueeze(
                 -1
             ) + batch.reward.unsqueeze(
                 -1

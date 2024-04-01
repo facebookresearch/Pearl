@@ -173,7 +173,7 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
             # cost + gamma * (min{Qtarget_1(s', a from target actor network),
             #                  Qtarget_2(s', a from target actor network)})
             expected_state_action_values = (
-                next_q * self.cost_discount_factor * (1 - batch.done.float())
+                next_q * self.cost_discount_factor * (1 - batch.terminated.float())
             ) + batch.cost  # (batch_size)
 
         # update twin critics towards bellman target

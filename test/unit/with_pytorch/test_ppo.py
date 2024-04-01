@@ -77,7 +77,7 @@ class TestPPO(unittest.TestCase):
                 next_state=torch.tensor([i * 1.0]),
                 curr_available_actions=action_space,
                 next_available_actions=action_space,
-                done=False,
+                terminated=False,
                 max_number_actions=action_space.n,
             )
         # gaes:

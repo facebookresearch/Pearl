@@ -52,7 +52,7 @@ class SingleTransitionReplayBuffer(ReplayBuffer):
         next_state: SubjectiveState,
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,
-        done: bool,
+        terminated: bool,
         max_number_actions: Optional[int] = None,
         cost: Optional[float] = None,
     ) -> None:
@@ -63,7 +63,7 @@ class SingleTransitionReplayBuffer(ReplayBuffer):
             next_state,
             curr_available_actions,
             next_available_actions,
-            done,
+            terminated,
             max_number_actions,
             cost,
         )

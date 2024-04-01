@@ -78,7 +78,7 @@ class OnPolicyReplayBuffer(TensorBasedReplayBuffer):
         next_state: SubjectiveState,
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,
-        done: bool,
+        terminated: bool,
         max_number_actions: Optional[int] = None,
         cost: Optional[float] = None,
     ) -> None:
@@ -103,7 +103,7 @@ class OnPolicyReplayBuffer(TensorBasedReplayBuffer):
                 curr_unavailable_actions_mask=curr_unavailable_actions_mask,
                 next_available_actions=None,
                 next_unavailable_actions_mask=None,
-                done=self._process_single_done(done),
+                terminated=self._process_single_terminated(terminated),
             ).to(self.device)
         )
 

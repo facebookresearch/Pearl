@@ -122,7 +122,7 @@ class TabularQLearning(PolicyLearner):
             next_state,
             _curr_available_actions,
             _next_available_actions,
-            done,
+            terminated,
             _max_number_actions,
             _cost,
         ) = transition
@@ -132,7 +132,7 @@ class TabularQLearning(PolicyLearner):
             for next_action in self._action_space
         ]
 
-        if done:
+        if terminated:
             next_state_value = 0
         else:
             # pyre-fixme[6]: For 1st argument expected
@@ -154,14 +154,14 @@ class TabularQLearning(PolicyLearner):
         self.q_values[(state, action.item())] = new_q_value
 
         if self.debug:
-            self.print_debug_information(state, action, reward, next_state, done)
+            self.print_debug_information(state, action, reward, next_state, terminated)
 
         return {
             "state": state,
             "action": action,
             "reward": reward,
             "next_state": next_state,
-            "done": done,
+            "terminated": terminated,
         }
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
@@ -173,13 +173,13 @@ class TabularQLearning(PolicyLearner):
         action: Action,
         reward: Reward,
         next_state: SubjectiveState,
-        done: bool,
+        terminated: bool,
     ) -> None:
         print("state:", state)
         print("action:", action)
         print("reward:", reward)
         print("next state:", next_state)
-        print("done:", done)
+        print("terminated:", terminated)
         print("q-values:", self.q_values)
 
     def __str__(self) -> str:

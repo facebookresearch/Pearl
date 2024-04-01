@@ -61,7 +61,7 @@ class TestHindsightExperienceReplayBuffer(unittest.TestCase):
                 next_state=torch.cat([states[i + 1], goal], dim=0),
                 curr_available_actions=action_space,
                 next_available_actions=action_space,
-                done=i == len(states) - 2,
+                terminated=i == len(states) - 2,
                 max_number_actions=action_space.n,
             )
 
@@ -82,7 +82,7 @@ class TestHindsightExperienceReplayBuffer(unittest.TestCase):
         self.assertEqual(3, additional_goal_count)
         self.assertEqual(3, original_goal_count)
 
-        # check cache is cleared after trajectory is done
+        # check cache is cleared after trajectory is terminated
         self.assertEqual(0, len(rb._trajectory))
 
         # check for same transition, goal in state and next state should stay the same

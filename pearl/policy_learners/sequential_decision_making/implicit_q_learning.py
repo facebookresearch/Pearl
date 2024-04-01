@@ -264,7 +264,9 @@ class ImplicitQLearning(ActorCriticBase):
 
             # compute targets for batch of (state, action, next_state): target y = r + gamma * V(s')
             target = (
-                values_next_states * self._discount_factor * (1 - batch.done.float())
+                values_next_states
+                * self._discount_factor
+                * (1 - batch.terminated.float())
             ) + batch.reward  # shape: (batch_size)
 
         assert isinstance(

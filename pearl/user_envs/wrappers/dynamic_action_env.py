@@ -37,7 +37,7 @@ class DynamicActionSpaceWrapper(gym.Wrapper):
         ):
             assert action != self.env.action_space.n - 1
 
-        observation, reward, done, truncated, info = self.env.step(action)
+        observation, reward, terminated, truncated, info = self.env.step(action)
         self.number_of_steps += 1
         shrink = (
             1 if self.number_of_steps % self.reduce_action_space_cadence == 0 else 0
@@ -45,4 +45,4 @@ class DynamicActionSpaceWrapper(gym.Wrapper):
         info["available_action_space"] = DiscreteActionSpace(
             [torch.tensor([i]) for i in range(self.env.action_space.n - shrink)]
         )
-        return observation, reward, done, truncated, info
+        return observation, reward, terminated, truncated, info

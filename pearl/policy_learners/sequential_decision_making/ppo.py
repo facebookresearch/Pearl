@@ -205,14 +205,14 @@ class ProximalPolicyOptimization(ActorCriticBase):
         for i, transition in enumerate(reversed(replay_buffer.memory)):
             td_error = (
                 transition.reward
-                + self._discount_factor * next_value * (~transition.done)
+                + self._discount_factor * next_value * (~transition.terminated)
                 - state_values[i]
             )
             gae = (
                 td_error
                 + self._discount_factor
                 * self._trace_decay_param
-                * (~transition.done)
+                * (~transition.terminated)
                 * gae
             )
             assert isinstance(transition, OnPolicyTransition)

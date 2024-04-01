@@ -41,7 +41,7 @@ class TestOnPolicyReplayBuffer(unittest.TestCase):
                 next_state=torch.tensor([i]),
                 curr_available_actions=self.action_space,
                 next_available_actions=self.action_space,
-                done=(i == (self.trajectory_len - 1)),
+                terminated=(i == (self.trajectory_len - 1)),
                 max_number_actions=self.action_space.n,
             )
 
@@ -54,9 +54,11 @@ class TestOnPolicyReplayBuffer(unittest.TestCase):
         order = torch.argsort(batch.state.squeeze())
 
         # validate terminal state indicators - 1 only for the last element
-        done = batch.done[order]
+        terminated = batch.terminated[order]
         self.assertTrue(
-            torch.equal(done, torch.eye(self.trajectory_len)[self.trajectory_len - 1])
+            torch.equal(
+                terminated, torch.eye(self.trajectory_len)[self.trajectory_len - 1]
+            )
         )
 
         # validate actions
@@ -75,7 +77,7 @@ class TestOnPolicyReplayBuffer(unittest.TestCase):
                 next_state=torch.tensor([i]),
                 curr_available_actions=self.action_space,
                 next_available_actions=self.action_space,
-                done=(i == (self.trajectory_len - 1)),
+                terminated=(i == (self.trajectory_len - 1)),
                 max_number_actions=self.action_space.n,
             )
 
@@ -92,7 +94,7 @@ class TestOnPolicyReplayBuffer(unittest.TestCase):
                 next_state=torch.tensor([i]),
                 curr_available_actions=self.action_space,
                 next_available_actions=self.action_space,
-                done=(i == (trajectory_len_2 - 1)),
+                terminated=(i == (trajectory_len_2 - 1)),
                 max_number_actions=self.action_space.n,
             )
 
@@ -105,16 +107,16 @@ class TestOnPolicyReplayBuffer(unittest.TestCase):
         order = torch.argsort(batch.state.squeeze())
 
         # validate terminal state indicators - 1 only for the last element
-        done = batch.done[order]
+        terminated = batch.terminated[order]
         self.assertTrue(
             torch.equal(
-                done[0 : self.trajectory_len],
+                terminated[0 : self.trajectory_len],
                 torch.eye(self.trajectory_len)[self.trajectory_len - 1],
             )
         )
         self.assertTrue(
             torch.equal(
-                done[self.trajectory_len :],
+                terminated[self.trajectory_len :],
                 torch.eye(trajectory_len_2)[trajectory_len_2 - 1],
             )
         )

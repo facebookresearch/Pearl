@@ -54,7 +54,7 @@ class TestIntegrationReplayBuffer(unittest.TestCase):
             reward_distance=1,
         )
 
-        def done_fn(state: SubjectiveState, action: Action) -> bool:
+        def terminated_fn(state: SubjectiveState, action: Action) -> bool:
             state = assert_is_tensor_like(state)
             next_state = state[:2] + torch.Tensor(env._actions[action]).to(state.device)
             goal = state[-2:]
@@ -63,8 +63,8 @@ class TestIntegrationReplayBuffer(unittest.TestCase):
             return False
 
         def reward_fn(state: SubjectiveState, action: Action) -> int:
-            done = done_fn(state, action)
-            if done:
+            terminated = terminated_fn(state, action)
+            if terminated:
                 return 0
             return -1
 
@@ -82,7 +82,7 @@ class TestIntegrationReplayBuffer(unittest.TestCase):
                 action_representation_module=action_representation_module,
             ),
             replay_buffer=HindsightExperienceReplayBuffer(
-                2_000_000, goal_dim=2, reward_fn=reward_fn, done_fn=done_fn
+                2_000_000, goal_dim=2, reward_fn=reward_fn, terminated_fn=terminated_fn
             ),
         )
         # precollect data

@@ -139,16 +139,16 @@ class ContinuousSoftActorCritic(ActorCriticBase):
     def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
 
         reward_batch = batch.reward  # shape: (batch_size)
-        done_batch = batch.done  # shape: (batch_size)
+        terminated_batch = batch.terminated  # shape: (batch_size)
 
-        if done_batch is not None:
+        if terminated_batch is not None:
             expected_state_action_values = (
                 self._get_next_state_expected_values(batch)
                 * self._discount_factor
-                * (1 - done_batch.float())
+                * (1 - terminated_batch.float())
             ) + reward_batch  # shape of expected_state_action_values: (batch_size)
         else:
-            raise AssertionError("done_batch should not be None")
+            raise AssertionError("terminated_batch should not be None")
 
         loss = twin_critic_action_value_loss(
             state_batch=batch.state,

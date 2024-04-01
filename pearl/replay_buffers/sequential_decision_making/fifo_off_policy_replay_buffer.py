@@ -36,7 +36,7 @@ class FIFOOffPolicyReplayBuffer(TensorBasedReplayBuffer):
         next_state: SubjectiveState,
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,
-        done: bool,
+        terminated: bool,
         max_number_actions: Optional[int],
         cost: Optional[float] = None,
     ) -> None:
@@ -63,7 +63,7 @@ class FIFOOffPolicyReplayBuffer(TensorBasedReplayBuffer):
                 curr_unavailable_actions_mask=curr_unavailable_actions_mask,
                 next_available_actions=next_available_actions_tensor_with_padding,
                 next_unavailable_actions_mask=next_unavailable_actions_mask,
-                done=self._process_single_done(done),
+                terminated=self._process_single_terminated(terminated),
                 cost=self._process_single_cost(cost),
             ).to(self.device)
         )

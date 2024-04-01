@@ -28,7 +28,7 @@ class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
     from other replay buffers
     - No next action or next state related
     - action is action idx instead of action value
-    - done is not needed, as for contextual bandit, it is always True
+    - terminated is not needed, as for contextual bandit, it is always True
     """
 
     def __init__(self, capacity: int) -> None:
@@ -47,7 +47,7 @@ class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
         next_state: SubjectiveState,
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,
-        done: bool,
+        terminated: bool,
         max_number_actions: Optional[int] = None,
         cost: Optional[float] = None,
     ) -> None:

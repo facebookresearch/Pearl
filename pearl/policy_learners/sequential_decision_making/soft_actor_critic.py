@@ -117,13 +117,13 @@ class SoftActorCritic(ActorCriticBase):
     def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
 
         reward_batch = batch.reward  # (batch_size)
-        done_batch = batch.done  # (batch_size)
+        terminated_batch = batch.terminated  # (batch_size)
 
-        assert done_batch is not None
+        assert terminated_batch is not None
         expected_state_action_values = (
             self._get_next_state_expected_values(batch)
             * self._discount_factor
-            * (1 - done_batch.float())
+            * (1 - terminated_batch.float())
         ) + reward_batch  # (batch_size), r + gamma * V(s)
 
         assert isinstance(self._critic, TwinCritic)

@@ -125,8 +125,12 @@ class GymEnvironment(Environment):
         if len(gym_action_result) == 4:
             # Older Gym versions use 'done' as opposed to 'terminated' and 'truncated'
             observation, reward, done, info = gym_action_result  # pyre-ignore
-            terminated = done
-            truncated = False
+            if done:
+                truncated = info["TimeLimit.truncated"]
+                terminated = not truncated
+            else:
+                truncated = False
+                terminated = False
         elif len(gym_action_result) == 5:
             # Newer Gym versions use 'terminated' and 'truncated'
             observation, reward, terminated, truncated, info = gym_action_result

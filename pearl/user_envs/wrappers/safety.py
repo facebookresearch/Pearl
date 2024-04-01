@@ -22,11 +22,11 @@ class PuckWorldSafetyWrapper(gym.Wrapper):
         self.sigma = sigma
 
     def step(self, action):
-        obs, reward, done, truncated, info = self.env.step(action)
+        obs, reward, terminated, truncated, info = self.env.step(action)
         x = obs[0]
         safety_reward = 0
         info["risky_sa"] = 0
         if x > self.env.game.width / 2:
             safety_reward = self.env.np_random.normal(0.01, self.sigma)
             info["risky_sa"] = 1
-        return obs, reward + safety_reward, done, truncated, info
+        return obs, reward + safety_reward, terminated, truncated, info

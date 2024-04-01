@@ -22,9 +22,9 @@ class PendulumSparseRewardWrapper(gym.Wrapper):
         super(PendulumSparseRewardWrapper, self).__init__(env)
 
     def step(self, action):
-        obs, reward, done, truncated, info = self.env.step(action)
+        obs, reward, terminated, truncated, info = self.env.step(action)
         sparse_reward = self.sparse_reward()
-        return obs, sparse_reward, done, truncated, info
+        return obs, sparse_reward, terminated, truncated, info
 
     def sparse_reward(self):
         th, thdot = self.env.state
@@ -49,9 +49,9 @@ class AcrobotSparseRewardWrapper(gym.Wrapper):
         super(AcrobotSparseRewardWrapper, self).__init__(env)
 
     def step(self, action):
-        obs, reward, done, truncated, info = self.env.step(action)
+        obs, reward, terminated, truncated, info = self.env.step(action)
         sparse_reward = self.sparse_reward()
-        return obs, sparse_reward, done, truncated, info
+        return obs, sparse_reward, terminated, truncated, info
 
     def sparse_reward(self):
         s = self.env.state
@@ -65,9 +65,9 @@ class MountainCarSparseRewardWrapper(gym.Wrapper):
         super(MountainCarSparseRewardWrapper, self).__init__(env)
 
     def step(self, action):
-        obs, reward, done, truncated, info = self.env.step(action)
+        obs, reward, terminated, truncated, info = self.env.step(action)
         sparse_reward = self.sparse_reward()
-        return obs, sparse_reward, done, truncated, info
+        return obs, sparse_reward, terminated, truncated, info
 
     def sparse_reward(self):
         position, velocity = self.env.state
@@ -83,9 +83,9 @@ class PuckWorldSparseRewardWrapper(gym.Wrapper):
         super(PuckWorldSparseRewardWrapper, self).__init__(env)
 
     def step(self, action):
-        obs, reward, done, truncated, info = self.env.step(action)
+        obs, reward, terminated, truncated, info = self.env.step(action)
         sparse_reward = self.sparse_reward()
-        return obs, sparse_reward, done, truncated, info
+        return obs, sparse_reward, terminated, truncated, info
 
     def sparse_reward(self):
         x = self.env.get_ob(self.env.game.getGameState())

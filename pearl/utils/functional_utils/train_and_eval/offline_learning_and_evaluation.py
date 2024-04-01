@@ -45,7 +45,7 @@ def get_offline_data_in_buffer(
 
     - Assumes the offline data is an iterable consisting of transition tuples
         (observation, action, reward, next_observation, curr_available_actions,
-        next_available_actions, action_space_done) as dictionaries.
+        next_available_actions, terminated) as dictionaries.
 
     - Also assumes offline data is in a .pt file; reading from a
         csv file can also be added later.
@@ -122,7 +122,7 @@ def get_offline_data_in_buffer(
             next_state=transition["next_observation"],
             curr_available_actions=transition["curr_available_actions"],
             next_available_actions=transition["next_available_actions"],
-            done=transition["done"],
+            terminated=transition["done"],
             max_number_actions=max_number_actions_if_discrete,
         )
 

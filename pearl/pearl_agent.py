@@ -192,7 +192,7 @@ class PearlAgent(Agent):
                 if action_result.available_action_space is None
                 else action_result.available_action_space
             ),  # next_available_actions
-            done=action_result.done,
+            terminated=action_result.terminated,
             max_number_actions=(
                 self.policy_learner.action_representation_module.max_number_actions
                 if not self.policy_learner.is_action_continuous

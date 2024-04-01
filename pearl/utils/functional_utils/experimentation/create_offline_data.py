@@ -183,7 +183,7 @@ def get_data_collection_agent_returns(
         data_collection_agent_returns = []
         g = 0
         for transition in list(data):
-            if transition["done"]:
+            if transition["terminated"]:
                 data_collection_agent_returns.append(g)
                 g = 0
             else:

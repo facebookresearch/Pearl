@@ -261,12 +261,12 @@ class DeepTDLearning(PolicyLearner):
         state_batch = batch.state  # (batch_size x state_dim)
         action_batch = batch.action  # (batch_size x action_dim)
         reward_batch = batch.reward  # (batch_size)
-        done_batch = batch.done  # (batch_size)
+        terminated_batch = batch.terminated  # (batch_size)
 
         batch_size = state_batch.shape[0]
         # sanity check they have same batch_size
         assert reward_batch.shape[0] == batch_size
-        assert done_batch.shape[0] == batch_size
+        assert terminated_batch.shape[0] == batch_size
 
         state_action_values = self._Q.get_q_values(
             state_batch=state_batch,
@@ -280,7 +280,7 @@ class DeepTDLearning(PolicyLearner):
         expected_state_action_values = (
             self.get_next_state_values(batch, batch_size)
             * self._discount_factor
-            * (1 - done_batch.float())
+            * (1 - terminated_batch.float())
         ) + reward_batch  # (batch_size), r + gamma * V(s)
 
         criterion = torch.nn.MSELoss()

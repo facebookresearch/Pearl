@@ -98,7 +98,7 @@ class TestOfflineCQL(unittest.TestCase):
                 next_available_actions=transition[
                     "next_available_actions"
                 ],  # next_available_actions
-                done=transition["done"],
+                terminated=transition["terminated"],
                 max_number_actions=max_number_actions,
             )
 

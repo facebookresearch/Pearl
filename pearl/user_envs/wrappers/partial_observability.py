@@ -27,9 +27,9 @@ class PartialObservableWrapper(gym.Wrapper):
         return self.observation(observation), info
 
     def step(self, action):
-        observation, reward, done, truncated, info = self.env.step(action)
+        observation, reward, terminated, truncated, info = self.env.step(action)
         self.env.number_of_steps += 1
-        return self.observation(observation), reward, done, truncated, info
+        return self.observation(observation), reward, terminated, truncated, info
 
     @abstractmethod
     def observation(self, observation):

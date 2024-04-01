@@ -26,7 +26,7 @@ def compute_cql_loss(
 
     Inputs:
     1) q_network: to compute the q values of every (state, action) pair.
-    2) batch: batch of data transitions (state, action, reward, done, next_state) along with
+    2) batch: batch of data transitions (state, action, reward, terminated, next_state) along with
               (current and next) available actions.
     3) batch_size: size of batch.
 

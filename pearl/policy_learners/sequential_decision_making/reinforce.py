@@ -143,7 +143,7 @@ class REINFORCE(ActorCriticBase):
         # compute return for all states in the buffer
         cum_reward = self._critic(
             self._history_summarization_module(replay_buffer.memory[-1].next_state)
-        ).detach() * (~replay_buffer.memory[-1].done)
+        ).detach() * (~replay_buffer.memory[-1].terminated)
         for transition in reversed(replay_buffer.memory):
             cum_reward += transition.reward
             assert isinstance(transition, OnPolicyTransition)

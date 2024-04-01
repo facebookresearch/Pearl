@@ -35,7 +35,7 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
         next_state: SubjectiveState,
         curr_available_actions: ActionSpace,
         next_available_actions: ActionSpace,
-        done: bool,
+        terminated: bool,
         max_number_actions: Optional[int] = None,
         cost: Optional[float] = None,
     ) -> None:
@@ -76,10 +76,10 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
                     curr_unavailable_actions_mask=self.cache.curr_unavailable_actions_mask,
                     next_available_actions=self.cache.next_available_actions,
                     next_unavailable_actions_mask=self.cache.next_unavailable_actions_mask,
-                    done=self.cache.done,
+                    terminated=self.cache.terminated,
                 ).to(self.device)
             )
-        if not done:
+        if not terminated:
             # save current push into cache
             self.cache = Transition(
                 state=current_state,
@@ -90,7 +90,7 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
                 curr_unavailable_actions_mask=curr_unavailable_actions_mask,
                 next_available_actions=next_available_actions_tensor_with_padding,
                 next_unavailable_actions_mask=next_unavailable_actions_mask,
-                done=self._process_single_done(done),
+                terminated=self._process_single_terminated(terminated),
             ).to(self.device)
         else:
             # for terminal state, push directly
@@ -106,6 +106,6 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
                     curr_unavailable_actions_mask=curr_unavailable_actions_mask,
                     next_available_actions=next_available_actions_tensor_with_padding,
                     next_unavailable_actions_mask=next_unavailable_actions_mask,
-                    done=self._process_single_done(done),
+                    terminated=self._process_single_terminated(terminated),
                 ).to(self.device)
             )
