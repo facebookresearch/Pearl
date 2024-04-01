@@ -150,10 +150,12 @@ class TD3(DeepDeterministicPolicyGradient):
                 self._actor_update_noise_clip,
             )  # shape (batch_size, action_dim)
 
-            # add clipped noise to next_action
+            # rescale the noise
             low = torch.tensor(self._action_space.low, device=batch.device)
             high = torch.tensor(self._action_space.high, device=batch.device)
+            noise = noise * (high - low) / 2
 
+            # add clipped noise to next_action
             next_action = torch.clamp(
                 next_action + noise, low, high
             )  # shape (batch_size, action_dim)

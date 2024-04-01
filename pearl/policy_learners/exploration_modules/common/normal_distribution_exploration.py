@@ -67,11 +67,9 @@ class NormalDistributionExploration(ExplorationModule):
             size=action_dim,
             device=device,
         )
-        # clip noise to be between [-1, 1]^{action_dim}
-        clipped_noise = torch.clip(noise, -1, 1)
 
         # scale noise according to the action space
-        scaled_noise = noise_scaling(action_space, clipped_noise)
+        scaled_noise = noise_scaling(action_space, noise)
         action = exploit_action + scaled_noise  # add noise
 
         # clip final action value to be within bounds of the action space
