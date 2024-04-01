@@ -100,16 +100,13 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
         # sample a batch of actions from the actor network; shape (batch_size, action_dim)
         action_batch = self._actor.sample_action(batch.state)
 
-        # samples q values for (batch.state, action_batch) from twin critics
-        q1, q2 = self._critic.get_q_values(
+        # obtain q values for (batch.state, action_batch) from critic 1
+        q1 = self._critic._critic_1.get_q_values(
             state_batch=batch.state, action_batch=action_batch
         )
 
-        # clipped double q learning (reduce overestimation bias); shape (batch_size)
-        q = torch.minimum(q1, q2)
-
         # optimization objective: optimize actor to maximize Q(s, a)
-        loss = -q.mean()
+        loss = -q1.mean()
 
         return loss
 
