@@ -9,7 +9,6 @@
 
 import unittest
 
-# pyre-fixme[21]: Could not find module `numpy.testing`.
 import numpy.testing as npt
 import torch
 from pearl.neural_networks.common.epistemic_neural_networks import Ensemble

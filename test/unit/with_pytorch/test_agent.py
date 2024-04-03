@@ -65,8 +65,6 @@ from pearl.utils.scripts.cb_benchmark.cb_benchmark_config import (
     return_neural_squarecb_config,
 )
 
-# pyre-fixme[21]: Could not find module
-#  `pearl.utils.scripts.cb_benchmark.run_cb_benchmarks`.
 from pearl.utils.scripts.cb_benchmark.run_cb_benchmarks import run_cb_benchmarks
 
 

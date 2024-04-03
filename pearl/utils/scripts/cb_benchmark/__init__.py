@@ -16,8 +16,6 @@ from .cb_benchmark_config import (
     return_offline_eval_config,
 )
 
-# pyre-fixme[21]: Could not find module
-#  `pearl.utils.scripts.cb_benchmark.run_cb_benchmarks`.
 from .run_cb_benchmarks import (
     online_evaluation,
     run_cb_benchmarks,
