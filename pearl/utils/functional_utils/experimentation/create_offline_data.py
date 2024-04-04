@@ -91,7 +91,7 @@ def create_offline_data(
                 "next_observation": action_result.observation,
                 "curr_available_actions": env.action_space,
                 "next_available_actions": env.action_space,
-                "done": action_result.done,
+                "terminated": action_result.terminated,
             }
 
             observation = action_result.observation
