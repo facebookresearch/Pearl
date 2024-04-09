@@ -136,6 +136,10 @@ class NeuralLinearBandit(ContextualBanditBase):
         return self._optimizer
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+
+        # get scores for logging purpose
+        ucb_scores = self.get_scores(batch.state).mean()
+
         if self._state_features_only:
             input_features = batch.state
         else:
@@ -150,9 +154,6 @@ class NeuralLinearBandit(ContextualBanditBase):
             if batch.weight is not None
             else torch.ones_like(expected_values)
         )
-
-        # get scores for logging
-        ucb_scores = self.get_scores(input_features).mean()
 
         # criterion = mae, mse, Xentropy
         # Xentropy loss apply Sigmoid, MSE or MAE apply Identiy
