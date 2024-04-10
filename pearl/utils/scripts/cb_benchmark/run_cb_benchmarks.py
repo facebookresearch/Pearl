@@ -307,7 +307,7 @@ def run_cb_benchmarks(
             )
 
 
-if __name__ == "__main__":
+def main() -> None:
 
     # load CB algorithm
     cb_algorithms_config: Dict[str, Any] = {
@@ -330,3 +330,7 @@ if __name__ == "__main__":
         test_environments_config=test_environments_config,
         run_config=run_config_def,
     )
+
+
+if __name__ == "__main__":
+    main()  # pragma: no cover
