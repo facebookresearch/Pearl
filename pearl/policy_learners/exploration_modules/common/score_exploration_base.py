@@ -20,7 +20,9 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
     ExplorationType,
 )
-from pearl.utils.functional_utils.learning.action_utils import get_model_actions
+from pearl.utils.functional_utils.learning.action_utils import (
+    get_model_action_index_batch,
+)
 from pearl.utils.tensor_like import assert_is_tensor_like
 
 
@@ -66,8 +68,27 @@ class ScoreExplorationBase(ExplorationModule):
             representation=representation,
         )  # shape: (batch_size, action_count)
         scores = assert_is_tensor_like(scores)
-        selected_action = get_model_actions(scores, action_availability_mask)
-        return selected_action.squeeze(-1)
+        action_index_batch = get_model_action_index_batch(
+            scores, action_availability_mask
+        )
+        return action_index_batch.squeeze(-1)
+        # FIXME: the squeeze(-1) is a hack.
+        # It is used to get rid of the batch dimension if the batch has a
+        # single element. For example, if action_index_batch is
+        # torch.tensor([0]), then the result will be the batch-less index 0.
+        # The rationale is that if the batch has a single element, then
+        # subject_state was batchless and self.get_score introduced a batch
+        # dimension (for uniformity and convenience of operations, which can
+        # then all assume batch form), so the batch dimension should be removed.
+        # The problem with this approach is that it is heuristic and not
+        # correct in all cases. For example, if subject_state is *not* batchless
+        # but has a single element, then the returned value should be a
+        # single-element batch containing one index, but in this case
+        # squeeze will incorrectly remove the batch dimension.
+        # The correct approach should be that all functions manipulate tensors
+        # in the same way PyTorch modules do, namely accepting input that
+        # may have a batch dimension or not, and have all following tensors
+        # mirroring that.
 
     @abstractmethod
     def get_scores(
