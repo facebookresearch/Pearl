@@ -222,9 +222,24 @@ class TestAgentWithPyTorch(unittest.TestCase):
 
     def test_tabular_q_learning_online_rl(self) -> None:
         env = GymEnvironment("FrozenLake-v1", is_slippery=False)
-        agent = PearlAgent(policy_learner=TabularQLearning())
+        agent = PearlAgent(policy_learner=TabularQLearning(exploration_rate=0.7))
+        # We use a large exploration rate because the exploitation action
+        # is always the first one among those with the highest value
+        # (so that the agent is deterministic in the absence of exploration).
+        # For FrozenLake, this results in action 0 which is "moving left"
+        # and has no effect for the initial position in the left top corner.
+        # Ideally, we should use a smarter exploration strategy that
+        # picks an action randomly but favors the best ones
+        # (propensity exploration).
+        # For FrozenLake, especially at the beginning of training,
+        # this would result in a random choice between the
+        # initially equally valueless actions, resulting in effective
+        # exploration, but focusing more on valuable actions
+        # as training progresses.
+        # TODO: modify tabular Q-learning so it accepts
+        # a greater variety of exploration modules.
 
-        online_learning(agent, env, number_of_episodes=500)
+        online_learning(agent, env, number_of_episodes=6000)
 
         for _ in range(100):  # Should always reach the goal
             episode_info, total_steps = run_episode(

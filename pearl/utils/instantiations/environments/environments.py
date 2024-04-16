@@ -30,6 +30,12 @@ from pearl.api.environment import Environment
 
 
 class FixedNumberOfStepsEnvironment(Environment):
+    """
+    An environment that terminates after a fixed number of steps,
+    where actions have no effect, and both the observation and the
+    reward are the number of steps.
+    """
+
     def __init__(self, number_of_steps: int = 100) -> None:
         self.number_of_steps_so_far = 0
         self.number_of_steps: int = number_of_steps

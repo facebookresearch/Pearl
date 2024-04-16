@@ -17,7 +17,6 @@ from pearl.api.state import SubjectiveState
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
-from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class PropensityExploration(ExplorationModule):

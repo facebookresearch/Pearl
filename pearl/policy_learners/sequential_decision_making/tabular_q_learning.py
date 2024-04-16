@@ -7,7 +7,6 @@
 
 # pyre-strict
 
-import random
 from typing import Any, Dict, Iterable, List, Tuple
 
 import torch
@@ -24,6 +23,7 @@ from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration
 from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.utils.functional_utils.python_utils import first_item
 from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
 
 # TODO: make package names and organization more consistent
@@ -82,18 +82,12 @@ class TabularQLearning(PolicyLearner):
             action: self.q_values.get((subjective_state, action), 0)
             for action in actions_as_ints
         }
-        #  `Iterable[Variable[SupportsRichComparisonT (bound to
-        #  Union[SupportsDunderGT[typing.Any], SupportsDunderLT[typing.Any]])]]` but
-        #  got `dict_values[int, Number]`.
-        # Fixing this will require that Value is defined so it supports
-        # rich comparisons.
         max_q_value = max(q_values_for_state.values())
-        best_actions = [
+        exploit_action = first_item(
             action
             for action, q_value in q_values_for_state.items()
             if q_value == max_q_value
-        ]
-        exploit_action = random.choice(best_actions)
+        )
         exploit_action = torch.tensor([exploit_action])
         if exploit:
             return exploit_action
