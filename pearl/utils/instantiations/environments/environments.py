@@ -40,7 +40,7 @@ class FixedNumberOfStepsEnvironment(Environment):
         self.number_of_steps_so_far = 0
         self.number_of_steps: int = number_of_steps
         self._action_space = DiscreteActionSpace(
-            [torch.tensor(True), torch.tensor(False)]
+            [torch.tensor(False), torch.tensor(True)]
         )
 
     def step(self, action: Action) -> ActionResult:

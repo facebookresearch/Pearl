@@ -7,9 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, Dict, Iterable, List, Tuple
-
-import torch
+from typing import Any, Dict, Iterable, Tuple
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -45,6 +43,9 @@ class TabularQLearning(PolicyLearner):
     ) -> None:
         """
         Initializes the tabular Q-learning policy learner.
+        Currently, tabular Q-learning assumes
+        a discrete action space, and assumes that for each action
+        int(action.item()) == action's index.
 
         Args:
             learning_rate (float, optional): the learning rate. Defaults to 0.01.
@@ -66,6 +67,13 @@ class TabularQLearning(PolicyLearner):
 
     def reset(self, action_space: ActionSpace) -> None:
         self._action_space = action_space
+        for i, action in enumerate(self._action_space):
+            if int(action.item()) != i:
+                raise ValueError(
+                    f"{self.__class__.__name__} only supports "
+                    f"action spaces that are a DiscreteSpace where for each action "
+                    f"action.item() == action's index. "
+                )
 
     def act(
         self,
@@ -74,21 +82,22 @@ class TabularQLearning(PolicyLearner):
         exploit: bool = False,
     ) -> Action:
         assert isinstance(available_action_space, DiscreteSpace)
-        # FIXME: this conversion should be eliminated once Action
-        # is no longer constrained to be a Tensor.
-        actions_as_ints: List[int] = [int(a.item()) for a in available_action_space]
+        # TODO: if we substitute DiscreteActionSpace for DiscreteSpace
+        # we get Pyre errors. It would be nice to fix this.
+
         # Choose the action with the highest Q-value for the current state.
-        q_values_for_state = {
-            action: self.q_values.get((subjective_state, action), 0)
-            for action in actions_as_ints
+        action_q_values_for_state = {
+            action_index: self.q_values.get((subjective_state, action_index), 0)
+            for action_index in range(available_action_space.n)
         }
-        max_q_value = max(q_values_for_state.values())
-        exploit_action = first_item(
-            action
-            for action, q_value in q_values_for_state.items()
-            if q_value == max_q_value
+        max_q_value_for_state = max(action_q_values_for_state.values())
+        exploit_action_index = first_item(
+            action_index
+            for action_index, q_value in action_q_values_for_state.items()
+            if q_value == max_q_value_for_state
         )
-        exploit_action = torch.tensor([exploit_action])
+        exploit_action = available_action_space.actions[exploit_action_index]
+
         if exploit:
             return exploit_action
 
@@ -102,6 +111,7 @@ class TabularQLearning(PolicyLearner):
         self,
         replay_buffer: ReplayBuffer,
     ) -> Dict[str, Any]:
+
         # We know the sampling result from SingleTransitionReplayBuffer
         # is a list with a single tuple.
         transitions = replay_buffer.sample(1)

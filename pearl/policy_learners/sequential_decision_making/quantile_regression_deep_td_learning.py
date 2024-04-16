@@ -149,7 +149,8 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             q_values = self.safety_module.get_q_values_under_risk_metric(
                 states_repeated, actions, self._Q
             )
-            exploit_action = torch.argmax(q_values).view((-1))
+            exploit_action_index = torch.argmax(q_values)
+            exploit_action = available_action_space.actions[exploit_action_index]
 
         if exploit:
             return exploit_action

@@ -158,10 +158,7 @@ class PearlAgent(Agent):
             subjective_state_to_be_used, safe_action_space, exploit=exploit  # pyre-fixme[6]
         )
 
-        if isinstance(safe_action_space, DiscreteActionSpace):
-            self._latest_action = safe_action_space.actions_batch[int(action.item())]
-        else:
-            self._latest_action = action
+        self._latest_action = action
 
         return action
 

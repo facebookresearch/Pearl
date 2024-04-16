@@ -27,7 +27,6 @@ class PropensityExploration(ExplorationModule):
     def __init__(self) -> None:
         super(PropensityExploration, self).__init__()
 
-    # TODO: We should make discrete action space itself iterable
     def act(
         self,
         subjective_state: SubjectiveState,

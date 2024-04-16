@@ -7,8 +7,6 @@
 
 # pyre-strict
 
-from typing import Optional
-
 from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,

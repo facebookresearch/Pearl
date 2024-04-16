@@ -221,7 +221,8 @@ class DeepTDLearning(PolicyLearner):
             # this does a forward pass since all avaialble
             # actions are already stacked together
 
-            exploit_action = torch.argmax(q_values).view((-1))
+            exploit_action_index = torch.argmax(q_values)
+            exploit_action = available_action_space.actions[exploit_action_index]
 
         if exploit:
             return exploit_action

@@ -77,7 +77,9 @@ class DeepExploration(ExplorationModule):
             # this does a forward pass since all available
             # actions are already stacked together
 
-        return torch.argmax(q_values).view((-1))
+        action_index = torch.argmax(q_values)
+        action = action_space.actions[action_index]
+        return action
 
     def reset(self) -> None:  # noqa: B027
         # sample a new epistemic index (i.e., a Q-network) at the beginning of a
