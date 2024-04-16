@@ -55,6 +55,13 @@ class NeuralLinearBandit(ContextualBanditBase):
 
     The implementation of LinearBandit refers to https://arxiv.org/pdf/1003.0146.pdf
     The implementation of NeuralLinearBandit refers to https://arxiv.org/pdf/2012.01780.pdf
+
+    When `separate_uncertainty` is True, the `sigma` is separate from the `values` to get ucb score.
+    From high level, that is,
+        separate_uncertainty=False:
+            ucb = activation(NeuralLinearRegression's output  + ucb_alpha*sigma)
+        separate_uncertainty=True :
+            ucb = activation(NeuralLinearRegression's output) + ucb_alpha*sigma
     """
 
     def __init__(
@@ -79,6 +86,7 @@ class NeuralLinearBandit(ContextualBanditBase):
         dropout_ratio: float = 0.0,
         use_skip_connections: bool = False,
         nn_e2e: bool = True,
+        separate_uncertainty: bool = False,
     ) -> None:
         assert (
             len(hidden_dims) >= 1
@@ -111,6 +119,7 @@ class NeuralLinearBandit(ContextualBanditBase):
         self.loss_type = loss_type
         self.apply_discounting_interval = apply_discounting_interval
         self.last_sum_weight_when_discounted = 0.0
+        self.separate_uncertainty = separate_uncertainty
 
     def _maybe_apply_discounting(self) -> None:
         """
@@ -245,16 +254,33 @@ class NeuralLinearBandit(ContextualBanditBase):
         feature = feature.reshape(-1, feature_dim)
         # dim: [batch_size, num_arms, feature_dim]
         model_ret = self.model.forward_with_intermediate_values(feature)
+        # model_ret contains "pred_label" and "pred_label_pre_activation", where
+        # "pred_label_pre_activation" is the output of linear regression layer without activation.
+        # "pred_label" is the output of linear regression layer with an activation.
         # dim: [batch_size * num_arms, 1]
         assert isinstance(self._exploration_module, ScoreExplorationBase)
-        scores = self._exploration_module.get_scores(
-            subjective_state=model_ret["nn_output"],
-            values=model_ret[
-                "pred_label_pre_activation"
-            ],  # using pre-activation values here because activation will be applied afterwards
-            action_space=action_space,
-            representation=self.model._linear_regression_layer,
-        )
-        # dim: [batch_size, num_arms] or [batch_size]
-        scores = self.model.output_activation(scores)
+        if self.separate_uncertainty is False:
+            # ucb = self.model.output_activation(mu + ucb_alpha*sigma)
+            # here mu is obtained by feeding model_ret["pred_label_pre_activation"] to exploration
+            scores = self._exploration_module.get_scores(
+                subjective_state=model_ret["nn_output"],
+                values=model_ret[
+                    "pred_label_pre_activation"
+                ],  # using pre-activation values here because activation will be applied afterwards
+                action_space=action_space,
+                representation=self.model._linear_regression_layer,
+            )
+            # dim: [batch_size, num_arms] or [batch_size]
+            scores = self.model.output_activation(
+                scores
+            )  # apply activation after exploration.
+        else:
+            # ucb = mu + ucb_alpha*sigma
+            # here mu is obtained by feeding model_ret["pred_label"] to exploration
+            scores = self._exploration_module.get_scores(
+                subjective_state=model_ret["nn_output"],
+                values=model_ret["pred_label"],  # post-activation values
+                action_space=action_space,
+                representation=self.model._linear_regression_layer,
+            )
         return scores.reshape(batch_size, -1).squeeze(-1)
