@@ -38,9 +38,11 @@ from pearl.replay_buffers.sequential_decision_making.bootstrap_replay_buffer imp
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
 )
+from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
+set_seed(0)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 device_id = 0 if torch.cuda.is_available() else -1
@@ -128,12 +130,6 @@ class SequenceClassificationModel(nn.Module):
         )
         out, (_, _) = self.lstm(x, (h0, c0))
         mlp_input = out[:, -1, :].view((batch_size, -1))
-        print("Action shape: ", action.shape)
-        print("mlp_input.shape: ", mlp_input.shape)
-        print(
-            "torch.cat([mlp_input, action], dim=-1).shape:, ",
-            torch.cat([mlp_input, action], dim=-1).shape,
-        )
         return torch.sigmoid(self.mlp(torch.cat([mlp_input, action], dim=-1)))
 
 
@@ -182,6 +178,9 @@ class RecEnv(Environment):
             available_action_space=self._action_space,
         )
 
+    def __str__(self) -> str:
+        return self.__class__.__name__
+
 
 class TestTutorials(unittest.TestCase):
     def setUp(self) -> None:
@@ -193,12 +192,14 @@ class TestTutorials(unittest.TestCase):
         model.load_state_dict(
             # Note: in the tutorial the directory "pearl" must be replaced by "Pearl"
             torch.load(
-                "pearl/tutorials/single_item_recommender_system_example/env_model_state_dict.pt"
+                "pearl/tutorials/single_item_recommender_system_example/env_model_state_dict.pt",
+                weights_only=True,
             )
         )
         # Note: in the tutorial the directory "pearl" must be replaced by "Pearl"
         actions = torch.load(
-            "pearl/tutorials/single_item_recommender_system_example/news_embedding_small.pt"
+            "pearl/tutorials/single_item_recommender_system_example/news_embedding_small.pt",
+            weights_only=True,
         )
         history_length = 8
         env = RecEnv(list(actions.values())[:100], model, history_length)
@@ -210,8 +211,8 @@ class TestTutorials(unittest.TestCase):
 
         """
         ## Vanilla DQN Agent
-        Able to handle dynamic action space but not able to handle partial observabilit
-         and sparse reward.
+        Able to handle dynamic action space but not able to handle partial observability
+        and sparse reward.
         """
 
         # create a pearl agent
@@ -243,6 +244,8 @@ class TestTutorials(unittest.TestCase):
             record_period=min(record_period, number_of_steps),
             learn_after_episode=True,
         )
+
+        # Keep the commented out code below as a reference for the notebook
         # torch.save(info["return"], "DQN-return.pt")
         # plt.plot(
         #     record_period * np.arange(len(info["return"])), info["return"], label="DQN"
@@ -253,7 +256,7 @@ class TestTutorials(unittest.TestCase):
         """
         ## DQN Agent with LSTM history summarization module
 
-        Now the DQN agent can handle partially observable environments with history summarization
+        Now the DQN agent can handle partially observable environments with history summarization.
         """
 
         # Add a LSTM history summarization module
@@ -285,6 +288,8 @@ class TestTutorials(unittest.TestCase):
             record_period=min(record_period, number_of_steps),
             learn_after_episode=True,
         )
+
+        # Keep the commented out code below as a reference for the notebook
         # torch.save(info["return"], "DQN-LSTM-return.pt")
         # plt.plot(
         #     record_period * np.arange(len(info["return"])),
@@ -339,6 +344,8 @@ class TestTutorials(unittest.TestCase):
             record_period=min(record_period, number_of_steps),
             learn_after_episode=True,
         )
+
+        # Keep the commented out code below as a reference for the notebook
         # torch.save(info["return"], "BootstrappedDQN-LSTM-return.pt")
         # plt.plot(
         #     record_period * np.arange(len(info["return"])),
