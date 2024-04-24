@@ -22,7 +22,7 @@ jobs:
           pip install .
     - name: Generate coverage report
       run: |
-        python -m unittest discover -t . test.unit --cov=./ --cov-report=xml
+        pytest -m unittest discover -t . test.unit --cov=./ --cov-report=xml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
