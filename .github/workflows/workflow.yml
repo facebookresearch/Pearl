@@ -10,17 +10,19 @@ jobs:
       OS: ${{ matrix.os }}
       PYTHON: '3.8'
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v4
     - name: Setup Python
-      uses: actions/setup-python@master
+      uses: actions/setup-python@v4
       with:
         python-version: 3.8
+    - name: Install dependencies
+      run: |
+          pip install pytest
+          pip install pytest-cov
+          pip install .
     - name: Generate coverage report
       run: |
-        pip install pytest
-        pip install pytest-cov
-        pip install .
-        pytest --cov=./ --cov-report=xml
+        python -m unittest discover -t . test.unit --cov=./ --cov-report=xml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
