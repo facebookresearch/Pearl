@@ -31,4 +31,5 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         token: ${{ secrets.CODECOV_TOKEN }}
+        slug: facebookresearch/Pearl
         verbose: true
