@@ -192,14 +192,14 @@ class TestTutorials(unittest.TestCase):
         model = SequenceClassificationModel(100).to(device)
         print("current dir", os.getcwd())
         print("dirs list", os.listdir())
-        if os.path.exists("pearl"):
-            # Meta internal tests
-            print("pearl directory exists")
-            model_dir = "pearl/tutorials/single_item_recommender_system_example/"
-        else:
+        if os.path.exists("../Pearl"):
             # Github CI tests
             print("Pearl directory exists")
             model_dir = "Pearl/tutorials/single_item_recommender_system_example/"
+        else:
+            # Meta internal tests
+            print("pearl directory exists")
+            model_dir = "pearl/tutorials/single_item_recommender_system_example/"
         model.load_state_dict(
             # Note: in the tutorial the directory "pearl" must be replaced by "Pearl"
             torch.load(
