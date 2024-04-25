@@ -191,6 +191,7 @@ class TestTutorials(unittest.TestCase):
         # load environment
         model = SequenceClassificationModel(100).to(device)
         print("current dir", os.getcwd())
+        print("dirs list", os.listdir())
         if os.path.exists("pearl"):
             # Meta internal tests
             print("pearl directory exists")
