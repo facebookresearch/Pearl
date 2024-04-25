@@ -22,7 +22,7 @@ jobs:
           pip install .
     - name: Generate coverage report
       run: |
-        pytest test/unit/with_pytorch/test_action_utils.py --cov=./ --cov-report=xml
+        pytest test/unit/ --cov=./ --cov-report=xml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
