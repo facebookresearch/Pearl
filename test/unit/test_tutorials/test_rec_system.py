@@ -202,7 +202,7 @@ class TestTutorials(unittest.TestCase):
         model.load_state_dict(
             # Note: in the tutorial the directory "pearl" must be replaced by "Pearl"
             torch.load(
-                os.path.join("model_dir", "env_model_state_dict.pt"),
+                os.path.join(model_dir, "env_model_state_dict.pt"),
                 weights_only=True,
             )
         )
