@@ -67,7 +67,7 @@ number_of_steps = 30  # 100000
 This environment's underlying model was pre-trained using the MIND dataset (Wu et al. 2020).
 The model is defined by class `SequenceClassificationModel` below.
 The model's state dict is saved in
-tutorials/single_item_recommender_system_example/env_model_state_dict.pt
+tutorials/single_item_recommender_system_example/env_model_state_dict
 
 Each data point is:
 - A history of impressions clicked by a user
@@ -195,7 +195,7 @@ class TestTutorials(unittest.TestCase):
         if os.path.exists("../Pearl"):
             # Github CI tests
             print("Pearl directory exists")
-            model_dir = "Pearl/tutorials/single_item_recommender_system_example/"
+            model_dir = "tutorials/single_item_recommender_system_example/"
         else:
             # Meta internal tests
             print("pearl directory exists")
