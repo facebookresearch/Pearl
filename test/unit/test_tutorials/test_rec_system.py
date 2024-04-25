@@ -193,11 +193,11 @@ class TestTutorials(unittest.TestCase):
         print("current dir", os.getcwd())
         if os.path.exists("pearl"):
             # Meta internal tests
-            print("pearl directory exists)
+            print("pearl directory exists")
             model_dir = "pearl/tutorials/single_item_recommender_system_example/"
         else:
             # Github CI tests
-            print("Pearl directory exists)
+            print("Pearl directory exists")
             model_dir = "Pearl/tutorials/single_item_recommender_system_example/"
         model.load_state_dict(
             # Note: in the tutorial the directory "pearl" must be replaced by "Pearl"
