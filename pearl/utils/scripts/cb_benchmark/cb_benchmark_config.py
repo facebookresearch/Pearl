@@ -31,8 +31,10 @@ from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploratio
 from pearl.utils.instantiations.environments.contextual_bandit_uci_environment import (
     SLCBEnvironment,
 )
-
-DATA_PATH: str = "./utils/instantiations/environments/uci_datasets"
+if os.path.exists("../Pearl"):
+    DATA_PATH: str = "pearl/utils/instantiations/environments/uci_datasets"
+else:
+    DATA_PATH: str = "./utils/instantiations/environments/uci_datasets"
 
 """
 Experiment config
