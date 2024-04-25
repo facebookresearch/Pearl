@@ -275,6 +275,9 @@ def run_cb_benchmarks(
 
     # Create UCI data directory if it does not already exist
     uci_data_path = "./utils/instantiations/environments/uci_datasets"
+    print("current_dir", os.getcwd())
+    print("dirs list", os.listdir())
+    print("dir exists", os.path.exists("./utils/instantiations/environments/"))
     if not os.path.exists(uci_data_path):
         os.makedirs(uci_data_path)
 
