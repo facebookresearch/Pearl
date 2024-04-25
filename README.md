@@ -8,6 +8,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Support Ukraine](https://img.shields.io/badge/Support-Ukraine-FFD500?style=flat&labelColor=005BBB)](https://opensource.fb.com/support-ukraine)
+[![codecov](https://codecov.io/gh/facebookresearch/Pearl/graph/badge.svg?token=CARFOP3E30)](https://codecov.io/gh/facebookresearch/Pearl)
 
 More details of the library at our [official website](https://pearlagent.github.io).
 

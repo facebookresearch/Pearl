@@ -1,0 +1,36 @@
+name: Workflow for CI and Codecov Action
+on: [push, pull_request]
+jobs:
+  run:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: '3.9'
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+          pip install pytest
+          pip install pytest-cov
+          pip install -e .
+    - name: Generate coverage report
+      run: |
+        pytest --cov=./ --cov-report=xml
+    - name: Upload coverage to Codecov
+      if: success() || failure()
+      uses: codecov/codecov-action@v4
+      with:
+        env_vars: OS,PYTHON
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        token: ${{ secrets.CODECOV_TOKEN }}
+        slug: facebookresearch/Pearl
+        verbose: true
