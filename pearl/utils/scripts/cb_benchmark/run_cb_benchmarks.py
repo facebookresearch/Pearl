@@ -277,7 +277,14 @@ def run_cb_benchmarks(
     uci_data_path = "./utils/instantiations/environments/uci_datasets"
     print("current_dir", os.getcwd())
     print("dirs list", os.listdir())
-    print("dir exists", os.path.exists("./utils/instantiations/environments/"))
+    
+    if os.path.exists("../Pearl"):
+        uci_data_path = "pearl/utils/instantiations/environments/uci_datasets"
+        save_results_path: str = "pearl/utils/scripts/cb_benchmark/experiments_results"
+        print("dir exists", os.path.exists("pearl/utils/instantiations/environments/"))
+    else:
+        uci_data_path = "utils/instantiations/environments/uci_datasets"
+        save_results_path: str = "utils/scripts/cb_benchmark/experiments_results"
     if not os.path.exists(uci_data_path):
         os.makedirs(uci_data_path)
 
@@ -285,7 +292,7 @@ def run_cb_benchmarks(
     download_uci_data(data_path=uci_data_path)
 
     # Create folder for result if it does not already exist
-    save_results_path: str = "./utils/scripts/cb_benchmark/experiments_results"
+    
     if not os.path.exists(save_results_path):
         os.makedirs(save_results_path)
 
