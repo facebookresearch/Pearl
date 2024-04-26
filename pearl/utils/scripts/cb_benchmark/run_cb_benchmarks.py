@@ -29,7 +29,7 @@ from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.contextual_bandits.discrete_contextual_bandit_replay_buffer import (
     DiscreteContextualBanditReplayBuffer,
 )
-from pearl.test.utils import prefix_dir
+from test.utils import prefix_dir
 from pearl.utils.instantiations.environments.contextual_bandit_uci_environment import (
     SLCBEnvironment,
 )
