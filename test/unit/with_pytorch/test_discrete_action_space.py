@@ -10,6 +10,7 @@
 import unittest
 
 import torch
+import torch.testing as tt
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
@@ -19,4 +20,4 @@ class TestDiscreteActionSpace(unittest.TestCase):
         actions = [torch.randn(4) for _ in range(5)]
         action_space = DiscreteActionSpace(actions=actions)
         for i, action in enumerate(action_space):
-            self.assertTrue(torch.equal(actions[i], action))
+            tt.assert_close(actions[i], action, rtol=0.0, atol=0.0)

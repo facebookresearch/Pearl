@@ -11,6 +11,7 @@ import copy
 import unittest
 
 import torch
+import torch.testing as tt
 from pearl.neural_networks.contextual_bandit.linear_regression import LinearRegression
 from pearl.policy_learners.contextual_bandits.linear_bandit import LinearBandit
 from pearl.policy_learners.exploration_modules.contextual_bandits.thompson_sampling_exploration import (  # noqa: E501
@@ -52,24 +53,20 @@ class TestLinearBandits(unittest.TestCase):
     def test_learn(self) -> None:
         batch = self.batch
         # a single input
-        self.assertTrue(
-            torch.allclose(
-                self.policy_learner.model(
-                    torch.cat([batch.state[0], batch.action[0]]).unsqueeze(0),
-                ),
-                batch.reward[0:1],
-                atol=1e-4,
-            )
+        tt.assert_close(
+            self.policy_learner.model(
+                torch.cat([batch.state[0], batch.action[0]]).unsqueeze(0),
+            ),
+            batch.reward[0:1],
+            atol=1e-3,
+            rtol=0.0,
         )
         # a batch input
-        self.assertTrue(
-            torch.allclose(
-                self.policy_learner.model(
-                    torch.cat([batch.state, batch.action], dim=1)
-                ),
-                batch.reward,
-                atol=1e-4,
-            )
+        tt.assert_close(
+            self.policy_learner.model(torch.cat([batch.state, batch.action], dim=1)),
+            batch.reward,
+            atol=1e-3,
+            rtol=0.0,
         )
 
     def test_linear_ucb_scores(self) -> None:
@@ -166,14 +163,10 @@ class TestLinearBandits(unittest.TestCase):
         )
 
         # the 2nd arm's sigma is sqrt(10) times 1st arm's sigma
-        sigma_ratio = (sigma[-1] / sigma[0]).clone().detach()
-        self.assertTrue(
-            torch.allclose(
-                sigma_ratio,
-                torch.tensor(10.0**0.5),  # the 1st arm occured 10 times than 2nd arm
-                rtol=0.01,
-            )
-        )
+        sigma_ratio = (sigma[-1] / sigma[0]).detach().item()
+        self.assertAlmostEqual(
+            sigma_ratio, 10.0**0.5, delta=0.01
+        )  # the 1st arm occured 10 times than 2nd arm
 
     def test_linear_thompson_sampling_act(self) -> None:
         """

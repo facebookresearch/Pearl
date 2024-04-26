@@ -11,6 +11,7 @@ import unittest
 from typing import Dict
 
 import torch
+import torch.testing as tt
 
 from pearl.replay_buffers.sequential_decision_making.hindsight_experience_replay_buffer import (
     HindsightExperienceReplayBuffer,
@@ -89,6 +90,6 @@ class TestHindsightExperienceReplayBuffer(unittest.TestCase):
         assert (batch_state := batch.state) is not None
         assert (batch_next_state := batch.next_state) is not None
         for i in range(2 * len(states) - 2):
-            self.assertTrue(
-                torch.all(torch.eq(batch_state[i][-2:], batch_next_state[i][-2:]))
+            tt.assert_close(
+                batch_state[i][-2:], batch_next_state[i][-2:], rtol=0.0, atol=0.0
             )

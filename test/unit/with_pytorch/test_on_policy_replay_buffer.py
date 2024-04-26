@@ -10,6 +10,7 @@
 import unittest
 
 import torch
+import torch.testing as tt
 
 from pearl.replay_buffers.sequential_decision_making.on_policy_replay_buffer import (
     OnPolicyReplayBuffer,
@@ -55,15 +56,16 @@ class TestOnPolicyReplayBuffer(unittest.TestCase):
 
         # validate terminal state indicators - 1 only for the last element
         terminated = batch.terminated[order]
-        self.assertTrue(
-            torch.equal(
-                terminated, torch.eye(self.trajectory_len)[self.trajectory_len - 1]
-            )
+        tt.assert_close(
+            terminated,
+            torch.eye(self.trajectory_len)[self.trajectory_len - 1].bool(),
+            rtol=0.0,
+            atol=0.0,
         )
 
         # validate actions
         actions = batch.action[order]
-        self.assertTrue(torch.equal(actions, torch.arange(self.action_size)))
+        tt.assert_close(actions, torch.arange(self.action_size), rtol=0.0, atol=0.0)
 
     def test_push_2_trajectories(self) -> None:
         replay_buffer = OnPolicyReplayBuffer(self.capacity)
@@ -108,29 +110,30 @@ class TestOnPolicyReplayBuffer(unittest.TestCase):
 
         # validate terminal state indicators - 1 only for the last element
         terminated = batch.terminated[order]
-        self.assertTrue(
-            torch.equal(
-                terminated[0 : self.trajectory_len],
-                torch.eye(self.trajectory_len)[self.trajectory_len - 1],
-            )
+        tt.assert_close(
+            terminated[0 : self.trajectory_len],
+            torch.eye(self.trajectory_len)[self.trajectory_len - 1].bool(),
+            rtol=0.0,
+            atol=0.0,
         )
-        self.assertTrue(
-            torch.equal(
-                terminated[self.trajectory_len :],
-                torch.eye(trajectory_len_2)[trajectory_len_2 - 1],
-            )
+        tt.assert_close(
+            terminated[self.trajectory_len :],
+            torch.eye(trajectory_len_2)[trajectory_len_2 - 1].bool(),
+            rtol=0.0,
+            atol=0.0,
         )
 
         # validate actions
         actions = batch.action[order]
-        self.assertTrue(
-            torch.equal(
-                actions[0 : self.trajectory_len], torch.arange(self.action_size)
-            )
+        tt.assert_close(
+            actions[0 : self.trajectory_len],
+            torch.arange(self.action_size),
+            rtol=0.0,
+            atol=0.0,
         )
-        self.assertTrue(
-            torch.equal(
-                actions[self.trajectory_len :],
-                torch.arange(self.action_size)[0:trajectory_len_2],
-            )
+        tt.assert_close(
+            actions[self.trajectory_len :],
+            torch.arange(self.action_size)[0:trajectory_len_2],
+            rtol=0.0,
+            atol=0.0,
         )
