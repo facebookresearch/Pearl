@@ -29,10 +29,10 @@ from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.contextual_bandits.discrete_contextual_bandit_replay_buffer import (
     DiscreteContextualBanditReplayBuffer,
 )
+from pearl.test.utils import prefix_dir
 from pearl.utils.instantiations.environments.contextual_bandit_uci_environment import (
     SLCBEnvironment,
 )
-
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 from pearl.utils.scripts.cb_benchmark.cb_benchmark_config import (
@@ -274,7 +274,11 @@ def run_cb_benchmarks(
     """
 
     # Create UCI data directory if it does not already exist
-    uci_data_path = "./utils/instantiations/environments/uci_datasets"
+    uci_data_path: str = f"{prefix_dir()}utils/instantiations/environments/uci_datasets"
+    save_results_path: str = (
+        f"{prefix_dir()}utils/scripts/cb_benchmark/experiments_results"
+    )
+
     if not os.path.exists(uci_data_path):
         os.makedirs(uci_data_path)
 
@@ -282,7 +286,6 @@ def run_cb_benchmarks(
     download_uci_data(data_path=uci_data_path)
 
     # Create folder for result if it does not already exist
-    save_results_path: str = "./utils/scripts/cb_benchmark/experiments_results"
     if not os.path.exists(save_results_path):
         os.makedirs(save_results_path)
 
