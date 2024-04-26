@@ -28,7 +28,7 @@ from pearl.policy_learners.exploration_modules.contextual_bandits.thompson_sampl
 from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
     UCBExploration,
 )
-from pearl.test.utils import prefix_dir
+from test.utils import prefix_dir
 from pearl.utils.instantiations.environments.contextual_bandit_uci_environment import (
     SLCBEnvironment,
 )
