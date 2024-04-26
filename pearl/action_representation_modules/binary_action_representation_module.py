@@ -25,6 +25,8 @@ class BinaryActionTensorRepresentationModule(ActionRepresentationModule):
         self._max_number_actions: int = 2**bits_num
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if len(x.shape) == 1:
+            x = x.unsqueeze(-1)
         return self.binary(x)
         # (batch_size x action_dim)
 

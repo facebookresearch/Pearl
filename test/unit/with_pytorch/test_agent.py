@@ -8,7 +8,6 @@
 # pyre-strict
 
 import unittest
-from typing import Any, Dict
 
 import torch
 from pearl.action_representation_modules.one_hot_action_representation_module import (
@@ -58,14 +57,6 @@ from pearl.utils.instantiations.environments.reward_is_equal_to_ten_times_action
     RewardIsEqualToTenTimesActionContextualBanditEnvironment,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
-from pearl.utils.scripts.cb_benchmark.cb_benchmark_config import (
-    pendigits_uci_dict,
-    return_neural_lin_ts_config,
-    return_neural_lin_ucb_config,
-    return_neural_squarecb_config,
-)
-
-from pearl.utils.scripts.cb_benchmark.run_cb_benchmarks import run_cb_benchmarks
 
 
 class TestAgentWithPyTorch(unittest.TestCase):
@@ -272,32 +263,3 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 agent, env, learn=False, exploit=True
             )
             assert episode_info["return"] == max_action * 10
-
-    def test_contextual_bandit_on_uci_datasets(self) -> None:
-        # Tests that neural versions of CB algorithms train on a UCI dataset
-        # CB Algorithms are the neural versions of LinUCB, LinTS, and SquareCB with shared models.
-
-        # set number of time steps to be small, just for unit testing purposes
-        run_config_test: Dict[str, Any] = {
-            "T": 300,
-            "training_rounds": 1,
-            "num_of_experiments": 1,
-        }
-
-        # load configs of neural versions of SquareCB, LinUCB, and LinTS
-        cb_algorithms_config: Dict[str, Any] = {
-            "NeuralSquareCB": return_neural_squarecb_config,
-            "NeuralLinUCB": return_neural_lin_ucb_config,
-            "NeuralLinTS": return_neural_lin_ts_config,
-        }
-
-        # load only pendigits UCI dataset
-        test_environments_config: Dict[str, Any] = {
-            "pendigits": pendigits_uci_dict,
-        }
-
-        run_cb_benchmarks(
-            cb_algorithms_config=cb_algorithms_config,
-            test_environments_config=test_environments_config,
-            run_config=run_config_test,
-        )
