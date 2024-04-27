@@ -11,7 +11,6 @@
 This file contains helpers for unittest creation
 """
 
-import os
 from typing import Tuple
 
 import torch
@@ -41,17 +40,3 @@ def create_normal_pdf_training_data(
     )  # corresponding pdf of mvn
     y_corrupted = y + 0.01 * torch.randn(num_data_points)  # noise corrupted targets
     return x, y_corrupted
-
-
-def prefix_dir() -> str:
-    """
-    Returns the path needed to go from the current working directory while running
-    tests to the second-level Pearl packages, depending on the platform being run.
-    On the GitHub setup, this is "pearl/". In the internal Meta setup, this is "".
-    """
-    if os.path.exists("../Pearl"):
-        # github CI
-        return "pearl/"
-    else:
-        # internal Meta tests
-        return ""
