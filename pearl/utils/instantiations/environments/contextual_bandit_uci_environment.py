@@ -9,13 +9,23 @@ from pearl.api.action_space import ActionSpace
 
 from pearl.api.observation import Observation
 from pearl.api.reward import Value
+from pearl.api.space import Space
 from pearl.utils.instantiations.environments.contextual_bandit_environment import (
     ContextualBanditEnvironment,
 )
+from pearl.utils.instantiations.spaces.box import BoxSpace
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class SLCBEnvironment(ContextualBanditEnvironment):
+    """
+    A contextual bandit environment to work with uci datasets.
+
+    Note that the context features are assumed to be continuous. For datasets with discrete
+    features, please modify the code used to normalize features and set the _observation_space
+    attribute to be a `DiscreteSpace` object.
+    """
+
     def __init__(
         self,
         path_filename: str,
@@ -86,8 +96,14 @@ class SLCBEnvironment(ContextualBanditEnvironment):
         )
         self._action_dim_env: int = self._action_space[0].shape[0]
 
-        # Set observation dimension
+        # Set observation space and observation dimension
         self.observation_dim: int = tensor.size()[1] - 1  # 0th index is the target
+        self._observation_space: Space = (
+            BoxSpace(  # Box space with low for each dimension = -inf, high for each dimension = inf
+                high=torch.full((self.observation_dim,), float("inf")),
+                low=torch.full((self.observation_dim,), float("-inf")),
+            )
+        )
 
         # Set noise to be added to reward
         self.reward_noise_sigma = reward_noise_sigma
@@ -121,6 +137,10 @@ class SLCBEnvironment(ContextualBanditEnvironment):
             return torch.tensor(action)
         else:
             raise Exception("Invalid action_embeddings type")
+
+    @property
+    def observation_space(self) -> Optional[Space]:
+        return self._observation_space
 
     @property
     def action_space(self) -> ActionSpace:

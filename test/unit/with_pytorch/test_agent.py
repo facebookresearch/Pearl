@@ -53,8 +53,8 @@ from pearl.utils.instantiations.environments.environments import (
     FixedNumberOfStepsEnvironment,
 )
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
-from pearl.utils.instantiations.environments.reward_is_equal_to_ten_times_action_contextual_bandit_environment import (  # noqa: E501
-    RewardIsEqualToTenTimesActionContextualBanditEnvironment,
+from pearl.utils.instantiations.environments.reward_is_equal_to_ten_times_action_multi_arm_bandit_environment import (  # Noqa E501
+    RewardIsEqualToTenTimesActionMultiArmBanditEnvironment,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
@@ -207,7 +207,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
         self.assertTrue(sum(regrets[10:]) >= sum(regrets[-10:]))
 
     def test_online_rl(self) -> None:
-        env = FixedNumberOfStepsEnvironment(number_of_steps=100)
+        env = FixedNumberOfStepsEnvironment(max_number_of_steps=100)
         agent = PearlAgent(TabularQLearning())
         online_learning(agent, env, number_of_episodes=1000)
 
@@ -241,7 +241,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
     def test_contextual_bandit_with_tabular_q_learning_online_rl(self) -> None:
         num_actions = 5
         max_action = num_actions - 1
-        env = RewardIsEqualToTenTimesActionContextualBanditEnvironment(
+        env = RewardIsEqualToTenTimesActionMultiArmBanditEnvironment(
             action_space=DiscreteActionSpace(
                 actions=list(torch.arange(num_actions).view(-1, 1))
             )

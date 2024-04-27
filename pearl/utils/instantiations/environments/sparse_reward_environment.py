@@ -19,7 +19,7 @@ The agent gets reward 0 only when it gets close enough to the target, otherwise 
 
 There are 2 versions in this file:
 - one for discrete action space
-- one for contineous action space
+- one for continuous action space
 """
 import math
 import random
@@ -33,36 +33,60 @@ from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
 
 from pearl.api.environment import Environment
+from pearl.utils.instantiations.spaces.box import BoxSpace
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+
+# FIXME by @Jalaj: this file needs thorough fixing.
 
 
 class SparseRewardEnvironment(Environment):
     def __init__(
         self,
-        length: float,
+        width: float,
         height: float,
         max_episode_duration: int = 500,
         reward_distance: float = 1,
     ) -> None:
-        self._length = length
+        self._width = width
         self._height = height
         self._max_episode_duration = max_episode_duration
-        # reset will initialize following
+        self._reward_distance = reward_distance
+
+        # reset will initialize the agent position, goal and step count
         self._agent_position: Optional[Tuple[float, float]] = None
         self._goal: Optional[Tuple[float, float]] = None
         self._step_count = 0
-        self._reward_distance = reward_distance
 
     @abstractmethod
     def step(self, action: Action) -> ActionResult:
         pass
 
+    @property
+    def observation_space(self) -> BoxSpace:
+        """
+        The observation space is a 2d box space, with the range in the x-coordinate
+        being [0, width] and the range in the y-coordinate being [0, height].
+        """
+        observation_space = BoxSpace(
+            low=torch.tensor([0, 0]), high=torch.tensor([self._width, self._height])
+        )
+        return observation_space
+
     def reset(self, seed: Optional[int] = None) -> Tuple[torch.Tensor, ActionSpace]:
 
-        # reset (x, y)
-        self._agent_position = (self._length / 2, self._height / 2)
-        self._goal = (random.uniform(0, self._length), random.uniform(0, self._height))
-        self._step_count = 0
+        # reset (x, y) for agent position
+        self._agent_position = (
+            self._width / 2,
+            self._height / 2,
+        )
+
+        # reset (x, y) for goal
+        self._goal = (
+            random.uniform(0, self._width),
+            random.uniform(0, self._height),
+        )
+
+        self._step_count = 0  # reset step_count
         assert self._agent_position is not None
         assert (goal := self._goal) is not None
         return (
@@ -72,24 +96,27 @@ class SparseRewardEnvironment(Environment):
 
     def _update_position(self, delta: Tuple[float, float]) -> None:
         """
-        This API is to update and clip and ensure agent always stay in map
+        Update the agent position, say (x, y) --> (x', y') where:
+        x' = x + delta_x
+        y' = y + delta_y
+
+        A clip operation is added to ensure the agent always stay in 2d grid.
         """
         delta_x, delta_y = delta
         assert self._agent_position is not None
         x, y = self._agent_position
         self._agent_position = (
-            max(min(x + delta_x, self._length), 0),
+            max(min(x + delta_x, self._width), 0),
             max(min(y + delta_y, self._height), 0),
         )
 
     def _check_win(self) -> bool:
         """
-        Return:
-            True if reached goal
-            False if not reached goal
+        Indicates whether the agent position is close enough (in Euclidean distance) to the goal.
         """
         assert self._agent_position is not None
         assert self._goal is not None
+
         if math.dist(self._agent_position, self._goal) < self._reward_distance:
             return True
         return False
@@ -126,7 +153,7 @@ class ContinuousSparseRewardEnvironment(SparseRewardEnvironment):
 
 class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
     """
-    Given action count N, action index will be 0,...,N-1
+    Given action count N, action index will be 0, ..., N-1
     For action n, position will be changed by:
     x +=  cos(360/N * n) * step_size
     y +=  sin(360/N * n) * step_size
@@ -135,18 +162,18 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
     # FIXME: This environment mixes the concepts of action index and action feature.
     def __init__(
         self,
-        length: float,
+        width: float,
         height: float,
+        action_count: int,
+        reward_distance: float,
         step_size: float = 0.01,
-        action_count: int = 4,
         max_episode_duration: int = 500,
-        reward_distance: Optional[float] = None,
     ) -> None:
         super(DiscreteSparseRewardEnvironment, self).__init__(
-            length,
-            height,
-            max_episode_duration,
-            reward_distance if reward_distance is not None else step_size,
+            width=width,
+            height=height,
+            max_episode_duration=max_episode_duration,
+            reward_distance=reward_distance,
         )
         self._step_size = step_size
         self._action_count = action_count

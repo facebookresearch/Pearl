@@ -36,9 +36,9 @@ class FixedNumberOfStepsEnvironment(Environment):
     reward are the number of steps.
     """
 
-    def __init__(self, number_of_steps: int = 100) -> None:
+    def __init__(self, max_number_of_steps: int = 100) -> None:
         self.number_of_steps_so_far = 0
-        self.number_of_steps: int = number_of_steps
+        self.max_number_of_steps: int = max_number_of_steps
         self._action_space = DiscreteActionSpace(
             [torch.tensor(False), torch.tensor(True)]
         )
@@ -60,7 +60,20 @@ class FixedNumberOfStepsEnvironment(Environment):
     def action_space(self) -> ActionSpace:
         return self._action_space
 
+    @property
+    def observation_space(self) -> DiscreteSpace:
+        return DiscreteSpace(
+            [torch.tensor(i) for i in range(self.max_number_of_steps + 1)]
+        )
+
     def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
+        """
+        Provides the observation and action space to the agent.
+        """
+        # clipping the observation to be within the range of [0, max_number_of_steps]
+        self.number_of_steps_so_far = max(
+            self.number_of_steps_so_far, self.max_number_of_steps
+        )
         return self.number_of_steps_so_far, self.action_space
 
     def __str__(self) -> str:
@@ -77,7 +90,9 @@ class ObservationTransformationEnvironmentAdapterBase(Environment, ABC):
         base_environment: Environment,
     ) -> None:
         self.base_environment = base_environment
-        self.observation_space: Space = self.make_observation_space(base_environment)
+        self._observation_space: Space = self.make_observation_space(
+            self.base_environment
+        )
 
     @staticmethod
     @abstractmethod
@@ -91,6 +106,10 @@ class ObservationTransformationEnvironmentAdapterBase(Environment, ABC):
     @property
     def action_space(self) -> ActionSpace:
         return self.base_environment.action_space
+
+    @property
+    def observation_space(self) -> Space:
+        return self._observation_space
 
     def step(self, action: Action) -> ActionResult:
         action_result = self.base_environment.step(action)
@@ -113,11 +132,13 @@ class ObservationTransformationEnvironmentAdapterBase(Environment, ABC):
 
 class OneHotObservationsFromDiscrete(ObservationTransformationEnvironmentAdapterBase):
     """
-    An environment adapter mapping a Discrete observation space into
-    a Box observation space with dimension 1
-    where the observation is a one-hot vector.
+    A wrapper around a base environment that transforms the observation space of the base
+    environment from a DiscreteSpace with a finite subset of integers (for e.g. a Discrete
+    environment in Gymnasium, gym.spaces.Discrete, {0, 1, 2, ... end}) to a DiscreteSpace
+    in Pearl where the observations are represented as one hot vectors.
 
-    This is useful to use with agents expecting tensor observations.
+    This is useful to use with agents expecting one-hot tensor observations. One-hot encoding
+    is a common way to represent discrete observations in RL.
     """
 
     def __init__(self, base_environment: Environment) -> None:
@@ -125,8 +146,6 @@ class OneHotObservationsFromDiscrete(ObservationTransformationEnvironmentAdapter
 
     @staticmethod
     def make_observation_space(base_environment: Environment) -> Space:
-        # pyre-fixme: need to add `observation_space` property in Environment
-        # and implement it in all concrete subclasses
         assert isinstance(base_environment.observation_space, DiscreteSpace)
         n = base_environment.observation_space.n
         elements = [F.one_hot(torch.tensor(i), n).float() for i in range(n)]
@@ -137,8 +156,6 @@ class OneHotObservationsFromDiscrete(ObservationTransformationEnvironmentAdapter
             observation_tensor = observation
         else:
             observation_tensor = torch.tensor(observation)
-        # pyre-fixme: need to add `observation_space` property in Environment
-        # and implement it in all concrete subclasses
         assert isinstance(self.base_environment.observation_space, DiscreteSpace)
         return F.one_hot(
             observation_tensor,

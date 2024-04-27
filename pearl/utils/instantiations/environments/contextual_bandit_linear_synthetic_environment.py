@@ -16,9 +16,11 @@ from pearl.api.action_space import ActionSpace
 
 from pearl.api.observation import Observation
 from pearl.api.reward import Value
+from pearl.api.space import Space
 from pearl.utils.instantiations.environments.contextual_bandit_environment import (
     ContextualBanditEnvironment,
 )
+from pearl.utils.instantiations.spaces.box import BoxSpace
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
@@ -35,7 +37,11 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
     "A Contextual-Bandit Approach to Personalized News Article Recommendation,"
 
     The context for an arm is the concatenation of the observation feature vector
-    and the arm feature vevctor.
+    and the arm feature vector.
+
+    In this example, the observation space (i.e. the context space) is taken to be
+    [0, 1]^{`observation_dim`} where `observation_dim` is specified during initialization.
+    Observations are taken to be random vectors generated from this observation space.
     """
 
     def __init__(
@@ -58,6 +64,9 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         """
         assert isinstance(action_space, DiscreteActionSpace)
         self._action_space: DiscreteActionSpace = action_space
+        self._observation_space: Space = BoxSpace(
+            low=torch.zeros((observation_dim)), high=torch.ones((observation_dim))
+        )
         self.observation_dim = observation_dim
         self._arm_feature_vector_dim = arm_feature_vector_dim
         self.reward_noise_sigma = reward_noise_sigma
@@ -70,6 +79,10 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
     @property
     def action_space(self) -> ActionSpace:
         return self._action_space
+
+    @property
+    def observation_space(self) -> Optional[Space]:
+        return self._observation_space
 
     @property
     def arm_feature_vector_dim(self) -> int:
@@ -107,7 +120,7 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         """
         Provides the observation and action space to the agent.
         """
-        self._observation = torch.rand(self.observation_dim)
+        self._observation = self._observation_space.sample()
         return self._observation, self.action_space
 
     def get_reward(self, action: Action) -> Value:
@@ -122,7 +135,7 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
     def get_regret(self, action: Action) -> Value:
         """
         Given action, environment will return regret for choosing this action
-        regret == max(reward over all action) - reward for current action
+        regret == max(reward over all actions) - reward for current action
         """
         rewards = [
             self._compute_reward_from_context(self._get_context_for_arm(i))

@@ -9,20 +9,25 @@
 
 from typing import Optional, Tuple
 
+import torch
+
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.observation import Observation
 from pearl.api.reward import Value
+from pearl.api.space import Space
 from pearl.utils.instantiations.environments.contextual_bandit_environment import (
     ContextualBanditEnvironment,
 )
+from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
 
 
-class RewardIsEqualToTenTimesActionContextualBanditEnvironment(
+class RewardIsEqualToTenTimesActionMultiArmBanditEnvironment(
     ContextualBanditEnvironment
 ):
     """
-    A example implementation of a contextual bandit environment.
+    A example implementation of a bandit environment. For simplicity, we assume
+    no context. Therefore, it is a multi-arm bandit environment.
     """
 
     def __init__(self, action_space: ActionSpace) -> None:
@@ -31,6 +36,13 @@ class RewardIsEqualToTenTimesActionContextualBanditEnvironment(
     @property
     def action_space(self) -> ActionSpace:
         return self._action_space
+
+    @property
+    def observation_space(self) -> Optional[Space]:
+        # For multi-arm bandit environments (where there are no 'observations'), we set the
+        # observation space to be a DiscreteSpace with a single element, taken to be an empty
+        # tensor.
+        return DiscreteSpace([torch.tensor([])])
 
     def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
         # Function returning the context and the available action space

@@ -15,6 +15,7 @@ from pearl.api.action_space import ActionSpace
 
 from pearl.api.environment import Environment
 from pearl.api.reward import Reward
+from pearl.api.space import Space
 
 
 class ContextualBanditEnvironment(Environment, ABC):
@@ -30,6 +31,16 @@ class ContextualBanditEnvironment(Environment, ABC):
     It defers to a new method `get_reward` (to be provided by implementations)
     to determine the ActionResult reward.
     """
+
+    @property
+    @abstractmethod
+    def observation_space(self) -> Space:
+        """
+        For multi-arm bandit environments (i.e. no context), we should set the observation space to
+        simply be an empty tensor, i.e. {tensor([])}. For contextual bandit environments, if the
+        context space is not be known in advance, then it should also be set to an empty tensor.
+        """
+        pass
 
     @property
     @abstractmethod

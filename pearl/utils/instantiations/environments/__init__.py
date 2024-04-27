@@ -17,8 +17,8 @@ from .environments import (
     OneHotObservationsFromDiscrete,
 )
 from .gym_environment import GymEnvironment
-from .reward_is_equal_to_ten_times_action_contextual_bandit_environment import (
-    RewardIsEqualToTenTimesActionContextualBanditEnvironment,
+from .reward_is_equal_to_ten_times_action_multi_arm_bandit_environment import (
+    RewardIsEqualToTenTimesActionMultiArmBanditEnvironment,
 )
 from .sparse_reward_environment import (
     ContinuousSparseRewardEnvironment,
@@ -36,7 +36,7 @@ __all__ = [
     "FixedNumberOfStepsEnvironment",
     "GymEnvironment",
     "OneHotObservationsFromDiscrete",
-    "RewardIsEqualToTenTimesActionContextualBanditEnvironment",
+    "RewardIsEqualToTenTimesActionMultiArmBanditEnvironment",
     "SLCBEnvironment",
     "SparseRewardEnvironment",
 ]

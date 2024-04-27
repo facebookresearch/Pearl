@@ -46,7 +46,7 @@ class TestIntegrationReplayBuffer(unittest.TestCase):
                 DQN is not able to solve this problem within 1000 episodes
         """
         env: DiscreteSparseRewardEnvironment = DiscreteSparseRewardEnvironment(
-            length=50,
+            width=50,
             height=50,
             step_size=1,
             action_count=8,
