@@ -63,7 +63,7 @@ class DeepTDLearning(PolicyLearner):
         target_update_freq: int = 10,
         soft_update_tau: float = 0.1,
         is_conservative: bool = False,
-        conservative_alpha: float = 2.0,
+        conservative_alpha: Optional[float] = 2.0,
         network_type: Type[QValueNetwork] = VanillaQValueNetwork,
         state_output_dim: Optional[int] = None,
         action_output_dim: Optional[int] = None,
@@ -71,7 +71,6 @@ class DeepTDLearning(PolicyLearner):
         action_hidden_dims: Optional[List[int]] = None,
         network_instance: Optional[QValueNetwork] = None,
         action_representation_module: Optional[ActionRepresentationModule] = None,
-        **kwargs: Any,
     ) -> None:
         """Constructs a DeepTDLearning based policy learner. DeepTDLearning is the base class
         for all value based (i.e. temporal difference learning based) algorithms.

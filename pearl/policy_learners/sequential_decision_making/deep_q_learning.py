@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, List, Optional, Tuple, Type
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -94,8 +94,13 @@ class DeepQLearning(DeepTDLearning):
                 Note: This is an alternative to specifying a `network_type`. If provided, the
                 specified `network_type` is ignored and the input `network_instance` is used for
                 learning. Allows for custom implementations of Q-value networks.
-        """
+            **kwargs: Additional arguments to be passed when using `TwoTowerNetwork`
+                class as the QValueNetwork. This includes {state_output_dim (int),
+                action_output_dim (int), state_hidden_dims (List[int]),
+                action_hidden_dims (List[int])}, all of which are used to instantiate a
+                `TwoTowerNetwork` object.
 
+        """
         super(DeepQLearning, self).__init__(
             exploration_module=(
                 exploration_module
@@ -108,11 +113,14 @@ class DeepQLearning(DeepTDLearning):
             hidden_dims=hidden_dims,
             learning_rate=learning_rate,
             soft_update_tau=soft_update_tau,
+            is_conservative=is_conservative,
+            conservative_alpha=conservative_alpha,
             network_type=network_type,
             action_representation_module=action_representation_module,
             discount_factor=discount_factor,
             training_rounds=training_rounds,
             batch_size=batch_size,
+            target_update_freq=target_update_freq,
             network_instance=network_instance,
             **kwargs,
         )
