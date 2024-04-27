@@ -9,8 +9,9 @@
 
 import unittest
 
-import numpy.testing as npt
 import torch
+
+import torch.testing as tt
 from pearl.neural_networks.common.epistemic_neural_networks import Ensemble
 from pearl.neural_networks.common.utils import ensemble_forward
 from torch import optim
@@ -49,10 +50,11 @@ class TestEnsembles(unittest.TestCase):
         for_loop_values = ensemble_forward(self.network.models, x, use_for_loop=True)
         vectorized_values = ensemble_forward(self.network.models, x, use_for_loop=False)
         self.assertEqual(for_loop_values.shape, vectorized_values.shape)
-        npt.assert_allclose(
-            for_loop_values.detach().numpy(),
-            vectorized_values.detach().numpy(),
+        tt.assert_close(
+            for_loop_values,
+            vectorized_values,
             atol=1e-5,
+            rtol=0.0,
         )
 
     def test_ensemble_optimization(self) -> None:

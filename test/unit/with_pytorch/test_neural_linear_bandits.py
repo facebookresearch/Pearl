@@ -10,6 +10,7 @@
 import unittest
 
 import torch
+import torch.testing as tt
 from pearl.neural_networks.common.residual_wrapper import ResidualWrapper
 from pearl.policy_learners.contextual_bandits.neural_bandit import LOSS_TYPES
 from pearl.policy_learners.contextual_bandits.neural_linear_bandit import (
@@ -71,25 +72,25 @@ class TestNeuralLinearBandits(unittest.TestCase):
         copy_policy_learner.load_state_dict(policy_learner.state_dict())
 
         # assert and check if they are the same
-        self.assertTrue(
-            torch.equal(
-                copy_policy_learner.model._linear_regression_layer._A,
-                policy_learner.model._linear_regression_layer._A,
-            )
+        tt.assert_close(
+            copy_policy_learner.model._linear_regression_layer._A,
+            policy_learner.model._linear_regression_layer._A,
+            rtol=0.0,
+            atol=0.0,
         )
 
-        self.assertTrue(
-            torch.equal(
-                copy_policy_learner.model._linear_regression_layer._b,
-                policy_learner.model._linear_regression_layer._b,
-            )
+        tt.assert_close(
+            copy_policy_learner.model._linear_regression_layer._b,
+            policy_learner.model._linear_regression_layer._b,
+            rtol=0.0,
+            atol=0.0,
         )
 
         for p1, p2 in zip(
             copy_policy_learner.model._nn_layers.parameters(),
             policy_learner.model._nn_layers.parameters(),
         ):
-            self.assertTrue(torch.equal(p1.to(p2.device), p2))
+            tt.assert_close(p1.to(p2.device), p2, rtol=0.0, atol=0.0)
 
     # currently test support mse, mae, cross_entropy
     # separate loss_types into inddividual test cases to make it easier to debug.
