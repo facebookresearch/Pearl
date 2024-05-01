@@ -32,7 +32,6 @@ class Environment(ABC):
         """Returns the action space of the environment."""
         pass
 
-    # FIXME: add this and in implement in all concrete subclasses
     @property
     @abstractmethod
     def observation_space(self) -> Space:

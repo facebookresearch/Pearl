@@ -19,6 +19,7 @@ from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
 from pearl.api.environment import Environment
 from pearl.api.observation import Observation
+from pearl.api.space import Space
 from pearl.history_summarization_modules.lstm_history_summarization_module import (
     LSTMHistorySummarizationModule,
 )
@@ -40,6 +41,7 @@ from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buff
 )
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
+from pearl.utils.instantiations.spaces.box import BoxSpace
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 set_seed(0)
@@ -147,8 +149,13 @@ class RecEnv(Environment):
         self.state: torch.Tensor = torch.zeros((self.history_length, 100)).to(device)
         self._action_space: DiscreteActionSpace = DiscreteActionSpace(self.actions[0])
 
+    @property
     def action_space(self) -> ActionSpace:
         return DiscreteActionSpace(self.actions[0])
+
+    @property
+    def observation_space(self) -> Space:
+        return BoxSpace(low=torch.zeros((1,)), high=torch.ones((1,)))
 
     def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
         self.state: torch.Tensor = torch.zeros((self.history_length, 100))
