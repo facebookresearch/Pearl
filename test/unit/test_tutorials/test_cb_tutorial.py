@@ -36,8 +36,6 @@ from pearl.utils.uci_data import download_uci_data
 
 set_seed(0)
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-device_id = 0 if torch.cuda.is_available() else -1
 
 """
 This is a unit test version of the CB tutorial.
@@ -56,7 +54,7 @@ class TestCBTutorials(unittest.TestCase):
 
     def test_cb_tutorials(self) -> None:
         # load environment
-        device = -1
+        device_id = 0 if torch.cuda.is_available() else -1
 
         # Download UCI dataset if doesn't exist
         uci_data_path = "./utils/instantiations/environments/uci_datasets"
@@ -75,8 +73,8 @@ class TestCBTutorials(unittest.TestCase):
         env = SLCBEnvironment(**pendigits_uci_dict)  # pyre-ignore
 
         # experiment code
-        number_of_steps = 200
-        record_period = 400
+        number_of_steps = 300
+        record_period = 300
 
         """
         SquareCB
@@ -98,7 +96,7 @@ class TestCBTutorials(unittest.TestCase):
                 ),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(100_000),
-            device_id=device,
+            device_id=device_id,
         )
 
         _ = online_learning(
@@ -126,7 +124,7 @@ class TestCBTutorials(unittest.TestCase):
                 exploration_module=UCBExploration(alpha=1.0),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(100_000),
-            device_id=device,
+            device_id=device_id,
         )
 
         _ = online_learning(
@@ -155,7 +153,7 @@ class TestCBTutorials(unittest.TestCase):
                 exploration_module=ThompsonSamplingExplorationLinear(),
             ),
             replay_buffer=FIFOOffPolicyReplayBuffer(100_000),
-            device_id=-1,
+            device_id=device_id,
         )
 
         _ = online_learning(
