@@ -3,6 +3,7 @@
 # pyre-strict
 
 
+import os
 import random
 import unittest
 from typing import List, Optional, Tuple
@@ -196,16 +197,23 @@ class TestTutorials(unittest.TestCase):
     def test_rec_system(self) -> None:
         # load environment
         model = SequenceClassificationModel(100).to(device)
+        if os.path.exists("../Pearl"):
+            # Github CI
+            model_dir = "tutorials/single_item_recommender_system_example/"
+        else:
+            # internal Meta tests
+            model_dir = "pearl/tutorials/single_item_recommender_system_example/"
+
         model.load_state_dict(
             # Note: in the tutorial the directory "pearl" must be replaced by "Pearl"
             torch.load(
-                "pearl/tutorials/single_item_recommender_system_example/env_model_state_dict.pt",
+                os.path.join(model_dir, "env_model_state_dict.pt"),
                 weights_only=True,
             )
         )
         # Note: in the tutorial the directory "pearl" must be replaced by "Pearl"
         actions = torch.load(
-            "pearl/tutorials/single_item_recommender_system_example/news_embedding_small.pt",
+            os.path.join(model_dir, "news_embedding_small.pt"),
             weights_only=True,
         )
         history_length = 8
