@@ -141,9 +141,25 @@ class REINFORCE(ActorCriticBase):
         assert type(replay_buffer) is OnPolicyReplayBuffer
         assert len(replay_buffer.memory) > 0
         # compute return for all states in the buffer
+
+        # Transitions in the reply buffer memory are in the CPU
+        # (only sampled batches are moved to the used device,
+        # kept in replay_buffer.device_for_batches)
+        # To use it in expressions involving the critic,
+        # we must move them to the device being used first.
+        next_state = replay_buffer.memory[-1].next_state
+        terminated = replay_buffer.memory[-1].terminated
+        assert next_state is not None
+        assert terminated is not None
+        next_state_in_device = next_state.to(replay_buffer.device_for_batches)
+        terminated_in_device = terminated.to(replay_buffer.device_for_batches)
+
         cum_reward = self._critic(
-            self._history_summarization_module(replay_buffer.memory[-1].next_state)
-        ).detach() * (~replay_buffer.memory[-1].terminated)
+            self._history_summarization_module(next_state_in_device)
+        ).detach() * (~terminated_in_device)
+
+        # move cum_reward to CPU to process CPU-stored transitions
+        cum_reward = cum_reward.cpu()
         for transition in reversed(replay_buffer.memory):
             cum_reward += transition.reward
             assert isinstance(transition, OnPolicyTransition)

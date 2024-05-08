@@ -148,7 +148,7 @@ def offline_learning(
     set_seed(seed=seed)
 
     # move replay buffer to device of the offline agent
-    data_buffer.device = offline_agent.device
+    data_buffer.device_for_batches = offline_agent.device
 
     # training loop
     for i in range(training_epochs):

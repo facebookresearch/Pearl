@@ -43,38 +43,38 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         self._has_next_action = has_next_action
         self._has_next_available_actions = has_next_available_actions
         self.has_cost_available = has_cost_available
-        self._device: torch.device = get_default_device()
+        self._device_for_batches: torch.device = get_default_device()
 
     @property
-    def device(self) -> torch.device:
-        return self._device
+    def device_for_batches(self) -> torch.device:
+        return self._device_for_batches
 
-    @device.setter
-    def device(self, value: torch.device) -> None:
-        self._device = value
+    @device_for_batches.setter
+    def device_for_batches(self, new_device_for_batches: torch.device) -> None:
+        self._device_for_batches = new_device_for_batches
 
     def _process_single_state(self, state: SubjectiveState) -> torch.Tensor:
         if isinstance(state, torch.Tensor):
-            return state.clone().detach().to(self._device).unsqueeze(0)
+            return state.to(get_default_device()).clone().detach().unsqueeze(0)
         else:
-            return torch.tensor(state, device=self._device).unsqueeze(0)
+            return torch.tensor(state).unsqueeze(0)
 
     def _process_single_action(self, action: Action) -> torch.Tensor:
         if isinstance(action, torch.Tensor):
-            return action.clone().detach().to(self._device).unsqueeze(0)
+            return action.to(get_default_device()).clone().detach().unsqueeze(0)
         else:
-            return torch.tensor(action, device=self._device).unsqueeze(0)
+            return torch.tensor(action).unsqueeze(0)
 
     def _process_single_reward(self, reward: Reward) -> torch.Tensor:
-        return torch.tensor([reward], device=self._device)
+        return torch.tensor([reward])
 
     def _process_single_cost(self, cost: Optional[float]) -> Optional[torch.Tensor]:
         if cost is None:
             return None
-        return torch.tensor([cost], device=self._device)
+        return torch.tensor([cost])
 
     def _process_single_terminated(self, terminated: bool) -> torch.Tensor:
-        return torch.tensor([terminated], device=self._device)  # (1,)
+        return torch.tensor([terminated])  # (1,)
 
     """
     This function is only used for discrete action space.
@@ -116,7 +116,6 @@ class TensorBasedReplayBuffer(ReplayBuffer):
 
         available_actions_tensor_with_padding = torch.zeros(
             (1, max_number_actions, available_action_space.action_dim),
-            device=self._device,
             dtype=torch.float32,
         )  # (1 x action_space_size x action_dim)
         available_actions_tensor = available_action_space.actions_batch
@@ -125,7 +124,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         )
 
         unavailable_actions_mask = torch.zeros(
-            (1, max_number_actions), device=self._device
+            (1, max_number_actions)
         )  # (1 x action_space_size)
         unavailable_actions_mask[0, available_action_space.n :] = 1
         unavailable_actions_mask = unavailable_actions_mask.bool()
@@ -253,4 +252,4 @@ class TensorBasedReplayBuffer(ReplayBuffer):
             next_unavailable_actions_mask=next_unavailable_actions_mask_batch,
             terminated=terminated_batch,
             cost=cost_batch,
-        ).to(self.device)
+        ).to(self.device_for_batches)

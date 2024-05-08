@@ -65,5 +65,5 @@ class FIFOOffPolicyReplayBuffer(TensorBasedReplayBuffer):
                 next_unavailable_actions_mask=next_unavailable_actions_mask,
                 terminated=self._process_single_terminated(terminated),
                 cost=self._process_single_cost(cost),
-            ).to(self.device)
+            )
         )

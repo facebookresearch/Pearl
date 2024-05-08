@@ -114,7 +114,7 @@ class PearlAgent(Agent):
         self.replay_buffer.is_action_continuous = (
             self.policy_learner.is_action_continuous
         )
-        self.replay_buffer.device = self.device
+        self.replay_buffer.device_for_batches = self.device
 
         # check that all components of the agent are compatible with each other
         pearl_agent_compatibility_check(

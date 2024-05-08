@@ -104,7 +104,7 @@ class OnPolicyReplayBuffer(TensorBasedReplayBuffer):
                 next_available_actions=None,
                 next_unavailable_actions_mask=None,
                 terminated=self._process_single_terminated(terminated),
-            ).to(self.device)
+            )
         )
 
     def _create_transition_batch(
@@ -146,4 +146,4 @@ class OnPolicyReplayBuffer(TensorBasedReplayBuffer):
             transition_batch, **on_policy_attrs
         )
 
-        return transition_batch
+        return transition_batch.to(self.device_for_batches)

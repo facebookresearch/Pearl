@@ -184,6 +184,17 @@ class ProximalPolicyOptimization(ActorCriticBase):
             torch.cat(action_list)
         )
 
+        # Transitions in the reply buffer memory are in the CPU
+        # (only sampled batches are moved to the used device, kept in replay_buffer.device)
+        # To use it in expressions involving the models,
+        # we must move them to the device being used first.
+        history_summary_batch = history_summary_batch.to(
+            replay_buffer.device_for_batches
+        )
+        action_representation_batch = action_representation_batch.to(
+            replay_buffer.device_for_batches
+        )
+
         state_values = self._critic(history_summary_batch).detach()
         action_probs = (
             self._actor.get_action_prob(
@@ -193,16 +204,28 @@ class ProximalPolicyOptimization(ActorCriticBase):
             .detach()
             .unsqueeze(-1)
         )
+
+        # Transitions in the reply buffer memory are in the CPU
+        # (only sampled batches are moved to the used device,
+        # kept in replay_buffer.device_for_batches)
+        # To use it in expressions involving the critic,
+        # we must move them to the device being used first.
+        next_state = replay_buffer.memory[-1].next_state
+        assert next_state is not None
+        next_state_in_device = next_state.to(replay_buffer.device_for_batches)
+
         # Obtain the value of the most recent state stored in the replay buffer.
         # This value is used to compute the generalized advantage estimation (gae)
         # and the truncated lambda return for all states in the replay buffer.
         next_value = self._critic(
-            self._history_summarization_module(replay_buffer.memory[-1].next_state)
+            self._history_summarization_module(next_state_in_device)
         ).detach()[
             0
         ]  # shape (1,)
         gae = torch.tensor([0.0]).to(state_values.device)
         for i, transition in enumerate(reversed(replay_buffer.memory)):
+            original_transition_device = transition.device
+            transition.to(state_values.device)
             td_error = (
                 transition.reward
                 + self._discount_factor * next_value * (~transition.terminated)
@@ -222,3 +245,4 @@ class ProximalPolicyOptimization(ActorCriticBase):
             # action probabilities from the current policy
             transition.action_probs = action_probs[i]
             next_value = state_values[i]
+            transition.to(original_transition_device)
