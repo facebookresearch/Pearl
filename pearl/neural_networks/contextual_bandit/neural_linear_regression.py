@@ -27,6 +27,7 @@ class NeuralLinearRegression(MuSigmaCBModel):
         hidden_dims: List[int],  # last one is the input dim for linear regression
         l2_reg_lambda_linear: float = 1.0,
         gamma: float = 1.0,
+        force_pinv: bool = False,
         output_activation_name: str = "linear",
         use_batch_norm: bool = False,
         use_layer_norm: bool = False,
@@ -46,6 +47,9 @@ class NeuralLinearRegression(MuSigmaCBModel):
             hidden_dims: size of hidden layers in the network
             l2_reg_lambda_linear: L2 regularization parameter for the linear regression layer
             gamma: discounting multiplier for the linear regression layer
+            force_pinv: If True, we will always use pseudo inverse to invert the `A` matrix. If
+                False, we will first try to use regular matrix inversion. If it fails, we will
+                fallback to pseudo inverse.
             output_activation_name: output activation function name (see ACTIVATION_MAP)
             use_batch_norm: whether to use batch normalization
             use_layer_norm: whether to use layer normalization
@@ -73,6 +77,7 @@ class NeuralLinearRegression(MuSigmaCBModel):
             feature_dim=hidden_dims[-1],
             l2_reg_lambda=l2_reg_lambda_linear,
             gamma=gamma,
+            force_pinv=force_pinv,
         )
         self.output_activation: nn.Module = ACTIVATION_MAP[output_activation_name]()
         self.linear_layer_e2e = nn.Linear(

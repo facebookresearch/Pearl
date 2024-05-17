@@ -76,6 +76,7 @@ class NeuralLinearBandit(ContextualBanditBase):
         l2_reg_lambda_linear: float = 1.0,
         gamma: float = 1.0,
         apply_discounting_interval: float = 0.0,  # set to 0 to disable
+        force_pinv: bool = False,  # If True, use pseudo inverse instead of regular inverse for `A`
         state_features_only: bool = True,
         loss_type: str = "mse",  # one of the LOSS_TYPES names: [mse, mae, cross_entropy]
         output_activation_name: str = "linear",
@@ -103,6 +104,7 @@ class NeuralLinearBandit(ContextualBanditBase):
             hidden_dims=hidden_dims,
             l2_reg_lambda_linear=l2_reg_lambda_linear,
             gamma=gamma,
+            force_pinv=force_pinv,
             output_activation_name=output_activation_name,
             use_batch_norm=use_batch_norm,
             use_layer_norm=use_layer_norm,
