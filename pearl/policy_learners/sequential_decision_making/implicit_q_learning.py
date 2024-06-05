@@ -125,16 +125,6 @@ class ImplicitQLearning(ActorCriticBase):
         self._expectile = expectile
         self._is_action_continuous: bool = action_space.is_continuous
 
-        # TODO: create actor network interfaces for discrete and continuous actor networks
-        # and use the continuous one in this test.
-        if self._is_action_continuous:
-            torch._assert(
-                actor_network_type == GaussianActorNetwork
-                or actor_network_type == VanillaContinuousActorNetwork,
-                "continuous action space requires a deterministic or a stochastic actor which works"
-                "with continuous action spaces",
-            )
-
         self._temperature_advantage_weighted_regression = (
             temperature_advantage_weighted_regression
         )

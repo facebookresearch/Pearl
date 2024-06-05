@@ -94,6 +94,7 @@ class TD3(DeepDeterministicPolicyGradient):
         self._actor_update_noise = actor_update_noise
         self._actor_update_noise_clip = actor_update_noise_clip
         self._critic_update_count = 0
+        self._last_actor_loss: float = 0.0
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         # The actor and the critic updates are arranged in the following way
@@ -108,7 +109,8 @@ class TD3(DeepDeterministicPolicyGradient):
             # see ddpg base class for actor update details
             actor_loss = self._actor_loss(batch)
             actor_loss.backward(retain_graph=True)
-            report["actor_loss"] = actor_loss.item()
+            self._last_actor_loss = actor_loss.item()
+        report["actor_loss"] = self._last_actor_loss
 
         self._critic_optimizer.zero_grad()
         critic_loss = self._critic_loss(batch)  # critic update
