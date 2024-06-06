@@ -200,8 +200,8 @@ class NeuralLinearBandit(ContextualBanditBase):
             "prediction": predicted_values,
             "weight": batch_weight,
             "loss": loss.detach(),
-            "scores:ucb": ucb_scores,
-            "scores:mu": predicted_values.mean(),
+            "ucb_scores": ucb_scores,
+            "mu_scores": predicted_values.mean(),
         }
 
     def act(
