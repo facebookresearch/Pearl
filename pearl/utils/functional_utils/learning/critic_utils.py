@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import cast, Iterable, Optional, Type, Union
+from typing import cast, Iterable, Optional, Tuple, Type, Union
 
 import torch
 import torch.nn as nn
@@ -167,7 +167,7 @@ def twin_critic_action_value_loss(
     action_batch: torch.Tensor,
     expected_target_batch: torch.Tensor,
     critic: TwinCritic,
-) -> torch.Tensor:
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     This method calculates the sum of the mean squared errors between the predicted Q-values
     using critic networks (LHS of the Bellman equation) and the input target estimates (RHS of the
@@ -185,6 +185,8 @@ def twin_critic_action_value_loss(
         loss (torch.Tensor): Sum of mean squared errors in the Bellman equation (for action-value
             prediction) corresponding to both critic networks. The expected shape is `()`. This
             scalar loss is used to train both critics of the twin critic network.
+        q1: q1 critic network prediction
+        q2: q2 critic network prediction
     """
 
     criterion = torch.nn.MSELoss()
@@ -192,4 +194,4 @@ def twin_critic_action_value_loss(
     loss = criterion(
         q_1.reshape_as(expected_target_batch), expected_target_batch.detach()
     ) + criterion(q_2.reshape_as(expected_target_batch), expected_target_batch.detach())
-    return loss
+    return loss, q_1, q_2

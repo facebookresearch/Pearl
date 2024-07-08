@@ -264,7 +264,7 @@ class ImplicitQLearning(ActorCriticBase):
         ), "Critic in ImplicitQLearning should be TwinCritic"
 
         # update twin critics towards target
-        loss = twin_critic_action_value_loss(
+        loss, _, _ = twin_critic_action_value_loss(
             state_batch=batch.state,
             action_batch=batch.action,
             expected_target_batch=target,

@@ -33,7 +33,7 @@ class TestTwinCritic(unittest.TestCase):
         state_batch = torch.randn(self.batch_size, self.state_dim)
         action_batch = torch.randn(self.batch_size, self.action_dim)
         optimizer = torch.optim.AdamW(twin_critics.parameters(), lr=1e-3)
-        loss = twin_critic_action_value_loss(
+        loss, _, _ = twin_critic_action_value_loss(
             state_batch=state_batch,
             action_batch=action_batch,
             expected_target_batch=torch.randn(self.batch_size),
