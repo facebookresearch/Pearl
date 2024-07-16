@@ -194,4 +194,5 @@ def twin_critic_action_value_loss(
     loss = criterion(
         q_1.reshape_as(expected_target_batch), expected_target_batch.detach()
     ) + criterion(q_2.reshape_as(expected_target_batch), expected_target_batch.detach())
+    loss = loss / 2.0
     return loss, q_1, q_2
