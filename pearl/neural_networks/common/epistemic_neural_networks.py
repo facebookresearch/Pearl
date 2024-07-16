@@ -13,11 +13,11 @@ This module defines epistemic neural networks that can model posterior distribut
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import torch
 import torch.nn as nn
-from pearl.neural_networks.common.utils import mlp_block
+from pearl.neural_networks.common.utils import init_weights, mlp_block
 from torch import Tensor
 
 
@@ -37,7 +37,7 @@ class EpistemicNeuralNetwork(ABC, nn.Module):
         super(EpistemicNeuralNetwork, self).__init__()
 
     @abstractmethod
-    def forward(self, x: Tensor, z: Optional[Tensor] = None) -> Tensor:
+    def forward(self, x: Tensor, z: Tensor) -> Tensor:
         """
         Input:
             x: Feature vector of state action pairs
@@ -116,9 +116,7 @@ class Ensemble(EpistemicNeuralNetwork):
 
         self._resample_epistemic_index()
 
-    def forward(
-        self, x: Tensor, z: Optional[Tensor] = None, persistent: bool = False
-    ) -> Tensor:
+    def forward(self, x: Tensor, z: Tensor, persistent: bool = False) -> Tensor:
         """
         Input:
             x: Feature vector of state action pairs
@@ -126,12 +124,9 @@ class Ensemble(EpistemicNeuralNetwork):
         Output:
             posterior samples corresponding to z
         """
-        if z is not None:
-            assert z.flatten().shape[0] == 1
-            ensemble_index = int(z.item())
-            assert ensemble_index >= 0 and ensemble_index < self.ensemble_size
-        else:
-            ensemble_index = self.z
+        assert z.flatten().shape[0] == 1
+        ensemble_index = int(z.item())
+        assert ensemble_index >= 0 and ensemble_index < self.ensemble_size
 
         return self.models[ensemble_index](x)
 
@@ -140,3 +135,112 @@ class Ensemble(EpistemicNeuralNetwork):
 
     def _resample_epistemic_index(self) -> None:
         self.z = torch.randint(0, self.ensemble_size, (1,))
+
+
+class Priornet(nn.Module):
+    """
+    Prior network for epinet.  This network contains an ensemble of
+    randomly initialized models which are held fixed during training.
+    """
+
+    def __init__(
+        self, input_dim: int, hidden_dims: List[int], output_dim: int, index_dim: int
+    ) -> None:
+        super(Priornet, self).__init__()
+        self.input_dim = input_dim
+        self.hidden_dims = hidden_dims
+        self.output_dim = output_dim
+        self.index_dim = index_dim
+        models = []
+        for _ in range(self.index_dim):
+            model = mlp_block(self.input_dim, self.hidden_dims, self.output_dim)
+            # Xavier uniform initalization
+            model.apply(init_weights)
+            models.append(model)
+        self.models: nn.ModuleList = nn.ModuleList(models)
+        self.params: Dict[str, Any]
+        self.buffers: Dict[str, Any]
+        self.params, self.buffers = torch.func.stack_module_state(self.models)
+
+    def forward(self, x: Tensor, z: Tensor) -> Tensor:
+        """
+        Perform forward pass on the priornet ensemble and weight by epistemic index
+        x and z are assumed to already be formatted.
+        Input:
+            x: tensor consisting of concatentated input and epistemic index
+            z: tensor consisting of epistemic index
+        Output:
+            ensemble output of x weighted by epistemic index vector z.
+        """
+        outputs = []
+        for model in self.models:
+            outputs.append(model(x))
+        outputs = torch.stack(outputs, dim=0)
+        return torch.einsum("ijk,ji->jk", outputs, z)
+
+
+class Epinet(EpistemicNeuralNetwork):
+    def __init__(
+        self,
+        index_dim: int,
+        input_dim: int,
+        output_dim: int,
+        num_indices: int,
+        epi_hiddens: List[int],
+        prior_hiddens: List[int],
+        prior_scale: float,
+    ) -> None:
+        super(Epinet, self).__init__(input_dim, None, output_dim)
+        self.index_dim = index_dim
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.num_indices = num_indices
+        self.epi_hiddens = epi_hiddens
+        self.prior_hiddens = prior_hiddens
+        self.prior_scale = prior_scale
+
+        epinet_input_dim = self.input_dim + self.index_dim
+        # Trainable Epinet
+        self.epinet: nn.Module = mlp_block(
+            epinet_input_dim, self.epi_hiddens, self.index_dim * self.output_dim
+        )
+        self.epinet.apply(init_weights)
+        # Priornet
+        self.priornet = Priornet(
+            self.input_dim, self.prior_hiddens, self.output_dim, self.index_dim
+        )
+
+    def format_xz(self, x: Tensor, z: Tensor) -> Tensor:
+        """
+        Take cartesian product of x and z and concatenate for forward pass.
+        Input:
+            x: Feature vectors containing item and user embeddings and interactions
+            z: Epinet epistemic indices
+        Output:
+            xz: Concatenated cartesian product of x and z
+        """
+        batch_size, d = x.shape
+        num_indices, _ = z.shape
+        x_expanded = x.unsqueeze(1).expand(batch_size, num_indices, d)
+        z_expanded = z.unsqueeze(0).expand(batch_size, num_indices, self.index_dim)
+        xz = torch.cat([x_expanded, z_expanded], dim=-1)
+        return xz.view(batch_size * num_indices, d + self.index_dim)
+
+    def forward(self, x: Tensor, z: Tensor, persistent: bool = False) -> Tensor:
+        """
+        Input:
+            x: Feature vector containing item and user embeddings and interactions
+            z: Matrix containing . Epinet epistemic indices
+        Output:
+            posterior samples corresponding to z
+        """
+        xz = self.format_xz(x, z)
+        x_cartesian, z_cartesian = xz[:, : -self.index_dim], xz[:, -self.index_dim :]
+        batch_size, _ = xz.shape
+        epinet_out = self.epinet(xz.detach()).view(
+            batch_size, self.output_dim, self.index_dim
+        )
+        epinet_out = torch.einsum("ijk,ik->ij", epinet_out, z_cartesian)
+        with torch.no_grad():
+            priornet_out = self.prior_scale * self.priornet(x_cartesian, z_cartesian)
+        return epinet_out + priornet_out

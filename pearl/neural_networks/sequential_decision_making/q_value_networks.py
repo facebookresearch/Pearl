@@ -527,17 +527,15 @@ class EnsembleQValueNetwork(QValueNetwork):
         r"""Resamples the epistemic index of the underlying model."""
         self._model._resample_epistemic_index()
 
-    def forward(
-        self, x: Tensor, z: Optional[Tensor] = None, persistent: bool = False
-    ) -> Tensor:
+    def forward(self, x: Tensor, z: Tensor, persistent: bool = False) -> Tensor:
         return self._model(x, z=z, persistent=persistent)
 
     def get_q_values(
         self,
         state_batch: Tensor,
         action_batch: Tensor,
+        z: Tensor,
         curr_available_actions_batch: Optional[Tensor] = None,
-        z: Optional[Tensor] = None,
         persistent: bool = False,
     ) -> Tensor:
         x = torch.cat([state_batch, action_batch], dim=-1)

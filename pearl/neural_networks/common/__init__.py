@@ -18,4 +18,5 @@ __all__ = [
     "ValueNetwork",
     "VanillaCNN",
     "VanillaValueNetwork",
+    "Epinet",
 ]

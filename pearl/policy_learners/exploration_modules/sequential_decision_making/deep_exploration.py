@@ -72,7 +72,10 @@ class DeepExploration(ExplorationModule):
 
         with torch.no_grad():
             q_values = self.q_ensemble_network.get_q_values(
-                state_batch=states_repeated, action_batch=actions, persistent=True
+                state_batch=states_repeated,
+                action_batch=actions,
+                z=self.q_ensemble_network._model.z,
+                persistent=True,
             )
             # this does a forward pass since all available
             # actions are already stacked together
