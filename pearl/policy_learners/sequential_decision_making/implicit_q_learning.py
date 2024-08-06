@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, Union
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -95,6 +95,10 @@ class ImplicitQLearning(ActorCriticBase):
         temperature_advantage_weighted_regression: float = 0.5,
         advantage_clamp: float = 100.0,
         action_representation_module: Optional[ActionRepresentationModule] = None,
+        actor_network_instance: Optional[ActorNetwork] = None,
+        critic_network_instance: Optional[
+            Union[ValueNetwork, QValueNetwork, torch.nn.Module]
+        ] = None,
     ) -> None:
         super(ImplicitQLearning, self).__init__(
             state_dim=state_dim,
@@ -120,6 +124,8 @@ class ImplicitQLearning(ActorCriticBase):
             is_action_continuous=action_space.is_continuous,  # inferred from the action space
             on_policy=False,
             action_representation_module=action_representation_module,
+            actor_network_instance=actor_network_instance,
+            critic_network_instance=critic_network_instance,
         )
 
         self._expectile = expectile

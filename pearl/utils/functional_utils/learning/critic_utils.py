@@ -125,8 +125,12 @@ def update_critic_target_network(
         )
     else:
         update_target_network(
-            target_network._model,
-            network._model,
+            (
+                target_network._model
+                if hasattr(target_network, "_model")
+                else target_network
+            ),
+            network._model if hasattr(network, "_model") else network,
             tau=tau,
         )
 
