@@ -267,6 +267,7 @@ def run_episode(
             action.cpu() if isinstance(action, torch.Tensor) else action
         )  # action can be int sometimes
         action_result = env.step(action)
+        # pyre-fixme[58]: `+` is not supported for operand types `int` and `object`.
         cum_reward += action_result.reward
         if (
             num_risky_sa is not None
@@ -296,8 +297,12 @@ def run_episode(
 
     info = {"return": cum_reward}
     if num_risky_sa is not None:
+        # pyre-fixme[6]: For 1st argument expected `SupportsKeysAndGetItem[str,
+        #  int]` but got `Dict[str, float]`.
         info.update({"risky_sa_ratio": num_risky_sa / episode_steps})
     if cum_cost is not None:
+        # pyre-fixme[6]: For 1st argument expected `SupportsKeysAndGetItem[str,
+        #  int]` but got `Dict[str, float]`.
         info.update({"return_cost": cum_cost})
 
     return info, episode_steps

@@ -102,6 +102,7 @@ class DisjointBanditContainer(ContextualBanditBase):
                     state = batch.state[:, arm, :]
                 batches.append(
                     TransitionBatch(
+                        # pyre-fixme[61]: `state` is undefined, or not always defined.
                         state=state[mask],
                         reward=batch.reward[mask],
                         weight=(

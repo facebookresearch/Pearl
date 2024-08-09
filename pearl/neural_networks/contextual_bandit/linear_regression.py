@@ -125,6 +125,8 @@ class LinearRegression(MuSigmaCBModel):
         try:
             return torch.linalg.inv(A).contiguous()
         # pyre-ignore[16]: Module `_C` has no attribute `_LinAlgError`.
+        # pyre-fixme[66]: Exception handler type annotation `unknown` must extend
+        #  BaseException.
         except torch._C._LinAlgError as e:
             logger.warning(
                 "Exception raised during A inversion, falling back to pseudo-inverse",

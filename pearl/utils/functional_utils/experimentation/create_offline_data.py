@@ -82,6 +82,7 @@ def create_offline_data(
             action = agent.act(exploit=False)
 
             action_result = env.step(action)
+            # pyre-fixme[58]: `+` is not supported for operand types `int` and `object`.
             g += action_result.reward
             agent.observe(action_result)
             transition_tuple = {
