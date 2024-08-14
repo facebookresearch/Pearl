@@ -292,14 +292,14 @@ BootstrappedDQN_method = {
     "replay_buffer_args": {
         "capacity": 50000,
         "p": 1.0,
-        "ensemble_size": 10,
+        "ensemble_size": 5,
     },
     "network_module": EnsembleQValueNetwork,
     "network_args": {
-        "ensemble_size": 10,
+        "ensemble_size": 5,
         "output_dim": 1,
         "hidden_dims": [64, 64],
-        "prior_scale": 0.0,
+        "prior_scale": 100.0,
     },
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},

@@ -14,6 +14,9 @@ import torch
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
+from pearl.action_representation_modules.identity_action_representation_module import (
+    IdentityActionRepresentationModule,
+)
 from pearl.api.action import Action
 
 from pearl.api.action_space import ActionSpace
@@ -62,11 +65,19 @@ class BootstrappedDQN(DeepQLearning):
         soft_update_tau: float = 1.0,
         action_representation_module: Optional[ActionRepresentationModule] = None,
     ) -> None:
+        assert isinstance(action_space, DiscreteActionSpace)
+        if action_representation_module is None:
+            action_representation_module = IdentityActionRepresentationModule(
+                max_number_actions=action_space.n,
+                representation_dim=action_space.action_dim,
+            )
         PolicyLearner.__init__(
             self=self,
             training_rounds=training_rounds,
             batch_size=batch_size,
-            exploration_module=DeepExploration(q_ensemble_network),
+            exploration_module=DeepExploration(
+                q_ensemble_network, action_representation_module
+            ),
             on_policy=False,
             is_action_continuous=False,
             action_representation_module=action_representation_module,

@@ -48,9 +48,11 @@ class DeepExploration(ExplorationModule):
     def __init__(
         self,
         q_ensemble_network: EnsembleQValueNetwork,
+        action_representation_module: torch.nn.Module,
     ) -> None:
         super(DeepExploration, self).__init__()
         self.q_ensemble_network = q_ensemble_network
+        self.action_representation_module = action_representation_module
 
     def act(
         self,
@@ -69,6 +71,8 @@ class DeepExploration(ExplorationModule):
 
         actions = action_space.actions_batch.to(subjective_state.device)
         # (action_space_size, action_dim)
+
+        actions = self.action_representation_module(actions)
 
         with torch.no_grad():
             q_values = self.q_ensemble_network.get_q_values(
