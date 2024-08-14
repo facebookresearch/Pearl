@@ -17,6 +17,7 @@ from pearl.api.state import SubjectiveState
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
 class PropensityExploration(ExplorationModule):
@@ -36,4 +37,7 @@ class PropensityExploration(ExplorationModule):
         action_availability_mask: Optional[torch.Tensor] = None,
         representation: Optional[torch.nn.Module] = None,
     ) -> Action:
-        return torch.distributions.Categorical(values).sample()
+        if not isinstance(action_space, DiscreteActionSpace):
+            raise TypeError("action space must be discrete")
+        action_index = torch.distributions.Categorical(values).sample()
+        return action_space.actions[action_index]
