@@ -38,6 +38,10 @@ from pearl.replay_buffers.sequential_decision_making.on_policy_replay_buffer imp
     OnPolicyTransition,
     OnPolicyTransitionBatch,
 )
+from pearl.utils.functional_utils.learning.critic_utils import (
+    twin_critic_action_value_loss,
+)
+
 from pearl.replay_buffers.transition import TransitionBatch
 
 from pearl.utils.functional_utils.learning.critic_utils import (
@@ -110,8 +114,6 @@ class ProximalPolicyOptimization(ActorCriticBase):
         """
         Loss = actor loss + critic loss + entropy_bonus_scaling * entropy loss
         """
-        # TODO need to support continuous action
-        # TODO: change the output shape of value networks
         assert isinstance(batch, OnPolicyTransitionBatch)
         action_probs = self._actor.get_action_prob(
             state_batch=batch.state,
@@ -156,13 +158,26 @@ class ProximalPolicyOptimization(ActorCriticBase):
         return loss
 
     def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
-        assert isinstance(batch, OnPolicyTransitionBatch)
-        assert batch.lam_return is not None
-        return single_critic_state_value_loss(
+        reward_batch = batch.reward  # shape: (batch_size)
+        terminated_batch = batch.terminated  # shape: (batch_size)
+
+        if terminated_batch is not None:
+            expected_state_action_values = (
+                                                   self._get_next_state_expected_values(batch)
+                                                   * self._discount_factor
+                                                   * (1 - terminated_batch.float())
+                                           ) + reward_batch  # shape of expected_state_action_values: (batch_size)
+        else:
+            raise AssertionError("terminated_batch should not be None")
+
+        loss, _, _ = twin_critic_action_value_loss(
             state_batch=batch.state,
-            expected_target_batch=batch.lam_return,
+            action_batch=batch.action,
+            expected_target_batch=expected_state_action_values,
             critic=self._critic,
         )
+
+        return loss
 
     def learn(self, replay_buffer: ReplayBuffer) -> Dict[str, Any]:
         self.preprocess_replay_buffer(replay_buffer)
