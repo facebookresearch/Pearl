@@ -1,3 +1,12 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+#
+
+# pyre-strict
+
 import torch
 from typing import Any, Dict, List, Optional, Type, Union
 from torch.distributions import Normal
@@ -12,11 +21,10 @@ from pearl.neural_networks.common.value_networks import (
 )
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetwork,
-    VanillaActorNetwork,
+    VanillaActorNetwork, GaussianActorNetwork,
 )
-from pearl.policy_learners.exploration_modules.common.propensity_exploration import (
-    PropensityExploration,
-)
+from pearl.policy_learners.exploration_modules.common import NoExploration
+
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
@@ -51,7 +59,7 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
             actor_learning_rate: float = 1e-4,
             critic_learning_rate: float = 1e-4,
             exploration_module: Optional[ExplorationModule] = None,
-            actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
+            actor_network_type: Type[ActorNetwork] = GaussianActorNetwork,
             critic_network_type: Type[ValueNetwork] = VanillaValueNetwork,
             discount_factor: float = 0.99,
             training_rounds: int = 100,
@@ -81,7 +89,7 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
             exploration_module=(
                 exploration_module
                 if exploration_module is not None
-                else PropensityExploration()
+                else NoExploration()
             ),
             discount_factor=discount_factor,
             training_rounds=training_rounds,
@@ -142,6 +150,30 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
         result = super().learn(replay_buffer)
         # Update old actor with the latest actor for the next round
         return result
+
+    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+        actor_critic_loss = super().learn_batch(batch)
+        state_batch = batch.state  # shape: (batch_size x state_dim)
+
+        if self._entropy_autotune:
+            with torch.no_grad():
+                _, action_batch_log_prob = self._actor.sample_action(
+                    state_batch, get_log_prob=True
+                )
+
+            entropy_optimizer_loss = (
+                -torch.exp(self._log_entropy)
+                * (action_batch_log_prob + self._target_entropy)
+            ).mean()
+
+            self._entropy_optimizer.zero_grad()
+            entropy_optimizer_loss.backward()
+            self._entropy_optimizer.step()
+
+            self._entropy_coef = torch.exp(self._log_entropy).detach()
+            {**actor_critic_loss, **{"entropy_coef": entropy_optimizer_loss}}
+
+        return actor_critic_loss
 
     def preprocess_replay_buffer(self, replay_buffer: ReplayBuffer) -> None:
         """
