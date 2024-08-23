@@ -36,7 +36,7 @@ from pearl.utils.functional_utils.learning.critic_utils import (
 from torch import nn
 
 
-class ProximalPolicyOptimization(ActorCriticBase):
+class ContinuousProximalPolicyOptimization(ActorCriticBase):
     """
     PPO algorithm for continuous action spaces.
     """
@@ -56,14 +56,14 @@ class ProximalPolicyOptimization(ActorCriticBase):
             discount_factor: float = 0.99,
             training_rounds: int = 100,
             batch_size: int = 128,
-            epsilon: float = 0.0,
+            epsilon: float = 0.2,
             trace_decay_param: float = 0.95,
             entropy_bonus_scaling: float = 0.01,
             action_representation_module: Optional[ActionRepresentationModule] = None,
             actor_network_instance: Optional[ActorNetwork] = None,
             critic_network_instance: Optional[Union[ValueNetwork, nn.Module]] = None,
     ) -> None:
-        super(ProximalPolicyOptimization, self).__init__(
+        super(ContinuousProximalPolicyOptimization, self).__init__(
             state_dim=state_dim,
             action_space=action_space,
             actor_hidden_dims=actor_hidden_dims,
