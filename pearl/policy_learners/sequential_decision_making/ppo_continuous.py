@@ -113,6 +113,16 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
         # Get action mean and standard deviation (for Gaussian distribution)
         action_mean, action_log_std = self._actor(batch.state)
         action_std = action_log_std.exp()
+        #print(f"action_mean: {action_mean} | action_log_std: {action_log_std} | action_std: {action_std}")
+
+        isnan_mean = action_mean.isnan().any()
+        isnan_std = action_std.isnan().any()
+
+        # print(f"Does Action Mean have Nan: {isnan_mean}")
+        # print(f"Does Action Std have Nan: {isnan_std}")
+
+        # shape of action_batch: (batch_size, action_dim)
+        # shape of action_batch_log_prob: (batch_size, 1)
 
         # Create a normal distribution based on the mean and std
         dist = Normal(action_mean, action_std)
@@ -128,6 +138,7 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
             r_theta, min=1.0 - self._epsilon, max=1.0 + self._epsilon
         )
         loss = -torch.min(r_theta * batch.gae, clip * batch.gae).mean()
+        print(f"loss: {loss}")
 
         # Entropy for encouraging exploration
         entropy = dist.entropy().sum(axis=-1).mean()
@@ -147,33 +158,10 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
     def learn(self, replay_buffer: ReplayBuffer) -> Dict[str, Any]:
         self.preprocess_replay_buffer(replay_buffer)
         # Sample from replay buffer and learn
+
         result = super().learn(replay_buffer)
         # Update old actor with the latest actor for the next round
         return result
-
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
-        actor_critic_loss = super().learn_batch(batch)
-        state_batch = batch.state  # shape: (batch_size x state_dim)
-
-        if self._entropy_autotune:
-            with torch.no_grad():
-                _, action_batch_log_prob = self._actor.sample_action(
-                    state_batch, get_log_prob=True
-                )
-
-            entropy_optimizer_loss = (
-                -torch.exp(self._log_entropy)
-                * (action_batch_log_prob + self._target_entropy)
-            ).mean()
-
-            self._entropy_optimizer.zero_grad()
-            entropy_optimizer_loss.backward()
-            self._entropy_optimizer.step()
-
-            self._entropy_coef = torch.exp(self._log_entropy).detach()
-            {**actor_critic_loss, **{"entropy_coef": entropy_optimizer_loss}}
-
-        return actor_critic_loss
 
     def preprocess_replay_buffer(self, replay_buffer: ReplayBuffer) -> None:
         """
@@ -237,6 +225,13 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
                     * (~transition.terminated)
                     * gae
             )
+
+            isnan_gae = gae.isnan().any()
+            #print(f"GAE: {gae} | TD Error: {td_error}")
+
+            if(isnan_gae):
+                print(td_error)
+
             assert isinstance(transition, OnPolicyTransition)
             transition.gae = gae
             transition.lam_return = gae + state_values[i]

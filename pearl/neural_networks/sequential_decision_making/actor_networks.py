@@ -384,7 +384,8 @@ class GaussianActorNetwork(ActorNetwork):
             input_dim=input_dim,
             hidden_dims=hidden_dims[:-1],
             output_dim=hidden_dims[-1],
-            last_activation="relu",
+            last_activation="tanh",
+            hidden_activation="tanh"
         )
         self.fc_mu = torch.nn.Linear(hidden_dims[-1], output_dim)
         self.fc_std = torch.nn.Linear(hidden_dims[-1], output_dim)
