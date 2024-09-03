@@ -110,6 +110,15 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
         """
         assert isinstance(batch, OnPolicyTransitionBatch)
 
+        state_batch = batch.state  # shape: (batch_size x state_dim)
+
+        # shape of action_batch: (batch_size, action_dim)
+        # shape of action_batch_log_prob: (batch_size, 1)
+        (
+            action_batch,
+            action_batch_log_prob,
+        ) = self._actor.sample_action(state_batch, get_log_prob=True)
+
         # Get action mean and standard deviation (for Gaussian distribution)
         action_mean, action_log_std = self._actor(batch.state)
         action_std = action_log_std.exp()
@@ -117,6 +126,8 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
 
         isnan_mean = action_mean.isnan().any()
         isnan_std = action_std.isnan().any()
+
+        action_mean = action_batch
 
         # print(f"Does Action Mean have Nan: {isnan_mean}")
         # print(f"Does Action Std have Nan: {isnan_std}")
@@ -131,14 +142,17 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
         # Calculate the ratio for PPO
         action_probs_old = batch.action_probs
         assert action_probs_old is not None
-        r_theta = torch.exp(log_probs - action_probs_old)  # shape (batch_size)
+        r_theta = torch.exp(action_batch_log_prob - action_probs_old)  # shape (batch_size)
 
         # Clipped surrogate objective
         clip = torch.clamp(
             r_theta, min=1.0 - self._epsilon, max=1.0 + self._epsilon
         )
         loss = -torch.min(r_theta * batch.gae, clip * batch.gae).mean()
-        print(f"loss: {loss}")
+        #print(f"loss: {loss}")
+
+        if(loss > 300):
+            print(loss)
 
         # Entropy for encouraging exploration
         entropy = dist.entropy().sum(axis=-1).mean()
@@ -172,12 +186,19 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
         """
         assert type(replay_buffer) is OnPolicyReplayBuffer
         assert len(replay_buffer.memory) > 0
-
-        state_list, action_list = [], []
+        (
+            state_list,
+            action_list,
+            available_actions_list,
+            unavailable_actions_mask_list,
+        ) = ([], [], [], [])
         for transition in reversed(replay_buffer.memory):
             state_list.append(transition.state)
             action_list.append(transition.action)
-
+            available_actions_list.append(transition.curr_available_actions)
+            unavailable_actions_mask_list.append(
+                transition.curr_unavailable_actions_mask
+            )
         history_summary_batch = self._history_summarization_module(
             torch.cat(state_list)
         ).detach()
@@ -185,6 +206,10 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
             torch.cat(action_list)
         )
 
+        # Transitions in the reply buffer memory are in the CPU
+        # (only sampled batches are moved to the used device, kept in replay_buffer.device)
+        # To use it in expressions involving the models,
+        # we must move them to the device being used first.
         history_summary_batch = history_summary_batch.to(
             replay_buffer.device_for_batches
         )
@@ -205,10 +230,15 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
         next_state = replay_buffer.memory[-1].next_state
         assert next_state is not None
         next_state_in_device = next_state.to(replay_buffer.device_for_batches)
+
+        # Obtain the value of the most recent state stored in the replay buffer.
+        # This value is used to compute the generalized advantage estimation (gae)
+        # and the truncated lambda return for all states in the replay buffer.
         next_value = self._critic(
             self._history_summarization_module(next_state_in_device)
-        ).detach()[0]
-
+        ).detach()[
+            0
+        ]  # shape (1,)
         gae = torch.tensor([0.0]).to(state_values.device)
         for i, transition in enumerate(reversed(replay_buffer.memory)):
             original_transition_device = transition.device
@@ -226,15 +256,11 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
                     * gae
             )
 
-            isnan_gae = gae.isnan().any()
-            #print(f"GAE: {gae} | TD Error: {td_error}")
-
-            if(isnan_gae):
-                print(td_error)
-
             assert isinstance(transition, OnPolicyTransition)
             transition.gae = gae
+            # truncated lambda return of the state
             transition.lam_return = gae + state_values[i]
+            # action probabilities from the current policy
             transition.action_probs = action_log_probs[i]
             next_value = state_values[i]
             transition.to(original_transition_device)

@@ -3,4 +3,3 @@ build/
 /.idea
 /tutorials/lunar_lander/info_PPO-return.pt
 /tutorials/lunar_lander/.ipynb_checkpoints/
-/tutorials/lunar_lander/[Lunar_Laner]_Pearl_Proximal_Policy_Optimization_(PPO).ipynb
