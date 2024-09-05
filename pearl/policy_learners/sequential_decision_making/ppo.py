@@ -124,11 +124,11 @@ class ProximalPolicyOptimization(ActorCriticBase):
         # actor loss
         action_probs_old = batch.action_probs
         assert action_probs_old is not None
-        r_thelta = torch.div(action_probs, action_probs_old)  # shape (batch_size)
+        r_theta = torch.div(action_probs, action_probs_old)  # shape (batch_size)
         clip = torch.clamp(
-            r_thelta, min=1.0 - self._epsilon, max=1.0 + self._epsilon
+            r_theta, min=1.0 - self._epsilon, max=1.0 + self._epsilon
         )  # shape (batch_size)
-        loss = torch.sum(-torch.min(r_thelta * batch.gae, clip * batch.gae))
+        loss = torch.sum(-torch.min(r_theta * batch.gae, clip * batch.gae))
         # entropy
         entropy: torch.Tensor = torch.distributions.Categorical(
             action_probs.detach()

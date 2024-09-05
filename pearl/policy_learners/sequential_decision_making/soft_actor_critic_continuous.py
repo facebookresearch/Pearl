@@ -118,7 +118,7 @@ class ContinuousSoftActorCritic(ActorCriticBase):
 
         if self._entropy_autotune:
             with torch.no_grad():
-                _, action_batch_log_prob = self._actor.sample_action(
+                _, action_batch_log_prob, _ = self._actor.sample_action(
                     state_batch, get_log_prob=True
                 )
 
@@ -169,6 +169,7 @@ class ContinuousSoftActorCritic(ActorCriticBase):
         (
             next_action_batch,
             next_action_batch_log_prob,
+            next_action_distribution,
         ) = self._actor.sample_action(next_state_batch, get_log_prob=True)
 
         next_q1, next_q2 = self._critic_target.get_q_values(
@@ -196,6 +197,7 @@ class ContinuousSoftActorCritic(ActorCriticBase):
         (
             action_batch,
             action_batch_log_prob,
+            action_batch_distribution
         ) = self._actor.sample_action(state_batch, get_log_prob=True)
 
         q1, q2 = self._critic.get_q_values(

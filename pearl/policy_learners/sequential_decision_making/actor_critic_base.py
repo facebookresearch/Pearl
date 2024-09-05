@@ -295,7 +295,6 @@ class ActorCriticBase(PolicyLearner):
         After the graph is cleared, critic_loss.backward() fails.
         """
         actor_loss.backward(retain_graph=True)
-        #torch.nn.utils.clip_grad_norm_(self._actor.parameters(), max_norm=1.0)
         if self._use_critic:
             self._critic_optimizer.zero_grad()
             critic_loss = self._critic_loss(batch)

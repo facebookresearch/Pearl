@@ -9,6 +9,9 @@
 
 import torch
 from typing import Any, Dict, List, Optional, Type, Union
+
+from pkg_resources import get_distribution
+from sympy.physics.units import action
 from torch.distributions import Normal
 
 from pearl.action_representation_modules.action_representation_module import (
@@ -20,8 +23,7 @@ from pearl.neural_networks.common.value_networks import (
     VanillaValueNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
-    ActorNetwork,
-    VanillaActorNetwork, GaussianActorNetwork,
+    ActorNetwork,GaussianActorNetwork, action_scaling
 )
 from pearl.policy_learners.exploration_modules.common import NoExploration
 
@@ -104,6 +106,42 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
         self._trace_decay_param = trace_decay_param
         self._entropy_bonus_scaling = entropy_bonus_scaling
 
+    # def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
+    #     """
+    #     Loss = actor loss + critic loss + entropy_bonus_scaling * entropy loss
+    #     """
+    #     assert isinstance(batch, OnPolicyTransitionBatch)
+    #
+    #     state_batch = batch.state  # shape: (batch_size x state_dim)
+    #     action_probs, normal = (
+    #         self._actor.get_log_probability(
+    #             state_batch=batch.state,
+    #             action_batch=batch.action, get_distribution=True
+    #         )
+    #     )
+    #
+    #     action_probs = torch.squeeze(action_probs)
+    #
+    #     # Calculate the ratio for PPO
+    #     action_probs_old = torch.squeeze(batch.action_probs)
+    #     assert action_probs_old is not None
+    #     #r_theta = torch.exp(action_batch_log_prob - action_probs_old)  # shape (batch_size)
+    #     r_theta = torch.div(action_probs, action_probs_old)  # shape (batch_size)
+    #     clip = torch.clamp(
+    #         r_theta, min=1.0 - self._epsilon, max=1.0 + self._epsilon
+    #     )  # shape (batch_size)
+    #     loss = torch.mean(-torch.min(r_theta * batch.gae, clip * batch.gae))
+    #
+    #     # entropy: torch.Tensor = torch.distributions(
+    #     #     action_probs.detach()
+    #     # ).entropy()
+    #
+    #     # Entropy for encouraging exploration
+    #     entropy = normal.entropy().sum(axis=-1).mean()
+    #     loss -= self._entropy_bonus_scaling * entropy
+    #
+    #     return loss
+
     def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
         """
         Loss = actor loss + critic loss + entropy_bonus_scaling * entropy loss
@@ -111,51 +149,24 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
         assert isinstance(batch, OnPolicyTransitionBatch)
 
         state_batch = batch.state  # shape: (batch_size x state_dim)
-
-        # shape of action_batch: (batch_size, action_dim)
-        # shape of action_batch_log_prob: (batch_size, 1)
-        (
-            action_batch,
-            action_batch_log_prob,
-        ) = self._actor.sample_action(state_batch, get_log_prob=True)
-
-        # Get action mean and standard deviation (for Gaussian distribution)
-        action_mean, action_log_std = self._actor(batch.state)
-        action_std = action_log_std.exp()
-        #print(f"action_mean: {action_mean} | action_log_std: {action_log_std} | action_std: {action_std}")
-
-        isnan_mean = action_mean.isnan().any()
-        isnan_std = action_std.isnan().any()
-
-        action_mean = action_batch
-
-        # print(f"Does Action Mean have Nan: {isnan_mean}")
-        # print(f"Does Action Std have Nan: {isnan_std}")
-
-        # shape of action_batch: (batch_size, action_dim)
-        # shape of action_batch_log_prob: (batch_size, 1)
-
-        # Create a normal distribution based on the mean and std
-        dist = Normal(action_mean, action_std)
-        log_probs = dist.log_prob(batch.action).sum(axis=-1)
-
-        # Calculate the ratio for PPO
-        action_probs_old = batch.action_probs
-        assert action_probs_old is not None
-        r_theta = torch.exp(action_batch_log_prob - action_probs_old)  # shape (batch_size)
-
-        # Clipped surrogate objective
-        clip = torch.clamp(
-            r_theta, min=1.0 - self._epsilon, max=1.0 + self._epsilon
+        log_action_probs, normal = self._actor.get_log_probability(
+            state_batch=batch.state,
+            action_batch=batch.action, get_distribution=True
         )
-        loss = -torch.min(r_theta * batch.gae, clip * batch.gae).mean()
-        #print(f"loss: {loss}")
 
-        if(loss > 300):
-            print(loss)
+        log_action_probs = torch.squeeze(log_action_probs)
+
+        # Calculate the log ratio for PPO
+        log_action_probs_old = torch.squeeze(batch.action_probs)
+        assert log_action_probs_old is not None
+
+        # Use log difference for stability
+        r_theta = torch.exp(log_action_probs - log_action_probs_old)  # shape (batch_size)
+        clip = torch.clamp(r_theta, min=1.0 - self._epsilon, max=1.0 + self._epsilon)
+        loss = torch.mean(-torch.min(r_theta * batch.gae, clip * batch.gae))
 
         # Entropy for encouraging exploration
-        entropy = dist.entropy().sum(axis=-1).mean()
+        entropy = normal.entropy().sum(axis=-1).mean()
         loss -= self._entropy_bonus_scaling * entropy
 
         return loss
@@ -220,12 +231,16 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
         state_values = self._critic(history_summary_batch).detach()
 
         # Get action mean and standard deviation for current policy
-        action_mean, action_log_std = self._actor(history_summary_batch)
-        action_std = action_log_std.exp()
-        dist = Normal(action_mean, action_std)
+        action_probs = (
+            self._actor.get_log_probability(
+                state_batch=history_summary_batch,
+                action_batch=action_representation_batch,
+            )
+            .detach()
+            .unsqueeze(-1)
+        )
 
-        # Calculate action log probabilities
-        action_log_probs = dist.log_prob(action_representation_batch).sum(axis=-1).detach().unsqueeze(-1)
+        #print(action_probs)
 
         next_state = replay_buffer.memory[-1].next_state
         assert next_state is not None
@@ -261,6 +276,6 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
             # truncated lambda return of the state
             transition.lam_return = gae + state_values[i]
             # action probabilities from the current policy
-            transition.action_probs = action_log_probs[i]
+            transition.action_probs = action_probs[i]
             next_value = state_values[i]
             transition.to(original_transition_device)

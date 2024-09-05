@@ -418,7 +418,7 @@ class GaussianActorNetwork(ActorNetwork):
 
     def sample_action(
         self, state_batch: Tensor, get_log_prob: bool = False
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    ) -> tuple[Tensor, Tensor, Normal] | Tensor:
         """
         Sample an action from the actor network.
 
@@ -453,13 +453,13 @@ class GaussianActorNetwork(ActorNetwork):
             log_prob = log_prob.sum(dim=1, keepdim=True)
 
         if get_log_prob:
-            return action, log_prob
+            return action, log_prob, normal
         else:
             return action
 
     def get_log_probability(
-        self, state_batch: torch.Tensor, action_batch: torch.Tensor
-    ) -> Tensor:
+        self, state_batch: torch.Tensor, action_batch: torch.Tensor, get_distribution: bool = False
+    ) -> tuple[Tensor, Normal] | Tensor:
         """
         Compute log probability of actions, pi(a|s) under the policy parameterized by
         the actor network.
@@ -491,4 +491,7 @@ class GaussianActorNetwork(ActorNetwork):
         if log_prob.dim() == 2:
             log_prob = log_prob.sum(dim=1, keepdim=True)
 
-        return log_prob
+        if get_distribution:
+            return log_prob, normal
+        else:
+            return log_prob
