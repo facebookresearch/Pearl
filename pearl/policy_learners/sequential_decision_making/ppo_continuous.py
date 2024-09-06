@@ -10,10 +10,6 @@
 import torch
 from typing import Any, Dict, List, Optional, Type, Union
 
-from pkg_resources import get_distribution
-from sympy.physics.units import action
-from torch.distributions import Normal
-
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
@@ -23,7 +19,7 @@ from pearl.neural_networks.common.value_networks import (
     VanillaValueNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
-    ActorNetwork,GaussianActorNetwork, action_scaling
+    ActorNetwork,GaussianActorNetwork
 )
 from pearl.policy_learners.exploration_modules.common import NoExploration
 
@@ -44,7 +40,6 @@ from pearl.utils.functional_utils.learning.critic_utils import (
     single_critic_state_value_loss,
 )
 from torch import nn
-
 
 class ContinuousProximalPolicyOptimization(ActorCriticBase):
     """
@@ -69,6 +64,7 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
             epsilon: float = 0.2,
             trace_decay_param: float = 0.95,
             entropy_bonus_scaling: float = 0.01,
+            normalize_gae: bool = True,
             action_representation_module: Optional[ActionRepresentationModule] = None,
             actor_network_instance: Optional[ActorNetwork] = None,
             critic_network_instance: Optional[Union[ValueNetwork, nn.Module]] = None,
@@ -102,45 +98,13 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
             actor_network_instance=actor_network_instance,
             critic_network_instance=critic_network_instance,
         )
+
+        self._normalize_gae = normalize_gae
         self._epsilon = epsilon
         self._trace_decay_param = trace_decay_param
         self._entropy_bonus_scaling = entropy_bonus_scaling
 
-    # def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
-    #     """
-    #     Loss = actor loss + critic loss + entropy_bonus_scaling * entropy loss
-    #     """
-    #     assert isinstance(batch, OnPolicyTransitionBatch)
-    #
-    #     state_batch = batch.state  # shape: (batch_size x state_dim)
-    #     action_probs, normal = (
-    #         self._actor.get_log_probability(
-    #             state_batch=batch.state,
-    #             action_batch=batch.action, get_distribution=True
-    #         )
-    #     )
-    #
-    #     action_probs = torch.squeeze(action_probs)
-    #
-    #     # Calculate the ratio for PPO
-    #     action_probs_old = torch.squeeze(batch.action_probs)
-    #     assert action_probs_old is not None
-    #     #r_theta = torch.exp(action_batch_log_prob - action_probs_old)  # shape (batch_size)
-    #     r_theta = torch.div(action_probs, action_probs_old)  # shape (batch_size)
-    #     clip = torch.clamp(
-    #         r_theta, min=1.0 - self._epsilon, max=1.0 + self._epsilon
-    #     )  # shape (batch_size)
-    #     loss = torch.mean(-torch.min(r_theta * batch.gae, clip * batch.gae))
-    #
-    #     # entropy: torch.Tensor = torch.distributions(
-    #     #     action_probs.detach()
-    #     # ).entropy()
-    #
-    #     # Entropy for encouraging exploration
-    #     entropy = normal.entropy().sum(axis=-1).mean()
-    #     loss -= self._entropy_bonus_scaling * entropy
-    #
-    #     return loss
+        assert self.is_action_continuous is True
 
     def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
         """
@@ -163,7 +127,12 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
         # Use log difference for stability
         r_theta = torch.exp(log_action_probs - log_action_probs_old)  # shape (batch_size)
         clip = torch.clamp(r_theta, min=1.0 - self._epsilon, max=1.0 + self._epsilon)
-        loss = torch.mean(-torch.min(r_theta * batch.gae, clip * batch.gae))
+
+        advantages = batch.gae
+        if self._normalize_gae:
+            advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+
+        loss = torch.sum(-torch.min(r_theta * advantages, clip * advantages))
 
         # Entropy for encouraging exploration
         entropy = normal.entropy().sum(axis=-1).mean()

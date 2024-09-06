@@ -31,6 +31,7 @@ class ReplayBuffer(ABC):
 
     def __init__(self) -> None:
         super().__init__()
+        self.memory = None
         self._is_action_continuous: bool = False
         self._has_cost_available: bool = False
 
