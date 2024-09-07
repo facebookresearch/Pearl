@@ -132,7 +132,8 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
         if self._normalize_gae:
             advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
-        loss = torch.sum(-torch.min(r_theta * advantages, clip * advantages))
+        #loss = torch.sum(-torch.min(r_theta * advantages, clip * advantages))
+        loss = torch.mean(-torch.min(r_theta * advantages, clip * advantages))
 
         # Entropy for encouraging exploration
         entropy = normal.entropy().sum(axis=-1).mean()
