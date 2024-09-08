@@ -12,11 +12,11 @@ from typing import Optional
 import torch
 
 from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
 from pearl.api.reward import Reward
 from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
 from pearl.replay_buffers.transition import Transition
+from torch import Tensor
 
 
 class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
@@ -27,46 +27,20 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
         # this is designed for single transition for now
         self.cache: Optional[Transition] = None
 
-    def push(
+    def _store_transition(
         self,
         state: SubjectiveState,
         action: Action,
         reward: Reward,
         terminated: bool,
-        curr_available_actions: Optional[ActionSpace] = None,
-        next_state: Optional[SubjectiveState] = None,
-        next_available_actions: Optional[ActionSpace] = None,
-        max_number_actions: Optional[int] = None,
+        curr_available_actions_tensor_with_padding: Optional[Tensor],
+        curr_unavailable_actions_mask: Optional[Tensor],
+        next_state: Optional[SubjectiveState],
+        next_available_actions_tensor_with_padding: Optional[Tensor],
+        next_unavailable_actions_mask: Optional[Tensor],
         cost: Optional[float] = None,
     ) -> None:
-        if curr_available_actions is None:
-            raise ValueError(
-                f"{type(self)} requires curr_available_actions not to be None"
-            )
-
-        if next_available_actions is None:
-            raise ValueError(
-                f"{type(self)} requires next_available_actions not to be None"
-            )
-
-        if next_state is None:
-            raise ValueError(f"{type(self)} requires next_state not to be None")
-
-        (
-            curr_available_actions_tensor_with_padding,
-            curr_unavailable_actions_mask,
-        ) = self._create_action_tensor_and_mask(
-            max_number_actions, curr_available_actions
-        )
-
-        (
-            next_available_actions_tensor_with_padding,
-            next_unavailable_actions_mask,
-        ) = self._create_action_tensor_and_mask(
-            max_number_actions, next_available_actions
-        )
-
-        current_state = self._process_single_state(state)
+        current_state = self._process_non_optional_single_state(state)
         current_action = self._process_single_action(action)
 
         if self.cache is not None:

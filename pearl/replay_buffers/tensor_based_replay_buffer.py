@@ -22,6 +22,7 @@ from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import Transition, TransitionBatch
 from pearl.utils.device import get_default_device
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from torch import Tensor
 
 
 class TensorBasedReplayBuffer(ReplayBuffer):
@@ -45,6 +46,63 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         self.has_cost_available = has_cost_available
         self._device_for_batches: torch.device = get_default_device()
 
+    def _store_transition(
+        self,
+        state: SubjectiveState,
+        action: Action,
+        reward: Reward,
+        terminated: bool,
+        curr_available_actions_tensor_with_padding: Optional[Tensor],
+        curr_unavailable_actions_mask: Optional[Tensor],
+        next_state: Optional[SubjectiveState],
+        next_available_actions_tensor_with_padding: Optional[Tensor],
+        next_unavailable_actions_mask: Optional[Tensor],
+        cost: Optional[float] = None,
+    ) -> None:
+        """
+        Implements the way the replay buffer stores transitions.
+        """
+        raise NotImplementedError(f"{type(self)} has not implemented _store_transition")
+
+    def push(
+        self,
+        state: SubjectiveState,
+        action: Action,
+        reward: Reward,
+        terminated: bool,
+        curr_available_actions: Optional[ActionSpace] = None,
+        next_state: Optional[SubjectiveState] = None,
+        next_available_actions: Optional[ActionSpace] = None,
+        max_number_actions: Optional[int] = None,
+        cost: Optional[float] = None,
+    ) -> None:
+        (
+            curr_available_actions_tensor_with_padding,
+            curr_unavailable_actions_mask,
+        ) = self._create_action_tensor_and_mask(
+            max_number_actions, curr_available_actions
+        )
+
+        (
+            next_available_actions_tensor_with_padding,
+            next_unavailable_actions_mask,
+        ) = self._create_action_tensor_and_mask(
+            max_number_actions, next_available_actions
+        )
+
+        self._store_transition(
+            state,
+            action,
+            reward,
+            terminated,
+            curr_available_actions_tensor_with_padding,
+            curr_unavailable_actions_mask,
+            next_state,
+            next_available_actions_tensor_with_padding,
+            next_unavailable_actions_mask,
+            cost,
+        )
+
     @property
     def device_for_batches(self) -> torch.device:
         return self._device_for_batches
@@ -53,7 +111,17 @@ class TensorBasedReplayBuffer(ReplayBuffer):
     def device_for_batches(self, new_device_for_batches: torch.device) -> None:
         self._device_for_batches = new_device_for_batches
 
-    def _process_single_state(self, state: SubjectiveState) -> torch.Tensor:
+    def _process_single_state(
+        self, state: Optional[SubjectiveState]
+    ) -> Optional[torch.Tensor]:
+        if state is None:
+            return None
+        else:
+            return self._process_non_optional_single_state(state)
+
+    def _process_non_optional_single_state(
+        self, state: SubjectiveState
+    ) -> torch.Tensor:
         if isinstance(state, torch.Tensor):
             return state.to(get_default_device()).clone().detach().unsqueeze(0)
         else:
@@ -107,9 +175,15 @@ class TensorBasedReplayBuffer(ReplayBuffer):
     """
 
     def _create_action_tensor_and_mask(
-        self, max_number_actions: Optional[int], available_action_space: ActionSpace
+        self,
+        max_number_actions: Optional[int],
+        available_action_space: Optional[ActionSpace],
     ) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
-        if self._is_action_continuous or max_number_actions is None:
+        if (
+            self._is_action_continuous
+            or max_number_actions is None
+            or available_action_space is None
+        ):
             return (None, None)
 
         assert isinstance(available_action_space, DiscreteActionSpace)

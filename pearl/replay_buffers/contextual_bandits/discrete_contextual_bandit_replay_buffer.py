@@ -56,7 +56,7 @@ class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
         action = assert_is_tensor_like(action)
         self.memory.append(
             Transition(
-                state=self._process_single_state(state),
+                state=self._process_non_optional_single_state(state),
                 action=self._process_single_action(action),
                 reward=self._process_single_reward(reward),
             )

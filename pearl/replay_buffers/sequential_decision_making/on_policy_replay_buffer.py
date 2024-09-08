@@ -14,11 +14,11 @@ from typing import List, Optional
 import torch
 
 from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
 from pearl.api.reward import Reward
 from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
 from pearl.replay_buffers.transition import Transition, TransitionBatch
+from torch import Tensor
 
 
 @dataclass(frozen=False)
@@ -70,47 +70,29 @@ class OnPolicyReplayBuffer(TensorBasedReplayBuffer):
             has_cost_available=has_cost_available,
         )
 
-    def push(
+    def _store_transition(
         self,
         state: SubjectiveState,
         action: Action,
         reward: Reward,
         terminated: bool,
-        curr_available_actions: Optional[ActionSpace] = None,
-        next_state: Optional[SubjectiveState] = None,
-        next_available_actions: Optional[ActionSpace] = None,
-        max_number_actions: Optional[int] = None,
+        curr_available_actions_tensor_with_padding: Optional[Tensor],
+        curr_unavailable_actions_mask: Optional[Tensor],
+        next_state: Optional[SubjectiveState],
+        next_available_actions_tensor_with_padding: Optional[Tensor],
+        next_unavailable_actions_mask: Optional[Tensor],
         cost: Optional[float] = None,
     ) -> None:
-        if curr_available_actions is None:
-            raise ValueError(
-                f"{type(self)} requires curr_available_actions not to be None"
-            )
-
-        if next_state is None:
-            raise ValueError(f"{type(self)} requires next_state not to be None")
-
-        (
-            curr_available_actions_tensor_with_padding,
-            curr_unavailable_actions_mask,
-        ) = self._create_action_tensor_and_mask(
-            max_number_actions, curr_available_actions
-        )
-
-        current_state = self._process_single_state(state)
-        current_action = self._process_single_action(action)
-        next_reward = self._process_single_reward(reward)
-        n_state = self._process_single_state(next_state)
         self.memory.append(
             OnPolicyTransition(
-                state=current_state,
-                action=current_action,
-                reward=next_reward,
-                next_state=n_state,
+                state=self._process_non_optional_single_state(state),
+                action=self._process_single_action(action),
+                reward=self._process_single_reward(reward),
+                next_state=self._process_single_state(next_state),
                 curr_available_actions=curr_available_actions_tensor_with_padding,
                 curr_unavailable_actions_mask=curr_unavailable_actions_mask,
-                next_available_actions=None,
-                next_unavailable_actions_mask=None,
+                next_available_actions=next_available_actions_tensor_with_padding,
+                next_unavailable_actions_mask=next_unavailable_actions_mask,
                 terminated=self._process_single_terminated(terminated),
             )
         )

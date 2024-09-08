@@ -105,9 +105,6 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
                 f"{type(self)} requires next_available_actions not to be None"
             )
 
-        if next_state is None:
-            raise ValueError(f"{type(self)} requires next_state not to be None")
-
         self._trajectory.append(
             (
                 state,

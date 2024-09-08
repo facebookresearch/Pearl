@@ -12,7 +12,6 @@ from typing import Optional
 
 import torch
 from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
 from pearl.api.reward import Reward
 from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (  # noqa E501
@@ -22,6 +21,7 @@ from pearl.replay_buffers.transition import (
     TransitionWithBootstrapMask,
     TransitionWithBootstrapMaskBatch,
 )
+from torch import Tensor
 
 
 class BootstrapReplayBuffer(FIFOOffPolicyReplayBuffer):
@@ -56,51 +56,26 @@ class BootstrapReplayBuffer(FIFOOffPolicyReplayBuffer):
         self.p = p
         self.ensemble_size = ensemble_size
 
-    def push(
+    def _store_transition(
         self,
         state: SubjectiveState,
         action: Action,
         reward: Reward,
         terminated: bool,
-        curr_available_actions: Optional[ActionSpace] = None,
-        next_state: Optional[SubjectiveState] = None,
-        next_available_actions: Optional[ActionSpace] = None,
-        max_number_actions: Optional[int] = None,
+        curr_available_actions_tensor_with_padding: Optional[Tensor],
+        curr_unavailable_actions_mask: Optional[Tensor],
+        next_state: Optional[SubjectiveState],
+        next_available_actions_tensor_with_padding: Optional[Tensor],
+        next_unavailable_actions_mask: Optional[Tensor],
         cost: Optional[float] = None,
     ) -> None:
-
-        if curr_available_actions is None:
-            raise ValueError(
-                f"{type(self)} requires curr_available_actions not to be None"
-            )
-
-        if next_available_actions is None:
-            raise ValueError(
-                f"{type(self)} requires next_available_actions not to be None"
-            )
-
-        if next_state is None:
-            raise ValueError(f"{type(self)} requires next_state not to be None")
-
         # sample the bootstrap mask from Bernoulli(p) on each push
         probs = torch.tensor(self.p).repeat(1, self.ensemble_size)
         bootstrap_mask = torch.bernoulli(probs)
-        (
-            curr_available_actions_tensor_with_padding,
-            curr_unavailable_actions_mask,
-        ) = self._create_action_tensor_and_mask(
-            max_number_actions, curr_available_actions
-        )
 
-        (
-            next_available_actions_tensor_with_padding,
-            next_unavailable_actions_mask,
-        ) = self._create_action_tensor_and_mask(
-            max_number_actions, next_available_actions
-        )
         self.memory.append(
             TransitionWithBootstrapMask(
-                state=self._process_single_state(state),
+                state=self._process_non_optional_single_state(state),
                 action=self._process_single_action(action),
                 reward=self._process_single_reward(reward),
                 next_state=self._process_single_state(next_state),
