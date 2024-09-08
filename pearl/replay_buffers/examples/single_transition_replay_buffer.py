@@ -57,10 +57,10 @@ class SingleTransitionReplayBuffer(ReplayBuffer):
         state: SubjectiveState,
         action: Action,
         reward: Reward,
-        next_state: SubjectiveState,
-        curr_available_actions: ActionSpace,
-        next_available_actions: ActionSpace,
         terminated: bool,
+        curr_available_actions: Optional[ActionSpace] = None,
+        next_state: Optional[SubjectiveState] = None,
+        next_available_actions: Optional[ActionSpace] = None,
         max_number_actions: Optional[int] = None,
         cost: Optional[float] = None,
     ) -> None:

@@ -61,13 +61,27 @@ class BootstrapReplayBuffer(FIFOOffPolicyReplayBuffer):
         state: SubjectiveState,
         action: Action,
         reward: Reward,
-        next_state: SubjectiveState,
-        curr_available_actions: ActionSpace,
-        next_available_actions: ActionSpace,
         terminated: bool,
+        curr_available_actions: Optional[ActionSpace] = None,
+        next_state: Optional[SubjectiveState] = None,
+        next_available_actions: Optional[ActionSpace] = None,
         max_number_actions: Optional[int] = None,
         cost: Optional[float] = None,
     ) -> None:
+
+        if curr_available_actions is None:
+            raise ValueError(
+                f"{type(self)} requires curr_available_actions not to be None"
+            )
+
+        if next_available_actions is None:
+            raise ValueError(
+                f"{type(self)} requires next_available_actions not to be None"
+            )
+
+        if next_state is None:
+            raise ValueError(f"{type(self)} requires next_state not to be None")
+
         # sample the bootstrap mask from Bernoulli(p) on each push
         probs = torch.tensor(self.p).repeat(1, self.ensemble_size)
         bootstrap_mask = torch.bernoulli(probs)

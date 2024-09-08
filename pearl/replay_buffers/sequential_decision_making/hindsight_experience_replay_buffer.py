@@ -73,10 +73,10 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
         state: SubjectiveState,
         action: Action,
         reward: Reward,
-        next_state: SubjectiveState,
-        curr_available_actions: ActionSpace,
-        next_available_actions: ActionSpace,
         terminated: bool,
+        curr_available_actions: Optional[ActionSpace] = None,
+        next_state: Optional[SubjectiveState] = None,
+        next_available_actions: Optional[ActionSpace] = None,
         max_number_actions: Optional[int] = None,
         cost: Optional[float] = None,
     ) -> None:
@@ -87,13 +87,27 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
             state,
             action,
             reward,
-            next_state,
-            curr_available_actions,
-            next_available_actions,
             terminated,
+            curr_available_actions,
+            next_state,
+            next_available_actions,
             max_number_actions,
             cost,
         )
+
+        if curr_available_actions is None:
+            raise ValueError(
+                f"{type(self)} requires curr_available_actions not to be None"
+            )
+
+        if next_available_actions is None:
+            raise ValueError(
+                f"{type(self)} requires next_available_actions not to be None"
+            )
+
+        if next_state is None:
+            raise ValueError(f"{type(self)} requires next_state not to be None")
+
         self._trajectory.append(
             (
                 state,
@@ -127,14 +141,14 @@ class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
                     state,
                     action,
                     self._reward_fn(state, action),
-                    next_state,
-                    curr_available_actions,
-                    next_available_actions,
                     (
                         terminated
                         if self._terminated_fn is None
                         else self._terminated_fn(state, action)
                     ),
+                    curr_available_actions,
+                    next_state,
+                    next_available_actions,
                     max_number_actions,
                     cost,
                 )
