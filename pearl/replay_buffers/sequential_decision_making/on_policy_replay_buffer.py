@@ -115,25 +115,28 @@ class OnPolicyReplayBuffer(TensorBasedReplayBuffer):
             has_cost_available,
         )
 
-        def helper(
+        def make_column_tensor(
             transitions: List[Transition],
-            name: str,
+            attr_name: str,
         ) -> Optional[torch.Tensor]:
-            tmp_list = []
-            for x in transitions:
-                assert isinstance(x, OnPolicyTransition)
-                if getattr(x, name) is None:
+            list_of_values_of_attr = []
+            for transition in transitions:
+                assert isinstance(transition, OnPolicyTransition)
+                value_of_attr = getattr(transition, attr_name)
+                if value_of_attr is None:
                     return None
-                tmp_list.append(getattr(x, name))
-            return torch.cat(tmp_list)
+                list_of_values_of_attr.append(value_of_attr)
+            attr_column_tensor = torch.cat(list_of_values_of_attr)
+            return attr_column_tensor
 
-        names = ["gae", "lam_return", "action_probs", "cum_reward"]
-        on_policy_attrs = {}
-        for name in names:
-            on_policy_attrs[name] = helper(transitions, name)
+        attr_names = ["gae", "lam_return", "action_probs", "cum_reward"]
+        from_attrib_name_to_attr_column_tensor = {}
+        for attr_name in attr_names:
+            attr_column_tensor = make_column_tensor(transitions, attr_name)
+            from_attrib_name_to_attr_column_tensor[attr_name] = attr_column_tensor
 
         transition_batch = OnPolicyTransitionBatch.from_parent(
-            transition_batch, **on_policy_attrs
+            transition_batch, **from_attrib_name_to_attr_column_tensor
         )
 
         return transition_batch.to(self.device_for_batches)
