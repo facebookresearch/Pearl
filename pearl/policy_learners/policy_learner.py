@@ -84,7 +84,7 @@ class PolicyLearner(torch.nn.Module, ABC):
                         max_number_actions=(
                             action_space.n
                             if isinstance(action_space, DiscreteActionSpace)
-                            else -1
+                            else None
                         ),
                         representation_dim=action_space.action_dim,
                     )
@@ -97,7 +97,7 @@ class PolicyLearner(torch.nn.Module, ABC):
                 )
         else:
             # User needs to at least specify action dimensions if no action_space is provided.
-            assert action_representation_module.representation_dim != -1
+            assert action_representation_module.representation_dim is not None
             self._action_representation_module = action_representation_module
 
         self._history_summarization_module: HistorySummarizationModule = (
