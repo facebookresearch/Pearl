@@ -66,7 +66,7 @@ class ProximalPolicyOptimization(ActorCriticBase):
         discount_factor: float = 0.99,
         training_rounds: int = 100,
         batch_size: int = 128,
-        epsilon: float = 0.2,
+        epsilon: float = 0.0,
         trace_decay_param: float = 0.95,
         entropy_bonus_scaling: float = 0.01,
         action_representation_module: Optional[ActionRepresentationModule] = None,
