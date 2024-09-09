@@ -10,11 +10,11 @@
 from typing import Optional
 
 from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
 from pearl.api.reward import Reward
 from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
 from pearl.replay_buffers.transition import Transition
+from torch import Tensor
 
 
 class FIFOOffPolicyReplayBuffer(TensorBasedReplayBuffer):
@@ -26,44 +26,29 @@ class FIFOOffPolicyReplayBuffer(TensorBasedReplayBuffer):
             has_cost_available=has_cost_available,
         )
 
-    # TODO: add helper to convert subjective state into tensors
-    # TODO: assumes action space is gym action space with one-hot encoding
-    def push(
+    def _store_transition(
         self,
         state: SubjectiveState,
         action: Action,
         reward: Reward,
-        next_state: SubjectiveState,
-        curr_available_actions: ActionSpace,
-        next_available_actions: ActionSpace,
         terminated: bool,
-        max_number_actions: Optional[int],
+        curr_available_actions_tensor_with_padding: Optional[Tensor],
+        curr_unavailable_actions_mask: Optional[Tensor],
+        next_state: Optional[SubjectiveState],
+        next_available_actions_tensor_with_padding: Optional[Tensor],
+        next_unavailable_actions_mask: Optional[Tensor],
         cost: Optional[float] = None,
     ) -> None:
-        (
-            curr_available_actions_tensor_with_padding,
-            curr_unavailable_actions_mask,
-        ) = self._create_action_tensor_and_mask(
-            max_number_actions, curr_available_actions
+        transition = Transition(
+            state=self._process_non_optional_single_state(state),
+            action=self._process_single_action(action),
+            reward=self._process_single_reward(reward),
+            next_state=self._process_single_state(next_state),
+            curr_available_actions=curr_available_actions_tensor_with_padding,
+            curr_unavailable_actions_mask=curr_unavailable_actions_mask,
+            next_available_actions=next_available_actions_tensor_with_padding,
+            next_unavailable_actions_mask=next_unavailable_actions_mask,
+            terminated=self._process_single_terminated(terminated),
+            cost=self._process_single_cost(cost),
         )
-
-        (
-            next_available_actions_tensor_with_padding,
-            next_unavailable_actions_mask,
-        ) = self._create_action_tensor_and_mask(
-            max_number_actions, next_available_actions
-        )
-        self.memory.append(
-            Transition(
-                state=self._process_single_state(state),
-                action=self._process_single_action(action),
-                reward=self._process_single_reward(reward),
-                next_state=self._process_single_state(next_state),
-                curr_available_actions=curr_available_actions_tensor_with_padding,
-                curr_unavailable_actions_mask=curr_unavailable_actions_mask,
-                next_available_actions=next_available_actions_tensor_with_padding,
-                next_unavailable_actions_mask=next_unavailable_actions_mask,
-                terminated=self._process_single_terminated(terminated),
-                cost=self._process_single_cost(cost),
-            )
-        )
+        self.memory.append(transition)

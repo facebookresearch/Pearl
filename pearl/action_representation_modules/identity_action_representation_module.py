@@ -7,6 +7,8 @@
 
 # pyre-strict
 
+from typing import Optional
+
 import torch
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
@@ -19,7 +21,9 @@ class IdentityActionRepresentationModule(ActionRepresentationModule):
     """
 
     def __init__(
-        self, max_number_actions: int = -1, representation_dim: int = -1
+        self,
+        max_number_actions: Optional[int] = None,
+        representation_dim: Optional[int] = None,
     ) -> None:
         super(IdentityActionRepresentationModule, self).__init__()
         self._max_number_actions = max_number_actions
@@ -28,10 +32,14 @@ class IdentityActionRepresentationModule(ActionRepresentationModule):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x
 
+    # TODO: the properties below need to be at the ActionRepresentationModule level.
+    # Several classes access them at that level, including PearlAgent.
+    # Not sure why this is not generating Pyre errors.
+
     @property
-    def max_number_actions(self) -> int:
+    def max_number_actions(self) -> Optional[int]:
         return self._max_number_actions
 
     @property
-    def representation_dim(self) -> int:
+    def representation_dim(self) -> Optional[int]:
         return self._representation_dim

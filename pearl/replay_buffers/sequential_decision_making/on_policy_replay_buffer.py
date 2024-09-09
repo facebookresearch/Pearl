@@ -14,11 +14,11 @@ from typing import List, Optional
 import torch
 
 from pearl.api.action import Action
-from pearl.api.action_space import ActionSpace
 from pearl.api.reward import Reward
 from pearl.api.state import SubjectiveState
 from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
 from pearl.replay_buffers.transition import Transition, TransitionBatch
+from torch import Tensor
 
 
 @dataclass(frozen=False)
@@ -51,7 +51,7 @@ class OnPolicyTransitionBatch(TransitionBatch):
             gae=gae,
             lam_return=lam_return,
             action_probs=action_probs,
-            cum_reward=cum_reward
+            cum_reward=cum_reward,
         )
         return child_obj
 
@@ -70,39 +70,29 @@ class OnPolicyReplayBuffer(TensorBasedReplayBuffer):
             has_cost_available=has_cost_available,
         )
 
-    def push(
+    def _store_transition(
         self,
         state: SubjectiveState,
         action: Action,
         reward: Reward,
-        next_state: SubjectiveState,
-        curr_available_actions: ActionSpace,
-        next_available_actions: ActionSpace,
         terminated: bool,
-        max_number_actions: Optional[int] = None,
+        curr_available_actions_tensor_with_padding: Optional[Tensor],
+        curr_unavailable_actions_mask: Optional[Tensor],
+        next_state: Optional[SubjectiveState],
+        next_available_actions_tensor_with_padding: Optional[Tensor],
+        next_unavailable_actions_mask: Optional[Tensor],
         cost: Optional[float] = None,
     ) -> None:
-        (
-            curr_available_actions_tensor_with_padding,
-            curr_unavailable_actions_mask,
-        ) = self._create_action_tensor_and_mask(
-            max_number_actions, curr_available_actions
-        )
-
-        current_state = self._process_single_state(state)
-        current_action = self._process_single_action(action)
-        next_reward = self._process_single_reward(reward)
-        n_state = self._process_single_state(next_state)
         self.memory.append(
             OnPolicyTransition(
-                state=current_state,
-                action=current_action,
-                reward=next_reward,
-                next_state=n_state,
+                state=self._process_non_optional_single_state(state),
+                action=self._process_single_action(action),
+                reward=self._process_single_reward(reward),
+                next_state=self._process_single_state(next_state),
                 curr_available_actions=curr_available_actions_tensor_with_padding,
                 curr_unavailable_actions_mask=curr_unavailable_actions_mask,
-                next_available_actions=None,
-                next_unavailable_actions_mask=None,
+                next_available_actions=next_available_actions_tensor_with_padding,
+                next_unavailable_actions_mask=next_unavailable_actions_mask,
                 terminated=self._process_single_terminated(terminated),
             )
         )
@@ -125,25 +115,28 @@ class OnPolicyReplayBuffer(TensorBasedReplayBuffer):
             has_cost_available,
         )
 
-        def helper(
+        def make_column_tensor(
             transitions: List[Transition],
-            name: str,
+            attr_name: str,
         ) -> Optional[torch.Tensor]:
-            tmp_list = []
-            for x in transitions:
-                assert isinstance(x, OnPolicyTransition)
-                if getattr(x, name) is None:
+            list_of_values_of_attr = []
+            for transition in transitions:
+                assert isinstance(transition, OnPolicyTransition)
+                value_of_attr = getattr(transition, attr_name)
+                if value_of_attr is None:
                     return None
-                tmp_list.append(getattr(x, name))
-            return torch.cat(tmp_list)
+                list_of_values_of_attr.append(value_of_attr)
+            attr_column_tensor = torch.cat(list_of_values_of_attr)
+            return attr_column_tensor
 
-        names = ["gae", "lam_return", "action_probs", "cum_reward"]
-        on_policy_attrs = {}
-        for name in names:
-            on_policy_attrs[name] = helper(transitions, name)
+        attr_names = ["gae", "lam_return", "action_probs", "cum_reward"]
+        from_attrib_name_to_attr_column_tensor = {}
+        for attr_name in attr_names:
+            attr_column_tensor = make_column_tensor(transitions, attr_name)
+            from_attrib_name_to_attr_column_tensor[attr_name] = attr_column_tensor
 
         transition_batch = OnPolicyTransitionBatch.from_parent(
-            transition_batch, **on_policy_attrs
+            transition_batch, **from_attrib_name_to_attr_column_tensor
         )
 
         return transition_batch.to(self.device_for_batches)

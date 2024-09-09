@@ -44,10 +44,10 @@ class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
         state: SubjectiveState,
         action: Action,
         reward: Reward,
-        next_state: SubjectiveState,
-        curr_available_actions: ActionSpace,
-        next_available_actions: ActionSpace,
         terminated: bool,
+        curr_available_actions: Optional[ActionSpace] = None,
+        next_state: Optional[SubjectiveState] = None,
+        next_available_actions: Optional[ActionSpace] = None,
         max_number_actions: Optional[int] = None,
         cost: Optional[float] = None,
     ) -> None:
@@ -56,7 +56,7 @@ class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
         action = assert_is_tensor_like(action)
         self.memory.append(
             Transition(
-                state=self._process_single_state(state),
+                state=self._process_non_optional_single_state(state),
                 action=self._process_single_action(action),
                 reward=self._process_single_reward(reward),
             )
