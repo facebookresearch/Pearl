@@ -144,41 +144,50 @@ class TensorBasedReplayBuffer(ReplayBuffer):
     def _process_single_terminated(self, terminated: bool) -> torch.Tensor:
         return torch.tensor([terminated])  # (1,)
 
-    """
-    This function is only used for discrete action space.
-    An example:
-    ----------------------------------------------------------
-    Suppose the environment at every step has a maximum number of 5 actions, and
-    the agent uses a onehot action representation module. At time step t, if the agent offers
-    2 actions, [0, 3], then the result of this function will be:
-    available_actions_tensor_with_padding = [
-        [0],
-        [3],
-        [0],
-        [0],
-        [0],
-    ]
-    unavailable_actions_mask = [0, 0, 1, 1, 1]
-    Note that although the actions and padding can have overlap, the mask will always disable the
-    unavailable actions so won't impact algorithm.
-
-    The same goes to the case where the agent uses an identity action representation
-    (assuming some random features for action 0 and 3), then it would be
-    available_actions_tensor_with_padding = [
-        [0.1, 0.6, 0.3, 1.8, 2.0],
-        [0.8, -0.3, 0.6, 1.9, 3.0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-    ]
-    unavailable_actions_mask = [0, 0, 1, 1, 1]
-    """
-
     def _create_action_tensor_and_mask(
         self,
         max_number_actions: Optional[int],
         available_action_space: Optional[ActionSpace],
     ) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
+        """
+        Takes an action space containing only available actions,
+        and the maximum number of actions possible.
+
+        If the action space is continuous, returns (None, None).
+
+        If the action space is discrete, returns a pair of tensors:
+
+        1. A tensor of shape (1 x action_space_size x action_dim) that contains the available
+        actions.
+        2. A mask tensor of shape (1 x action_space_size) that contains 0 for available actions.
+
+        Example:
+        ----------------------------------------------------------
+        Suppose the environment at every step has a maximum number of 5 actions, and
+        the agent uses a onehot action representation module. At time step t, if the agent offers
+        2 actions, [0, 3], then the result of this function will be:
+        available_actions_tensor_with_padding = [
+            [0],
+            [3],
+            [0],
+            [0],
+            [0],
+        ]
+        unavailable_actions_mask = [0, 0, 1, 1, 1]
+        Note that although the actions and padding can overlap, the mask will always disable
+        the unavailable actions so won't impact algorithm.
+
+        The same goes to the case where the agent uses an identity action representation
+        (assuming some random features for action 0 and 3), then it would be
+        available_actions_tensor_with_padding = [
+            [0.1, 0.6, 0.3, 1.8, 2.0],
+            [0.8, -0.3, 0.6, 1.9, 3.0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+        ]
+        unavailable_actions_mask = [0, 0, 1, 1, 1]
+        """
         if (
             self._is_action_continuous
             or max_number_actions is None

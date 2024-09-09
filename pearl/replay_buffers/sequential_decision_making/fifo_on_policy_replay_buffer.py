@@ -20,11 +20,14 @@ from torch import Tensor
 
 
 class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
+    """
+    This replay buffer is used to delay push for SARSA.
+    It waits until next action is available and only then does it push a transition
+    that contains that information.
+    """
+
     def __init__(self, capacity: int) -> None:
         super(FIFOOnPolicyReplayBuffer, self).__init__(capacity)
-        # this is used to delay push SARS
-        # wait for next action is available and then final push
-        # this is designed for single transition for now
         self.cache: Optional[Transition] = None
 
     def _store_transition(
