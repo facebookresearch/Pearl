@@ -53,7 +53,6 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
             use_critic: bool,
             actor_hidden_dims: Optional[List[int]] = None,
             critic_hidden_dims: Optional[List[int]] = None,
-            is_action_continuous: bool = True,
             actor_learning_rate: float = 1e-4,
             critic_learning_rate: float = 1e-4,
             exploration_module: Optional[ExplorationModule] = None,
@@ -104,7 +103,6 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
         self._epsilon = epsilon
         self._trace_decay_param = trace_decay_param
         self._entropy_bonus_scaling = entropy_bonus_scaling
-        self._is_action_continuous = is_action_continuous
 
         assert self.is_action_continuous is True
 

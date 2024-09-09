@@ -130,8 +130,7 @@ class TestPPO(unittest.TestCase):
             critic_hidden_dims=[64, 64],
             training_rounds=1,
             batch_size=500,
-            epsilon=0.1,
-            is_action_continuous=True
+            epsilon=0.1
         )
         optimizer_params_count = sum(
             len(group["params"])
