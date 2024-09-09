@@ -446,8 +446,6 @@ class TestIntegration(unittest.TestCase):
         This test checks for performance of PPO when instances of actor and critic networks are
         passed as input arguments. The performance metric is if PPO can eventually attain an
         episodic return of 500.
-
-        Note: Pearl currently only supports PPO for discrete action spaces.
         """
         env = GymEnvironment("CartPole-v1")
         assert isinstance(env.action_space, DiscreteActionSpace)
@@ -501,11 +499,8 @@ class TestIntegration(unittest.TestCase):
 
     def test_continuous_ppo_network_instance(self) -> None:
         """
-        This test checks the performance of continuous SAC when actor and critic network instances
-        are passed as arguments. The performance metric is if SAC is able to eventually get to
-        a moving average episodic return -250 or less for Pendulum-v1.
-
-        This test uses a Gaussian policy network and twin critics.
+        This test is checking if continuous PPO will eventually learn for Pendulum-v1.
+        The target is to get moving average of returns to -250 or less.
         """
 
         env = GymEnvironment("Pendulum-v1")
