@@ -22,6 +22,7 @@ from pearl.replay_buffers.sequential_decision_making.on_policy_replay_buffer imp
     OnPolicyReplayBuffer,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 
 
 class TestPPO(unittest.TestCase):
@@ -123,13 +124,14 @@ class TestPPO(unittest.TestCase):
         """
         policy_learner = ContinuousProximalPolicyOptimization(
             16,
-            DiscreteActionSpace(actions=[torch.tensor(i) for i in range(3)]),
+            BoxActionSpace(low=0, high=1, seed=0),
             actor_hidden_dims=[64, 64],
             use_critic=True,
             critic_hidden_dims=[64, 64],
             training_rounds=1,
             batch_size=500,
             epsilon=0.1,
+            is_action_continuous=True
         )
         optimizer_params_count = sum(
             len(group["params"])
@@ -147,7 +149,7 @@ class TestPPO(unittest.TestCase):
         This test is to ensure the calculation is correct.
         """
         state_dim = 1
-        action_space = DiscreteActionSpace(actions=[torch.tensor(i) for i in range(3)])
+        action_space = BoxActionSpace(low=0, high=1, seed=0)
         policy_learner = ContinuousProximalPolicyOptimization(
             state_dim=state_dim,
             action_space=action_space,
@@ -156,6 +158,7 @@ class TestPPO(unittest.TestCase):
             critic_hidden_dims=[64, 64],
             training_rounds=10,
             batch_size=500,
+            normalize_gae=False,
             epsilon=0.1,
             discount_factor=0.6,
             trace_decay_param=0.5,
@@ -173,7 +176,6 @@ class TestPPO(unittest.TestCase):
                 curr_available_actions=action_space,
                 next_available_actions=action_space,
                 terminated=False,
-                max_number_actions=action_space.n,
             )
         # gaes:
         # gae0 = 4 + 0.6 * v1 - v0 + 0.6 * 0.5 * gae1 --> state 0
