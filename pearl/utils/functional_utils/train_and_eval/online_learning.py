@@ -218,6 +218,7 @@ def target_return_is_reached(
         if value >= target_return:
             target_returns_in_a_row += 1
             if target_returns_in_a_row >= required_target_returns_in_a_row:
+                print(f"episode {i+1} return:", returns[-1])
                 return True
         else:
             target_returns_in_a_row = 0

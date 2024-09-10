@@ -128,12 +128,15 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
         r_theta = torch.exp(log_action_probs - log_action_probs_old)  # shape (batch_size)
         clip = torch.clamp(r_theta, min=1.0 - self._epsilon, max=1.0 + self._epsilon)
 
-        advantages = batch.gae
+        gae = batch.gae
         if self._normalize_gae:
-            advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+            gae = (gae - gae.mean()) / (gae.std() + 1e-8)
 
-        #loss = torch.sum(-torch.min(r_theta * advantages, clip * advantages))
-        loss = torch.mean(-torch.min(r_theta * advantages, clip * advantages))
+        # clipped surrogate loss
+        clip_loss_1 = gae * r_theta
+        clip_loss_2 = gae * clip
+        loss = -torch.min(clip_loss_1, clip_loss_2)
+        loss = loss.mean()
 
         # Entropy for encouraging exploration
         entropy = normal.entropy().sum(axis=-1).mean()
@@ -209,8 +212,6 @@ class ContinuousProximalPolicyOptimization(ActorCriticBase):
             .detach()
             .unsqueeze(-1)
         )
-
-        #print(action_probs)
 
         next_state = replay_buffer.memory[-1].next_state
         assert next_state is not None

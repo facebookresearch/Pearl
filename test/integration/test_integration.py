@@ -504,38 +504,23 @@ class TestIntegration(unittest.TestCase):
         """
 
         env = GymEnvironment("Pendulum-v1")
-        # for continuous action spaces, Pearl currently only supports
-        # IdentityActionRepresentationModule as the action representation module. So, the output_dim
-        # argument of the GaussianActorNetwork is the same as the action space dimension. Also,
-        # the action_dim argument for critic networks is the same as the action space dimension.
-        actor_network_instance = GaussianActorNetwork(
-            input_dim=env.observation_space.shape[0],
-            hidden_dims=[64, 64],
-            output_dim=env.action_space.action_dim,
-            action_space=env.action_space,
-        )
-
-        # PPO uses a VanillaValueNetwork by default
-        critic_network_instance = VanillaValueNetwork(
-            input_dim=env.observation_space.shape[0],
-            hidden_dims=[64, 64],
-            output_dim=1,
-        )
 
         agent = PearlAgent(
             policy_learner=ContinuousProximalPolicyOptimization(
                 state_dim=env.observation_space.shape[0],
-                action_space=env.action_space,
-                training_rounds=50,
                 use_critic=True,
+                action_space=env.action_space,
+                actor_hidden_dims=[64, 64],
+                critic_hidden_dims=[64, 64],
+                critic_learning_rate=1e-4,
+                actor_learning_rate=1e-4,
+                epsilon=0.1,
+                normalize_gae=True,
+                training_rounds=50,
                 batch_size=100,
-                entropy_bonus_scaling=0.1,
-                actor_learning_rate=0.001,
-                critic_learning_rate=0.001,
-                actor_network_instance=actor_network_instance,
-                critic_network_instance=critic_network_instance,
+                entropy_bonus_scaling=0.005,
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(100000),
+            replay_buffer=OnPolicyReplayBuffer(250_000),
         )
 
         self.assertTrue(
