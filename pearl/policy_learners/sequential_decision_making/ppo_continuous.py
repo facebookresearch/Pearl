@@ -7,25 +7,22 @@
 
 # pyre-strict
 
+import torch
 from typing import Any, Dict, List, Optional, Type, Union
 
-import torch
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
-
 from pearl.api.action_space import ActionSpace
 from pearl.neural_networks.common.value_networks import (
     ValueNetwork,
     VanillaValueNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
-    ActorNetwork,
-    VanillaActorNetwork,
+    ActorNetwork,GaussianActorNetwork
 )
-from pearl.policy_learners.exploration_modules.common.propensity_exploration import (
-    PropensityExploration,
-)
+from pearl.policy_learners.exploration_modules.common import NoExploration
+
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
@@ -39,41 +36,40 @@ from pearl.replay_buffers.sequential_decision_making.on_policy_replay_buffer imp
     OnPolicyTransitionBatch,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-
 from pearl.utils.functional_utils.learning.critic_utils import (
     single_critic_state_value_loss,
 )
 from torch import nn
 
-
-class ProximalPolicyOptimization(ActorCriticBase):
+class ContinuousProximalPolicyOptimization(ActorCriticBase):
     """
-    paper: https://arxiv.org/pdf/1707.06347.pdf
+    PPO algorithm for continuous action spaces.
     """
 
     def __init__(
-        self,
-        state_dim: int,
-        action_space: ActionSpace,
-        use_critic: bool,
-        actor_hidden_dims: Optional[List[int]] = None,
-        critic_hidden_dims: Optional[List[int]] = None,
-        actor_learning_rate: float = 1e-4,
-        critic_learning_rate: float = 1e-4,
-        exploration_module: Optional[ExplorationModule] = None,
-        actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
-        critic_network_type: Type[ValueNetwork] = VanillaValueNetwork,
-        discount_factor: float = 0.99,
-        training_rounds: int = 100,
-        batch_size: int = 128,
-        epsilon: float = 0.0,
-        trace_decay_param: float = 0.95,
-        entropy_bonus_scaling: float = 0.01,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
-        actor_network_instance: Optional[ActorNetwork] = None,
-        critic_network_instance: Optional[Union[ValueNetwork, nn.Module]] = None,
+            self,
+            state_dim: int,
+            action_space: ActionSpace,
+            use_critic: bool,
+            actor_hidden_dims: Optional[List[int]] = None,
+            critic_hidden_dims: Optional[List[int]] = None,
+            actor_learning_rate: float = 1e-4,
+            critic_learning_rate: float = 1e-4,
+            exploration_module: Optional[ExplorationModule] = None,
+            actor_network_type: Type[ActorNetwork] = GaussianActorNetwork,
+            critic_network_type: Type[ValueNetwork] = VanillaValueNetwork,
+            discount_factor: float = 0.99,
+            training_rounds: int = 100,
+            batch_size: int = 128,
+            epsilon: float = 0.2,
+            trace_decay_param: float = 0.95,
+            entropy_bonus_scaling: float = 0.01,
+            normalize_gae: bool = True,
+            action_representation_module: Optional[ActionRepresentationModule] = None,
+            actor_network_instance: Optional[ActorNetwork] = None,
+            critic_network_instance: Optional[Union[ValueNetwork, nn.Module]] = None,
     ) -> None:
-        super(ProximalPolicyOptimization, self).__init__(
+        super(ContinuousProximalPolicyOptimization, self).__init__(
             state_dim=state_dim,
             action_space=action_space,
             actor_hidden_dims=actor_hidden_dims,
@@ -91,49 +87,61 @@ class ProximalPolicyOptimization(ActorCriticBase):
             exploration_module=(
                 exploration_module
                 if exploration_module is not None
-                else PropensityExploration()
+                else NoExploration()
             ),
             discount_factor=discount_factor,
             training_rounds=training_rounds,
             batch_size=batch_size,
-            is_action_continuous=False,
+            is_action_continuous=True,  # Change to continuous action space
             on_policy=True,
             action_representation_module=action_representation_module,
             actor_network_instance=actor_network_instance,
             critic_network_instance=critic_network_instance,
         )
+
+        self._normalize_gae = normalize_gae
         self._epsilon = epsilon
         self._trace_decay_param = trace_decay_param
         self._entropy_bonus_scaling = entropy_bonus_scaling
+
+        assert self.is_action_continuous is True
 
     def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
         """
         Loss = actor loss + critic loss + entropy_bonus_scaling * entropy loss
         """
-        # TODO need to support continuous action
-        # TODO: change the output shape of value networks
         assert isinstance(batch, OnPolicyTransitionBatch)
-        action_probs = self._actor.get_action_prob(
-            state_batch=batch.state,
-            action_batch=batch.action,
-            available_actions=batch.curr_available_actions,
-            unavailable_actions_mask=batch.curr_unavailable_actions_mask,
-        )
-        # shape (batch_size)
 
-        # actor loss
-        action_probs_old = batch.action_probs
-        assert action_probs_old is not None
-        r_theta = torch.div(action_probs, action_probs_old)  # shape (batch_size)
-        clip = torch.clamp(
-            r_theta, min=1.0 - self._epsilon, max=1.0 + self._epsilon
-        )  # shape (batch_size)
-        loss = torch.sum(-torch.min(r_theta * batch.gae, clip * batch.gae))
-        # entropy
-        entropy: torch.Tensor = torch.distributions.Categorical(
-            action_probs.detach()
-        ).entropy()
-        loss -= torch.sum(self._entropy_bonus_scaling * entropy)
+        state_batch = batch.state  # shape: (batch_size x state_dim)
+        log_action_probs, normal = self._actor.get_log_probability(
+            state_batch=batch.state,
+            action_batch=batch.action, get_distribution=True
+        )
+
+        log_action_probs = torch.squeeze(log_action_probs)
+
+        # Calculate the log ratio for PPO
+        log_action_probs_old = torch.squeeze(batch.action_probs)
+        assert log_action_probs_old is not None
+
+        # Use log difference for stability
+        r_theta = torch.exp(log_action_probs - log_action_probs_old)  # shape (batch_size)
+        clip = torch.clamp(r_theta, min=1.0 - self._epsilon, max=1.0 + self._epsilon)
+
+        gae = batch.gae
+        if self._normalize_gae:
+            gae = (gae - gae.mean()) / (gae.std() + 1e-8)
+
+        # clipped surrogate loss
+        clip_loss_1 = gae * r_theta
+        clip_loss_2 = gae * clip
+        loss = -torch.min(clip_loss_1, clip_loss_2)
+        loss = loss.mean()
+
+        # Entropy for encouraging exploration
+        entropy = normal.entropy().sum(axis=-1).mean()
+        loss -= self._entropy_bonus_scaling * entropy
+
         return loss
 
     def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
@@ -147,20 +155,18 @@ class ProximalPolicyOptimization(ActorCriticBase):
 
     def learn(self, replay_buffer: ReplayBuffer) -> Dict[str, Any]:
         self.preprocess_replay_buffer(replay_buffer)
-        # sample from replay buffer and learn
+        # Sample from replay buffer and learn
+
         result = super().learn(replay_buffer)
-        # update old actor with latest actor for next round
+        # Update old actor with the latest actor for the next round
         return result
 
     def preprocess_replay_buffer(self, replay_buffer: ReplayBuffer) -> None:
         """
         Preprocess the replay buffer by calculating
         and adding the generalized advantage estimates (gae),
-        truncated lambda returns (lam_return) and action probabilities (action_probs)
+        truncated lambda returns (lam_return), and action log probabilities (action_probs)
         under the current policy.
-        See https://arxiv.org/abs/1707.06347 equation (11) for the definition of gae.
-        See "Reinforcement Learning: An Introduction" by Sutton and Barto (2018) equation (12.10)
-        for the definition of truncated lambda return.
         """
         assert type(replay_buffer) is OnPolicyReplayBuffer
         assert len(replay_buffer.memory) > 0
@@ -196,8 +202,10 @@ class ProximalPolicyOptimization(ActorCriticBase):
         )
 
         state_values = self._critic(history_summary_batch).detach()
+
+        # Get action mean and standard deviation for current policy
         action_probs = (
-            self._actor.get_action_prob(
+            self._actor.get_log_probability(
                 state_batch=history_summary_batch,
                 action_batch=action_representation_batch,
             )
@@ -205,11 +213,6 @@ class ProximalPolicyOptimization(ActorCriticBase):
             .unsqueeze(-1)
         )
 
-        # Transitions in the reply buffer memory are in the CPU
-        # (only sampled batches are moved to the used device,
-        # kept in replay_buffer.device_for_batches)
-        # To use it in expressions involving the critic,
-        # we must move them to the device being used first.
         next_state = replay_buffer.memory[-1].next_state
         assert next_state is not None
         next_state_in_device = next_state.to(replay_buffer.device_for_batches)
@@ -227,17 +230,18 @@ class ProximalPolicyOptimization(ActorCriticBase):
             original_transition_device = transition.device
             transition.to(state_values.device)
             td_error = (
-                transition.reward
-                + self._discount_factor * next_value * (~transition.terminated)
-                - state_values[i]
+                    transition.reward
+                    + self._discount_factor * next_value * (~transition.terminated)
+                    - state_values[i]
             )
             gae = (
-                td_error
-                + self._discount_factor
-                * self._trace_decay_param
-                * (~transition.terminated)
-                * gae
+                    td_error
+                    + self._discount_factor
+                    * self._trace_decay_param
+                    * (~transition.terminated)
+                    * gae
             )
+
             assert isinstance(transition, OnPolicyTransition)
             transition.gae = gae
             # truncated lambda return of the state
