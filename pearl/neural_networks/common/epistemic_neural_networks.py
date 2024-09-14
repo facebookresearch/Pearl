@@ -192,9 +192,14 @@ class Priornet(nn.Module):
         Output:
             ensemble output of x weighted by epistemic index vector z.
         """
-        outputs = torch.vmap(self.call_single_model, (0, 0, None))(
-            self.params, self.buffers, x
-        )
+        # vmap is not compatible with torchscript
+        # outputs = torch.vmap(self.call_single_model, (0, 0, None))(
+        #     self.params, self.buffers, x
+        # )
+        outputs = []
+        for model in self.models:
+            outputs.append(model(x))
+        outputs = torch.stack(outputs, dim=0)
         return torch.einsum("ijk,ji->jk", outputs, z)
 
 
