@@ -49,6 +49,7 @@ class DiscreteSpace(Space):
         if len(elements) == 0:
             raise ValueError("`DiscreteSpace` requires at least one element.")
         self._set_validated_elements(elements=elements)  # sets self.elements
+        # pyre-fixme[28]: Unexpected keyword argument `start`.
         self._gym_space = Discrete(n=len(elements), seed=seed, start=0)
 
     def _set_validated_elements(self, elements: List[Tensor]) -> None:
@@ -94,6 +95,7 @@ class DiscreteSpace(Space):
             A randomly sampled (available) element.
         """
         mask_np = mask.numpy().astype(int) if mask is not None else None
+        # pyre-fixme[28]: Unexpected keyword argument `mask`.
         idx = self._gym_space.sample(mask=mask_np)
         return self.elements[idx]
 

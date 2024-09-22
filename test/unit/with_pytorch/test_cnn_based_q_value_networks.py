@@ -31,6 +31,8 @@ class TestCNNQValueNetworks(unittest.TestCase):
         self.num_data_points = 5000
         self.mnist_train_dataset = Subset(
             mnist_dataset,
+            # pyre-fixme[6]: For 2nd argument expected `Sequence[int]` but got
+            #  `ndarray[typing.Any, dtype[typing.Any]]`.
             np.arange(1, self.num_data_points),
         )
         self.learning_rate = 0.001
