@@ -37,6 +37,7 @@ def single_element_tensor_to_int(x: Tensor) -> int:
     return int(x)
 
 
+# pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
 def tensor_to_numpy(x: Tensor) -> np.ndarray:
     return x.numpy(force=True)
 
@@ -51,6 +52,7 @@ GYM_TO_PEARL_OBSERVATION_SPACE = {
     "Box": BoxSpace,
     # Add more here as needed
 }
+# pyre-fixme[5]: Global expression must be annotated.
 PEARL_TO_GYM_ACTION = {
     "Discrete": single_element_tensor_to_int,
     "Box": tensor_to_numpy,
@@ -179,7 +181,9 @@ class GymEnvironment(Environment):
 
 
 def _get_gym_action(
-    pearl_action: Action, gym_space: gym.Space
+    pearl_action: Action,
+    gym_space: gym.Space,
+    # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
 ) -> Union[int, np.ndarray]:
     """A helper function to convert a Pearl `Action` to an action compatible with
     the Gym action space `gym_space`."""
