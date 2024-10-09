@@ -352,7 +352,7 @@ class VanillaContinuousActorNetwork(ActorNetwork):
 
 class GaussianActorNetwork(ActorNetwork):
     """
-    A multivariate gaussian actor network: parameterize the policy (action distirbution)
+    A multivariate gaussian actor network: parameterize the policy (action distribution)
     as a multivariate gaussian. Given input state, the network outputs a pair of
     (mu, sigma), where mu is the mean of the Gaussian distribution, and sigma is its
     standard deviation along different dimensions.
@@ -417,7 +417,7 @@ class GaussianActorNetwork(ActorNetwork):
 
     def sample_action(
         self, state_batch: Tensor, get_log_prob: bool = False
-    ) -> Union[Tensor, Tensor] | Tensor:
+    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """
         Sample an action from the actor network.
 
@@ -458,13 +458,14 @@ class GaussianActorNetwork(ActorNetwork):
 
     def get_log_probability(
         self, state_batch: torch.Tensor, action_batch: torch.Tensor, get_distribution: bool = False
-    ) -> Tuple[Tensor, Normal] | Tensor:
+    ) -> Union[torch.Tensor, Tuple[torch.Tensor, Normal]]:
         """
         Compute log probability of actions, pi(a|s) under the policy parameterized by
         the actor network.
         Args:
             state_batch: batch of states
             action_batch: batch of actions
+            get_distribution: If True, also return the log probability of the sampled actions.
         Returns:
             log_prob: log probability of each action in the batch
         """

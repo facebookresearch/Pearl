@@ -112,7 +112,6 @@ class ContinuousProximalPolicyOptimization(ProximalPolicyOptimizationBase):
         """
         assert isinstance(batch, OnPolicyTransitionBatch)
 
-        state_batch = batch.state  # shape: (batch_size x state_dim)
         log_action_probs, normal = self._actor.get_log_probability(
             state_batch=batch.state,
             action_batch=batch.action, get_distribution=True
