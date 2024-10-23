@@ -75,8 +75,8 @@ from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import 
 from pearl.replay_buffers.sequential_decision_making.bootstrap_replay_buffer import (
     BootstrapReplayBuffer,
 )
-from pearl.replay_buffers.sequential_decision_making.fifo_on_policy_replay_buffer import (  # noqa E501
-    FIFOOnPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.sarsa_replay_buffer import (  # noqa E501
+    SARSAReplayBuffer,
 )
 from pearl.safety_modules.reward_constrained_safety_module import (
     RCSafetyModuleCostCriticContinuousAction,
@@ -179,7 +179,7 @@ SARSA_method = {
     },
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
-    "replay_buffer": FIFOOnPolicyReplayBuffer,
+    "replay_buffer": SARSAReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},

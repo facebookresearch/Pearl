@@ -8,12 +8,12 @@
 
 from .basic_replay_buffer import BasicReplayBuffer
 from .bootstrap_replay_buffer import BootstrapReplayBuffer
-from .fifo_on_policy_replay_buffer import FIFOOnPolicyReplayBuffer
 from .hindsight_experience_replay_buffer import HindsightExperienceReplayBuffer
+from .sarsa_replay_buffer import SARSAReplayBuffer
 
 __all__ = [
     "BootstrapReplayBuffer",
     "BasicReplayBuffer",
-    "FIFOOnPolicyReplayBuffer",
+    "SARSAReplayBuffer",
     "HindsightExperienceReplayBuffer",
 ]

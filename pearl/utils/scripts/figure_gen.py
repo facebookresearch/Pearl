@@ -29,8 +29,8 @@ from pearl.policy_learners.sequential_decision_making.deep_sarsa import DeepSARS
 from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
     BasicReplayBuffer,
 )
-from pearl.replay_buffers.sequential_decision_making.fifo_on_policy_replay_buffer import (
-    FIFOOnPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.sarsa_replay_buffer import (
+    SARSAReplayBuffer,
 )
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
@@ -85,7 +85,7 @@ def main() -> None:
             hidden_dims=[64, 64],
             training_rounds=20,
         ),
-        replay_buffer=FIFOOnPolicyReplayBuffer(10000),
+        replay_buffer=SARSAReplayBuffer(10000),
     )
     info = online_learning(
         agent,

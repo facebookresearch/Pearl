@@ -35,13 +35,13 @@ class TestReplayBuffer(unittest.TestCase):
             REINFORCEReplayBuffer(replay_buffer_size),
             BasicReplayBuffer(replay_buffer_size),
             BootstrapReplayBuffer(replay_buffer_size, p=0.5, ensemble_size=3),
-            # We meant to test FIFOOnPolicyReplayBuffer as well, but we observe
+            # We meant to test SARSAReplayBuffer as well, but we observe
             # that it does not get filled when input is random, because
             # it requires the next state of one transition
             # to be equal the current state of the next transition.
             # TODO: verify that we really need this restriction on this
             # replay buffer.
-            # FIFOOnPolicyReplayBuffer,
+            # SARSAReplayBuffer,
         }
         for replay_buffer in replay_buffers_to_be_tested:
             print(f"Replay buffer class being tested: {type(replay_buffer).__name__}")

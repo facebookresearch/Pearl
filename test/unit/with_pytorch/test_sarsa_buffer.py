@@ -12,13 +12,13 @@ import unittest
 import torch
 import torch.testing as tt
 
-from pearl.replay_buffers.sequential_decision_making.fifo_on_policy_replay_buffer import (
-    FIFOOnPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.sarsa_replay_buffer import (
+    SARSAReplayBuffer,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
-class TestFifoBuffer(unittest.TestCase):
+class TestSARSABuffer(unittest.TestCase):
     def setUp(self) -> None:
         self.batch_size = 3
         state_dim = 10
@@ -36,12 +36,12 @@ class TestFifoBuffer(unittest.TestCase):
         self.next_available_actions = self.action_space
         self.terminated = torch.randint(2, (self.batch_size,))
 
-    def test_on_policy_buffer_sarsa_match(self) -> None:
+    def test_sarsa_match(self) -> None:
         """
         This test is to ensure on-policy buffer could correctly match SARSA pair
         for single push
         """
-        replay_buffer = FIFOOnPolicyReplayBuffer(self.batch_size * 4)
+        replay_buffer = SARSAReplayBuffer(self.batch_size * 4)
         # push S0 A0 R0 S1
         replay_buffer.push(
             state=self.states[0],
@@ -96,11 +96,11 @@ class TestFifoBuffer(unittest.TestCase):
             atol=0.0,
         )
 
-    def test_on_policy_buffer_terminal_push(self) -> None:
+    def test_sarsa_replay_buffer_terminal_push(self) -> None:
         """
         This test is to ensure on-policy buffer could push for terminal state
         """
-        replay_buffer = FIFOOnPolicyReplayBuffer(self.batch_size * 4)
+        replay_buffer = SARSAReplayBuffer(self.batch_size * 4)
         replay_buffer.push(
             state=self.states[0],
             action=self.actions[0],

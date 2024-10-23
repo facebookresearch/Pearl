@@ -79,8 +79,8 @@ from pearl.policy_learners.sequential_decision_making.td3 import TD3
 from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
     BasicReplayBuffer,
 )
-from pearl.replay_buffers.sequential_decision_making.fifo_on_policy_replay_buffer import (
-    FIFOOnPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.sarsa_replay_buffer import (
+    SARSAReplayBuffer,
 )
 from pearl.safety_modules.risk_sensitive_safety_modules import (
     QuantileNetworkMeanVarianceSafetyModule,
@@ -225,7 +225,7 @@ class TestIntegration(unittest.TestCase):
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=FIFOOnPolicyReplayBuffer(10_000),
+            replay_buffer=SARSAReplayBuffer(10_000),
         )
         self.assertTrue(
             target_return_is_reached(

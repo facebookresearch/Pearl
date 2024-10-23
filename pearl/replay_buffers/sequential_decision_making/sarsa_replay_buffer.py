@@ -19,7 +19,7 @@ from pearl.replay_buffers.transition import Transition
 from torch import Tensor
 
 
-class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
+class SARSAReplayBuffer(TensorBasedReplayBuffer):
     """
     This replay buffer is used to delay push for SARSA.
     It waits until next action is available and only then does it push a transition
@@ -27,7 +27,7 @@ class FIFOOnPolicyReplayBuffer(TensorBasedReplayBuffer):
     """
 
     def __init__(self, capacity: int) -> None:
-        super(FIFOOnPolicyReplayBuffer, self).__init__(capacity)
+        super(SARSAReplayBuffer, self).__init__(capacity)
         self.cache: Optional[Transition] = None
 
     def _store_transition(
