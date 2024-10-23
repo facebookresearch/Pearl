@@ -11,8 +11,8 @@ import unittest
 
 import torch
 import torch.testing as tt
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
-    FIFOOffPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
+    BasicReplayBuffer,
 )
 
 from pearl.replay_buffers.transition import TransitionBatch
@@ -33,7 +33,7 @@ class TestTrajectoriesInReplayBuffer(unittest.TestCase):
         )
 
     def test_push_complete_trajectory(self) -> None:
-        replay_buffer = FIFOOffPolicyReplayBuffer(self.capacity)
+        replay_buffer = BasicReplayBuffer(self.capacity)
         for i in range(self.trajectory_len):
             replay_buffer.push(
                 state=torch.tensor([i]),
@@ -68,7 +68,7 @@ class TestTrajectoriesInReplayBuffer(unittest.TestCase):
         tt.assert_close(actions, torch.arange(self.action_size), rtol=0.0, atol=0.0)
 
     def test_push_2_trajectories(self) -> None:
-        replay_buffer = FIFOOffPolicyReplayBuffer(self.capacity)
+        replay_buffer = BasicReplayBuffer(self.capacity)
 
         # push 1st trajectory
         for i in range(self.trajectory_len):

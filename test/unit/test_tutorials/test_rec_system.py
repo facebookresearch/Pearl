@@ -34,11 +34,11 @@ from pearl.policy_learners.sequential_decision_making.bootstrapped_dqn import (
 from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,
 )
+from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
+    BasicReplayBuffer,
+)
 from pearl.replay_buffers.sequential_decision_making.bootstrap_replay_buffer import (
     BootstrapReplayBuffer,
-)
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
-    FIFOOffPolicyReplayBuffer,
 )
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
@@ -246,7 +246,7 @@ class TestTutorials(unittest.TestCase):
                 training_rounds=50,
                 action_representation_module=action_representation_module,
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(100_000),
+            replay_buffer=BasicReplayBuffer(100_000),
             device_id=device_id,
         )
 
@@ -290,7 +290,7 @@ class TestTutorials(unittest.TestCase):
                 hidden_dim=128,
                 history_length=history_length,
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(100_000),
+            replay_buffer=BasicReplayBuffer(100_000),
             device_id=device_id,
         )
 

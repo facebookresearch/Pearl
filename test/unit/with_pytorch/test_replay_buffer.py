@@ -15,12 +15,12 @@ from pearl.policy_learners.sequential_decision_making.ppo import PPOReplayBuffer
 from pearl.policy_learners.sequential_decision_making.reinforce import (
     REINFORCEReplayBuffer,
 )
+
+from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
+    BasicReplayBuffer,
+)
 from pearl.replay_buffers.sequential_decision_making.bootstrap_replay_buffer import (
     BootstrapReplayBuffer,
-)
-
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
-    FIFOOffPolicyReplayBuffer,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
@@ -33,7 +33,7 @@ class TestReplayBuffer(unittest.TestCase):
             PPOReplayBuffer(replay_buffer_size),
             REINFORCEReplayBuffer(replay_buffer_size),
             REINFORCEReplayBuffer(replay_buffer_size),
-            FIFOOffPolicyReplayBuffer(replay_buffer_size),
+            BasicReplayBuffer(replay_buffer_size),
             BootstrapReplayBuffer(replay_buffer_size, p=0.5, ensemble_size=3),
             # We meant to test FIFOOnPolicyReplayBuffer as well, but we observe
             # that it does not get filled when input is random, because

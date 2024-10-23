@@ -69,11 +69,11 @@ from pearl.policy_learners.sequential_decision_making.soft_actor_critic_continuo
     ContinuousSoftActorCritic,
 )
 from pearl.policy_learners.sequential_decision_making.td3 import TD3
+from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (  # noqa E501
+    BasicReplayBuffer,
+)
 from pearl.replay_buffers.sequential_decision_making.bootstrap_replay_buffer import (
     BootstrapReplayBuffer,
-)
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (  # noqa E501
-    FIFOOffPolicyReplayBuffer,
 )
 from pearl.replay_buffers.sequential_decision_making.fifo_on_policy_replay_buffer import (  # noqa E501
     FIFOOnPolicyReplayBuffer,
@@ -112,7 +112,7 @@ DQN_method = {
     },
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
@@ -127,7 +127,7 @@ DQN_LSTM_method = {
     },
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
@@ -149,7 +149,7 @@ CDQN_method = {
     },
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
@@ -164,7 +164,7 @@ DDQN_method = {
     },
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
@@ -227,7 +227,7 @@ DuelingDQN_method = {
     "network_args": {"hidden_dims": [64, 64], "output_dim": 1},
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
@@ -242,7 +242,7 @@ QRDQN_method = {
     },
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "safety_module": QuantileNetworkMeanVarianceSafetyModule,
     "safety_module_args": {"variance_weighting_coefficient": 0.0},
@@ -259,7 +259,7 @@ QRDQN_var_coeff_05_method = {
     },
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "safety_module": QuantileNetworkMeanVarianceSafetyModule,
     "safety_module_args": {"variance_weighting_coefficient": 0.5},
@@ -276,7 +276,7 @@ QRDQN_var_coeff_2_method = {
     },
     "exploration_module": EGreedyExploration,
     "exploration_module_args": {"epsilon": 0.1},
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "safety_module": QuantileNetworkMeanVarianceSafetyModule,
     "safety_module_args": {"variance_weighting_coefficient": 2.0},
@@ -398,7 +398,7 @@ SAC_method = {
         "batch_size": 32,
         "entropy_coef": 0.1,
     },
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
@@ -415,7 +415,7 @@ SAC_LSTM_method = {
         "actor_learning_rate": 1e-4,
         "critic_learning_rate": 3e-4,
     },
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
@@ -438,7 +438,7 @@ SAC_dynamic_method = {
         "entropy_coef": 0.1,
     },
     "actor_network_type": DynamicActionActorNetwork,
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
@@ -466,7 +466,7 @@ IQL_online_method = {
     },
     "exploration_module": PropensityExploration,
     "exploration_module_args": {},
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
@@ -494,7 +494,7 @@ IQL_offline_method = {
     },
     "exploration_module": None,
     "exploration_module_args": {},
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 100000},
 }
 
@@ -524,7 +524,7 @@ CIQL_online_method = {
         "mean": 0,
         "std_dev": 0.1,
     },
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 100000},
 }
 DDPG_method = {
@@ -548,7 +548,7 @@ DDPG_method = {
         "mean": 0,
         "std_dev": 0.1,
     },
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 100000},
 }
 
@@ -573,7 +573,7 @@ DDPG_LSTM_method = {
         "mean": 0,
         "std_dev": 0.1,
     },
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 100000},
     "history_summarization_module": LSTMHistorySummarizationModule,
     "history_summarization_module_args": {
@@ -607,7 +607,7 @@ TD3_method = {
         "mean": 0,
         "std_dev": 0.1,
     },
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 100000},
 }
 
@@ -635,7 +635,7 @@ TD3_LSTM_method = {
         "mean": 0,
         "std_dev": 0.1,
     },
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 100000},
     "history_summarization_module": LSTMHistorySummarizationModule,
     "history_summarization_module_args": {
@@ -662,7 +662,7 @@ CSAC_method = {
         "critic_network_type": VanillaQValueNetwork,
         "discount_factor": 0.99,
     },
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 100000},
 }
 
@@ -683,7 +683,7 @@ CSAC_LSTM_method = {
         "critic_network_type": VanillaQValueNetwork,
         "discount_factor": 0.99,
     },
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 100000},
     "history_summarization_module": LSTMHistorySummarizationModule,
     "history_summarization_module_args": {
@@ -715,7 +715,7 @@ RCDDPG_method_const_0_2 = {
         "mean": 0,
         "std_dev": 0.1,
     },
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 100000, "has_cost_available": True},
     "safety_module": RCSafetyModuleCostCriticContinuousAction,
     "safety_module_args": {
@@ -766,7 +766,7 @@ RCTD3_method_const_0_2 = {
         "mean": 0,
         "std_dev": 0.1,
     },
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 100000, "has_cost_available": True},
     "safety_module": RCSafetyModuleCostCriticContinuousAction,
     "safety_module_args": {
@@ -809,7 +809,7 @@ RCCSAC_method_const_0_2 = {
         "critic_network_type": VanillaQValueNetwork,
         "discount_factor": 0.99,
     },
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 100000, "has_cost_available": True},
     "safety_module": RCSafetyModuleCostCriticContinuousAction,
     "safety_module_args": {
@@ -869,7 +869,7 @@ RCSAC_method_const_0_2 = {
         "batch_size": 32,
         "entropy_coef": 0.1,
     },
-    "replay_buffer": FIFOOffPolicyReplayBuffer,
+    "replay_buffer": BasicReplayBuffer,
     "replay_buffer_args": {"capacity": 50000, "has_cost_available": True},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},

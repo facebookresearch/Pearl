@@ -14,8 +14,8 @@ import torch
 from pearl.api.action import Action
 from pearl.api.reward import Reward
 from pearl.api.state import SubjectiveState
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (  # noqa E501
-    FIFOOffPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (  # noqa E501
+    BasicReplayBuffer,
 )
 from pearl.replay_buffers.transition import (
     TransitionWithBootstrapMask,
@@ -24,7 +24,7 @@ from pearl.replay_buffers.transition import (
 from torch import Tensor
 
 
-class BootstrapReplayBuffer(FIFOOffPolicyReplayBuffer):
+class BootstrapReplayBuffer(BasicReplayBuffer):
     r"""A ensemble replay buffer that supports the implementation of the
     masking distribution used in Bootstrapped DQN, as described in [1]. This
     implementation uses a Bernoulli(p) masking distribution (see Appendix 3.1

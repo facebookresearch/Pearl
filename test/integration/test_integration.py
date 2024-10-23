@@ -76,8 +76,8 @@ from pearl.policy_learners.sequential_decision_making.soft_actor_critic_continuo
     ContinuousSoftActorCritic,
 )
 from pearl.policy_learners.sequential_decision_making.td3 import TD3
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
-    FIFOOffPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
+    BasicReplayBuffer,
 )
 from pearl.replay_buffers.sequential_decision_making.fifo_on_policy_replay_buffer import (
     FIFOOnPolicyReplayBuffer,
@@ -126,7 +126,7 @@ class TestIntegration(unittest.TestCase):
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
+            replay_buffer=BasicReplayBuffer(10_000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -159,7 +159,7 @@ class TestIntegration(unittest.TestCase):
                 hidden_dims=[64],
                 training_rounds=20,
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(1000),
+            replay_buffer=BasicReplayBuffer(1000),
         )
 
         self.assertTrue(
@@ -193,7 +193,7 @@ class TestIntegration(unittest.TestCase):
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
+            replay_buffer=BasicReplayBuffer(10_000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -355,7 +355,7 @@ class TestIntegration(unittest.TestCase):
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
+            replay_buffer=BasicReplayBuffer(10_000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -390,7 +390,7 @@ class TestIntegration(unittest.TestCase):
                 ),
             ),
             safety_module=QuantileNetworkMeanVarianceSafetyModule(0.2),
-            replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
+            replay_buffer=BasicReplayBuffer(10_000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -520,7 +520,7 @@ class TestIntegration(unittest.TestCase):
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(50000),
+            replay_buffer=BasicReplayBuffer(50000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -580,7 +580,7 @@ class TestIntegration(unittest.TestCase):
                 actor_network_instance=actor_network,
                 critic_network_instance=twin_critic_network,
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(50000),
+            replay_buffer=BasicReplayBuffer(50000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -613,7 +613,7 @@ class TestIntegration(unittest.TestCase):
                 actor_learning_rate=0.001,
                 critic_learning_rate=0.001,
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(100000),
+            replay_buffer=BasicReplayBuffer(100000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -669,7 +669,7 @@ class TestIntegration(unittest.TestCase):
                 actor_network_instance=actor_network_instance,
                 critic_network_instance=twin_critic_network,
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(100000),
+            replay_buffer=BasicReplayBuffer(100000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -704,7 +704,7 @@ class TestIntegration(unittest.TestCase):
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
+            replay_buffer=BasicReplayBuffer(10_000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -741,7 +741,7 @@ class TestIntegration(unittest.TestCase):
                     std_dev=0.2,
                 ),
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(50000),
+            replay_buffer=BasicReplayBuffer(50000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -779,7 +779,7 @@ class TestIntegration(unittest.TestCase):
                     std_dev=0.2,
                 ),
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(50000),
+            replay_buffer=BasicReplayBuffer(50000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -844,7 +844,7 @@ class TestIntegration(unittest.TestCase):
                 actor_network_instance=actor_network_instance,
                 critic_network_instance=twin_critic_network,
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(50000),
+            replay_buffer=BasicReplayBuffer(50000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -881,7 +881,7 @@ class TestIntegration(unittest.TestCase):
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+            replay_buffer=BasicReplayBuffer(10000),
         )
 
         # specify path for offline data set
@@ -940,7 +940,7 @@ class TestIntegration(unittest.TestCase):
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(200000),
+            replay_buffer=BasicReplayBuffer(200000),
         )
 
         # specify path for offline data set

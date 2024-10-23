@@ -21,8 +21,8 @@ from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,
 )
 
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
-    FIFOOffPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
+    BasicReplayBuffer,
 )
 from pearl.utils.functional_utils.experimentation.create_offline_data import (
     create_offline_data,
@@ -66,7 +66,7 @@ class TestOfflineCQL(unittest.TestCase):
                 training_rounds=20,
                 action_representation_module=action_representation_module,
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(1000000),
+            replay_buffer=BasicReplayBuffer(1000000),
         )
 
         max_len_offline_data = 500
@@ -84,7 +84,7 @@ class TestOfflineCQL(unittest.TestCase):
         )
 
         # Load offline data into a Pearl replay buffer
-        offline_data_replay_buffer = FIFOOffPolicyReplayBuffer(max_len_offline_data)
+        offline_data_replay_buffer = BasicReplayBuffer(max_len_offline_data)
         raw_transitions_buffer = torch.load("offline_raw_transitions_dict.pt")
         for transition in raw_transitions_buffer:
             offline_data_replay_buffer.push(

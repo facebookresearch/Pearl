@@ -17,8 +17,8 @@ import torch
 from pearl.api.environment import Environment
 from pearl.pearl_agent import PearlAgent
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
-    FIFOOffPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
+    BasicReplayBuffer,
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
@@ -41,7 +41,7 @@ def get_offline_data_in_buffer(
 ) -> ReplayBuffer:
     """
     Fetches offline data from a url and returns a replay buffer which can be sampled
-    to train the offline agent. For this implementation we use FIFOOffPolicyReplayBuffer.
+    to train the offline agent. For this implementation we use BasicReplayBuffer.
 
     - Assumes the offline data is an iterable consisting of transition tuples
         (observation, action, reward, next_observation, curr_available_actions,
@@ -53,7 +53,7 @@ def get_offline_data_in_buffer(
     Args:
         is_action_continuous (bool): whether the action space is continuous or discrete.
             for continuous actions spaces, we need to set this flag; see 'push' method
-            in FIFOOffPolicyReplayBuffer class
+            in BasicReplayBuffer class
         url (str, optional): from where offline data needs to be fetched from
         data_path (str, optional): local path to the offline data
         max_number_actions_if_discrete (int, optional): To work with a discrete action space in
@@ -66,7 +66,7 @@ def get_offline_data_in_buffer(
         device (cpu): Device to load the data onto. If no device is specified, defaults to cpu.
 
     Returns:
-        ReplayBuffer: a FIFOOffPolicyReplayBuffer containing offline data of transition tuples.
+        ReplayBuffer: a BasicReplayBuffer containing offline data of transition tuples.
             The transition tuples are in the format as expected by a Pearl agent.
     """
 
@@ -97,7 +97,7 @@ def get_offline_data_in_buffer(
             data_path, map_location=torch.device(device)
         )
 
-    offline_data_replay_buffer = FIFOOffPolicyReplayBuffer(size)
+    offline_data_replay_buffer = BasicReplayBuffer(size)
     if is_action_continuous:
         offline_data_replay_buffer._is_action_continuous = True
 

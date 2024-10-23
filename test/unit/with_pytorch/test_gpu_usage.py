@@ -22,8 +22,8 @@ from pearl.policy_learners.sequential_decision_making.ppo import (
     PPOReplayBuffer,
     ProximalPolicyOptimization,
 )
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
-    FIFOOffPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
+    BasicReplayBuffer,
 )
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 
@@ -53,7 +53,7 @@ class TestGPUUsage(unittest.TestCase):
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+            replay_buffer=BasicReplayBuffer(10000),
         )
 
         online_learning(agent, env, number_of_episodes=10)

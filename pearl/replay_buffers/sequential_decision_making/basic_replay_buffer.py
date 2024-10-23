@@ -17,9 +17,9 @@ from pearl.replay_buffers.transition import Transition
 from torch import Tensor
 
 
-class FIFOOffPolicyReplayBuffer(TensorBasedReplayBuffer):
+class BasicReplayBuffer(TensorBasedReplayBuffer):
     def __init__(self, capacity: int, has_cost_available: bool = False) -> None:
-        super(FIFOOffPolicyReplayBuffer, self).__init__(
+        super(BasicReplayBuffer, self).__init__(
             capacity=capacity,
             has_next_state=True,
             has_next_action=False,

@@ -14,13 +14,13 @@ from pearl.api.action_space import ActionSpace
 from pearl.api.reward import Reward
 from pearl.api.state import SubjectiveState
 
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
-    FIFOOffPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
+    BasicReplayBuffer,
 )
 from pearl.utils.tensor_like import assert_is_tensor_like
 
 
-class HindsightExperienceReplayBuffer(FIFOOffPolicyReplayBuffer):
+class HindsightExperienceReplayBuffer(BasicReplayBuffer):
     """
     paper: https://arxiv.org/pdf/1707.01495.pdf
     final mode for alternative only for now

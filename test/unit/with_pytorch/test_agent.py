@@ -37,8 +37,8 @@ from pearl.policy_learners.sequential_decision_making.tabular_q_learning import 
 from pearl.replay_buffers.contextual_bandits.discrete_contextual_bandit_replay_buffer import (
     DiscreteContextualBanditReplayBuffer,
 )
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
-    FIFOOffPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
+    BasicReplayBuffer,
 )
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
     online_learning,
@@ -82,7 +82,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+            replay_buffer=BasicReplayBuffer(10000),
         )
         online_learning_to_png_graph(
             agent, env, number_of_episodes=10, learn_after_episode=True
@@ -105,7 +105,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+            replay_buffer=BasicReplayBuffer(10000),
         )
         online_learning_to_png_graph(
             agent, env, number_of_episodes=10, learn_after_episode=True
@@ -132,7 +132,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+            replay_buffer=BasicReplayBuffer(10000),
         )
         online_learning_to_png_graph(
             agent, env, number_of_episodes=number_of_episodes, learn_after_episode=True
@@ -160,7 +160,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+            replay_buffer=BasicReplayBuffer(10000),
         )
         online_learning_to_png_graph(
             agent, env, number_of_episodes=10, learn_after_episode=True

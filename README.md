@@ -39,8 +39,8 @@ from pearl.action_representation_modules.one_hot_action_representation_module im
 from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,
 )
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
-    FIFOOffPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
+    BasicReplayBuffer,
 )
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 
@@ -57,7 +57,7 @@ agent = PearlAgent(
             max_number_actions=num_actions
         ),
     ),
-    replay_buffer=FIFOOffPolicyReplayBuffer(10_000),
+    replay_buffer=BasicReplayBuffer(10_000),
 )
 
 observation, action_space = env.reset()

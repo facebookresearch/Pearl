@@ -17,8 +17,8 @@ from pearl.action_representation_modules.one_hot_action_representation_module im
 from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,
 )
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
-    FIFOOffPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
+    BasicReplayBuffer,
 )
 
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
@@ -53,7 +53,7 @@ class TestDynamicActionSpaceReplayBuffer(unittest.TestCase):
         action_representation_module = OneHotActionTensorRepresentationModule(
             max_number_actions=5
         )
-        replay_buffer = FIFOOffPolicyReplayBuffer(capacity=10)
+        replay_buffer = BasicReplayBuffer(capacity=10)
         replay_buffer.push(
             state=torch.zeros(state_dim),
             action=current_action_space.sample(),

@@ -26,8 +26,8 @@ from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,
 )
 from pearl.policy_learners.sequential_decision_making.deep_sarsa import DeepSARSA
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
-    FIFOOffPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
+    BasicReplayBuffer,
 )
 from pearl.replay_buffers.sequential_decision_making.fifo_on_policy_replay_buffer import (
     FIFOOnPolicyReplayBuffer,
@@ -66,7 +66,7 @@ def main() -> None:
             hidden_dims=[64, 64],
             training_rounds=20,
         ),
-        replay_buffer=FIFOOffPolicyReplayBuffer(10000),
+        replay_buffer=BasicReplayBuffer(10000),
     )
     info = online_learning(
         agent,

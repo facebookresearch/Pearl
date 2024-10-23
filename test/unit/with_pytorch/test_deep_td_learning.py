@@ -23,8 +23,8 @@ from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
 )
 from pearl.policy_learners.sequential_decision_making.deep_sarsa import DeepSARSA
 from pearl.policy_learners.sequential_decision_making.double_dqn import DoubleDQN
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
-    FIFOOffPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
+    BasicReplayBuffer,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
@@ -40,7 +40,7 @@ class TestDeepTDLearning(unittest.TestCase):
         self.action_representation_module = OneHotActionTensorRepresentationModule(
             max_number_actions=3
         )
-        buffer = FIFOOffPolicyReplayBuffer(self.batch_size)
+        buffer = BasicReplayBuffer(self.batch_size)
         for _ in range(self.batch_size):
             buffer.push(
                 state=torch.randn(self.state_dim),

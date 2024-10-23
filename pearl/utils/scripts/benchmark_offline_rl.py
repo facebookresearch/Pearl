@@ -27,8 +27,8 @@ from pearl.policy_learners.sequential_decision_making.implicit_q_learning import
 from pearl.policy_learners.sequential_decision_making.soft_actor_critic_continuous import (
     ContinuousSoftActorCritic,
 )
-from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
-    FIFOOffPolicyReplayBuffer,
+from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
+    BasicReplayBuffer,
 )
 
 from pearl.utils.functional_utils.experimentation.create_offline_data import (
@@ -281,7 +281,7 @@ if __name__ == "__main__":
             actor_learning_rate=0.0003,
             critic_learning_rate=0.0005,
         ),
-        replay_buffer=FIFOOffPolicyReplayBuffer(1000000),
+        replay_buffer=BasicReplayBuffer(1000000),
         device_id=device_id,
     )
 
