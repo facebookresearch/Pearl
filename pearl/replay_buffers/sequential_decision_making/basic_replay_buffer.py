@@ -18,13 +18,8 @@ from torch import Tensor
 
 
 class BasicReplayBuffer(TensorBasedReplayBuffer):
-    def __init__(self, capacity: int, has_cost_available: bool = False) -> None:
-        super(BasicReplayBuffer, self).__init__(
-            capacity=capacity,
-            has_next_state=True,
-            has_next_action=False,
-            has_cost_available=has_cost_available,
-        )
+    def __init__(self, capacity: int) -> None:
+        super(BasicReplayBuffer, self).__init__(capacity)
 
     def _store_transition(
         self,

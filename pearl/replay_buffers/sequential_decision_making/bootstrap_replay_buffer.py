@@ -40,10 +40,6 @@ class BootstrapReplayBuffer(BasicReplayBuffer):
         capacity: Size of the replay buffer.
         p: The parameter of the Bernoulli masking distribution.
         ensemble_size: The number of Q-networks in the ensemble.
-        has_next_state: Whether each piece of experience includes the next state.
-        has_next_action: Whether each piece of experience includes the next action.
-        has_next_available:actions: Whether each piece of experience includes the
-            next available actions.
     """
 
     def __init__(
@@ -100,11 +96,7 @@ class BootstrapReplayBuffer(BasicReplayBuffer):
             # pyre-fixme[6]: For 1st argument expected `List[Transition]` but got
             #  `List[Union[Transition, TransitionBatch]]`.
             transitions=samples,
-            has_next_state=self._has_next_state,
-            has_next_action=self._has_next_action,
             is_action_continuous=self.is_action_continuous,
-            has_next_available_actions=self._has_next_available_actions,
-            has_cost_available=self.has_cost_available,
         )
         # pyre-fixme[16]: Item `Transition` of `Union[Transition, TransitionBatch]`
         #  has no attribute `bootstrap_mask`.

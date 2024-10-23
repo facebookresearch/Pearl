@@ -32,7 +32,6 @@ class ReplayBuffer(ABC):
     def __init__(self) -> None:
         super().__init__()
         self._is_action_continuous: bool = False
-        self._has_cost_available: bool = False
 
     @property
     @abstractmethod
@@ -89,11 +88,3 @@ class ReplayBuffer(ABC):
     def is_action_continuous(self, value: bool) -> None:
         """Set whether the action space is continuous or not."""
         self._is_action_continuous = value
-
-    @property
-    def has_cost_available(self) -> bool:
-        return self._has_cost_available
-
-    @has_cost_available.setter
-    def has_cost_available(self, value: bool) -> None:
-        self._has_cost_available = value

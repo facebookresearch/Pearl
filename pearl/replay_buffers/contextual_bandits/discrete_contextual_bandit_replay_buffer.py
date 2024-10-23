@@ -34,9 +34,6 @@ class DiscreteContextualBanditReplayBuffer(TensorBasedReplayBuffer):
     def __init__(self, capacity: int) -> None:
         super(DiscreteContextualBanditReplayBuffer, self).__init__(
             capacity=capacity,
-            has_next_state=False,
-            has_next_action=False,
-            has_next_available_actions=False,
         )
 
     def push(

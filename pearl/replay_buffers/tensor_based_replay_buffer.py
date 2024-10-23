@@ -29,10 +29,6 @@ class TensorBasedReplayBuffer(ReplayBuffer):
     def __init__(
         self,
         capacity: int,
-        has_next_state: bool = True,
-        has_next_action: bool = True,
-        has_next_available_actions: bool = True,
-        has_cost_available: bool = False,
     ) -> None:
         super(TensorBasedReplayBuffer, self).__init__()
         self.capacity = capacity
@@ -40,10 +36,6 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         self.memory: Deque[Union[Transition, TransitionBatch]] = deque(
             [], maxlen=capacity
         )
-        self._has_next_state = has_next_state
-        self._has_next_action = has_next_action
-        self._has_next_available_actions = has_next_available_actions
-        self.has_cost_available = has_cost_available
         self._device_for_batches: torch.device = get_default_device()
 
     def _store_transition(
@@ -241,11 +233,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
             # pyre-fixme[6]: For 1st argument expected `List[Transition]` but got
             #  `List[Union[Transition, TransitionBatch]]`.
             transitions=samples,
-            has_next_state=self._has_next_state,
-            has_next_action=self._has_next_action,
             is_action_continuous=self._is_action_continuous,
-            has_next_available_actions=self._has_next_available_actions,
-            has_cost_available=self.has_cost_available,
         )
 
     def __len__(self) -> int:
@@ -257,11 +245,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
     def _create_transition_batch(
         self,
         transitions: List[Transition],
-        has_next_state: bool,
-        has_next_action: bool,
         is_action_continuous: bool,
-        has_next_available_actions: bool,
-        has_cost_available: bool,
     ) -> TransitionBatch:
 
         if len(transitions) == 0:

@@ -62,15 +62,8 @@ def make_replay_buffer_class_for_specific_transition_types(
         def __init__(
             self,
             capacity: int,
-            has_cost_available: bool = False,
         ) -> None:
-            super().__init__(
-                capacity=capacity,
-                has_next_state=True,
-                has_next_action=False,
-                has_next_available_actions=False,
-                has_cost_available=has_cost_available,
-            )
+            super().__init__(capacity)
 
         def _store_transition(
             self,
@@ -121,19 +114,11 @@ def make_replay_buffer_class_for_specific_transition_types(
         def _create_transition_batch(
             self,
             transitions: List[Transition],
-            has_next_state: bool,
-            has_next_action: bool,
             is_action_continuous: bool,
-            has_next_available_actions: bool,
-            has_cost_available: bool,
         ) -> TransitionBatchType:
             transition_batch = super()._create_transition_batch(
                 transitions,
-                has_next_state,
-                has_next_action,
                 is_action_continuous,
-                has_next_available_actions,
-                has_cost_available,
             )
 
             transition_batch = self.include_attrs_in_batch(
