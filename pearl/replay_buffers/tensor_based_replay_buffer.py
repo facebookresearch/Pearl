@@ -263,6 +263,27 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         has_next_available_actions: bool,
         has_cost_available: bool,
     ) -> TransitionBatch:
+
+        if len(transitions) == 0:
+            return TransitionBatch(
+                state=torch.empty(0),
+                action=torch.empty(0),
+                reward=torch.empty(0),
+                next_state=torch.empty(0),
+                next_action=torch.empty(0),
+                curr_available_actions=torch.empty(0),
+                curr_unavailable_actions_mask=torch.empty(0),
+                next_available_actions=torch.empty(0),
+                next_unavailable_actions_mask=torch.empty(0),
+                terminated=torch.empty(0),
+                cost=torch.empty(0),
+            ).to(self.device_for_batches)
+
+        has_next_state = transitions[0].next_state is not None
+        has_next_action = transitions[0].next_action is not None
+        has_next_available_actions = transitions[0].next_available_actions is not None
+        has_cost_available = transitions[0].cost is not None
+
         state_list = []
         action_list = []
         reward_list = []
