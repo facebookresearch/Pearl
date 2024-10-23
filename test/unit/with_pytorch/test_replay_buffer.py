@@ -10,16 +10,17 @@ import unittest
 
 import torch
 
+from pearl.policy_learners.sequential_decision_making.ppo import PPOReplayBuffer
+
+from pearl.policy_learners.sequential_decision_making.reinforce import (
+    REINFORCEReplayBuffer,
+)
 from pearl.replay_buffers.sequential_decision_making.bootstrap_replay_buffer import (
     BootstrapReplayBuffer,
 )
 
 from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buffer import (
     FIFOOffPolicyReplayBuffer,
-)
-
-from pearl.replay_buffers.sequential_decision_making.on_policy_replay_buffer import (
-    OnPolicyReplayBuffer,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
@@ -29,7 +30,9 @@ class TestReplayBuffer(unittest.TestCase):
         replay_buffer_size = 100_000
         number_of_transitions = 80_000
         replay_buffers_to_be_tested = {
-            OnPolicyReplayBuffer(replay_buffer_size),
+            PPOReplayBuffer(replay_buffer_size),
+            REINFORCEReplayBuffer(replay_buffer_size),
+            REINFORCEReplayBuffer(replay_buffer_size),
             FIFOOffPolicyReplayBuffer(replay_buffer_size),
             BootstrapReplayBuffer(replay_buffer_size, p=0.5, ensemble_size=3),
             # We meant to test FIFOOnPolicyReplayBuffer as well, but we observe

@@ -13,6 +13,7 @@ from .device import (
     get_pearl_device,
     is_distribution_enabled,
 )
+from .python_utils import get_subdataclass_specific_attributes
 from .tensor_like import assert_is_tensor_like
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "get_device",
     "get_pearl_device",
     "is_distribution_enabled",
+    "get_subdataclass_specific_attributes",
 ]

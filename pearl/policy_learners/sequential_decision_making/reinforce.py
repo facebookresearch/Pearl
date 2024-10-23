@@ -7,6 +7,7 @@
 
 # pyre-strict
 
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Type, Union
 
 from pearl.action_representation_modules.action_representation_module import (
@@ -16,6 +17,11 @@ from pearl.action_representation_modules.action_representation_module import (
 from pearl.neural_networks.common.value_networks import ValueNetwork
 
 from pearl.neural_networks.sequential_decision_making.actor_networks import ActorNetwork
+from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
+from pearl.replay_buffers.transition import Transition
+from pearl.utils.replay_buffer_utils import (
+    make_replay_buffer_class_for_specific_transition_types,
+)
 from torch import nn
 
 try:
@@ -39,14 +45,39 @@ from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
 )
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
-from pearl.replay_buffers.sequential_decision_making.on_policy_replay_buffer import (
-    OnPolicyReplayBuffer,
-    OnPolicyTransition,
-    OnPolicyTransitionBatch,
-)
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.critic_utils import (
     single_critic_state_value_loss,
+)
+
+
+@dataclass(frozen=False)
+class REINFORCETransition(Transition):
+    cum_reward: Optional[torch.Tensor] = None  # cumulative reward
+
+
+@dataclass(frozen=False)
+class REINFORCETransitionBatch(TransitionBatch):
+    cum_reward: Optional[torch.Tensor] = None  # cumulative reward
+
+    @classmethod
+    def from_parent(
+        cls,
+        parent_obj: TransitionBatch,
+        cum_reward: Optional[torch.Tensor] = None,
+    ) -> "REINFORCETransitionBatch":
+        # Extract attributes from parent_obj using __dict__ and create a new child object
+        child_obj = cls(
+            **parent_obj.__dict__,
+            cum_reward=cum_reward,
+        )
+        return child_obj
+
+
+REINFORCEReplayBuffer: Type[TensorBasedReplayBuffer] = (
+    make_replay_buffer_class_for_specific_transition_types(
+        REINFORCETransition, REINFORCETransitionBatch
+    )
 )
 
 
@@ -107,7 +138,7 @@ class REINFORCE(ActorCriticBase):
         )
 
     def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
-        assert isinstance(batch, OnPolicyTransitionBatch)
+        assert isinstance(batch, REINFORCETransitionBatch)
         state_batch = (
             batch.state
         )  # (batch_size x state_dim) note that here batch_size = episode length
@@ -129,7 +160,7 @@ class REINFORCE(ActorCriticBase):
 
     def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
         assert self._use_critic, "can not compute critic loss without critic"
-        assert isinstance(batch, OnPolicyTransitionBatch)
+        assert isinstance(batch, REINFORCETransitionBatch)
         assert batch.cum_reward is not None
         return single_critic_state_value_loss(
             state_batch=batch.state,
@@ -138,7 +169,7 @@ class REINFORCE(ActorCriticBase):
         )
 
     def learn(self, replay_buffer: ReplayBuffer) -> Dict[str, Any]:
-        assert type(replay_buffer) is OnPolicyReplayBuffer
+        assert type(replay_buffer) is REINFORCEReplayBuffer
         assert len(replay_buffer.memory) > 0
         # compute return for all states in the buffer
 
@@ -162,7 +193,7 @@ class REINFORCE(ActorCriticBase):
         cum_reward = cum_reward.cpu()
         for transition in reversed(replay_buffer.memory):
             cum_reward += transition.reward
-            assert isinstance(transition, OnPolicyTransition)
+            assert isinstance(transition, REINFORCETransition)
             transition.cum_reward = cum_reward
         # sample from replay buffer and learn
         result = super().learn(replay_buffer)

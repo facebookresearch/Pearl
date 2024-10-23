@@ -1,14 +1,6 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# All rights reserved.
-#
-# This source code is licensed under the MIT license found in the
-# LICENSE file in the root directory of this source tree.
-#
+# (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 
 # pyre-strict
-
-from dataclasses import dataclass
-
 from typing import List, Optional, Type
 
 import torch
@@ -16,9 +8,8 @@ import torch
 from pearl.api.action import Action
 from pearl.api.reward import Reward
 from pearl.api.state import SubjectiveState
-from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
-from pearl.replay_buffers.transition import Transition, TransitionBatch
-from pearl.utils.python_utils import get_subclass_specific_attributes
+from pearl.replay_buffers import TensorBasedReplayBuffer, Transition, TransitionBatch
+from pearl.utils import get_subdataclass_specific_attributes
 from torch import Tensor
 
 
@@ -47,7 +38,7 @@ def create_attribute_column_tensor(
     return attr_column_tensor
 
 
-def make_replay_buffer_class(
+def make_replay_buffer_class_for_specific_transition_types(
     TransitionType: Type[Transition], TransitionBatchType: Type[TransitionBatch]
 ) -> Type[TensorBasedReplayBuffer]:
     """
@@ -66,7 +57,7 @@ def make_replay_buffer_class(
         # if this is a generic class on TransitionType, then this function call passes
         # the TypeVar, rather than the value of the TypeVar, as an argument,
         # which is not what we want.
-        attr_names: List[str] = get_subclass_specific_attributes(TransitionType)
+        attr_names: List[str] = get_subdataclass_specific_attributes(TransitionType)
 
         def __init__(
             self,
@@ -152,43 +143,3 @@ def make_replay_buffer_class(
             return transition_batch.to(self.device_for_batches)
 
     return ReplayBufferForGivenTransitionTypes
-
-
-@dataclass(frozen=False)
-class OnPolicyTransition(Transition):
-    gae: Optional[torch.Tensor] = None  # generalized advantage estimation
-    lam_return: Optional[torch.Tensor] = None  # lambda return
-    action_probs: Optional[torch.Tensor] = None  # action probs
-    cum_reward: Optional[torch.Tensor] = None  # cumulative reward
-
-
-@dataclass(frozen=False)
-class OnPolicyTransitionBatch(TransitionBatch):
-    gae: Optional[torch.Tensor] = None  # generalized advantage estimation
-    lam_return: Optional[torch.Tensor] = None  # lambda return
-    action_probs: Optional[torch.Tensor] = None  # action probs
-    cum_reward: Optional[torch.Tensor] = None  # cumulative reward
-
-    @classmethod
-    def from_parent(
-        cls,
-        parent_obj: TransitionBatch,
-        gae: Optional[torch.Tensor] = None,
-        lam_return: Optional[torch.Tensor] = None,
-        action_probs: Optional[torch.Tensor] = None,
-        cum_reward: Optional[torch.Tensor] = None,
-    ) -> "OnPolicyTransitionBatch":
-        # Extract attributes from parent_obj using __dict__ and create a new child object
-        child_obj = cls(
-            **parent_obj.__dict__,
-            gae=gae,
-            lam_return=lam_return,
-            action_probs=action_probs,
-            cum_reward=cum_reward,
-        )
-        return child_obj
-
-
-OnPolicyReplayBuffer: Type[TensorBasedReplayBuffer] = make_replay_buffer_class(
-    OnPolicyTransition, OnPolicyTransitionBatch
-)

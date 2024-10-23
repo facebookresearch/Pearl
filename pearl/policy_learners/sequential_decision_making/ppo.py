@@ -7,6 +7,7 @@
 
 # pyre-strict
 
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Type, Union
 
 import torch
@@ -33,17 +34,54 @@ from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
 )
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
-from pearl.replay_buffers.sequential_decision_making.on_policy_replay_buffer import (
-    OnPolicyReplayBuffer,
-    OnPolicyTransition,
-    OnPolicyTransitionBatch,
-)
-from pearl.replay_buffers.transition import TransitionBatch
+from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
+from pearl.replay_buffers.transition import Transition, TransitionBatch
 
 from pearl.utils.functional_utils.learning.critic_utils import (
     single_critic_state_value_loss,
 )
+from pearl.utils.replay_buffer_utils import (
+    make_replay_buffer_class_for_specific_transition_types,
+)
 from torch import nn
+
+
+@dataclass(frozen=False)
+class PPOTransition(Transition):
+    gae: Optional[torch.Tensor] = None  # generalized advantage estimation
+    lam_return: Optional[torch.Tensor] = None  # lambda return
+    action_probs: Optional[torch.Tensor] = None  # action probs
+
+
+@dataclass(frozen=False)
+class PPOTransitionBatch(TransitionBatch):
+    gae: Optional[torch.Tensor] = None  # generalized advantage estimation
+    lam_return: Optional[torch.Tensor] = None  # lambda return
+    action_probs: Optional[torch.Tensor] = None  # action probs
+
+    @classmethod
+    def from_parent(
+        cls,
+        parent_obj: TransitionBatch,
+        gae: Optional[torch.Tensor] = None,
+        lam_return: Optional[torch.Tensor] = None,
+        action_probs: Optional[torch.Tensor] = None,
+    ) -> "PPOTransitionBatch":
+        # Extract attributes from parent_obj using __dict__ and create a new child object
+        child_obj = cls(
+            **parent_obj.__dict__,
+            gae=gae,
+            lam_return=lam_return,
+            action_probs=action_probs,
+        )
+        return child_obj
+
+
+PPOReplayBuffer: Type[TensorBasedReplayBuffer] = (
+    make_replay_buffer_class_for_specific_transition_types(
+        PPOTransition, PPOTransitionBatch
+    )
+)
 
 
 class ProximalPolicyOptimization(ActorCriticBase):
@@ -112,7 +150,7 @@ class ProximalPolicyOptimization(ActorCriticBase):
         """
         # TODO need to support continuous action
         # TODO: change the output shape of value networks
-        assert isinstance(batch, OnPolicyTransitionBatch)
+        assert isinstance(batch, PPOTransitionBatch)
         action_probs = self._actor.get_action_prob(
             state_batch=batch.state,
             action_batch=batch.action,
@@ -137,7 +175,7 @@ class ProximalPolicyOptimization(ActorCriticBase):
         return loss
 
     def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
-        assert isinstance(batch, OnPolicyTransitionBatch)
+        assert isinstance(batch, PPOTransitionBatch)
         assert batch.lam_return is not None
         return single_critic_state_value_loss(
             state_batch=batch.state,
@@ -162,7 +200,7 @@ class ProximalPolicyOptimization(ActorCriticBase):
         See "Reinforcement Learning: An Introduction" by Sutton and Barto (2018) equation (12.10)
         for the definition of truncated lambda return.
         """
-        assert type(replay_buffer) is OnPolicyReplayBuffer
+        assert isinstance(replay_buffer, TensorBasedReplayBuffer)
         assert len(replay_buffer.memory) > 0
         (
             state_list,
@@ -238,7 +276,7 @@ class ProximalPolicyOptimization(ActorCriticBase):
                 * (~transition.terminated)
                 * gae
             )
-            assert isinstance(transition, OnPolicyTransition)
+            assert isinstance(transition, PPOTransition)
             transition.gae = gae
             # truncated lambda return of the state
             transition.lam_return = gae + state_values[i]

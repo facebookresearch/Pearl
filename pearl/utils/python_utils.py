@@ -1,14 +1,16 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 
 # pyre-strict
+
 from dataclasses import fields, is_dataclass
-from typing import List
+
+from typing import List, Type
 
 
-def get_subclass_specific_attributes(a_dataclass) -> List[str]:  # pyre-ignore
+def get_subdataclass_specific_attributes(a_dataclass: Type[object]) -> List[str]:
     """
     Assumes argument is a dataclass with a single superclass which is also a dataclass.
-    Returns a list of attributes that are specific to the subclass
+    Returns a list of attribute names that are specific to the subclass
     (i.e. not present in the superclass).
     """
     # Ensure the class is a dataclass and has a single superclass

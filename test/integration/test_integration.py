@@ -59,12 +59,16 @@ from pearl.policy_learners.sequential_decision_making.implicit_q_learning import
     ImplicitQLearning,
 )
 from pearl.policy_learners.sequential_decision_making.ppo import (
+    PPOReplayBuffer,
     ProximalPolicyOptimization,
 )
 from pearl.policy_learners.sequential_decision_making.quantile_regression_deep_q_learning import (
     QuantileRegressionDeepQLearning,
 )
-from pearl.policy_learners.sequential_decision_making.reinforce import REINFORCE
+from pearl.policy_learners.sequential_decision_making.reinforce import (
+    REINFORCE,
+    REINFORCEReplayBuffer,
+)
 from pearl.policy_learners.sequential_decision_making.soft_actor_critic import (
     SoftActorCritic,
 )
@@ -77,9 +81,6 @@ from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buff
 )
 from pearl.replay_buffers.sequential_decision_making.fifo_on_policy_replay_buffer import (
     FIFOOnPolicyReplayBuffer,
-)
-from pearl.replay_buffers.sequential_decision_making.on_policy_replay_buffer import (
-    OnPolicyReplayBuffer,
 )
 from pearl.safety_modules.risk_sensitive_safety_modules import (
     QuantileNetworkMeanVarianceSafetyModule,
@@ -258,7 +259,7 @@ class TestIntegration(unittest.TestCase):
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=OnPolicyReplayBuffer(10_000),
+            replay_buffer=REINFORCEReplayBuffer(10_000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -311,7 +312,7 @@ class TestIntegration(unittest.TestCase):
                 actor_network_instance=actor_network_instance,
                 critic_network_instance=critic_network_instance,
             ),
-            replay_buffer=OnPolicyReplayBuffer(10_000),
+            replay_buffer=REINFORCEReplayBuffer(10_000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -425,7 +426,7 @@ class TestIntegration(unittest.TestCase):
                     max_number_actions=num_actions
                 ),
             ),
-            replay_buffer=OnPolicyReplayBuffer(10_000),
+            replay_buffer=PPOReplayBuffer(10_000),
         )
         self.assertTrue(
             target_return_is_reached(
@@ -482,7 +483,7 @@ class TestIntegration(unittest.TestCase):
                 actor_network_instance=actor_network_instance,
                 critic_network_instance=critic_network_instance,
             ),
-            replay_buffer=OnPolicyReplayBuffer(10_000),
+            replay_buffer=PPOReplayBuffer(10_000),
         )
         self.assertTrue(
             target_return_is_reached(

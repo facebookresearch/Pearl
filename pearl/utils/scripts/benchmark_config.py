@@ -52,12 +52,16 @@ from pearl.policy_learners.sequential_decision_making.implicit_q_learning import
     ImplicitQLearning,
 )
 from pearl.policy_learners.sequential_decision_making.ppo import (
+    PPOReplayBuffer,
     ProximalPolicyOptimization,
 )
 from pearl.policy_learners.sequential_decision_making.quantile_regression_deep_q_learning import (  # noqa E501
     QuantileRegressionDeepQLearning,
 )
-from pearl.policy_learners.sequential_decision_making.reinforce import REINFORCE
+from pearl.policy_learners.sequential_decision_making.reinforce import (
+    REINFORCE,
+    REINFORCEReplayBuffer,
+)
 from pearl.policy_learners.sequential_decision_making.soft_actor_critic import (
     SoftActorCritic,
 )
@@ -73,9 +77,6 @@ from pearl.replay_buffers.sequential_decision_making.fifo_off_policy_replay_buff
 )
 from pearl.replay_buffers.sequential_decision_making.fifo_on_policy_replay_buffer import (  # noqa E501
     FIFOOnPolicyReplayBuffer,
-)
-from pearl.replay_buffers.sequential_decision_making.on_policy_replay_buffer import (  # noqa E501
-    OnPolicyReplayBuffer,
 )
 from pearl.safety_modules.reward_constrained_safety_module import (
     RCSafetyModuleCostCriticContinuousAction,
@@ -193,7 +194,7 @@ REINFORCE_method = {
         "batch_size": 64,
         "use_critic": True,
     },
-    "replay_buffer": OnPolicyReplayBuffer,
+    "replay_buffer": REINFORCEReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
@@ -208,7 +209,7 @@ REINFORCE_dynamic_method = {
         "training_rounds": 1,
     },
     "actor_network_type": DynamicActionActorNetwork,
-    "replay_buffer": OnPolicyReplayBuffer,
+    "replay_buffer": REINFORCEReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
@@ -339,7 +340,7 @@ PPO_method = {
         "epsilon": 0.1,
         "use_critic": True,
     },
-    "replay_buffer": OnPolicyReplayBuffer,
+    "replay_buffer": PPOReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
@@ -358,7 +359,7 @@ PPO_LSTM_method = {
         "critic_learning_rate": 1e-4,
         "entropy_bonus_scaling": 0.01,
     },
-    "replay_buffer": OnPolicyReplayBuffer,
+    "replay_buffer": PPOReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
@@ -381,7 +382,7 @@ PPO_dynamic_method = {
         "epsilon": 0.1,
     },
     "actor_network_type": DynamicActionActorNetwork,
-    "replay_buffer": OnPolicyReplayBuffer,
+    "replay_buffer": PPOReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
@@ -845,7 +846,7 @@ RCREINFORCE_method_const_0_2 = {
         "training_rounds": 8,
         "batch_size": 64,
     },
-    "replay_buffer": OnPolicyReplayBuffer,
+    "replay_buffer": REINFORCEReplayBuffer,
     "replay_buffer_args": {"capacity": 50000, "has_cost_available": True},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
@@ -890,7 +891,7 @@ RCPPO_method_const_0_2 = {
         "batch_size": 32,
         "epsilon": 0.1,
     },
-    "replay_buffer": OnPolicyReplayBuffer,
+    "replay_buffer": PPOReplayBuffer,
     "replay_buffer_args": {"capacity": 50000, "has_cost_available": True},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},

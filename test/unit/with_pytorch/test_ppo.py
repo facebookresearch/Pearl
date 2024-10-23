@@ -12,10 +12,9 @@ import unittest
 import torch
 
 from pearl.policy_learners.sequential_decision_making.ppo import (
+    PPOReplayBuffer,
+    PPOTransition,
     ProximalPolicyOptimization,
-)
-from pearl.replay_buffers.sequential_decision_making.on_policy_replay_buffer import (
-    OnPolicyReplayBuffer,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
@@ -68,7 +67,7 @@ class TestPPO(unittest.TestCase):
         capacity = 10
         rewards = [4.0, 6.0, 5.0]
         trajectory_len = len(rewards)
-        replay_buffer = OnPolicyReplayBuffer(capacity)
+        replay_buffer = PPOReplayBuffer(capacity)
         for i in range(trajectory_len):
             replay_buffer.push(
                 state=torch.tensor([i * 1.0]),
@@ -104,10 +103,13 @@ class TestPPO(unittest.TestCase):
 
         policy_learner.preprocess_replay_buffer(replay_buffer)
         for i in range(trajectory_len):
-            # pyre-fixme
-            self.assertEqual(true_gaes[i], replay_buffer.memory[i].gae.detach())
-            self.assertEqual(
-                true_lambda_returns[i],
-                # pyre-fixme
-                replay_buffer.memory[i].lam_return.detach(),
-            )
+            transition = replay_buffer.memory[i]
+
+            assert isinstance(transition, PPOTransition)
+            gae = transition.gae
+            assert gae is not None
+            self.assertEqual(true_gaes[i], gae.detach())
+
+            lam_return = transition.lam_return
+            assert lam_return is not None
+            self.assertEqual(true_lambda_returns[i], lam_return.detach())

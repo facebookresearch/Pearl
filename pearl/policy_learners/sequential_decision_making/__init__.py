@@ -34,6 +34,7 @@ __all__ = [
     "DoubleDQN",
     "ImplicitQLearning",
     "ProximalPolicyOptimization",
+    "PPOReplayBuffer",
     "QuantileRegressionDeepQLearning",
     "QuantileRegressionDeepTDLearning",
     "REINFORCE",
