@@ -265,6 +265,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
 
         has_next_state = transitions[0].next_state is not None
         has_next_action = transitions[0].next_action is not None
+        has_curr_available_actions = transitions[0].curr_available_actions is not None
         has_next_available_actions = transitions[0].next_available_actions is not None
         has_cost_available = transitions[0].cost is not None
 
@@ -290,7 +291,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
                 next_state_list.append(x.next_state)
             if has_next_action:
                 next_action_list.append(x.next_action)
-            if not is_action_continuous:
+            if not is_action_continuous and has_curr_available_actions:
                 curr_available_actions_list.append(x.curr_available_actions)
                 curr_unavailable_actions_mask_list.append(
                     x.curr_unavailable_actions_mask
@@ -316,7 +317,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         if has_next_action:
             next_action_batch = torch.cat(next_action_list)
         curr_available_actions_batch, curr_unavailable_actions_mask_batch = None, None
-        if not is_action_continuous:
+        if not is_action_continuous and has_curr_available_actions:
             curr_available_actions_batch = torch.cat(curr_available_actions_list)
             curr_unavailable_actions_mask_batch = torch.cat(
                 curr_unavailable_actions_mask_list

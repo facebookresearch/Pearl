@@ -26,9 +26,7 @@ from pearl.policy_learners.exploration_modules.common.no_exploration import (
 )
 from pearl.policy_learners.policy_learner import PolicyLearner
 
-from pearl.replay_buffers.contextual_bandits.discrete_contextual_bandit_replay_buffer import (
-    DiscreteContextualBanditReplayBuffer,
-)
+from pearl.replay_buffers import BasicReplayBuffer
 from pearl.utils.instantiations.environments.contextual_bandit_uci_environment import (
     SLCBEnvironment,
 )
@@ -143,7 +141,7 @@ def run_experiments_offline(
 
     agent = PearlAgent(
         policy_learner=neural_greedy_policy,
-        replay_buffer=DiscreteContextualBanditReplayBuffer(T),
+        replay_buffer=BasicReplayBuffer(T),
     )
 
     # training_epoches is set to be equal to training_rounds
@@ -168,7 +166,7 @@ def run_experiments_online(
     # prepare agent
     agent = PearlAgent(
         policy_learner=policy_learner,
-        replay_buffer=DiscreteContextualBanditReplayBuffer(replay_buffer_size),
+        replay_buffer=BasicReplayBuffer(replay_buffer_size),
     )
 
     regrets = online_evaluation(env, agent, num_steps=T, training_mode=True)

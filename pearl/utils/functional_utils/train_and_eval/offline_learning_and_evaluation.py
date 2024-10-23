@@ -16,10 +16,8 @@ import torch
 
 from pearl.api.environment import Environment
 from pearl.pearl_agent import PearlAgent
+from pearl.replay_buffers import BasicReplayBuffer
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
-from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
-    BasicReplayBuffer,
-)
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.requests_get import requests_get

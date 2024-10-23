@@ -69,9 +69,7 @@ from pearl.policy_learners.sequential_decision_making.soft_actor_critic_continuo
     ContinuousSoftActorCritic,
 )
 from pearl.policy_learners.sequential_decision_making.td3 import TD3
-from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (  # noqa E501
-    BasicReplayBuffer,
-)
+from pearl.replay_buffers import BasicReplayBuffer  # noqa E501
 from pearl.replay_buffers.sequential_decision_making.bootstrap_replay_buffer import (
     BootstrapReplayBuffer,
 )

@@ -22,9 +22,7 @@ from pearl.policy_learners.sequential_decision_making.ppo import (
     PPOReplayBuffer,
     ProximalPolicyOptimization,
 )
-from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
-    BasicReplayBuffer,
-)
+from pearl.replay_buffers import BasicReplayBuffer
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment

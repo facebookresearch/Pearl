@@ -21,9 +21,7 @@ from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,
 )
 
-from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
-    BasicReplayBuffer,
-)
+from pearl.replay_buffers import BasicReplayBuffer
 from pearl.utils.functional_utils.experimentation.create_offline_data import (
     create_offline_data,
 )

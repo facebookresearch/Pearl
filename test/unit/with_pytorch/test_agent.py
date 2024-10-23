@@ -34,12 +34,7 @@ from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
 from pearl.policy_learners.sequential_decision_making.tabular_q_learning import (
     TabularQLearning,
 )
-from pearl.replay_buffers.contextual_bandits.discrete_contextual_bandit_replay_buffer import (
-    DiscreteContextualBanditReplayBuffer,
-)
-from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
-    BasicReplayBuffer,
-)
+from pearl.replay_buffers import BasicReplayBuffer
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
     online_learning,
     online_learning_to_png_graph,
@@ -183,7 +178,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
                 exploration_module=DisjointUCBExploration(alpha=0.1),
                 batch_size=1,
             ),
-            replay_buffer=DiscreteContextualBanditReplayBuffer(1),
+            replay_buffer=BasicReplayBuffer(1),
         )
         env = ContextualBanditLinearSyntheticEnvironment(
             action_space=action_space,

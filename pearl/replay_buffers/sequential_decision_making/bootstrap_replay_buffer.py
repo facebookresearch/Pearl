@@ -14,9 +14,7 @@ import torch
 from pearl.api.action import Action
 from pearl.api.reward import Reward
 from pearl.api.state import SubjectiveState
-from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (  # noqa E501
-    BasicReplayBuffer,
-)
+from pearl.replay_buffers import BasicReplayBuffer  # noqa E501
 from pearl.replay_buffers.transition import (
     TransitionWithBootstrapMask,
     TransitionWithBootstrapMaskBatch,

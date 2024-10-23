@@ -6,6 +6,7 @@
 
 # pyre-strict
 
+from .basic_replay_buffer import BasicReplayBuffer
 from .replay_buffer import ReplayBuffer
 from .tensor_based_replay_buffer import TensorBasedReplayBuffer
 from .transition import (
@@ -22,4 +23,5 @@ __all__ = [
     "TransitionBatch",
     "TransitionWithBootstrapMask",
     "TransitionWithBootstrapMaskBatch",
+    "BasicReplayBuffer",
 ]

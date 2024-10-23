@@ -24,9 +24,7 @@ from pearl.policy_learners.exploration_modules.contextual_bandits.thompson_sampl
 from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
     UCBExploration,
 )
-from pearl.replay_buffers.sequential_decision_making.basic_replay_buffer import (
-    BasicReplayBuffer,
-)
+from pearl.replay_buffers import BasicReplayBuffer
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 from pearl.utils.instantiations.environments.contextual_bandit_uci_environment import (
