@@ -68,19 +68,52 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         max_number_actions: Optional[int] = None,
         cost: Optional[float] = None,
     ) -> None:
-        (
-            curr_available_actions_tensor_with_padding,
-            curr_unavailable_actions_mask,
-        ) = self._create_action_tensor_and_mask(
-            max_number_actions, curr_available_actions
-        )
+        if self._is_action_continuous:
+            (
+                curr_available_actions_tensor_with_padding,
+                curr_unavailable_actions_mask,
+                next_available_actions_tensor_with_padding,
+                next_unavailable_actions_mask,
+            ) = (
+                None,
+                None,
+                None,
+                None,
+            )
+        else:
+            (
+                curr_available_actions_tensor_with_padding,
+                curr_unavailable_actions_mask,
+            ) = self.create_action_tensor_and_mask(
+                max_number_actions, curr_available_actions
+            )
 
-        (
-            next_available_actions_tensor_with_padding,
-            next_unavailable_actions_mask,
-        ) = self._create_action_tensor_and_mask(
-            max_number_actions, next_available_actions
-        )
+            (
+                next_available_actions_tensor_with_padding,
+                next_unavailable_actions_mask,
+            ) = self.create_action_tensor_and_mask(
+                max_number_actions, next_available_actions
+            )
+
+            # Transitions require a "batch" dimension in the tensors,
+            # so we add a dimension of size 1.
+            if curr_available_actions_tensor_with_padding is not None:
+                curr_available_actions_tensor_with_padding = (
+                    curr_available_actions_tensor_with_padding.unsqueeze(0)
+                )
+            if curr_unavailable_actions_mask is not None:
+                curr_unavailable_actions_mask = curr_unavailable_actions_mask.unsqueeze(
+                    0
+                )
+
+            if next_available_actions_tensor_with_padding is not None:
+                next_available_actions_tensor_with_padding = (
+                    next_available_actions_tensor_with_padding.unsqueeze(0)
+                )
+            if next_unavailable_actions_mask is not None:
+                next_unavailable_actions_mask = next_unavailable_actions_mask.unsqueeze(
+                    0
+                )
 
         self._store_transition(
             state,
@@ -136,8 +169,8 @@ class TensorBasedReplayBuffer(ReplayBuffer):
     def _process_single_terminated(self, terminated: bool) -> torch.Tensor:
         return torch.tensor([terminated])  # (1,)
 
-    def _create_action_tensor_and_mask(
-        self,
+    @staticmethod
+    def create_action_tensor_and_mask(
         max_number_actions: Optional[int],
         available_action_space: Optional[ActionSpace],
     ) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
@@ -149,9 +182,9 @@ class TensorBasedReplayBuffer(ReplayBuffer):
 
         If the action space is discrete, returns a pair of tensors:
 
-        1. A tensor of shape (1 x action_space_size x action_dim) that contains the available
+        1. A tensor of shape (action_space_size x action_dim) that contains the available
         actions.
-        2. A mask tensor of shape (1 x action_space_size) that contains 0 for available actions.
+        2. A mask tensor of shape (action_space_size) that contains 0 for available actions.
 
         Example:
         ----------------------------------------------------------
@@ -179,29 +212,33 @@ class TensorBasedReplayBuffer(ReplayBuffer):
             [0, 0, 0, 0, 0],
         ]
         unavailable_actions_mask = [0, 0, 1, 1, 1]
+
+        Args:
+            max_number_actions (Optional[int]): The maximum number of actions possible.
+            available_action_space (Optional[ActionSpace]): The action space containing
+            only available actions.
+        Returns:
+            Tuple[Optional[torch.Tensor], Optional[torch.Tensor]]: A pair of tensors
+            containing the available actions and the mask of unavailable actions.
         """
-        if (
-            self._is_action_continuous
-            or max_number_actions is None
-            or available_action_space is None
-        ):
+        if max_number_actions is None or available_action_space is None:
             return (None, None)
 
         assert isinstance(available_action_space, DiscreteActionSpace)
 
         available_actions_tensor_with_padding = torch.zeros(
-            (1, max_number_actions, available_action_space.action_dim),
+            (max_number_actions, available_action_space.action_dim),
             dtype=torch.float32,
-        )  # (1 x action_space_size x action_dim)
+        )  # (action_space_size x action_dim)
         available_actions_tensor = available_action_space.actions_batch
-        available_actions_tensor_with_padding[0, : available_action_space.n, :] = (
+        available_actions_tensor_with_padding[: available_action_space.n, :] = (
             available_actions_tensor
         )
 
         unavailable_actions_mask = torch.zeros(
-            (1, max_number_actions)
-        )  # (1 x action_space_size)
-        unavailable_actions_mask[0, available_action_space.n :] = 1
+            (max_number_actions,)
+        )  # (action_space_size)
+        unavailable_actions_mask[available_action_space.n :] = 1
         unavailable_actions_mask = unavailable_actions_mask.bool()
 
         return (available_actions_tensor_with_padding, unavailable_actions_mask)
