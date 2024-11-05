@@ -80,6 +80,7 @@ def online_learning(
     print_every_x_steps: Optional[int] = None,
     seed: Optional[int] = None,
     record_period: int = 1,
+    # TODO: use LearningLogger similarly to offline_learning
 ) -> Dict[str, Any]:
     """
     Performs online learning for a number of episodes.

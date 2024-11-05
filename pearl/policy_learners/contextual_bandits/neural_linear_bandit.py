@@ -166,34 +166,47 @@ class NeuralLinearBandit(ContextualBanditBase):
             else torch.ones_like(expected_values)
         )
 
-        # criterion = mae, mse, Xentropy
-        # Xentropy loss apply Sigmoid, MSE or MAE apply Identiy
-        criterion = LOSS_TYPES[self.loss_type]
-        if self.loss_type == "cross_entropy":
-            assert torch.all(expected_values >= 0) and torch.all(expected_values <= 1)
-            assert torch.all(predicted_values >= 0) and torch.all(predicted_values <= 1)
-            assert isinstance(self.model.output_activation, torch.nn.Sigmoid)
+        if batch_weight.sum().item() == 0:
+            # if all weights are zero, then there's nothing to learn, but also a
+            # division by zero. So, short circuit, and avoid the optimizer.
+            loss = torch.tensor(0.0)
+        else:
+            # criterion = mae, mse, Xentropy
+            # Xentropy loss apply Sigmoid, MSE or MAE apply Identiy
+            criterion = LOSS_TYPES[self.loss_type]
+            if self.loss_type == "cross_entropy":
+                assert torch.all(expected_values >= 0) and torch.all(
+                    expected_values <= 1
+                )
+                assert torch.all(predicted_values >= 0) and torch.all(
+                    predicted_values <= 1
+                )
+                assert isinstance(self.model.output_activation, torch.nn.Sigmoid)
 
-        # don't reduce the loss, so that we can calculate weighted loss
-        loss = criterion(
-            predicted_values.view(expected_values.shape),
-            expected_values,
-            reduction="none",
-        )
-        assert loss.shape == batch_weight.shape
-        loss = (loss * batch_weight).sum() / batch_weight.sum()  # weighted average loss
+            # don't reduce the loss, so that we can calculate weighted loss
+            loss = criterion(
+                predicted_values.view(expected_values.shape),
+                expected_values,
+                reduction="none",
+            )
+            assert loss.shape == batch_weight.shape
+            loss = (
+                loss * batch_weight
+            ).sum() / batch_weight.sum()  # weighted average loss
 
-        # Optimize the NN via backpropagation
-        self._optimizer.zero_grad()
-        loss.backward()
-        self._optimizer.step()
-        # Optimize linear regression
-        self.model._linear_regression_layer.learn_batch(
-            model_ret["nn_output"].detach(),
-            expected_values,
-            batch_weight,
-        )
-        self._maybe_apply_discounting()
+            # Optimize the NN via backpropagation
+            self._optimizer.zero_grad()
+            loss.backward()
+            self._optimizer.step()
+
+            # Optimize linear regression
+            self.model._linear_regression_layer.learn_batch(
+                model_ret["nn_output"].detach(),
+                expected_values,
+                batch_weight,
+            )
+            self._maybe_apply_discounting()
+
         predicted_values = predicted_values.detach()  # detach for logging
         return {
             "label": expected_values,

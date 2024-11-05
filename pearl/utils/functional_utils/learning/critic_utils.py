@@ -74,6 +74,7 @@ def make_critic(
 
         # cast network_type to get around static Pyre type checking; the runtime check with
         # `issubclass` ensures the network type is a sublcass of QValueNetwork
+        # pyre-fixme[22]: The cast is redundant.
         network_type = cast(Type[QValueNetwork], network_type)
 
         return TwinCritic(

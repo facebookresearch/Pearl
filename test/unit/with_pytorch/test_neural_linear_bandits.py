@@ -92,6 +92,14 @@ class TestNeuralLinearBandits(unittest.TestCase):
         ):
             tt.assert_close(p1.to(p2.device), p2, rtol=0.0, atol=0.0)
 
+    def _get_null_batch(self, feature_dim: int) -> TransitionBatch:
+        return TransitionBatch(  # cf. DisjointBanditContainer._get_null_batch
+            state=torch.zeros(1, feature_dim, dtype=torch.float),
+            action=torch.empty(1, 0, dtype=torch.float),
+            reward=torch.zeros(1, 1, dtype=torch.float),
+            weight=torch.zeros(1, 1, dtype=torch.float),
+        )
+
     # currently test support mse, mae, cross_entropy
     # separate loss_types into inddividual test cases to make it easier to debug.
     def test_neural_linucb_mse_loss(self) -> None:
@@ -150,9 +158,19 @@ class TestNeuralLinearBandits(unittest.TestCase):
             weight=torch.ones(batch_size, 1),
         )
         losses = []
-        for _ in range(epochs):
+        for i in range(epochs):
+            if i == 1:
+                # simulate empty batch on early iter: can happen from DisjointBandit.
+                losses.append(
+                    policy_learner.learn_batch(self._get_null_batch(feature_dim))[
+                        "loss"
+                    ]
+                )
+                continue
             losses.append(policy_learner.learn_batch(batch)["loss"])
+
         if epochs >= NUM_EPOCHS:
+            self.assertTrue(all(not torch.isnan(x) for x in losses))
             if loss_type == "mse":
                 self.assertGreater(1e-1, losses[-1])
             elif loss_type == "mae":

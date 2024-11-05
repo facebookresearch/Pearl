@@ -21,6 +21,10 @@ from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.requests_get import requests_get
+from pearl.utils.functional_utils.train_and_eval.learning_logger import (
+    LearningLogger,
+    null_learning_logger,
+)
 from pearl.utils.functional_utils.train_and_eval.online_learning import run_episode
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
@@ -131,6 +135,7 @@ def offline_learning(
     offline_agent: PearlAgent,
     data_buffer: ReplayBuffer,
     training_epochs: int = 1000,
+    logger: LearningLogger = null_learning_logger,
     seed: int = 100,
 ) -> None:
     """
@@ -153,8 +158,7 @@ def offline_learning(
         batch = data_buffer.sample(offline_agent.policy_learner.batch_size)
         assert isinstance(batch, TransitionBatch)
         loss = offline_agent.learn_batch(batch=batch)
-        if i % 500 == 0:
-            print("training epoch", i, "training loss", loss)
+        logger(loss, i, "training")
 
 
 def offline_evaluation(
