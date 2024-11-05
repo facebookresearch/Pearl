@@ -58,10 +58,18 @@ from pearl.policy_learners.sequential_decision_making.double_dqn import DoubleDQ
 from pearl.policy_learners.sequential_decision_making.implicit_q_learning import (
     ImplicitQLearning,
 )
-from pearl.policy_learners.sequential_decision_making.ppo import (
+from pearl.policy_learners.sequential_decision_making.ppo_base import (
     PPOReplayBuffer,
-    ProximalPolicyOptimization,
 )
+
+from pearl.policy_learners.sequential_decision_making.ppo import (
+    ProximalPolicyOptimization
+)
+
+from pearl.policy_learners.sequential_decision_making.ppo_continuous import (
+    ContinuousProximalPolicyOptimization
+)
+
 from pearl.policy_learners.sequential_decision_making.quantile_regression_deep_q_learning import (
     QuantileRegressionDeepQLearning,
 )
@@ -505,8 +513,8 @@ class TestIntegration(unittest.TestCase):
         agent = PearlAgent(
             policy_learner=ContinuousProximalPolicyOptimization(
                 state_dim=env.observation_space.shape[0],
-                use_critic=True,
                 action_space=env.action_space,
+                use_critic=True,
                 actor_hidden_dims=[64, 64],
                 critic_hidden_dims=[64, 64],
                 critic_learning_rate=1e-4,
@@ -517,7 +525,7 @@ class TestIntegration(unittest.TestCase):
                 batch_size=100,
                 entropy_bonus_scaling=0.005,
             ),
-            replay_buffer=OnPolicyReplayBuffer(250_000),
+            replay_buffer=PPOReplayBuffer(250_000),
         )
 
         self.assertTrue(
