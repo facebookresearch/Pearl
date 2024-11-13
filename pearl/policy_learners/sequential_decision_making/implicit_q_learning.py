@@ -77,9 +77,9 @@ class ImplicitQLearning(ActorCriticBase):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        actor_hidden_dims: List[int],
-        critic_hidden_dims: List[int],
-        value_critic_hidden_dims: List[int],
+        actor_hidden_dims: Optional[List[int]] = None,
+        critic_hidden_dims: Optional[List[int]] = None,
+        value_critic_hidden_dims: Optional[List[int]] = None,
         exploration_module: Optional[ExplorationModule] = None,
         actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
         critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
@@ -97,9 +97,8 @@ class ImplicitQLearning(ActorCriticBase):
         advantage_clamp: float = 100.0,
         action_representation_module: Optional[ActionRepresentationModule] = None,
         actor_network_instance: Optional[ActorNetwork] = None,
-        critic_network_instance: Optional[
-            Union[ValueNetwork, QValueNetwork, torch.nn.Module]
-        ] = None,
+        critic_network_instance: Optional[QValueNetwork] = None,
+        value_network_instance: Optional[ValueNetwork] = None,
     ) -> None:
         super(ImplicitQLearning, self).__init__(
             state_dim=state_dim,
@@ -138,11 +137,14 @@ class ImplicitQLearning(ActorCriticBase):
         )
         self._advantage_clamp = advantage_clamp
         # iql uses both q and v approximators
-        self._value_network: ValueNetwork = value_network_type(
-            input_dim=state_dim,
-            hidden_dims=value_critic_hidden_dims,
-            output_dim=1,
-        )
+        if value_network_instance is not None:
+            self._value_network = value_network_instance
+        else:
+            self._value_network: ValueNetwork = value_network_type(
+                input_dim=state_dim,
+                hidden_dims=value_critic_hidden_dims,
+                output_dim=1,
+            )
         self._value_network_optimizer = optim.AdamW(
             self._value_network.parameters(),
             lr=value_critic_learning_rate,
