@@ -115,7 +115,7 @@ class ActorCriticBase(PolicyLearner):
 
         self._action_dim: int = (
             self.action_representation_module.representation_dim
-            if self.is_action_continuous
+            if self._is_action_continuous
             else self.action_representation_module.max_number_actions
         )
 
@@ -239,7 +239,7 @@ class ActorCriticBase(PolicyLearner):
         # Step 1: compute exploit_action
         # (action computed by actor network; and without any exploration)
         with torch.no_grad():
-            if self.is_action_continuous:
+            if self._is_action_continuous:
                 exploit_action = self._actor.sample_action(subjective_state)
                 action_probabilities = None
             else:

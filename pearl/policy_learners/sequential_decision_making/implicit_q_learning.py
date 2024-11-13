@@ -225,7 +225,7 @@ class ImplicitQLearning(ActorCriticBase):
             actor_loss = (advantage * loss).mean()
 
         else:
-            if self.is_action_continuous:
+            if self._is_action_continuous:
                 log_action_probabilities = self._actor.get_log_probability(
                     batch.state, batch.action
                 ).view(-1)

@@ -108,7 +108,7 @@ class PolicyLearner(torch.nn.Module, ABC):
         self._batch_size = batch_size
         self._training_steps = 0
         self.on_policy = on_policy
-        self.is_action_continuous = is_action_continuous
+        self._is_action_continuous = is_action_continuous
         self.distribution_enabled: bool = is_distribution_enabled()
         self.requires_tensors = requires_tensors
 
