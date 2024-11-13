@@ -13,6 +13,7 @@ from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.reward import Reward, Value
 from pearl.history_summarization_modules.history_summarization_module import (
+    HistorySummarizationModule,
     SubjectiveState,
 )
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
@@ -74,6 +75,12 @@ class TabularQLearning(PolicyLearner):
                     f"action spaces that are a DiscreteSpace where for each action "
                     f"action.item() == action's index. "
                 )
+
+    def set_history_summarization_module(
+        self, value: HistorySummarizationModule
+    ) -> None:
+        # tabular q learning is assumed to not update parameters of the history summarization module
+        self._history_summarization_module = value
 
     def act(
         self,

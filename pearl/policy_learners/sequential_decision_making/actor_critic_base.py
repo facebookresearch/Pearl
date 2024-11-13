@@ -72,6 +72,8 @@ class ActorCriticBase(PolicyLearner):
         action_space: Optional[ActionSpace] = None,
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,
+        # used only for learnable history summarization module
+        history_summarization_learning_rate: float = 1e-3,
         actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
         critic_network_type: Union[
             Type[ValueNetwork], Type[QValueNetwork]
@@ -187,11 +189,23 @@ class ActorCriticBase(PolicyLearner):
                 self._critic_target: nn.Module = copy.deepcopy(self._critic)
 
         self._discount_factor = discount_factor
+        self._history_summarization_learning_rate = history_summarization_learning_rate
 
     def set_history_summarization_module(
         self, value: HistorySummarizationModule
     ) -> None:
-        self._actor_optimizer.add_param_group({"params": value.parameters()})
+        """
+        The history summarization module uses its own optimizer.
+        """
+        self._history_summarization_optimizer: optim.Optimizer = optim.AdamW(
+            [
+                {
+                    "params": value.parameters(),
+                    "lr": self._history_summarization_learning_rate,
+                    "amsgrad": True,
+                }
+            ]
+        )
         self._history_summarization_module = value
 
     def act(
@@ -279,6 +293,7 @@ class ActorCriticBase(PolicyLearner):
             Dict[str, Any]: A dictionary containing the loss reports from the critic
             and actor updates. These can be useful to track for debugging purposes.
         """
+        self._history_summarization_optimizer.zero_grad()
         actor_loss = self._actor_loss(batch)
         self._actor_optimizer.zero_grad()
         """
@@ -289,25 +304,15 @@ class ActorCriticBase(PolicyLearner):
         After the graph is cleared, critic_loss.backward() fails.
         """
         actor_loss.backward(retain_graph=True)
+        self._actor_optimizer.step()
+        report = {"actor_loss": actor_loss.item()}
         if self._use_critic:
             self._critic_optimizer.zero_grad()
             critic_loss = self._critic_loss(batch)
-            """
-            This backward operation needs to happen before the actor_optimizer.step().
-            This is because actor_optimizer.step() updates the history summarization neural network
-            and critic_loss.backward() fails
-            once parameters involved in critic_loss's computational graph change.
-            """
             critic_loss.backward()
-            self._actor_optimizer.step()
             self._critic_optimizer.step()
-            report = {
-                "actor_loss": actor_loss.item(),
-                "critic_loss": critic_loss.item(),
-            }
-        else:
-            self._actor_optimizer.step()
-            report = {"actor_loss": actor_loss.item()}
+            report["critic_loss"] = critic_loss.item()
+        self._history_summarization_optimizer.step()
 
         if self._use_critic_target:
             update_critic_target_network(

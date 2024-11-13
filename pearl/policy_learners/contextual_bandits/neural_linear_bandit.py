@@ -18,6 +18,7 @@ from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 
 from pearl.history_summarization_modules.history_summarization_module import (
+    HistorySummarizationModule,
     SubjectiveState,
 )
 from pearl.neural_networks.common.utils import LOSS_TYPES
@@ -145,6 +146,12 @@ class NeuralLinearBandit(ContextualBanditBase):
     @property
     def optimizer(self) -> torch.optim.Optimizer:
         return self._optimizer
+
+    def set_history_summarization_module(
+        self, value: HistorySummarizationModule
+    ) -> None:
+        self._optimizer.add_param_group({"params": value.parameters()})
+        self._history_summarization_module = value
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 

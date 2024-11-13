@@ -87,6 +87,7 @@ class ImplicitQLearning(ActorCriticBase):
         value_critic_learning_rate: float = 1e-3,
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,
+        history_summarization_learning_rate: float = 1e-3,
         critic_soft_update_tau: float = 0.05,
         discount_factor: float = 0.99,
         training_rounds: int = 5,
@@ -107,6 +108,7 @@ class ImplicitQLearning(ActorCriticBase):
             critic_hidden_dims=critic_hidden_dims,
             actor_learning_rate=actor_learning_rate,
             critic_learning_rate=critic_learning_rate,
+            history_summarization_learning_rate=history_summarization_learning_rate,
             actor_network_type=actor_network_type,
             critic_network_type=critic_network_type,
             use_actor_target=False,
@@ -147,16 +149,11 @@ class ImplicitQLearning(ActorCriticBase):
             amsgrad=True,
         )
 
-    def set_history_summarization_module(
-        self, value: HistorySummarizationModule
-    ) -> None:
-        self._actor_optimizer.add_param_group({"params": value.parameters()})
-        self._history_summarization_module = value
-
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
         value_loss = self._value_loss(batch)
         critic_loss = self._critic_loss(batch)
         actor_loss = self._actor_loss(batch)
+        self._history_summarization_optimizer.zero_grad()
         self._value_network_optimizer.zero_grad()
         self._actor_optimizer.zero_grad()
         self._critic_optimizer.zero_grad()
@@ -165,7 +162,7 @@ class ImplicitQLearning(ActorCriticBase):
         self._value_network_optimizer.step()
         self._actor_optimizer.step()
         self._critic_optimizer.step()
-
+        self._history_summarization_optimizer.step()
         # update critic and target Twin networks;
         update_target_networks(
             self._critic_target._critic_networks_combined,

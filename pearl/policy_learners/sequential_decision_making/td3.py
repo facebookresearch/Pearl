@@ -104,20 +104,21 @@ class TD3(DeepDeterministicPolicyGradient):
         self._critic_update_count += 1
         report = {}
         # delayed actor update
-        self._actor_optimizer.zero_grad()
+        self._history_summarization_optimizer.zero_grad()
         if self._critic_update_count % self._actor_update_freq == 0:
-            # see ddpg base class for actor update details
+            self._actor_optimizer.zero_grad()
             actor_loss = self._actor_loss(batch)
             actor_loss.backward(retain_graph=True)
+            self._actor_optimizer.step()
             self._last_actor_loss = actor_loss.item()
         report["actor_loss"] = self._last_actor_loss
 
         self._critic_optimizer.zero_grad()
         critic_loss = self._critic_loss(batch)  # critic update
         critic_loss.backward()
-        self._actor_optimizer.step()
         self._critic_optimizer.step()
         report["critic_loss"] = critic_loss.item()
+        self._history_summarization_optimizer.step()
 
         if self._critic_update_count % self._actor_update_freq == 0:
             # update targets of critics using soft updates

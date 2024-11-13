@@ -131,10 +131,11 @@ class PolicyLearner(torch.nn.Module, ABC):
     def get_action_representation_module(self) -> ActionRepresentationModule:
         return self._action_representation_module
 
+    @abstractmethod
     def set_history_summarization_module(
         self, value: HistorySummarizationModule
     ) -> None:
-        self._history_summarization_module = value
+        pass
 
     def reset(self, action_space: ActionSpace) -> None:
         """Resets policy maker for a new episode. Default implementation does nothing."""

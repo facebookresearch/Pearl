@@ -164,10 +164,19 @@ def evaluate_single(
     ):
         if (
             method["history_summarization_module"].__name__
-            == "StackHistorySummarizationModule"
+            == "StackingHistorySummarizationModule"
         ):
+            method["history_summarization_module_args"]["observation_dim"] = (
+                env.observation_space.shape[0]
+            )
+            method["history_summarization_module_args"]["action_dim"] = (
+                policy_learner_args["action_representation_module"].representation_dim
+                if "action_representation_module" in policy_learner_args
+                else env.action_space.action_dim
+            )
             policy_learner_args["state_dim"] = (
-                env.observation_space.shape[0] + env.action_space.n
+                method["history_summarization_module_args"]["observation_dim"]
+                + method["history_summarization_module_args"]["action_dim"]
             ) * method["history_summarization_module_args"]["history_length"]
         elif (
             method["history_summarization_module"].__name__
