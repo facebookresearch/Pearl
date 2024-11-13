@@ -37,8 +37,10 @@ class BoxSpace(Space):
 
     def __init__(
         self,
-        low: Union[float, Tensor],
-        high: Union[float, Tensor],
+        # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
+        low: Union[float, np.ndarray, Tensor],
+        # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
+        high: Union[float, np.ndarray, Tensor],
         seed: Optional[Union[int, np.random.Generator]] = None,
     ) -> None:
         """Constructs a `BoxSpace`.
@@ -51,10 +53,10 @@ class BoxSpace(Space):
         """
         # pyre-fixme[9]: low has type `Union[float, Tensor]`; used as `ndarray[Any,
         #  Any]`.
-        low = low.numpy(force=True) if isinstance(low, Tensor) else np.array([low])
+        low = low.numpy(force=True) if isinstance(low, Tensor) else low
         # pyre-fixme[9]: high has type `Union[float, Tensor]`; used as `ndarray[Any,
         #  Any]`.
-        high = high.numpy(force=True) if isinstance(high, Tensor) else np.array([high])
+        high = high.numpy(force=True) if isinstance(high, Tensor) else high
         self._gym_space = Box(low=low, high=high, seed=seed)
 
     @property
