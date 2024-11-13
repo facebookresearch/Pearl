@@ -155,7 +155,6 @@ class ActorCriticBase(PolicyLearner):
         # make a copy of the actor network to be used as the actor target network
         if self._use_actor_target:
             self._actor_target: nn.Module = copy.deepcopy(self._actor)
-            update_target_network(self._actor_target, self._actor, tau=1)
 
         self._critic_soft_update_tau = critic_soft_update_tau
         if self._use_critic:
@@ -186,11 +185,6 @@ class ActorCriticBase(PolicyLearner):
             )
             if self._use_critic_target:
                 self._critic_target: nn.Module = copy.deepcopy(self._critic)
-                update_critic_target_network(
-                    self._critic_target,
-                    self._critic,
-                    1,
-                )
 
         self._discount_factor = discount_factor
 
