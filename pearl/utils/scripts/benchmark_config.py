@@ -30,12 +30,16 @@ from pearl.neural_networks.sequential_decision_making.q_value_networks import (
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (  # noqa E501
     EGreedyExploration,
 )
+from pearl.policy_learners.exploration_modules.common.no_exploration import (
+    NoExploration,
+)
 from pearl.policy_learners.exploration_modules.common.normal_distribution_exploration import (  # noqa E501
     NormalDistributionExploration,
 )
 from pearl.policy_learners.exploration_modules.common.propensity_exploration import (
     PropensityExploration,
 )
+from pearl.policy_learners.exploration_modules.wrappers.warmup import Warmup
 from pearl.policy_learners.sequential_decision_making.bootstrapped_dqn import (
     BootstrappedDQN,
 )
@@ -546,7 +550,10 @@ DDPG_method = {
         "mean": 0,
         "std_dev": 0.1,
     },
+    "exploration_module_wrapper": Warmup,
+    "exploration_module_wrapper_args": {"warmup_steps": 25000},
     "replay_buffer": BasicReplayBuffer,
+    "learning_start_step": 25000,
     "replay_buffer_args": {"capacity": 100000},
 }
 
@@ -605,7 +612,10 @@ TD3_method = {
         "mean": 0,
         "std_dev": 0.1,
     },
+    "exploration_module_wrapper": Warmup,
+    "exploration_module_wrapper_args": {"warmup_steps": 25000},
     "replay_buffer": BasicReplayBuffer,
+    "learning_start_step": 25000,
     "replay_buffer_args": {"capacity": 100000},
 }
 
@@ -660,7 +670,12 @@ CSAC_method = {
         "critic_network_type": VanillaQValueNetwork,
         "discount_factor": 0.99,
     },
+    "exploration_module": NoExploration,
+    "exploration_module_args": {},
+    "exploration_module_wrapper": Warmup,
+    "exploration_module_wrapper_args": {"warmup_steps": 5000},
     "replay_buffer": BasicReplayBuffer,
+    "learning_start_step": 5000,
     "replay_buffer_args": {"capacity": 100000},
 }
 

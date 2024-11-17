@@ -15,6 +15,9 @@ class LearningLogger(Protocol):
         prefix: A prefix to add to the logged results.
     """
 
+    def __init__(self) -> None:
+        pass
+
     def __call__(self, results: Dict[str, Any], step: int, prefix: str = "") -> None:
         pass
 

@@ -127,6 +127,13 @@ def evaluate_single(
         policy_learner_args["exploration_module"] = method["exploration_module"](
             **method["exploration_module_args"]
         )
+        if "exploration_module_wrapper" in method:
+            policy_learner_args["exploration_module"] = method[
+                "exploration_module_wrapper"
+            ](
+                exploration_module=policy_learner_args["exploration_module"],
+                **method["exploration_module_wrapper_args"],
+            )
     if "replay_buffer" in method and "replay_buffer_args" in method:
         agent_args["replay_buffer"] = method["replay_buffer"](
             **method["replay_buffer_args"]
@@ -164,10 +171,19 @@ def evaluate_single(
     ):
         if (
             method["history_summarization_module"].__name__
-            == "StackHistorySummarizationModule"
+            == "StackingHistorySummarizationModule"
         ):
+            method["history_summarization_module_args"]["observation_dim"] = (
+                env.observation_space.shape[0]
+            )
+            method["history_summarization_module_args"]["action_dim"] = (
+                policy_learner_args["action_representation_module"].representation_dim
+                if "action_representation_module" in policy_learner_args
+                else env.action_space.action_dim
+            )
             policy_learner_args["state_dim"] = (
-                env.observation_space.shape[0] + env.action_space.n
+                method["history_summarization_module_args"]["observation_dim"]
+                + method["history_summarization_module_args"]["action_dim"]
             ) * method["history_summarization_module_args"]["history_length"]
         elif (
             method["history_summarization_module"].__name__
@@ -230,6 +246,7 @@ def evaluate_single(
         learn_every_k_steps=learn_every_k_steps,
         seed=run_idx,
         record_period=record_period,
+        learning_start_step=method.get("learning_start_step", 0),
     )
     dir = f"outputs/{env_name}/{method_name}"
     os.makedirs(dir, exist_ok=True)

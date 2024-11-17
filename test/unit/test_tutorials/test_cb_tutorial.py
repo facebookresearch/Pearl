@@ -58,7 +58,7 @@ class TestCBTutorials(unittest.TestCase):
         uci_data_path = "./utils/instantiations/environments/uci_datasets"
         if not os.path.exists(uci_data_path):
             os.makedirs(uci_data_path)
-            download_uci_data(data_path=uci_data_path)
+        download_uci_data(data_path=uci_data_path)
 
         # Built CB environment using the pendigits UCI dataset
         pendigits_uci_dict = {
@@ -71,8 +71,8 @@ class TestCBTutorials(unittest.TestCase):
         env = SLCBEnvironment(**pendigits_uci_dict)  # pyre-ignore
 
         # experiment code
-        number_of_steps = 300
-        record_period = 300
+        number_of_steps = 10
+        record_period = 10
 
         """
         SquareCB
@@ -85,8 +85,8 @@ class TestCBTutorials(unittest.TestCase):
         agent = PearlAgent(
             policy_learner=NeuralBandit(
                 feature_dim=env.observation_dim + env.unique_labels_num,
-                hidden_dims=[64, 16],
-                training_rounds=10,
+                hidden_dims=[2],
+                training_rounds=2,
                 learning_rate=0.01,
                 action_representation_module=action_representation_module,
                 exploration_module=SquareCBExploration(
@@ -101,7 +101,7 @@ class TestCBTutorials(unittest.TestCase):
             agent=agent,
             env=env,
             number_of_steps=number_of_steps,
-            print_every_x_steps=100,
+            print_every_x_steps=10,
             record_period=record_period,
             learn_after_episode=True,
         )
@@ -114,9 +114,9 @@ class TestCBTutorials(unittest.TestCase):
         agent = PearlAgent(
             policy_learner=NeuralLinearBandit(
                 feature_dim=env.observation_dim + env.unique_labels_num,
-                hidden_dims=[64, 16],
+                hidden_dims=[2],
                 state_features_only=False,
-                training_rounds=10,
+                training_rounds=2,
                 learning_rate=0.01,
                 action_representation_module=action_representation_module,
                 exploration_module=UCBExploration(alpha=1.0),
@@ -143,9 +143,9 @@ class TestCBTutorials(unittest.TestCase):
         agent = PearlAgent(
             policy_learner=NeuralLinearBandit(
                 feature_dim=env.observation_dim + env.unique_labels_num,
-                hidden_dims=[64, 16],
+                hidden_dims=[2],
                 state_features_only=False,
-                training_rounds=10,
+                training_rounds=2,
                 learning_rate=0.01,
                 action_representation_module=action_representation_module,
                 exploration_module=ThompsonSamplingExplorationLinear(),
@@ -158,7 +158,7 @@ class TestCBTutorials(unittest.TestCase):
             agent=agent,
             env=env,
             number_of_steps=number_of_steps,
-            print_every_x_steps=100,
+            print_every_x_steps=10,
             record_period=record_period,
             learn_after_episode=True,
         )

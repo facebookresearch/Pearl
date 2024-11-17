@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import List, Optional
+from typing import List, Optional, Type
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -58,6 +58,8 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
         target_update_freq: int = 10,
         soft_update_tau: float = 0.05,
         action_representation_module: Optional[ActionRepresentationModule] = None,
+        network_type: Type[QuantileQValueNetwork] = QuantileQValueNetwork,
+        network_instance: Optional[QuantileQValueNetwork] = None,
     ) -> None:
         assert isinstance(action_space, DiscreteActionSpace)
         super(QuantileRegressionDeepQLearning, self).__init__(
@@ -77,7 +79,8 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
             batch_size=batch_size,
             target_update_freq=target_update_freq,
             soft_update_tau=soft_update_tau,
-            network_type=QuantileQValueNetwork,  # enforced to be of the type QuantileQValueNetwork
+            network_type=network_type,
+            network_instance=network_instance,
             action_representation_module=action_representation_module,
         )
 

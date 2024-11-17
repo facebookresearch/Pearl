@@ -111,8 +111,8 @@ class PearlAgent(Agent):
         )
 
         # set here so replay_buffer and policy_learner are in sync
-        self.replay_buffer.is_action_continuous = (
-            self.policy_learner.is_action_continuous
+        self.replay_buffer._is_action_continuous = (
+            self.policy_learner._is_action_continuous
         )
         self.replay_buffer.device_for_batches = self.device
 
@@ -192,7 +192,7 @@ class PearlAgent(Agent):
             terminated=action_result.terminated,
             max_number_actions=(
                 self.policy_learner.action_representation_module.max_number_actions
-                if not self.policy_learner.is_action_continuous
+                if not self.policy_learner._is_action_continuous
                 else None
             ),  # max number of actions for discrete action space
             cost=action_result.cost,

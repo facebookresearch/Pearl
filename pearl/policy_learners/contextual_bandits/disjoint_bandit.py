@@ -14,6 +14,7 @@ import torch
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
+    HistorySummarizationModule,
     SubjectiveState,
 )
 from pearl.neural_networks.common.utils import ensemble_forward
@@ -228,3 +229,11 @@ class DisjointBanditContainer(ContextualBanditBase):
     @property
     def optimizer(self) -> torch.optim.Optimizer:
         return self._optimizer
+
+    def set_history_summarization_module(
+        self, value: HistorySummarizationModule
+    ) -> None:
+        # usually, this method would also add the parameters of the history summarization module
+        # to the optimizer of the bandit, but disjoint bandits do not use a pytorch optimizer.
+        # Instead, the optimization uses Pearl's own linear regression module.
+        self._history_summarization_module = value

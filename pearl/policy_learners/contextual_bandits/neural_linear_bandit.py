@@ -18,6 +18,7 @@ from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 
 from pearl.history_summarization_modules.history_summarization_module import (
+    HistorySummarizationModule,
     SubjectiveState,
 )
 from pearl.neural_networks.common.utils import LOSS_TYPES
@@ -146,6 +147,12 @@ class NeuralLinearBandit(ContextualBanditBase):
     def optimizer(self) -> torch.optim.Optimizer:
         return self._optimizer
 
+    def set_history_summarization_module(
+        self, value: HistorySummarizationModule
+    ) -> None:
+        self._optimizer.add_param_group({"params": value.parameters()})
+        self._history_summarization_module = value
+
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
 
         # get scores for logging purpose
@@ -199,13 +206,15 @@ class NeuralLinearBandit(ContextualBanditBase):
             loss.backward()
             self._optimizer.step()
 
-            # Optimize linear regression
-            self.model._linear_regression_layer.learn_batch(
-                model_ret["nn_output"].detach(),
-                expected_values,
-                batch_weight,
-            )
-            self._maybe_apply_discounting()
+        # Optimize linear regression
+        # n.b. this is also done for 0-weight batches to ensure parity across workers for the
+        # the internal torch.distributed.allreduce; it can otherwise lead to deadlocks.
+        self.model._linear_regression_layer.learn_batch(
+            model_ret["nn_output"].detach(),
+            expected_values,
+            batch_weight,
+        )
+        self._maybe_apply_discounting()
 
         predicted_values = predicted_values.detach()  # detach for logging
         return {

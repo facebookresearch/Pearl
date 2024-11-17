@@ -94,7 +94,7 @@ class BootstrapReplayBuffer(BasicReplayBuffer):
             # pyre-fixme[6]: For 1st argument expected `List[Transition]` but got
             #  `List[Union[Transition, TransitionBatch]]`.
             transitions=samples,
-            is_action_continuous=self.is_action_continuous,
+            is_action_continuous=self._is_action_continuous,
         )
         # pyre-fixme[16]: Item `Transition` of `Union[Transition, TransitionBatch]`
         #  has no attribute `bootstrap_mask`.

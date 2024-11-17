@@ -15,6 +15,7 @@ from pearl.action_representation_modules.action_representation_module import (
 )
 from pearl.api.action import Action
 from pearl.history_summarization_modules.history_summarization_module import (
+    HistorySummarizationModule,
     SubjectiveState,
 )
 from pearl.neural_networks.contextual_bandit.linear_regression import LinearRegression
@@ -190,3 +191,10 @@ class LinearBandit(ContextualBanditBase):
             action_space=action_space,
             representation=self.model,
         ).squeeze(-1)
+
+    def set_history_summarization_module(
+        self, value: HistorySummarizationModule
+    ) -> None:
+        # currently linear bandit algorithm does not update
+        # parameters of the history summarization module
+        self._history_summarization_module = value

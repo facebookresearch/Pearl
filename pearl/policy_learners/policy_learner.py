@@ -108,7 +108,7 @@ class PolicyLearner(torch.nn.Module, ABC):
         self._batch_size = batch_size
         self._training_steps = 0
         self.on_policy = on_policy
-        self.is_action_continuous = is_action_continuous
+        self._is_action_continuous = is_action_continuous
         self.distribution_enabled: bool = is_distribution_enabled()
         self.requires_tensors = requires_tensors
 
@@ -131,10 +131,11 @@ class PolicyLearner(torch.nn.Module, ABC):
     def get_action_representation_module(self) -> ActionRepresentationModule:
         return self._action_representation_module
 
+    @abstractmethod
     def set_history_summarization_module(
         self, value: HistorySummarizationModule
     ) -> None:
-        self._history_summarization_module = value
+        pass
 
     def reset(self, action_space: ActionSpace) -> None:
         """Resets policy maker for a new episode. Default implementation does nothing."""
