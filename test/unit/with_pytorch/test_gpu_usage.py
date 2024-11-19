@@ -73,7 +73,6 @@ class TestGPUUsage(unittest.TestCase):
                 state_dim=env.observation_space.shape[0],
                 action_space=env.action_space,
                 actor_hidden_dims=[64, 64],
-                use_critic=True,
                 critic_hidden_dims=[64, 64],
                 training_rounds=20,
                 batch_size=500,
