@@ -113,12 +113,6 @@ class ActorCriticBase(PolicyLearner):
         self._use_twin_critic = use_twin_critic
         self._use_critic: bool = use_critic
 
-        self._action_dim: int = (
-            self.action_representation_module.representation_dim
-            if self._is_action_continuous
-            else self.action_representation_module.max_number_actions
-        )
-
         if actor_network_instance is not None:
             self._actor: nn.Module = actor_network_instance
         else:
@@ -130,7 +124,7 @@ class ActorCriticBase(PolicyLearner):
             # actor network takes state as input and outputs an action vector
             self._actor: nn.Module = actor_network_type(
                 input_dim=(
-                    state_dim + self._action_dim
+                    state_dim + self.action_representation_module.representation_dim
                     if issubclass(actor_network_type, DynamicActionActorNetwork)
                     else state_dim
                 ),
@@ -138,7 +132,11 @@ class ActorCriticBase(PolicyLearner):
                 output_dim=(
                     1
                     if issubclass(actor_network_type, DynamicActionActorNetwork)
-                    else self._action_dim
+                    else (
+                        self.action_representation_module.representation_dim
+                        if self._is_action_continuous
+                        else self.action_representation_module.max_number_actions
+                    )
                 ),
                 action_space=action_space,
             )
@@ -170,7 +168,7 @@ class ActorCriticBase(PolicyLearner):
 
                 self._critic: nn.Module = make_critic(
                     state_dim=self._state_dim,
-                    action_dim=self._action_dim,
+                    action_dim=self.action_representation_module.representation_dim,
                     hidden_dims=critic_hidden_dims,
                     use_twin_critic=use_twin_critic,
                     network_type=critic_network_type,
