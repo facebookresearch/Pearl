@@ -58,10 +58,18 @@ from pearl.policy_learners.sequential_decision_making.double_dqn import DoubleDQ
 from pearl.policy_learners.sequential_decision_making.implicit_q_learning import (
     ImplicitQLearning,
 )
-from pearl.policy_learners.sequential_decision_making.ppo import (
+from pearl.policy_learners.sequential_decision_making.ppo_base import (
     PPOReplayBuffer,
-    ProximalPolicyOptimization,
 )
+
+from pearl.policy_learners.sequential_decision_making.ppo import (
+    ProximalPolicyOptimization
+)
+
+from pearl.policy_learners.sequential_decision_making.ppo_continuous import (
+    ContinuousProximalPolicyOptimization
+)
+
 from pearl.policy_learners.sequential_decision_making.quantile_regression_deep_q_learning import (
     QuantileRegressionDeepQLearning,
 )
@@ -443,8 +451,6 @@ class TestIntegration(unittest.TestCase):
         This test checks for performance of PPO when instances of actor and critic networks are
         passed as input arguments. The performance metric is if PPO can eventually attain an
         episodic return of 500.
-
-        Note: Pearl currently only supports PPO for discrete action spaces.
         """
         env = GymEnvironment("CartPole-v1")
         assert isinstance(env.action_space, DiscreteActionSpace)
@@ -490,6 +496,44 @@ class TestIntegration(unittest.TestCase):
                 learn=True,
                 learn_every_k_steps=200,
                 learn_after_episode=False,
+                exploit=False,
+            )
+        )
+
+    def test_continuous_ppo_network_instance(self) -> None:
+        """
+        This test is checking if continuous PPO will eventually learn for Pendulum-v1.
+        The target is to get moving average of returns to -250 or less.
+        """
+
+        env = GymEnvironment("Pendulum-v1")
+
+        agent = PearlAgent(
+            policy_learner=ContinuousProximalPolicyOptimization(
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                use_critic=True,
+                actor_hidden_dims=[64, 64],
+                critic_hidden_dims=[64, 64],
+                critic_learning_rate=1e-4,
+                actor_learning_rate=1e-4,
+                epsilon=0.1,
+                normalize_gae=True,
+                training_rounds=50,
+                batch_size=100,
+                entropy_bonus_scaling=0.005,
+            ),
+            replay_buffer=PPOReplayBuffer(250_000),
+        )
+
+        self.assertTrue(
+            target_return_is_reached(
+                agent=agent,
+                env=env,
+                target_return=-250,
+                max_episodes=1500,
+                learn=True,
+                learn_after_episode=True,
                 exploit=False,
             )
         )

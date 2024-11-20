@@ -18,10 +18,14 @@ from pearl.pearl_agent import PearlAgent
 from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,
 )
-from pearl.policy_learners.sequential_decision_making.ppo import (
+from pearl.policy_learners.sequential_decision_making.ppo_base import (
     PPOReplayBuffer,
+)
+
+from pearl.policy_learners.sequential_decision_making.ppo import (
     ProximalPolicyOptimization,
 )
+
 from pearl.replay_buffers import BasicReplayBuffer
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 
