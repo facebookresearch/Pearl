@@ -100,6 +100,7 @@ def train_via_uniform_data(
         action_result = env.step(action_ind)
         agent.observe(action_result)
 
+    # pyre-fixme[16]: `PolicyLearner` has no attribute `training_rounds`.
     agent.policy_learner.training_rounds = training_epoches * T
     agent.learn()
 
