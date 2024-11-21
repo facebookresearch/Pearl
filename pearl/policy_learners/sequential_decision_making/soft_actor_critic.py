@@ -113,6 +113,7 @@ class SoftActorCritic(ActorCriticBase):
 
     # sac uses a learning rate scheduler specifically
     def reset(self, action_space: ActionSpace) -> None:
+        # pyre-fixme[16]: `SoftActorCritic` has no attribute `_action_space`.
         self._action_space = action_space
         self.scheduler.step()
 
@@ -152,11 +153,14 @@ class SoftActorCritic(ActorCriticBase):
         assert next_available_actions_batch is not None
         next_state_batch_repeated = torch.repeat_interleave(
             next_state_batch.unsqueeze(1),
+            # pyre-fixme[6]: For 2nd argument expected `Tensor` but got
+            #  `Union[Module, Tensor]`.
             self.action_representation_module.max_number_actions,
             dim=1,
         )  # (batch_size x action_space_size x state_dim)
 
         # get q values of (states, all actions) from twin critics
+        # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         next_q1, next_q2 = self._critic_target.get_q_values(
             state_batch=next_state_batch_repeated,
             action_batch=next_available_actions_batch,
@@ -179,6 +183,7 @@ class SoftActorCritic(ActorCriticBase):
         if next_unavailable_actions_mask_batch is not None:
             next_state_action_values[next_unavailable_actions_mask_batch] = 0.0
 
+        # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         next_state_policy_dist = self._actor.get_policy_distribution(
             state_batch=next_state_batch,
             available_actions=next_available_actions_batch,
@@ -197,6 +202,8 @@ class SoftActorCritic(ActorCriticBase):
         state_batch = batch.state  # (batch_size x state_dim)
         state_batch_repeated = torch.repeat_interleave(
             state_batch.unsqueeze(1),
+            # pyre-fixme[6]: For 2nd argument expected `Tensor` but got
+            #  `Union[Module, Tensor]`.
             self.action_representation_module.max_number_actions,
             dim=1,
         )  # (batch_size x action_space_size x state_dim)
@@ -206,6 +213,7 @@ class SoftActorCritic(ActorCriticBase):
         )  # (batch_size x action_space_size x action_dim)
 
         # get q values of (states, all actions) from twin critics
+        # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         q1, q2 = self._critic.get_q_values(
             state_batch=state_batch_repeated, action_batch=available_actions
         )
@@ -216,6 +224,7 @@ class SoftActorCritic(ActorCriticBase):
             batch.curr_unavailable_actions_mask
         )  # (batch_size x action_space_size)
 
+        # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         new_policy_dist = self._actor.get_policy_distribution(
             state_batch=state_batch,
             available_actions=available_actions,
@@ -223,6 +232,8 @@ class SoftActorCritic(ActorCriticBase):
         )  # (batch_size x action_space_size)
 
         state_action_values = q.view(
+            # pyre-fixme[6]: For 1st argument expected `dtype` but got `Tuple[int,
+            #  Union[Module, Tensor]]`.
             (state_batch.shape[0], self.action_representation_module.max_number_actions)
         )  # (batch_size x action_space_size)
 

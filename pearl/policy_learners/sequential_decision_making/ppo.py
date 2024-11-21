@@ -152,6 +152,7 @@ class ProximalPolicyOptimization(ActorCriticBase):
         # TODO need to support continuous action
         # TODO: change the output shape of value networks
         assert isinstance(batch, PPOTransitionBatch)
+        # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         action_probs = self._actor.get_action_prob(
             state_batch=batch.state,
             action_batch=batch.action,
@@ -167,6 +168,8 @@ class ProximalPolicyOptimization(ActorCriticBase):
         clip = torch.clamp(
             r_thelta, min=1.0 - self._epsilon, max=1.0 + self._epsilon
         )  # shape (batch_size)
+        # pyre-fixme[58]: `*` is not supported for operand types `Tensor` and
+        #  `Optional[Tensor]`.
         loss = torch.sum(-torch.min(r_thelta * batch.gae, clip * batch.gae))
         # entropy
         entropy: torch.Tensor = torch.distributions.Categorical(
@@ -236,6 +239,7 @@ class ProximalPolicyOptimization(ActorCriticBase):
 
         state_values = self._critic(history_summary_batch).detach()
         action_probs = (
+            # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
             self._actor.get_action_prob(
                 state_batch=history_summary_batch,
                 action_batch=action_representation_batch,

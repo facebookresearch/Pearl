@@ -137,6 +137,7 @@ class TD3(DeepDeterministicPolicyGradient):
     def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
         with torch.no_grad():
             # sample next_action from actor's target network; shape (batch_size, action_dim)
+            # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
             next_action = self._actor_target.sample_action(batch.next_state)
 
             # sample clipped gaussian noise
@@ -164,6 +165,7 @@ class TD3(DeepDeterministicPolicyGradient):
             )  # shape (batch_size, action_dim)
 
             # sample q values of (next_state, next_action) from targets of critics
+            # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
             next_q1, next_q2 = self._critic_target.get_q_values(
                 state_batch=batch.next_state,
                 action_batch=next_action,
@@ -249,9 +251,11 @@ class TD3BC(TD3):
     def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
 
         # sample a batch of actions from the actor network; shape (batch_size, action_dim)
+        # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         action_batch = self._actor.sample_action(batch.state)
 
         # samples q values for (batch.state, action_batch) from twin critics
+        # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         q, _ = self._critic.get_q_values(
             state_batch=batch.state, action_batch=action_batch
         )

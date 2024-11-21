@@ -52,6 +52,7 @@ class VanillaValueNetwork(ValueNetwork):
 
     # default initialization in linear and conv layers of a F.sequential model is Kaiming
     def xavier_init(self) -> None:
+        # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         for layer in self._model:
             if isinstance(layer, nn.Linear):
                 nn.init.xavier_normal_(layer.weight)

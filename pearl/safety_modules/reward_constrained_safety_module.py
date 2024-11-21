@@ -137,8 +137,11 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
         """
 
         with torch.no_grad():
+            # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
             cost_q1, cost_q2 = cost_critic.get_q_values(
                 state_batch=batch.state,
+                # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no
+                #  attribute `sample_action`.
                 action_batch=policy_learner._actor.sample_action(batch.state),
             )
             cost_q = torch.maximum(cost_q1, cost_q2)
@@ -158,9 +161,12 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
 
         with torch.no_grad():
             # sample next_action from actor's target network; shape (batch_size, action_dim)
+            # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute
+            #  `sample_action`.
             next_action = policy_learner._actor.sample_action(batch.next_state)
 
             # sample q values of (next_state, next_action) from targets of critics
+            # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
             next_q1, next_q2 = self.target_of_cost_critic.get_q_values(
                 state_batch=batch.next_state,
                 action_batch=next_action,
@@ -173,7 +179,11 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
             # cost + gamma * (min{Qtarget_1(s', a from target actor network),
             #                  Qtarget_2(s', a from target actor network)})
             expected_state_action_values = (
-                next_q * self.cost_discount_factor * (1 - batch.terminated.float())
+                next_q
+                * self.cost_discount_factor
+                * (1 - batch.terminated.float())
+                # pyre-fixme[58]: `+` is not supported for operand types `Tensor` and
+                #  `Optional[Tensor]`.
             ) + batch.cost  # (batch_size)
 
         # update twin critics towards bellman target

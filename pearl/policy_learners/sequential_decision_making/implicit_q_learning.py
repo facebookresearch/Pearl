@@ -167,7 +167,11 @@ class ImplicitQLearning(ActorCriticBase):
         self._history_summarization_optimizer.step()
         # update critic and target Twin networks;
         update_target_networks(
+            # pyre-fixme[6]: For 1st argument expected `Union[List[Module],
+            #  ModuleList]` but got `Union[Tensor, Module]`.
             self._critic_target._critic_networks_combined,
+            # pyre-fixme[6]: For 2nd argument expected `Union[List[Module],
+            #  ModuleList]` but got `Union[Tensor, Module]`.
             self._critic._critic_networks_combined,
             self._critic_soft_update_tau,
         )
@@ -181,6 +185,7 @@ class ImplicitQLearning(ActorCriticBase):
     def _value_loss(self, batch: TransitionBatch) -> torch.Tensor:
 
         with torch.no_grad():
+            # pyre-fixme[29]: `Union[Tensor, Module]` is not a function.
             q1, q2 = self._critic_target.get_q_values(batch.state, batch.action)
             # random ensemble distillation.
             random_index = torch.randint(0, 2, (1,)).item()
@@ -197,6 +202,7 @@ class ImplicitQLearning(ActorCriticBase):
         Performs policy extraction using advantage weighted regression
         """
         with torch.no_grad():
+            # pyre-fixme[29]: `Union[Tensor, Module]` is not a function.
             q1, q2 = self._critic_target.get_q_values(batch.state, batch.action)
             # random ensemble distillation.
             random_index = torch.randint(0, 2, (1,)).item()
@@ -226,6 +232,7 @@ class ImplicitQLearning(ActorCriticBase):
 
         else:
             if self._is_action_continuous:
+                # pyre-fixme[29]: `Union[Tensor, Module]` is not a function.
                 log_action_probabilities = self._actor.get_log_probability(
                     batch.state, batch.action
                 ).view(-1)

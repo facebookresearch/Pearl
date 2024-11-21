@@ -134,6 +134,8 @@ class DeepTDLearning(PolicyLearner):
             if network_type is TwoTowerQValueNetwork:
                 return network_type(
                     state_dim=state_dim,
+                    # pyre-fixme[6]: For 2nd argument expected `int` but got
+                    #  `Union[Tensor, Module]`.
                     action_dim=self._action_representation_module.representation_dim,
                     hidden_dims=hidden_dims,
                     state_output_dim=state_output_dim,
@@ -149,6 +151,8 @@ class DeepTDLearning(PolicyLearner):
                 )
                 return network_type(
                     state_dim=state_dim,
+                    # pyre-fixme[6]: For 2nd argument expected `int` but got
+                    #  `Union[Tensor, Module]`.
                     action_dim=self._action_representation_module.representation_dim,
                     hidden_dims=hidden_dims,
                     output_dim=1,
@@ -289,6 +293,8 @@ class DeepTDLearning(PolicyLearner):
         # Conservative TD updates for offline learning.
         if self._is_conservative:
             cql_loss = compute_cql_loss(self._Q, batch, batch_size)
+            # pyre-fixme[58]: `*` is not supported for operand types
+            #  `Optional[float]` and `Tensor`.
             loss = self._conservative_alpha * cql_loss + bellman_loss
         else:
             loss = bellman_loss

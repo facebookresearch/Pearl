@@ -67,7 +67,10 @@ class TabularQLearning(PolicyLearner):
         self.debug: bool = debug
 
     def reset(self, action_space: ActionSpace) -> None:
+        # pyre-fixme[16]: `TabularQLearning` has no attribute `_action_space`.
         self._action_space = action_space
+        # pyre-fixme[6]: For 1st argument expected `Iterable[_T]` but got
+        #  `Union[Tensor, Module]`.
         for i, action in enumerate(self._action_space):
             if int(action.item()) != i:
                 raise ValueError(
@@ -140,6 +143,8 @@ class TabularQLearning(PolicyLearner):
         old_q_value = self.q_values.get((state, action.item()), 0)
         next_q_values = [
             self.q_values.get((next_state, next_action.item()), 0)
+            # pyre-fixme[29]: `Union[(self: Tensor) -> Any, Tensor, Module]` is not
+            #  a function.
             for next_action in self._action_space
         ]
 

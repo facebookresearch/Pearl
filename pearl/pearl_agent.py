@@ -92,6 +92,7 @@ class PearlAgent(Agent):
 
         # adds the safety module to the policy learner as well
         # @jalaj, we need to follow the practice below for safety module
+        # pyre-fixme[16]: `PolicyLearner` has no attribute `safety_module`.
         self.policy_learner.safety_module = self.safety_module
 
         self.replay_buffer: ReplayBuffer = (
@@ -190,6 +191,8 @@ class PearlAgent(Agent):
                 else action_result.available_action_space
             ),  # next_available_actions
             terminated=action_result.terminated,
+            # pyre-fixme[6]: For 8th argument expected `Optional[int]` but got
+            #  `Union[None, Tensor, Module]`.
             max_number_actions=(
                 self.policy_learner.action_representation_module.max_number_actions
                 if not self.policy_learner._is_action_continuous

@@ -52,6 +52,7 @@ class ThompsonSamplingExplorationLinear(ScoreExplorationBase):
             expected_reward = representation(subjective_state)
             # batch_size, action_count, 1
             assert expected_reward.shape == subjective_state.shape[:-1]
+            # pyre-fixme[29]: `Union[Tensor, Module]` is not a function.
             sigma = representation.calculate_sigma(subjective_state)
             # batch_size, action_count, 1
             assert sigma.shape == subjective_state.shape[:-1]

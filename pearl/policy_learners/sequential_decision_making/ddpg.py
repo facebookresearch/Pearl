@@ -100,9 +100,12 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
     def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
 
         # sample a batch of actions from the actor network; shape (batch_size, action_dim)
+        # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         action_batch = self._actor.sample_action(batch.state)
 
         # obtain q values for (batch.state, action_batch) from critic 1
+        # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute
+        #  `get_q_values`.
         q1 = self._critic._critic_1.get_q_values(
             state_batch=batch.state, action_batch=action_batch
         )
@@ -116,10 +119,12 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
 
         with torch.no_grad():
             # sample a batch of next actions from target actor network;
+            # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
             next_action = self._actor_target.sample_action(batch.next_state)
             # (batch_size, action_dim)
 
             # get q values of (batch.next_state, next_action) from targets of twin critic
+            # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
             next_q1, next_q2 = self._critic_target.get_q_values(
                 state_batch=batch.next_state,
                 action_batch=next_action,

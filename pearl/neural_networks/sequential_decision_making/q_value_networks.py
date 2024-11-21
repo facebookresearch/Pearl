@@ -594,6 +594,7 @@ class CNNQValueNetwork(VanillaCNN):
         self._action_dim = action_dim
 
     def forward(self, x: Tensor) -> Tensor:
+        # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         return self._model(x)
 
     def get_q_values(

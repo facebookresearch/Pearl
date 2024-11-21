@@ -238,6 +238,7 @@ class ActorCriticBase(PolicyLearner):
         # (action computed by actor network; and without any exploration)
         with torch.no_grad():
             if self._is_action_continuous:
+                # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
                 exploit_action = self._actor.sample_action(subjective_state)
                 action_probabilities = None
             else:
@@ -245,6 +246,7 @@ class ActorCriticBase(PolicyLearner):
                 actions = self.action_representation_module(
                     available_action_space.actions_batch
                 )
+                # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
                 action_probabilities = self._actor.get_policy_distribution(
                     state_batch=subjective_state,
                     available_actions=actions,
@@ -267,6 +269,7 @@ class ActorCriticBase(PolicyLearner):
         )
 
     def reset(self, action_space: ActionSpace) -> None:
+        # pyre-fixme[16]: `ActorCriticBase` has no attribute `_action_space`.
         self._action_space = action_space
 
     def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
@@ -334,7 +337,10 @@ class ActorCriticBase(PolicyLearner):
         # change reward to be the lambda_constraint weighted sum of reward and cost
         if hasattr(self.safety_module, "lambda_constraint"):
             batch.reward = (
-                batch.reward - self.safety_module.lambda_constraint * batch.cost
+                # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no
+                #  attribute `lambda_constraint`.
+                batch.reward
+                - self.safety_module.lambda_constraint * batch.cost
             )
         batch = super().preprocess_batch(batch)
 

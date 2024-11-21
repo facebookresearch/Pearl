@@ -145,6 +145,7 @@ class REINFORCE(ActorCriticBase):
             batch.state
         )  # (batch_size x state_dim) note that here batch_size = episode length
         return_batch = batch.cum_reward  # (batch_size)
+        # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         policy_propensities = self._actor.get_action_prob(
             batch.state,
             batch.action,

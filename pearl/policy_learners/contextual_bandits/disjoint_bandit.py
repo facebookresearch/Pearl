@@ -228,6 +228,7 @@ class DisjointBanditContainer(ContextualBanditBase):
 
     @property
     def optimizer(self) -> torch.optim.Optimizer:
+        # pyre-fixme[7]: Expected `Optimizer` but got `Union[Tensor, Module]`.
         return self._optimizer
 
     def set_history_summarization_module(

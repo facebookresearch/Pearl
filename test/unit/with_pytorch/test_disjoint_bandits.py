@@ -398,6 +398,7 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
         for i in range(self.action_space.n):
             model = policy_learner.models[i]  # model for arm i
             mus = model(features)
+            # pyre-fixme[29]: `Union[Tensor, Module]` is not a function.
             sigmas = model.calculate_sigma(features)
             expected_scores.append(mus + alpha * sigmas)
         expected_scores = torch.cat(expected_scores, dim=1)

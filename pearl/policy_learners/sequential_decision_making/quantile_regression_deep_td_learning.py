@@ -146,6 +146,8 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
 
             # instead of using the 'get_q_values' method of the QuantileQValueNetwork,
             # we invoke a method from the risk sensitive safety module
+            # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute
+            #  `get_q_values_under_risk_metric`.
             q_values = self.safety_module.get_q_values_under_risk_metric(
                 states_repeated, actions, self._Q
             )

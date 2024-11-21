@@ -133,6 +133,7 @@ class TestEpinet(unittest.TestCase):
         init_priornet_weight = copy.deepcopy(
             self.network.priornet.models[0][0][0].weight
         )
+        # pyre-fixme[29]: `Union[Tensor, Module]` is not a function.
         init_epinet_weight = copy.deepcopy(self.network.epinet[0][0].weight)
 
         for _ in range(self.num_epochs):
@@ -159,6 +160,7 @@ class TestEpinet(unittest.TestCase):
         final_priornet_weight = copy.deepcopy(
             self.network.priornet.models[0][0][0].weight
         )
+        # pyre-fixme[29]: `Union[Tensor, Module]` is not a function.
         final_epinet_weight = copy.deepcopy(self.network.epinet[0][0].weight)
         tt.assert_close(
             final_priornet_weight,

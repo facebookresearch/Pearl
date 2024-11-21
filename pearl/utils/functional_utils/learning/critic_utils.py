@@ -121,16 +121,22 @@ def update_critic_target_network(
     if isinstance(target_network, TwinCritic):
         update_target_networks(
             target_network._critic_networks_combined,
+            # pyre-fixme[6]: For 2nd argument expected `Union[List[Module],
+            #  ModuleList]` but got `Union[Module, Tensor]`.
             network._critic_networks_combined,
             tau=tau,
         )
     else:
         update_target_network(
             (
+                # pyre-fixme[6]: For 1st argument expected `Module` but got
+                #  `Union[Module, Tensor]`.
                 target_network._model
                 if hasattr(target_network, "_model")
                 else target_network
             ),
+            # pyre-fixme[6]: For 2nd argument expected `Module` but got
+            #  `Union[Module, Tensor]`.
             network._model if hasattr(network, "_model") else network,
             tau=tau,
         )

@@ -44,6 +44,7 @@ class UCBExploration(ScoreExplorationBase):
         Returns:
             sigma with shape (batch_size, action_count) or (batch_size, 1)
         """
+        # pyre-fixme[29]: `Union[Tensor, Module]` is not a function.
         sigma = representation.calculate_sigma(subjective_state)
         nan_check = torch.isnan(sigma)
         sigma = torch.where(nan_check, torch.zeros_like(sigma), sigma)

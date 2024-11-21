@@ -104,8 +104,15 @@ class ContinuousSoftActorCritic(ActorCriticBase):
                 torch.nn.Parameter(torch.zeros(1, requires_grad=True)),
             )
             self._entropy_optimizer: torch.optim.Optimizer = optim.AdamW(
-                [self._log_entropy], lr=critic_learning_rate, amsgrad=True
+                # pyre-fixme[6]: For 1st argument expected `Union[Iterable[Dict[str,
+                #  Any]], Iterable[Tuple[str, Tensor]], Iterable[Tensor]]` but got
+                #  `List[Union[Module, Tensor]]`.
+                [self._log_entropy],
+                lr=critic_learning_rate,
+                amsgrad=True,
             )
+            # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+            #  `Union[Module, Tensor]`.
             self.register_buffer("_entropy_coef", torch.exp(self._log_entropy).detach())
             assert isinstance(action_space, BoxSpace)
             self.register_buffer(
@@ -120,11 +127,14 @@ class ContinuousSoftActorCritic(ActorCriticBase):
 
         if self._entropy_autotune:
             with torch.no_grad():
+                # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
                 _, action_batch_log_prob = self._actor.sample_action(
                     state_batch, get_log_prob=True
                 )
 
             entropy_optimizer_loss = (
+                # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+                #  `Union[Module, Tensor]`.
                 -torch.exp(self._log_entropy)
                 * (action_batch_log_prob + self._target_entropy)
             ).mean()
@@ -133,6 +143,8 @@ class ContinuousSoftActorCritic(ActorCriticBase):
             entropy_optimizer_loss.backward()
             self._entropy_optimizer.step()
 
+            # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+            #  `Union[Module, Tensor]`.
             self._entropy_coef = torch.exp(self._log_entropy).detach()
             {**actor_critic_loss, **{"entropy_coef": entropy_optimizer_loss}}
 
@@ -171,8 +183,10 @@ class ContinuousSoftActorCritic(ActorCriticBase):
         (
             next_action_batch,
             next_action_batch_log_prob,
+            # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         ) = self._actor.sample_action(next_state_batch, get_log_prob=True)
 
+        # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         next_q1, next_q2 = self._critic_target.get_q_values(
             state_batch=next_state_batch,
             action_batch=next_action_batch,
@@ -198,8 +212,10 @@ class ContinuousSoftActorCritic(ActorCriticBase):
         (
             action_batch,
             action_batch_log_prob,
+            # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         ) = self._actor.sample_action(state_batch, get_log_prob=True)
 
+        # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         q1, q2 = self._critic.get_q_values(
             state_batch=state_batch, action_batch=action_batch
         )  # shape: (batch_size, 1)

@@ -136,8 +136,12 @@ def concatenate_actions_to_state(
     # (batch_size, action_count, state_dim + action_dim)
     new_feature = torch.cat([expanded_state, expanded_action], dim=2)
     torch._assert(
+        # pyre-fixme[58]: `+` is not supported for operand types `int` and
+        #  `Union[int, Tensor, Module]`.
         new_feature.shape == (batch_size, action_count, state_dim + action_dim),
         "The shape of the concatenated feature is wrong. Expected "
+        # pyre-fixme[58]: `+` is not supported for operand types `int` and
+        #  `Union[int, Tensor, Module]`.
         f"{(batch_size, action_count, state_dim + action_dim)}, got {new_feature.shape}",
     )
     return new_feature.to(subjective_state.device)
