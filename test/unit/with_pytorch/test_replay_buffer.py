@@ -57,6 +57,7 @@ class TestReplayBuffer(unittest.TestCase):
                     curr_available_actions=action_space,
                     next_available_actions=action_space,
                     terminated=(False),
+                    truncated=(False),
                     max_number_actions=2,
                 )
 

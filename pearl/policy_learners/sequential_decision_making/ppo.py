@@ -278,7 +278,7 @@ class ProximalPolicyOptimization(ActorCriticBase):
                 td_error
                 + self._discount_factor
                 * self._trace_decay_param
-                * (~transition.terminated)
+                * (not (transition.terminated or transition.truncated))
                 * gae
             )
             assert isinstance(transition, PPOTransition)

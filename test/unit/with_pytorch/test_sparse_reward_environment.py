@@ -76,4 +76,4 @@ class TestSparseRewardEnvironment(unittest.TestCase):
         env._step_count = env._max_episode_duration
         result = env.step(torch.tensor(1))
         self.assertEqual(result.reward, -1)
-        self.assertTrue(result.terminated)
+        self.assertTrue(result.truncated)

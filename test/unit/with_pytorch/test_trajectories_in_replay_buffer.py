@@ -40,7 +40,8 @@ class TestTrajectoriesInReplayBuffer(unittest.TestCase):
                 next_state=torch.tensor([i]),
                 curr_available_actions=self.action_space,
                 next_available_actions=self.action_space,
-                terminated=(i == (self.trajectory_len - 1)),
+                terminated=True,
+                truncated=(i == (self.trajectory_len - 1)),
                 max_number_actions=self.action_space.n,
             )
 
@@ -53,9 +54,9 @@ class TestTrajectoriesInReplayBuffer(unittest.TestCase):
         order = torch.argsort(batch.state.squeeze())
 
         # validate terminal state indicators - 1 only for the last element
-        terminated = batch.terminated[order]
+        truncated = batch.truncated[order]
         tt.assert_close(
-            terminated,
+            truncated,
             torch.eye(self.trajectory_len)[self.trajectory_len - 1].bool(),
             rtol=0.0,
             atol=0.0,
@@ -77,7 +78,8 @@ class TestTrajectoriesInReplayBuffer(unittest.TestCase):
                 next_state=torch.tensor([i]),
                 curr_available_actions=self.action_space,
                 next_available_actions=self.action_space,
-                terminated=(i == (self.trajectory_len - 1)),
+                terminated=True,
+                truncated=(i == (self.trajectory_len - 1)),
                 max_number_actions=self.action_space.n,
             )
 
@@ -94,7 +96,8 @@ class TestTrajectoriesInReplayBuffer(unittest.TestCase):
                 next_state=torch.tensor([i]),
                 curr_available_actions=self.action_space,
                 next_available_actions=self.action_space,
-                terminated=(i == (trajectory_len_2 - 1)),
+                terminated=True,
+                truncated=(i == (trajectory_len_2 - 1)),
                 max_number_actions=self.action_space.n,
             )
 
@@ -107,15 +110,15 @@ class TestTrajectoriesInReplayBuffer(unittest.TestCase):
         order = torch.argsort(batch.state.squeeze())
 
         # validate terminal state indicators - 1 only for the last element
-        terminated = batch.terminated[order]
+        truncated = batch.truncated[order]
         tt.assert_close(
-            terminated[0 : self.trajectory_len],
+            truncated[0 : self.trajectory_len],
             torch.eye(self.trajectory_len)[self.trajectory_len - 1].bool(),
             rtol=0.0,
             atol=0.0,
         )
         tt.assert_close(
-            terminated[self.trajectory_len :],
+            truncated[self.trajectory_len :],
             torch.eye(trajectory_len_2)[trajectory_len_2 - 1].bool(),
             rtol=0.0,
             atol=0.0,

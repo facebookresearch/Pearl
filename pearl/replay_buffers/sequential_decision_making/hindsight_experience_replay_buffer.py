@@ -61,6 +61,7 @@ class HindsightExperienceReplayBuffer(BasicReplayBuffer):
                 ActionSpace,
                 ActionSpace,
                 bool,
+                bool,
                 Optional[int],
                 Optional[float],
             ]
@@ -72,6 +73,7 @@ class HindsightExperienceReplayBuffer(BasicReplayBuffer):
         action: Action,
         reward: Reward,
         terminated: bool,
+        truncated: bool,
         curr_available_actions: Optional[ActionSpace] = None,
         next_state: Optional[SubjectiveState] = None,
         next_available_actions: Optional[ActionSpace] = None,
@@ -86,6 +88,7 @@ class HindsightExperienceReplayBuffer(BasicReplayBuffer):
             action,
             reward,
             terminated,
+            truncated,
             curr_available_actions,
             next_state,
             next_available_actions,
@@ -111,11 +114,12 @@ class HindsightExperienceReplayBuffer(BasicReplayBuffer):
                 curr_available_actions,
                 next_available_actions,
                 terminated,
+                truncated,
                 max_number_actions,
                 cost,
             )
         )
-        if terminated:
+        if terminated or truncated:
             additional_goal = next_state[: -self._goal_dim]  # final mode
             for (
                 state,
@@ -124,6 +128,7 @@ class HindsightExperienceReplayBuffer(BasicReplayBuffer):
                 curr_available_actions,
                 next_available_actions,
                 terminated,
+                truncated,
                 max_number_actions,
                 cost,
             ) in self._trajectory:
@@ -141,6 +146,7 @@ class HindsightExperienceReplayBuffer(BasicReplayBuffer):
                         if self._terminated_fn is None
                         else self._terminated_fn(state, action)
                     ),
+                    truncated,
                     curr_available_actions,
                     next_state,
                     next_available_actions,

@@ -36,6 +36,7 @@ class SARSAReplayBuffer(TensorBasedReplayBuffer):
         action: Action,
         reward: Reward,
         terminated: bool,
+        truncated: bool,
         curr_available_actions_tensor_with_padding: Optional[Tensor],
         curr_unavailable_actions_mask: Optional[Tensor],
         next_state: Optional[SubjectiveState],
@@ -67,9 +68,10 @@ class SARSAReplayBuffer(TensorBasedReplayBuffer):
                     next_available_actions=self.cache.next_available_actions,
                     next_unavailable_actions_mask=self.cache.next_unavailable_actions_mask,
                     terminated=self.cache.terminated,
+                    truncated=self.cache.truncated,
                 )
             )
-        if not terminated:
+        if not (terminated or truncated):
             # save current push into cache
             self.cache = Transition(
                 state=current_state,
@@ -81,9 +83,10 @@ class SARSAReplayBuffer(TensorBasedReplayBuffer):
                 next_available_actions=next_available_actions_tensor_with_padding,
                 next_unavailable_actions_mask=next_unavailable_actions_mask,
                 terminated=self._process_single_terminated(terminated),
+                truncated=self._process_single_truncated(truncated),
             )
         else:
-            # for terminal state, push directly
+            # for terminal state or time out, push directly
             self.memory.append(
                 Transition(
                     state=current_state,
@@ -97,5 +100,6 @@ class SARSAReplayBuffer(TensorBasedReplayBuffer):
                     next_available_actions=next_available_actions_tensor_with_padding,
                     next_unavailable_actions_mask=next_unavailable_actions_mask,
                     terminated=self._process_single_terminated(terminated),
+                    truncated=self._process_single_truncated(truncated),
                 )
             )

@@ -28,6 +28,7 @@ SingleTransition = Tuple[
     ActionSpace,
     ActionSpace,
     bool,
+    bool,
     Optional[int],
     Optional[float],
 ]
@@ -58,6 +59,7 @@ class SingleTransitionReplayBuffer(ReplayBuffer):
         action: Action,
         reward: Reward,
         terminated: bool,
+        truncated: bool,
         curr_available_actions: Optional[ActionSpace] = None,
         next_state: Optional[SubjectiveState] = None,
         next_available_actions: Optional[ActionSpace] = None,
@@ -74,6 +76,7 @@ class SingleTransitionReplayBuffer(ReplayBuffer):
             curr_available_actions,
             next_available_actions,
             to_default_device_if_tensor(terminated),
+            to_default_device_if_tensor(truncated),
             max_number_actions,
             to_default_device_if_tensor(cost),
         )

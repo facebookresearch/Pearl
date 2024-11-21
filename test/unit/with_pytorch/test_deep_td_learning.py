@@ -48,6 +48,7 @@ class TestDeepTDLearning(unittest.TestCase):
                 curr_available_actions=self.action_space,
                 next_available_actions=self.action_space,
                 terminated=False,
+                truncated=False,
                 max_number_actions=self.action_space.n,
             )
         self.batch = buffer.sample(self.batch_size)

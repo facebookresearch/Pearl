@@ -54,6 +54,7 @@ class ReplayBuffer(ABC):
         action: Action,
         reward: Reward,
         terminated: bool,
+        truncated: bool,
         curr_available_actions: Optional[ActionSpace] = None,
         next_state: Optional[SubjectiveState] = None,
         next_available_actions: Optional[ActionSpace] = None,

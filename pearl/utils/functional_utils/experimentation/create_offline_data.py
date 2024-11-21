@@ -93,6 +93,7 @@ def create_offline_data(
                 "curr_available_actions": env.action_space,
                 "next_available_actions": env.action_space,
                 "terminated": action_result.terminated,
+                "truncated": action_result.truncated,
             }
 
             observation = action_result.observation
@@ -184,7 +185,7 @@ def get_data_collection_agent_returns(
         data_collection_agent_returns = []
         g = 0
         for transition in list(data):
-            if transition["terminated"]:
+            if transition["terminated"] or transition["truncated"]:
                 data_collection_agent_returns.append(g)
                 g = 0
             else:

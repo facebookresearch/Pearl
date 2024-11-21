@@ -63,6 +63,7 @@ class TestHindsightExperienceReplayBuffer(unittest.TestCase):
                 curr_available_actions=action_space,
                 next_available_actions=action_space,
                 terminated=i == len(states) - 2,
+                truncated=False,
                 max_number_actions=action_space.n,
             )
 

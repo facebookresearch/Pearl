@@ -97,6 +97,7 @@ class TestOfflineCQL(unittest.TestCase):
                     "next_available_actions"
                 ],  # next_available_actions
                 terminated=transition["terminated"],
+                truncated=transition["truncated"],
                 max_number_actions=max_number_actions,
             )
 

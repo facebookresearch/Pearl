@@ -71,6 +71,7 @@ def make_replay_buffer_class_for_specific_transition_types(
             action: Action,
             reward: Reward,
             terminated: bool,
+            truncated: bool,
             curr_available_actions_tensor_with_padding: Optional[Tensor],
             curr_unavailable_actions_mask: Optional[Tensor],
             next_state: Optional[SubjectiveState],
@@ -91,6 +92,7 @@ def make_replay_buffer_class_for_specific_transition_types(
                     next_available_actions=next_available_actions_tensor_with_padding,
                     next_unavailable_actions_mask=next_unavailable_actions_mask,
                     terminated=self._process_single_terminated(terminated),
+                    truncated=self._process_single_truncated(truncated),
                 )
             )
 

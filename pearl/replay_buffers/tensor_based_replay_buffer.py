@@ -44,6 +44,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         action: Action,
         reward: Reward,
         terminated: bool,
+        truncated: bool,
         curr_available_actions_tensor_with_padding: Optional[Tensor],
         curr_unavailable_actions_mask: Optional[Tensor],
         next_state: Optional[SubjectiveState],
@@ -62,6 +63,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         action: Action,
         reward: Reward,
         terminated: bool,
+        truncated: bool,
         curr_available_actions: Optional[ActionSpace] = None,
         next_state: Optional[SubjectiveState] = None,
         next_available_actions: Optional[ActionSpace] = None,
@@ -120,6 +122,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
             action,
             reward,
             terminated,
+            truncated,
             curr_available_actions_tensor_with_padding,
             curr_unavailable_actions_mask,
             next_state,
@@ -168,6 +171,9 @@ class TensorBasedReplayBuffer(ReplayBuffer):
 
     def _process_single_terminated(self, terminated: bool) -> torch.Tensor:
         return torch.tensor([terminated])  # (1,)
+
+    def _process_single_truncated(self, truncated: bool) -> torch.Tensor:
+        return torch.tensor([truncated])  # (1,)
 
     @staticmethod
     def create_action_tensor_and_mask(
@@ -258,6 +264,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
           next_available_actions = tensor(batch_size, action_dim, action_dim),
           next_available_actions_mask = tensor(batch_size, action_dim),
           terminated = tensor(batch_size, ),
+          truncated = tensor(batch_size, ),
         )
         """
         if batch_size > len(self):
@@ -297,6 +304,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
                 next_available_actions=torch.empty(0),
                 next_unavailable_actions_mask=torch.empty(0),
                 terminated=torch.empty(0),
+                truncated=torch.empty(0),
                 cost=torch.empty(0),
             ).to(self.device_for_batches)
 
@@ -311,6 +319,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         reward_list = []
         cost_list = []
         terminated_list = []
+        truncated_list = []
         next_state_list = []
         next_action_list = []
         curr_available_actions_list = []
@@ -322,6 +331,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
             action_list.append(x.action)
             reward_list.append(x.reward)
             terminated_list.append(x.terminated)
+            truncated_list.append(x.truncated)
             if has_cost_available:
                 cost_list.append(x.cost)
             if has_next_state:
@@ -344,6 +354,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         action_batch = torch.cat(action_list)
         reward_batch = torch.cat(reward_list)
         terminated_batch = torch.cat(terminated_list)
+        truncated_batch = torch.cat(truncated_list)
         if has_cost_available:
             cost_batch = torch.cat(cost_list)
         else:
@@ -377,5 +388,6 @@ class TensorBasedReplayBuffer(ReplayBuffer):
             next_available_actions=next_available_actions_batch,
             next_unavailable_actions_mask=next_unavailable_actions_mask_batch,
             terminated=terminated_batch,
+            truncated=truncated_batch,
             cost=cost_batch,
         ).to(self.device_for_batches)

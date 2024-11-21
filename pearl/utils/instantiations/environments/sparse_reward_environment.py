@@ -134,14 +134,15 @@ class ContinuousSparseRewardEnvironment(SparseRewardEnvironment):
 
         has_win = self._check_win()
         self._step_count += 1
-        terminated = has_win or self._step_count >= self._max_episode_duration
+        terminated = has_win
+        truncated = self._step_count >= self._max_episode_duration
         assert self._agent_position is not None
         assert (goal := self._goal) is not None
         return ActionResult(
             observation=torch.tensor(list(self._agent_position) + list(goal)),
             reward=0 if has_win else -1,
             terminated=terminated,
-            truncated=False,
+            truncated=truncated,
         )
 
     @property

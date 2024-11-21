@@ -60,6 +60,7 @@ class TestDynamicActionSpaceReplayBuffer(unittest.TestCase):
             curr_available_actions=current_action_space,
             next_available_actions=next_action_space,
             terminated=False,
+            truncated=False,
             max_number_actions=action_representation_module.max_number_actions,
         )
         batch = replay_buffer.sample(1)

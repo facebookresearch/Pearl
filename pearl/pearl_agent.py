@@ -191,6 +191,7 @@ class PearlAgent(Agent):
                 else action_result.available_action_space
             ),  # next_available_actions
             terminated=action_result.terminated,
+            truncated=action_result.truncated,
             # pyre-fixme[6]: For 8th argument expected `Optional[int]` but got
             #  `Union[None, Tensor, Module]`.
             max_number_actions=(

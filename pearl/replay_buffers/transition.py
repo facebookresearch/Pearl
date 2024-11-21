@@ -28,6 +28,7 @@ class Transition:
     action: torch.Tensor
     reward: torch.Tensor
     terminated: torch.Tensor = torch.tensor(True)  # default True is useful for bandits
+    truncated: torch.Tensor = torch.tensor(True)  # default True is useful for bandits
     next_state: Optional[torch.Tensor] = None
     next_action: Optional[torch.Tensor] = None
     curr_available_actions: Optional[torch.Tensor] = None
@@ -65,6 +66,7 @@ class TransitionBatch:
     action: torch.Tensor
     reward: torch.Tensor
     terminated: torch.Tensor = torch.tensor(True)  # default True is useful for bandits
+    truncated: torch.Tensor = torch.tensor(True)  # default True is useful for bandits
     next_state: Optional[torch.Tensor] = None
     next_action: Optional[torch.Tensor] = None
     curr_available_actions: Optional[torch.Tensor] = None
@@ -133,17 +135,20 @@ def filter_batch_by_bootstrap_mask(
     filtered_action = _filter_tensor(batch.action)
     filtered_reward = _filter_tensor(batch.reward)
     filtered_terminated = _filter_tensor(batch.terminated)
+    filtered_truncated = _filter_tensor(batch.truncated)
 
     assert filtered_state is not None
     assert filtered_action is not None
     assert filtered_reward is not None
     assert filtered_terminated is not None
+    assert filtered_truncated is not None
 
     return TransitionBatch(
         state=filtered_state,
         action=filtered_action,
         reward=filtered_reward,
         terminated=filtered_terminated,
+        truncated=filtered_truncated,
         next_state=_filter_tensor(batch.next_state),
         next_action=_filter_tensor(batch.next_action),
         curr_available_actions=_filter_tensor(batch.curr_available_actions),
