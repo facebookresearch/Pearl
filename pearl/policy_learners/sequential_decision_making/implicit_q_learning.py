@@ -75,8 +75,8 @@ class ImplicitQLearning(ActorCriticBase):
 
     def __init__(
         self,
-        state_dim: int,
         action_space: ActionSpace,
+        state_dim: Optional[int] = None,
         actor_hidden_dims: Optional[List[int]] = None,
         critic_hidden_dims: Optional[List[int]] = None,
         value_critic_hidden_dims: Optional[List[int]] = None,
@@ -140,6 +140,8 @@ class ImplicitQLearning(ActorCriticBase):
         if value_network_instance is not None:
             self._value_network = value_network_instance
         else:
+            assert state_dim is not None
+            assert value_critic_hidden_dims is not None
             self._value_network: ValueNetwork = value_network_type(
                 input_dim=state_dim,
                 hidden_dims=value_critic_hidden_dims,

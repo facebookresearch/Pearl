@@ -26,8 +26,10 @@ class TestPPO(unittest.TestCase):
         including actor and critic
         """
         policy_learner = ProximalPolicyOptimization(
-            16,
-            DiscreteActionSpace(actions=[torch.tensor(i) for i in range(3)]),
+            action_space=DiscreteActionSpace(
+                actions=[torch.tensor(i) for i in range(3)]
+            ),
+            state_dim=16,
             actor_hidden_dims=[64, 64],
             critic_hidden_dims=[64, 64],
             training_rounds=1,

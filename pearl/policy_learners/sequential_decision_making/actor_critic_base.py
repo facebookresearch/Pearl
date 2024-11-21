@@ -64,8 +64,8 @@ class ActorCriticBase(PolicyLearner):
 
     def __init__(
         self,
-        state_dim: int,
         exploration_module: ExplorationModule,
+        state_dim: Optional[int] = None,
         actor_hidden_dims: Optional[List[int]] = None,
         use_critic: bool = True,
         critic_hidden_dims: Optional[List[int]] = None,
@@ -117,6 +117,10 @@ class ActorCriticBase(PolicyLearner):
             self._actor: nn.Module = actor_network_instance
         else:
             assert (
+                state_dim is not None
+            ), f"{self.__class__.__name__} requires parameter state_dim if a parameter \
+            action_network_instance has not been provided."
+            assert (
                 actor_hidden_dims is not None
             ), f"{self.__class__.__name__} requires parameter actor_hidden_dims if a parameter \
             action_network_instance has not been provided."
@@ -161,6 +165,10 @@ class ActorCriticBase(PolicyLearner):
             if critic_network_instance is not None:
                 self._critic: nn.Module = critic_network_instance
             else:
+                assert (
+                    state_dim is not None
+                ), f"{self.__class__.__name__} requires parameter state_dim if a parameter \
+                critic_network_instance has not been provided."
                 assert (
                     critic_hidden_dims is not None
                 ), f"{self.__class__.__name__} requires parameter critic_hidden_dims if a \

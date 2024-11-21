@@ -39,7 +39,6 @@ class DeepQLearning(DeepTDLearning):
 
     def __init__(
         self,
-        state_dim: int,
         action_space: Optional[ActionSpace] = None,
         hidden_dims: Optional[List[int]] = None,
         exploration_module: Optional[ExplorationModule] = None,
@@ -51,6 +50,7 @@ class DeepQLearning(DeepTDLearning):
         soft_update_tau: float = 0.75,  # a value of 1 indicates no soft updates
         is_conservative: bool = False,
         conservative_alpha: Optional[float] = 2.0,
+        state_dim: Optional[int] = None,
         network_type: Type[QValueNetwork] = VanillaQValueNetwork,
         action_representation_module: Optional[ActionRepresentationModule] = None,
         network_instance: Optional[QValueNetwork] = None,

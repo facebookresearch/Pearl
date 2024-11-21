@@ -53,8 +53,8 @@ class SoftActorCritic(ActorCriticBase):
 
     def __init__(
         self,
-        state_dim: int,
         action_space: ActionSpace,
+        state_dim: Optional[int] = None,
         actor_hidden_dims: Optional[List[int]] = None,
         critic_hidden_dims: Optional[List[int]] = None,
         actor_learning_rate: float = 1e-4,

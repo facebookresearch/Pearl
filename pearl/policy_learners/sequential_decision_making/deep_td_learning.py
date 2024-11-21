@@ -51,9 +51,9 @@ class DeepTDLearning(PolicyLearner):
 
     def __init__(
         self,
-        state_dim: int,
         exploration_module: ExplorationModule,
         on_policy: bool,
+        state_dim: Optional[int] = None,
         action_space: Optional[ActionSpace] = None,
         hidden_dims: Optional[List[int]] = None,
         learning_rate: float = 0.001,
@@ -130,6 +130,7 @@ class DeepTDLearning(PolicyLearner):
         self._conservative_alpha = conservative_alpha
 
         def make_specified_network() -> QValueNetwork:
+            assert state_dim is not None
             assert hidden_dims is not None
             if network_type is TwoTowerQValueNetwork:
                 return network_type(

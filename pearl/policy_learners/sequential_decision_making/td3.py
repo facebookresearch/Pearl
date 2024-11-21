@@ -48,8 +48,8 @@ class TD3(DeepDeterministicPolicyGradient):
 
     def __init__(
         self,
-        state_dim: int,
         action_space: ActionSpace,
+        state_dim: Optional[int] = None,
         actor_hidden_dims: Optional[List[int]] = None,
         critic_hidden_dims: Optional[List[int]] = None,
         exploration_module: Optional[ExplorationModule] = None,
@@ -200,9 +200,9 @@ class TD3BC(TD3):
 
     def __init__(
         self,
-        state_dim: int,
         action_space: ActionSpace,
         behavior_policy: torch.nn.Module,
+        state_dim: Optional[int] = None,
         actor_hidden_dims: Optional[List[int]] = None,
         critic_hidden_dims: Optional[List[int]] = None,
         exploration_module: Optional[ExplorationModule] = None,

@@ -34,7 +34,7 @@ class DeepSARSA(DeepTDLearning):
 
     def __init__(
         self,
-        state_dim: int,
+        state_dim: Optional[int] = None,
         action_space: Optional[ActionSpace] = None,
         exploration_module: Optional[ExplorationModule] = None,
         action_representation_module: Optional[ActionRepresentationModule] = None,

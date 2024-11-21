@@ -412,8 +412,8 @@ class TestIntegration(unittest.TestCase):
         num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=ProximalPolicyOptimization(
-                env.observation_space.shape[0],
-                env.action_space,
+                action_space=env.action_space,
+                state_dim=env.observation_space.shape[0],
                 actor_hidden_dims=[64, 64],
                 critic_hidden_dims=[64, 64],
                 training_rounds=20,
