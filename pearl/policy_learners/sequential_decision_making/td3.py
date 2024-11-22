@@ -104,6 +104,8 @@ class TD3(DeepDeterministicPolicyGradient):
         self._critic_update_count += 1
         report = {}
         # delayed actor update
+        # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute
+        #  `zero_grad`.
         self._history_summarization_optimizer.zero_grad()
         if self._critic_update_count % self._actor_update_freq == 0:
             self._actor_optimizer.zero_grad()
@@ -118,6 +120,7 @@ class TD3(DeepDeterministicPolicyGradient):
         critic_loss.backward()
         self._critic_optimizer.step()
         report["critic_loss"] = critic_loss.item()
+        # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute `step`.
         self._history_summarization_optimizer.step()
 
         if self._critic_update_count % self._actor_update_freq == 0:

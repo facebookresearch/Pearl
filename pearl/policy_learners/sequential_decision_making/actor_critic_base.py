@@ -128,11 +128,15 @@ class ActorCriticBase(PolicyLearner):
             # actor network takes state as input and outputs an action vector
             self._actor: nn.Module = actor_network_type(
                 input_dim=(
+                    # pyre-fixme[58]: `+` is not supported for operand types `int`
+                    #  and `Union[Module, Tensor]`.
                     state_dim + self.action_representation_module.representation_dim
                     if issubclass(actor_network_type, DynamicActionActorNetwork)
                     else state_dim
                 ),
                 hidden_dims=actor_hidden_dims,
+                # pyre-fixme[6]: For 3rd argument expected `int` but got `Union[int,
+                #  Module, Tensor]`.
                 output_dim=(
                     1
                     if issubclass(actor_network_type, DynamicActionActorNetwork)
@@ -175,7 +179,11 @@ class ActorCriticBase(PolicyLearner):
                 parameter critic_network_instance has not been provided."
 
                 self._critic: nn.Module = make_critic(
+                    # pyre-fixme[6]: For 1st argument expected `int` but got
+                    #  `Optional[int]`.
                     state_dim=self._state_dim,
+                    # pyre-fixme[6]: For 2nd argument expected `Optional[int]` but
+                    #  got `Union[Module, Tensor]`.
                     action_dim=self.action_representation_module.representation_dim,
                     hidden_dims=critic_hidden_dims,
                     use_twin_critic=use_twin_critic,
@@ -203,6 +211,8 @@ class ActorCriticBase(PolicyLearner):
         """
         The history summarization module uses its own optimizer.
         """
+        # pyre-fixme[16]: `ActorCriticBase` has no attribute
+        #  `_history_summarization_optimizer`.
         self._history_summarization_optimizer: optim.Optimizer = optim.AdamW(
             [
                 {
@@ -302,6 +312,8 @@ class ActorCriticBase(PolicyLearner):
             Dict[str, Any]: A dictionary containing the loss reports from the critic
             and actor updates. These can be useful to track for debugging purposes.
         """
+        # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute
+        #  `zero_grad`.
         self._history_summarization_optimizer.zero_grad()
         actor_loss = self._actor_loss(batch)
         self._actor_optimizer.zero_grad()
@@ -321,6 +333,7 @@ class ActorCriticBase(PolicyLearner):
             critic_loss.backward()
             self._critic_optimizer.step()
             report["critic_loss"] = critic_loss.item()
+        # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute `step`.
         self._history_summarization_optimizer.step()
 
         if self._use_critic_target:
@@ -348,6 +361,8 @@ class ActorCriticBase(PolicyLearner):
                 # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no
                 #  attribute `lambda_constraint`.
                 batch.reward
+                # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no
+                #  attribute `lambda_constraint`.
                 - self.safety_module.lambda_constraint * batch.cost
             )
         batch = super().preprocess_batch(batch)

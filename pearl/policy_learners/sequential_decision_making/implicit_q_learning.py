@@ -157,6 +157,8 @@ class ImplicitQLearning(ActorCriticBase):
         value_loss = self._value_loss(batch)
         critic_loss = self._critic_loss(batch)
         actor_loss = self._actor_loss(batch)
+        # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute
+        #  `zero_grad`.
         self._history_summarization_optimizer.zero_grad()
         self._value_network_optimizer.zero_grad()
         self._actor_optimizer.zero_grad()
@@ -166,6 +168,7 @@ class ImplicitQLearning(ActorCriticBase):
         self._value_network_optimizer.step()
         self._actor_optimizer.step()
         self._critic_optimizer.step()
+        # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute `step`.
         self._history_summarization_optimizer.step()
         # update critic and target Twin networks;
         update_target_networks(
