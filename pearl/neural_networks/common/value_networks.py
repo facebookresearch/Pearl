@@ -35,11 +35,11 @@ class VanillaValueNetwork(ValueNetwork):
     def __init__(
         self,
         input_dim: int,
-        hidden_dims: Optional[List[int]],
+        hidden_dims: list[int] | None,
         output_dim: int = 1,
         **kwargs: Any,
     ) -> None:
-        super(VanillaValueNetwork, self).__init__()
+        super().__init__()
         self._model: nn.Module = mlp_block(
             input_dim=input_dim,
             hidden_dims=hidden_dims,
@@ -82,13 +82,13 @@ class VanillaCNN(ValueNetwork):
         input_width: int,
         input_height: int,
         input_channels_count: int,
-        kernel_sizes: List[int],
-        output_channels_list: List[int],
-        strides: List[int],
-        paddings: List[int],
-        hidden_dims_fully_connected: Optional[
-            List[int]
-        ] = None,  # hidden dims for fully connected layers
+        kernel_sizes: list[int],
+        output_channels_list: list[int],
+        strides: list[int],
+        paddings: list[int],
+        hidden_dims_fully_connected: None | (
+            list[int]
+        ) = None,  # hidden dims for fully connected layers
         use_batch_norm_conv: bool = False,
         use_batch_norm_fully_connected: bool = False,
         output_dim: int = 1,  # dimension of the final output
@@ -100,7 +100,7 @@ class VanillaCNN(ValueNetwork):
             == len(strides)
             == len(paddings)
         )
-        super(VanillaCNN, self).__init__()
+        super().__init__()
 
         self._input_channels = input_channels_count
         self._input_height = input_height
@@ -110,9 +110,9 @@ class VanillaCNN(ValueNetwork):
         self._strides = strides
         self._paddings = paddings
         if hidden_dims_fully_connected is None:
-            self._hidden_dims_fully_connected: List[int] = []
+            self._hidden_dims_fully_connected: list[int] = []
         else:
-            self._hidden_dims_fully_connected: List[int] = hidden_dims_fully_connected
+            self._hidden_dims_fully_connected: list[int] = hidden_dims_fully_connected
 
         self._use_batch_norm_conv = use_batch_norm_conv
         self._use_batch_norm_fully_connected = use_batch_norm_fully_connected

@@ -96,7 +96,7 @@ class SequenceClassificationModel(nn.Module):
         state_dim: int = 128,
         num_layers: int = 2,
     ) -> None:
-        super(SequenceClassificationModel, self).__init__()
+        super().__init__()
         self.lstm = nn.LSTM(
             num_layers=num_layers,
             input_size=observation_dim,
@@ -136,13 +136,13 @@ class SequenceClassificationModel(nn.Module):
 
 class RecEnv(Environment):
     def __init__(
-        self, actions: List[torch.Tensor], model: nn.Module, history_length: int
+        self, actions: list[torch.Tensor], model: nn.Module, history_length: int
     ) -> None:
         self.model: nn.Module = model.to(device)
         self.history_length: int = history_length
         self.t = 0
         self.T = 20
-        self.actions: List[List[torch.Tensor]] = [
+        self.actions: list[list[torch.Tensor]] = [
             [torch.tensor(k) for k in random.sample(actions, 2)] for _ in range(self.T)
         ]
         self.state: torch.Tensor = torch.zeros((self.history_length, 100)).to(device)
@@ -156,7 +156,7 @@ class RecEnv(Environment):
     def observation_space(self) -> Space:
         return BoxSpace(low=torch.zeros((1,)), high=torch.ones((1,)))
 
-    def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
+    def reset(self, seed: int | None = None) -> tuple[Observation, ActionSpace]:
         self.state: torch.Tensor = torch.zeros((self.history_length, 100))
         self.t = 0
         self._action_space: DiscreteActionSpace = DiscreteActionSpace(

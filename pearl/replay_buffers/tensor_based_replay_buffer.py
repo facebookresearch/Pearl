@@ -30,12 +30,10 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         self,
         capacity: int,
     ) -> None:
-        super(TensorBasedReplayBuffer, self).__init__()
+        super().__init__()
         self.capacity = capacity
         # TODO: we want a unifying transition type
-        self.memory: Deque[Union[Transition, TransitionBatch]] = deque(
-            [], maxlen=capacity
-        )
+        self.memory: Deque[Transition | TransitionBatch] = deque([], maxlen=capacity)
         self._device_for_batches: torch.device = get_default_device()
 
     def _store_transition(
@@ -45,12 +43,12 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         reward: Reward,
         terminated: bool,
         truncated: bool,
-        curr_available_actions_tensor_with_padding: Optional[Tensor],
-        curr_unavailable_actions_mask: Optional[Tensor],
-        next_state: Optional[SubjectiveState],
-        next_available_actions_tensor_with_padding: Optional[Tensor],
-        next_unavailable_actions_mask: Optional[Tensor],
-        cost: Optional[float] = None,
+        curr_available_actions_tensor_with_padding: Tensor | None,
+        curr_unavailable_actions_mask: Tensor | None,
+        next_state: SubjectiveState | None,
+        next_available_actions_tensor_with_padding: Tensor | None,
+        next_unavailable_actions_mask: Tensor | None,
+        cost: float | None = None,
     ) -> None:
         """
         Implements the way the replay buffer stores transitions.
@@ -64,11 +62,11 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         reward: Reward,
         terminated: bool,
         truncated: bool,
-        curr_available_actions: Optional[ActionSpace] = None,
-        next_state: Optional[SubjectiveState] = None,
-        next_available_actions: Optional[ActionSpace] = None,
-        max_number_actions: Optional[int] = None,
-        cost: Optional[float] = None,
+        curr_available_actions: ActionSpace | None = None,
+        next_state: SubjectiveState | None = None,
+        next_available_actions: ActionSpace | None = None,
+        max_number_actions: int | None = None,
+        cost: float | None = None,
     ) -> None:
         if self._is_action_continuous:
             (
@@ -140,8 +138,8 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         self._device_for_batches = new_device_for_batches
 
     def _process_single_state(
-        self, state: Optional[SubjectiveState]
-    ) -> Optional[torch.Tensor]:
+        self, state: SubjectiveState | None
+    ) -> torch.Tensor | None:
         if state is None:
             return None
         else:
@@ -164,7 +162,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
     def _process_single_reward(self, reward: Reward) -> torch.Tensor:
         return torch.tensor([reward])
 
-    def _process_single_cost(self, cost: Optional[float]) -> Optional[torch.Tensor]:
+    def _process_single_cost(self, cost: float | None) -> torch.Tensor | None:
         if cost is None:
             return None
         return torch.tensor([cost])
@@ -177,9 +175,9 @@ class TensorBasedReplayBuffer(ReplayBuffer):
 
     @staticmethod
     def create_action_tensor_and_mask(
-        max_number_actions: Optional[int],
-        available_action_space: Optional[ActionSpace],
-    ) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
+        max_number_actions: int | None,
+        available_action_space: ActionSpace | None,
+    ) -> tuple[torch.Tensor | None, torch.Tensor | None]:
         """
         Takes an action space containing only available actions,
         and the maximum number of actions possible.
@@ -288,7 +286,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
 
     def _create_transition_batch(
         self,
-        transitions: List[Transition],
+        transitions: list[Transition],
         is_action_continuous: bool,
     ) -> TransitionBatch:
 

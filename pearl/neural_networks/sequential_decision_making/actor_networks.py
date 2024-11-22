@@ -96,20 +96,20 @@ class ActorNetwork(nn.Module):
     def __init__(
         self,
         input_dim: int,
-        hidden_dims: Optional[List[int]],
+        hidden_dims: list[int] | None,
         output_dim: int,
-        action_space: Optional[ActionSpace] = None,
+        action_space: ActionSpace | None = None,
     ) -> None:
-        super(ActorNetwork, self).__init__()
+        super().__init__()
 
 
 class VanillaActorNetwork(ActorNetwork):
     def __init__(
         self,
         input_dim: int,
-        hidden_dims: Optional[List[int]],
+        hidden_dims: list[int] | None,
         output_dim: int,
-        action_space: Optional[ActionSpace] = None,
+        action_space: ActionSpace | None = None,
     ) -> None:
         """A Vanilla Actor Network is meant to be used with discrete action spaces.
            For an input state (batch of states), it outputs a probability distribution over
@@ -121,9 +121,7 @@ class VanillaActorNetwork(ActorNetwork):
             output_dim: number of actions (action_space.n when used with the DiscreteActionSpace
                         class)
         """
-        super(VanillaActorNetwork, self).__init__(
-            input_dim, hidden_dims, output_dim, action_space
-        )
+        super().__init__(input_dim, hidden_dims, output_dim, action_space)
         self._model: nn.Module = mlp_block(
             input_dim=input_dim,
             hidden_dims=hidden_dims,
@@ -137,8 +135,8 @@ class VanillaActorNetwork(ActorNetwork):
     def get_policy_distribution(
         self,
         state_batch: torch.Tensor,
-        available_actions: Optional[torch.Tensor] = None,
-        unavailable_actions_mask: Optional[torch.Tensor] = None,
+        available_actions: torch.Tensor | None = None,
+        unavailable_actions_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Gets a policy distribution from a discrete actor network.
@@ -157,8 +155,8 @@ class VanillaActorNetwork(ActorNetwork):
         self,
         state_batch: torch.Tensor,
         action_batch: torch.Tensor,
-        available_actions: Optional[torch.Tensor] = None,
-        unavailable_actions_mask: Optional[torch.Tensor] = None,
+        available_actions: torch.Tensor | None = None,
+        unavailable_actions_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Gets probabilities of different actions from a discrete actor network.
@@ -181,9 +179,9 @@ class DynamicActionActorNetwork(VanillaActorNetwork):
     def __init__(
         self,
         input_dim: int,
-        hidden_dims: Optional[List[int]],
+        hidden_dims: list[int] | None,
         output_dim: int = 1,
-        action_space: Optional[ActionSpace] = None,
+        action_space: ActionSpace | None = None,
     ) -> None:
         """A DynamicActionActorNetwork is meant to be used with discrete dynamic action spaces.
            For an input state (batch of states), and a batch of actions, it outputs a probability of
@@ -194,9 +192,7 @@ class DynamicActionActorNetwork(VanillaActorNetwork):
             hidden_dims: list of hidden layer dimensions
             output_dim: expect to be 1
         """
-        super(DynamicActionActorNetwork, self).__init__(
-            input_dim, hidden_dims, output_dim, action_space
-        )
+        super().__init__(input_dim, hidden_dims, output_dim, action_space)
         self._model: nn.Module = mlp_block(
             input_dim=input_dim,
             hidden_dims=hidden_dims,
@@ -210,8 +206,8 @@ class DynamicActionActorNetwork(VanillaActorNetwork):
     def get_policy_distribution(
         self,
         state_batch: torch.Tensor,
-        available_actions: Optional[torch.Tensor] = None,
-        unavailable_actions_mask: Optional[torch.Tensor] = None,
+        available_actions: torch.Tensor | None = None,
+        unavailable_actions_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Gets a policy distribution from a dynamic action space discrete actor network.
@@ -249,15 +245,15 @@ class DynamicActionActorNetwork(VanillaActorNetwork):
             policy_dist.view((batch_size, -1)), dim=-1
         )  # shape (batch_size, max_number_actions)
         if batch_size == 1:
-            policy_dist = policy_dist.view((-1))
+            policy_dist = policy_dist.view(-1)
         return policy_dist  # shape (batch_size, max_number_actions) or (max_number_actions)
 
     def get_action_prob(
         self,
         state_batch: torch.Tensor,
         action_batch: torch.Tensor,
-        available_actions: Optional[torch.Tensor] = None,
-        unavailable_actions_mask: Optional[torch.Tensor] = None,
+        available_actions: torch.Tensor | None = None,
+        unavailable_actions_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Gets probabilities of different actions from a discrete actor network in a dynamic action
@@ -333,13 +329,11 @@ class VanillaContinuousActorNetwork(ActorNetwork):
     def __init__(
         self,
         input_dim: int,
-        hidden_dims: Optional[List[int]],
+        hidden_dims: list[int] | None,
         output_dim: int,
         action_space: ActionSpace,
     ) -> None:
-        super(VanillaContinuousActorNetwork, self).__init__(
-            input_dim, hidden_dims, output_dim, action_space
-        )
+        super().__init__(input_dim, hidden_dims, output_dim, action_space)
         self._model: nn.Module = mlp_block(
             input_dim=input_dim,
             hidden_dims=hidden_dims,
@@ -382,13 +376,11 @@ class GaussianActorNetwork(ActorNetwork):
     def __init__(
         self,
         input_dim: int,
-        hidden_dims: List[int],
+        hidden_dims: list[int],
         output_dim: int,
         action_space: ActionSpace,
     ) -> None:
-        super(GaussianActorNetwork, self).__init__(
-            input_dim, hidden_dims, output_dim, action_space
-        )
+        super().__init__(input_dim, hidden_dims, output_dim, action_space)
         if len(hidden_dims) < 1:
             raise ValueError(
                 "The hidden dims cannot be empty for a gaussian actor network."
@@ -415,7 +407,7 @@ class GaussianActorNetwork(ActorNetwork):
         self._log_std_min = -5
         self._log_std_max = 2
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         x = self._model(x)
         mean = self.fc_mu(x)
         log_std = self.fc_std(x)
@@ -431,7 +423,7 @@ class GaussianActorNetwork(ActorNetwork):
 
     def sample_action(
         self, state_batch: Tensor, get_log_prob: bool = False
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """
         Sample an action from the actor network.
 

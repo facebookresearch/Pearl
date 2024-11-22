@@ -18,7 +18,7 @@ from torch import Tensor
 
 
 def argmax_random_tie_breaks(
-    scores: Tensor, mask: Optional[Tensor] = None
+    scores: Tensor, mask: Tensor | None = None
 ) -> torch.Tensor:
     """
     Given a 2D tensor of scores, return the indices of the max score for each row.
@@ -60,7 +60,7 @@ def argmax_random_tie_breaks(
 
 def get_model_action_index_batch(
     scores: Tensor,
-    mask: Optional[Tensor] = None,
+    mask: Tensor | None = None,
     randomize_ties: bool = False,
 ) -> torch.Tensor:
     """

@@ -7,7 +7,8 @@
 
 # pyre-strict
 
-from typing import Callable, List, Optional, Tuple
+from collections.abc import Callable
+from typing import List, Optional, Tuple
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -47,14 +48,14 @@ class HindsightExperienceReplayBuffer(BasicReplayBuffer):
         capacity: int,
         goal_dim: int,
         reward_fn: Callable[[SubjectiveState, Action], Reward],
-        terminated_fn: Optional[Callable[[SubjectiveState, Action], bool]] = None,
+        terminated_fn: Callable[[SubjectiveState, Action], bool] | None = None,
     ) -> None:
-        super(HindsightExperienceReplayBuffer, self).__init__(capacity=capacity)
+        super().__init__(capacity=capacity)
         self._goal_dim = goal_dim
         self._reward_fn = reward_fn
         self._terminated_fn = terminated_fn
-        self._trajectory: List[
-            Tuple[
+        self._trajectory: list[
+            tuple[
                 SubjectiveState,
                 Action,
                 SubjectiveState,
@@ -62,8 +63,8 @@ class HindsightExperienceReplayBuffer(BasicReplayBuffer):
                 ActionSpace,
                 bool,
                 bool,
-                Optional[int],
-                Optional[float],
+                int | None,
+                float | None,
             ]
         ] = []
 
@@ -74,15 +75,15 @@ class HindsightExperienceReplayBuffer(BasicReplayBuffer):
         reward: Reward,
         terminated: bool,
         truncated: bool,
-        curr_available_actions: Optional[ActionSpace] = None,
-        next_state: Optional[SubjectiveState] = None,
-        next_available_actions: Optional[ActionSpace] = None,
-        max_number_actions: Optional[int] = None,
-        cost: Optional[float] = None,
+        curr_available_actions: ActionSpace | None = None,
+        next_state: SubjectiveState | None = None,
+        next_available_actions: ActionSpace | None = None,
+        max_number_actions: int | None = None,
+        cost: float | None = None,
     ) -> None:
         next_state = assert_is_tensor_like(next_state)
         # assuming state and goal are all list, so we could use + to cat
-        super(HindsightExperienceReplayBuffer, self).push(
+        super().push(
             # input here already have state and goal cat together
             state,
             action,
@@ -137,7 +138,7 @@ class HindsightExperienceReplayBuffer(BasicReplayBuffer):
                 next_state = assert_is_tensor_like(next_state)
                 state[-self._goal_dim :] = additional_goal
                 next_state[-self._goal_dim :] = additional_goal
-                super(HindsightExperienceReplayBuffer, self).push(
+                super().push(
                     state,
                     action,
                     self._reward_fn(state, action),

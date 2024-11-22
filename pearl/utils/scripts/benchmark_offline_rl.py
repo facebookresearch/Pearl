@@ -45,13 +45,13 @@ from pearl.utils.instantiations.environments.gym_environment import GymEnvironme
 def get_random_agent_returns(
     agent: Agent,
     env: Environment,
-    save_path: Optional[str],
-    file_path: Optional[str] = None,
+    save_path: str | None,
+    file_path: str | None = None,
     learn: bool = False,
     learn_after_episode: bool = False,
     evaluation_episodes: int = 500,
-    seed: Optional[int] = None,
-) -> List[float]:
+    seed: int | None = None,
+) -> list[float]:
     """
     This function returns a list of episode returns of a Pearl Agent interacting with the input
     environment using a randomly instantiated policy learner. This is needed to compute
@@ -117,14 +117,14 @@ def evaluate_offline_rl(
     method_name: str,
     training_epochs: int = 1000,
     evaluation_episodes: int = 500,
-    url: Optional[str] = None,
-    data_path: Optional[str] = None,
-    data_collection_agent: Optional[PearlAgent] = None,
-    file_name: Optional[str] = None,
-    data_save_path: Optional[str] = "offline_rl_data/",
+    url: str | None = None,
+    data_path: str | None = None,
+    data_collection_agent: PearlAgent | None = None,
+    file_name: str | None = None,
+    data_save_path: str | None = "offline_rl_data/",
     data_size: int = 1000000,
-    seed: Optional[int] = None,
-) -> List[float]:
+    seed: int | None = None,
+) -> list[float]:
     """
     This function trains and evaluates an offline RL agent on the given environment. Training data
     can be provided through a url or by specifying a local file path. If neither are provided,

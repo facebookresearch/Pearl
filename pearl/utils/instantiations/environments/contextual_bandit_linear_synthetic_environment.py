@@ -65,7 +65,7 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         assert isinstance(action_space, DiscreteActionSpace)
         self._action_space: DiscreteActionSpace = action_space
         self._observation_space: Space = BoxSpace(
-            low=torch.zeros((observation_dim)), high=torch.ones((observation_dim))
+            low=torch.zeros(observation_dim), high=torch.ones(observation_dim)
         )
         self.observation_dim = observation_dim
         self._arm_feature_vector_dim = arm_feature_vector_dim
@@ -74,14 +74,14 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
 
         self._features_of_all_arms: torch.Tensor = self._generate_features_of_all_arms()
         self._linear_mapping: torch.nn.Module = self._make_initial_linear_mapping()
-        self._observation: Optional[torch.Tensor] = None
+        self._observation: torch.Tensor | None = None
 
     @property
     def action_space(self) -> ActionSpace:
         return self._action_space
 
     @property
-    def observation_space(self) -> Optional[Space]:
+    def observation_space(self) -> Space | None:
         return self._observation_space
 
     @property
@@ -116,7 +116,7 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
             out_features=1,
         )
 
-    def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
+    def reset(self, seed: int | None = None) -> tuple[Observation, ActionSpace]:
         """
         Provides the observation and action space to the agent.
         """

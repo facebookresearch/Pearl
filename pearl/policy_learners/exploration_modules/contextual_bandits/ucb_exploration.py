@@ -27,7 +27,7 @@ class UCBExploration(ScoreExplorationBase):
     """
 
     def __init__(self, alpha: float) -> None:
-        super(UCBExploration, self).__init__()
+        super().__init__()
         self._alpha = alpha
 
     def sigma(
@@ -55,8 +55,8 @@ class UCBExploration(ScoreExplorationBase):
         subjective_state: SubjectiveState,
         values: torch.Tensor,
         action_space: ActionSpace,
-        representation: Optional[torch.nn.Module] = None,
-        exploit_action: Optional[Action] = None,
+        representation: torch.nn.Module | None = None,
+        exploit_action: Action | None = None,
     ) -> torch.Tensor:
         """
         Args:
@@ -106,7 +106,7 @@ class DisjointUCBExploration(UCBExploration):
         sigmas = []
         for i, arm_model in enumerate(representation):
             sigmas.append(
-                super(DisjointUCBExploration, self).sigma(
+                super().sigma(
                     subjective_state=subjective_state[:, i, :],
                     representation=arm_model,
                 )
@@ -121,7 +121,7 @@ class VanillaUCBExploration(UCBExploration):
     """
 
     def __init__(self) -> None:
-        super(VanillaUCBExploration, self).__init__(alpha=1)
+        super().__init__(alpha=1)
         # pyre-fixme[4]: Attribute must be annotated.
         self.action_execution_count = {}
         # pyre-fixme[4]: Attribute must be annotated.
@@ -133,10 +133,10 @@ class VanillaUCBExploration(UCBExploration):
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
-        representation: Optional[torch.nn.Module] = None,
+        representation: torch.nn.Module | None = None,
     ) -> torch.Tensor:
         assert isinstance(action_space, DiscreteActionSpace)
-        exploration_bonus = torch.zeros((action_space.n))  # (action_space_size)
+        exploration_bonus = torch.zeros(action_space.n)  # (action_space_size)
         for action in action_space.actions:
             if action not in self.action_execution_count:
                 self.action_execution_count[action] = 1
@@ -155,7 +155,7 @@ class VanillaUCBExploration(UCBExploration):
         values: torch.Tensor,
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,
-        exploit_action: Optional[Action] = None,
+        exploit_action: Action | None = None,
     ) -> Action:
         selected_action = super().act(
             subjective_state,

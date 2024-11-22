@@ -65,19 +65,19 @@ class ActorCriticBase(PolicyLearner):
     def __init__(
         self,
         exploration_module: ExplorationModule,
-        state_dim: Optional[int] = None,
-        actor_hidden_dims: Optional[List[int]] = None,
+        state_dim: int | None = None,
+        actor_hidden_dims: list[int] | None = None,
         use_critic: bool = True,
-        critic_hidden_dims: Optional[List[int]] = None,
-        action_space: Optional[ActionSpace] = None,
+        critic_hidden_dims: list[int] | None = None,
+        action_space: ActionSpace | None = None,
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,
         # used only for learnable history summarization module
         history_summarization_learning_rate: float = 1e-3,
-        actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
-        critic_network_type: Union[
-            Type[ValueNetwork], Type[QValueNetwork]
-        ] = VanillaQValueNetwork,
+        actor_network_type: type[ActorNetwork] = VanillaActorNetwork,
+        critic_network_type: (
+            type[ValueNetwork] | type[QValueNetwork]
+        ) = VanillaQValueNetwork,
         use_actor_target: bool = False,
         use_critic_target: bool = False,
         actor_soft_update_tau: float = 0.005,
@@ -88,13 +88,13 @@ class ActorCriticBase(PolicyLearner):
         batch_size: int = 256,
         is_action_continuous: bool = False,
         on_policy: bool = False,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
-        actor_network_instance: Optional[ActorNetwork] = None,
-        critic_network_instance: Optional[
-            Union[ValueNetwork, QValueNetwork, nn.Module]
-        ] = None,
+        action_representation_module: ActionRepresentationModule | None = None,
+        actor_network_instance: ActorNetwork | None = None,
+        critic_network_instance: None | (
+            ValueNetwork | QValueNetwork | nn.Module
+        ) = None,
     ) -> None:
-        super(ActorCriticBase, self).__init__(
+        super().__init__(
             on_policy=on_policy,
             is_action_continuous=is_action_continuous,
             training_rounds=training_rounds,
@@ -290,7 +290,7 @@ class ActorCriticBase(PolicyLearner):
         # pyre-fixme[16]: `ActorCriticBase` has no attribute `_action_space`.
         self._action_space = action_space
 
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         """
         Trains the actor and critic networks using a batch of transitions.
         This method performs the following steps:

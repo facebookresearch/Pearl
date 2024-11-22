@@ -27,7 +27,7 @@ class StackingHistorySummarizationModule(HistorySummarizationModule):
     def __init__(
         self, observation_dim: int, action_dim: int, history_length: int = 8
     ) -> None:
-        super(StackingHistorySummarizationModule, self).__init__()
+        super().__init__()
         self.history_length = history_length
         self.observation_dim = observation_dim
         self.action_dim = action_dim
@@ -37,7 +37,7 @@ class StackingHistorySummarizationModule(HistorySummarizationModule):
         )
 
     def summarize_history(
-        self, observation: Observation, action: Optional[Action]
+        self, observation: Observation, action: Action | None
     ) -> torch.Tensor:
         if action is None:
             action = self.default_action
@@ -57,10 +57,10 @@ class StackingHistorySummarizationModule(HistorySummarizationModule):
             ],
             dim=0,
         )
-        return self.history.view((-1))
+        return self.history.view(-1)
 
     def get_history(self) -> torch.Tensor:
-        return self.history.view((-1))
+        return self.history.view(-1)
 
     def forward(self, x: History) -> torch.Tensor:
         x = assert_is_tensor_like(x)

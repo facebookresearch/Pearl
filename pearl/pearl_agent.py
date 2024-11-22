@@ -56,9 +56,9 @@ class PearlAgent(Agent):
     def __init__(
         self,
         policy_learner: PolicyLearner,
-        safety_module: Optional[SafetyModule] = None,
-        replay_buffer: Optional[ReplayBuffer] = None,
-        history_summarization_module: Optional[HistorySummarizationModule] = None,
+        safety_module: SafetyModule | None = None,
+        replay_buffer: ReplayBuffer | None = None,
+        history_summarization_module: HistorySummarizationModule | None = None,
         device_id: int = -1,
     ) -> None:
         """
@@ -121,9 +121,9 @@ class PearlAgent(Agent):
         pearl_agent_compatibility_check(
             self.policy_learner, self.safety_module, self.replay_buffer
         )
-        self._subjective_state: Optional[SubjectiveState] = None
-        self._latest_action: Optional[Action] = None
-        self._action_space: Optional[ActionSpace] = None
+        self._subjective_state: SubjectiveState | None = None
+        self._latest_action: Action | None = None
+        self._action_space: ActionSpace | None = None
         self.policy_learner.to(self.device)
         self.safety_module.to(self.device)
         self.history_summarization_module.to(self.device)
@@ -209,7 +209,7 @@ class PearlAgent(Agent):
         )
         self._subjective_state = new_subjective_state
 
-    def learn(self) -> Dict[str, Any]:
+    def learn(self) -> dict[str, Any]:
         report = self.policy_learner.learn(self.replay_buffer)
         self.safety_module.learn(self.replay_buffer, self.policy_learner)
 
@@ -218,7 +218,7 @@ class PearlAgent(Agent):
 
         return report
 
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, typing.Any]:
+    def learn_batch(self, batch: TransitionBatch) -> dict[str, typing.Any]:
         """
         This API is often used in offline learning
         where users pass in a batch of data to train directly
@@ -241,7 +241,7 @@ class PearlAgent(Agent):
 
     def _update_subjective_state(
         self, observation: Observation
-    ) -> Optional[SubjectiveState]:
+    ) -> SubjectiveState | None:
         if observation is None:
             return None
 

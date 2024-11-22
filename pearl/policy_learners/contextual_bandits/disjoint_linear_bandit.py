@@ -49,7 +49,7 @@ class DisjointLinearBandit(ContextualBanditBase):
         batch_size: int = 128,
         state_features_only: bool = False,
     ) -> None:
-        super(DisjointLinearBandit, self).__init__(
+        super().__init__(
             feature_dim=feature_dim,
             training_rounds=training_rounds,
             batch_size=batch_size,
@@ -58,7 +58,7 @@ class DisjointLinearBandit(ContextualBanditBase):
         # Currently our disjoint LinUCB usecase only use LinearRegression
 
         # Keep list attribute since ensemble_forward requires List[nn.Module]
-        self._linear_regressions_list: List[nn.Module] = [
+        self._linear_regressions_list: list[nn.Module] = [
             LinearRegression(feature_dim=feature_dim, l2_reg_lambda=l2_reg_lambda)
             for _ in range(action_space.n)
         ]
@@ -67,7 +67,7 @@ class DisjointLinearBandit(ContextualBanditBase):
         self._discrete_action_space = action_space
         self._state_features_only = state_features_only
 
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         """
         Assumption of input is that action in
         batch is action idx instead of action value

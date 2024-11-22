@@ -7,7 +7,8 @@
 
 # pyre-strict
 
-from typing import Any, Dict, Iterable, Tuple
+from collections.abc import Iterable
+from typing import Any, Dict, Tuple
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -55,7 +56,7 @@ class TabularQLearning(PolicyLearner):
             debug (bool, optional): whether to print debug information to standard output.
             Defaults to False.
         """
-        super(TabularQLearning, self).__init__(
+        super().__init__(
             exploration_module=EGreedyExploration(exploration_rate),
             on_policy=False,
             is_action_continuous=False,
@@ -63,7 +64,7 @@ class TabularQLearning(PolicyLearner):
         )
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
-        self.q_values: Dict[Tuple[SubjectiveState, int], Value] = {}
+        self.q_values: dict[tuple[SubjectiveState, int], Value] = {}
         self.debug: bool = debug
 
     def reset(self, action_space: ActionSpace) -> None:
@@ -120,7 +121,7 @@ class TabularQLearning(PolicyLearner):
     def learn(
         self,
         replay_buffer: ReplayBuffer,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
 
         # We know the sampling result from SingleTransitionReplayBuffer
         # is a list with a single tuple.
@@ -184,7 +185,7 @@ class TabularQLearning(PolicyLearner):
             "truncated": truncated,
         }
 
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         raise Exception("tabular_q_learning doesnt need learn_batch")
 
     def print_debug_information(

@@ -38,13 +38,13 @@ class RewardIsEqualToTenTimesActionMultiArmBanditEnvironment(
         return self._action_space
 
     @property
-    def observation_space(self) -> Optional[Space]:
+    def observation_space(self) -> Space | None:
         # For multi-arm bandit environments (where there are no 'observations'), we set the
         # observation space to be a DiscreteSpace with a single element, taken to be an empty
         # tensor.
         return DiscreteSpace([torch.tensor([])])
 
-    def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
+    def reset(self, seed: int | None = None) -> tuple[Observation, ActionSpace]:
         # Function returning the context and the available action space
         # Here, we use no context (None), but we could return varied implementations.
         return None, self.action_space

@@ -73,7 +73,7 @@ def run(experiments) -> None:
         p.join()
 
 
-def evaluate(experiment, all_processes: List[mp.Process]) -> None:
+def evaluate(experiment, all_processes: list[mp.Process]) -> None:
     """Running multiple methods and multiple runs in the given gym environment."""
     env_name = experiment["env_name"]
     num_runs = experiment["num_runs"]

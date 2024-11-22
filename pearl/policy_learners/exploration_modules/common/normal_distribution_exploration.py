@@ -34,18 +34,18 @@ class NormalDistributionExploration(ExplorationModule):
         mean: float = 0.0,
         std_dev: float = 1.0,
     ) -> None:
-        super(NormalDistributionExploration, self).__init__()
+        super().__init__()
         self._mean = mean
         self._std_dev = std_dev
 
     def act(
         self,
         action_space: ActionSpace,
-        subjective_state: Optional[SubjectiveState] = None,
-        values: Optional[torch.Tensor] = None,
-        exploit_action: Optional[Action] = None,
-        action_availability_mask: Optional[torch.Tensor] = None,
-        representation: Optional[torch.nn.Module] = None,
+        subjective_state: SubjectiveState | None = None,
+        values: torch.Tensor | None = None,
+        exploit_action: Action | None = None,
+        action_availability_mask: torch.Tensor | None = None,
+        representation: torch.nn.Module | None = None,
     ) -> Action:
         assert isinstance(action_space, BoxActionSpace)
         assert exploit_action is not None

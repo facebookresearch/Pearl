@@ -46,7 +46,7 @@ class SquareCBExploration(ScoreExplorationBase):
         reward_ub: float = 1.0,
         clamp_values: bool = False,
     ) -> None:
-        super(SquareCBExploration, self).__init__()
+        super().__init__()
         self._gamma = gamma
         self.reward_lb = reward_lb
         self.reward_ub = reward_ub
@@ -60,9 +60,9 @@ class SquareCBExploration(ScoreExplorationBase):
         subjective_state: SubjectiveState,
         action_space: DiscreteActionSpace,
         values: torch.Tensor,
-        representation: Optional[torch.nn.Module] = None,
-        exploit_action: Optional[Action] = None,
-        action_availability_mask: Optional[torch.Tensor] = None,
+        representation: torch.nn.Module | None = None,
+        exploit_action: Action | None = None,
+        action_availability_mask: torch.Tensor | None = None,
     ) -> Action:
         """
         Args:
@@ -106,7 +106,7 @@ class SquareCBExploration(ScoreExplorationBase):
         self,
         empirical_gaps: torch.Tensor,
         max_val: float,
-        action_num: Union[float, int],
+        action_num: float | int,
     ) -> torch.Tensor:
         """
         Return unnormalized probabilities
@@ -120,8 +120,8 @@ class SquareCBExploration(ScoreExplorationBase):
         subjective_state: SubjectiveState,
         action_space: DiscreteActionSpace,
         values: torch.Tensor,
-        exploit_action: Optional[Action] = None,
-        representation: Optional[torch.nn.Module] = None,
+        exploit_action: Action | None = None,
+        representation: torch.nn.Module | None = None,
     ) -> Action:
         return values.view(-1, action_space.n)
 
@@ -153,7 +153,7 @@ class FastCBExploration(SquareCBExploration):
         reward_lb: float = 0.0,
         reward_ub: float = 1.0,
     ) -> None:
-        super(FastCBExploration, self).__init__(
+        super().__init__(
             gamma=gamma,
             reward_lb=reward_lb,
             reward_ub=reward_ub,
@@ -164,7 +164,7 @@ class FastCBExploration(SquareCBExploration):
         self,
         empirical_gaps: torch.Tensor,
         max_val: float,
-        action_num: Union[float, int],
+        action_num: float | int,
     ) -> torch.Tensor:
         """
         Return unnormalized probabilities

@@ -16,7 +16,7 @@ class GymAvgTorqueWrapper(gym.Wrapper):
     r"""Sparse Reward wrapper for the Pendulum environment."""
 
     def __init__(self, env):
-        super(GymAvgTorqueWrapper, self).__init__(env)
+        super().__init__(env)
 
     def step(self, action):
         obs, reward, terminated, truncated, info = self.env.step(action)

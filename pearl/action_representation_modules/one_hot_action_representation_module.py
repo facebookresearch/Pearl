@@ -21,7 +21,7 @@ class OneHotActionTensorRepresentationModule(ActionRepresentationModule):
     """
 
     def __init__(self, max_number_actions: int) -> None:
-        super(OneHotActionTensorRepresentationModule, self).__init__()
+        super().__init__()
         self._max_number_actions = max_number_actions
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

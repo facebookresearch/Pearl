@@ -52,7 +52,7 @@ def online_evaluation(
     agent: PearlAgent,
     num_steps: int = 5000,
     training_mode: bool = True,
-) -> List[float]:
+) -> list[float]:
     regrets = []
     for i in range(num_steps):
         observation, action_space = env.reset()
@@ -111,10 +111,10 @@ def run_experiments_offline(
     env: SLCBEnvironment,
     T: int = 50000,
     training_rounds: int = 100,
-    hidden_dims: Optional[List[int]] = None,
+    hidden_dims: list[int] | None = None,
     num_eval_steps: int = 100,
-    action_representation_module: Optional[ActionRepresentationModule] = None,
-) -> List[float]:
+    action_representation_module: ActionRepresentationModule | None = None,
+) -> list[float]:
     """
     Runs offline evaluation by training a `NeuralBandit` on the data collected
     by taking uniform actions.
@@ -159,7 +159,7 @@ def run_experiments_online(
     policy_learner: PolicyLearner,
     T: int,
     replay_buffer_size: int = 100,
-) -> List[float]:
+) -> list[float]:
     """
     Runs online evaluation by training a policy learner on the
     data collected by following the attached `exploration_module`.
@@ -179,9 +179,9 @@ def run_experiments(
     env: SLCBEnvironment,
     T: int,
     num_of_experiments: int,
-    policy_learner_dict: Dict[str, Any],
-    exploration_module_dict: Dict[str, Any],
-    run_config: Dict[str, Any],
+    policy_learner_dict: dict[str, Any],
+    exploration_module_dict: dict[str, Any],
+    run_config: dict[str, Any],
     save_results_path: str,
     dataset_name: str,
     run_offline: bool = False,
@@ -261,9 +261,9 @@ def run_experiments(
 
 
 def run_cb_benchmarks(
-    cb_algorithms_config: Dict[str, Any],
-    test_environments_config: Dict[str, Any],
-    run_config: Dict[str, Any],
+    cb_algorithms_config: dict[str, Any],
+    test_environments_config: dict[str, Any],
+    run_config: dict[str, Any],
 ) -> None:
     """
     Run Contextual Bandit algorithms on environments.
@@ -309,7 +309,7 @@ def run_cb_benchmarks(
 def main() -> None:
 
     # load CB algorithm
-    cb_algorithms_config: Dict[str, Any] = {
+    cb_algorithms_config: dict[str, Any] = {
         "NeuralSquareCB": return_neural_squarecb_config,
         "NeuralLinUCB": return_neural_lin_ucb_config,
         "NeuralLinTS": return_neural_lin_ts_config,
@@ -317,7 +317,7 @@ def main() -> None:
     }
 
     # load UCI dataset
-    test_environments_config: Dict[str, Any] = {
+    test_environments_config: dict[str, Any] = {
         "pendigits": pendigits_uci_dict,
         "yeast": yeast_uci_dict,
         "letter": letter_uci_dict,

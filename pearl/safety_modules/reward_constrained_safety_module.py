@@ -45,7 +45,7 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
         constraint_value: float,
         state_dim: int,
         action_space: ActionSpace,
-        critic_hidden_dims: List[int],
+        critic_hidden_dims: list[int],
         lambda_constraint_ub_value: float = 20.0,
         lambda_constraint_init_value: float = 0.0,
         cost_discount_factor: float = 0.5,
@@ -54,9 +54,9 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
         critic_soft_update_tau: float = 0.005,
         batch_size: int = 256,
         use_twin_critic: bool = True,
-        critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
+        critic_network_type: type[QValueNetwork] = VanillaQValueNetwork,
     ) -> None:
-        super(RCSafetyModuleCostCriticContinuousAction, self).__init__()
+        super().__init__()
 
         # initialize parameters of lambda constraint
         self.constraint_value = constraint_value
@@ -157,7 +157,7 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
 
     def cost_critic_learn_batch(
         self, batch: TransitionBatch, policy_learner: PolicyLearner
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
 
         with torch.no_grad():
             # sample next_action from actor's target network; shape (batch_size, action_dim)

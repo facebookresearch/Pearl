@@ -49,14 +49,14 @@ class TD3(DeepDeterministicPolicyGradient):
     def __init__(
         self,
         action_space: ActionSpace,
-        state_dim: Optional[int] = None,
-        actor_hidden_dims: Optional[List[int]] = None,
-        critic_hidden_dims: Optional[List[int]] = None,
-        exploration_module: Optional[ExplorationModule] = None,
+        state_dim: int | None = None,
+        actor_hidden_dims: list[int] | None = None,
+        critic_hidden_dims: list[int] | None = None,
+        exploration_module: ExplorationModule | None = None,
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,
-        actor_network_type: Type[ActorNetwork] = VanillaContinuousActorNetwork,
-        critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
+        actor_network_type: type[ActorNetwork] = VanillaContinuousActorNetwork,
+        critic_network_type: type[QValueNetwork] = VanillaQValueNetwork,
         actor_soft_update_tau: float = 0.005,
         critic_soft_update_tau: float = 0.005,
         discount_factor: float = 0.99,
@@ -65,12 +65,12 @@ class TD3(DeepDeterministicPolicyGradient):
         actor_update_freq: int = 2,
         actor_update_noise: float = 0.2,
         actor_update_noise_clip: float = 0.5,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
-        actor_network_instance: Optional[ActorNetwork] = None,
-        critic_network_instance: Optional[Union[QValueNetwork, nn.Module]] = None,
+        action_representation_module: ActionRepresentationModule | None = None,
+        actor_network_instance: ActorNetwork | None = None,
+        critic_network_instance: QValueNetwork | nn.Module | None = None,
     ) -> None:
         assert isinstance(action_space, BoxActionSpace)
-        super(TD3, self).__init__(
+        super().__init__(
             state_dim=state_dim,
             action_space=action_space,
             exploration_module=exploration_module,
@@ -96,7 +96,7 @@ class TD3(DeepDeterministicPolicyGradient):
         self._critic_update_count = 0
         self._last_actor_loss: float = 0.0
 
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         # The actor and the critic updates are arranged in the following way
         # for the same reason as in the comment "If the history summarization module ..."
         # in the learn_batch function in actor_critic_base.py.
@@ -205,14 +205,14 @@ class TD3BC(TD3):
         self,
         action_space: ActionSpace,
         behavior_policy: torch.nn.Module,
-        state_dim: Optional[int] = None,
-        actor_hidden_dims: Optional[List[int]] = None,
-        critic_hidden_dims: Optional[List[int]] = None,
-        exploration_module: Optional[ExplorationModule] = None,
+        state_dim: int | None = None,
+        actor_hidden_dims: list[int] | None = None,
+        critic_hidden_dims: list[int] | None = None,
+        exploration_module: ExplorationModule | None = None,
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,
-        actor_network_type: Type[ActorNetwork] = VanillaContinuousActorNetwork,
-        critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
+        actor_network_type: type[ActorNetwork] = VanillaContinuousActorNetwork,
+        critic_network_type: type[QValueNetwork] = VanillaQValueNetwork,
         actor_soft_update_tau: float = 0.005,
         critic_soft_update_tau: float = 0.005,
         discount_factor: float = 0.99,
@@ -221,12 +221,12 @@ class TD3BC(TD3):
         actor_update_freq: int = 2,
         actor_update_noise: float = 0.2,
         actor_update_noise_clip: float = 0.5,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
-        actor_network_instance: Optional[ActorNetwork] = None,
-        critic_network_instance: Optional[Union[QValueNetwork, nn.Module]] = None,
+        action_representation_module: ActionRepresentationModule | None = None,
+        actor_network_instance: ActorNetwork | None = None,
+        critic_network_instance: QValueNetwork | nn.Module | None = None,
         alpha_bc: float = 2.5,
     ) -> None:
-        super(TD3BC, self).__init__(
+        super().__init__(
             state_dim=state_dim,
             action_space=action_space,
             actor_hidden_dims=actor_hidden_dims,

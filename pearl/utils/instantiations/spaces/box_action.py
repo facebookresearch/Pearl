@@ -41,9 +41,9 @@ class BoxActionSpace(BoxSpace, ActionSpace):
 
     def __init__(
         self,
-        low: Union[float, Tensor],
-        high: Union[float, Tensor],
-        seed: Optional[Union[int, np.random.Generator]] = None,
+        low: float | Tensor,
+        high: float | Tensor,
+        seed: int | np.random.Generator | None = None,
     ) -> None:
         """Contructs a `BoxActionSpace`.
 
@@ -67,7 +67,7 @@ class BoxActionSpace(BoxSpace, ActionSpace):
             if isinstance(high, Tensor)
             else np.array([high])
         )
-        super(BoxActionSpace, self).__init__(low=low, high=high, seed=seed)
+        super().__init__(low=low, high=high, seed=seed)
 
     @property
     def action_dim(self) -> int:

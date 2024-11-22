@@ -68,9 +68,9 @@ class NeuralLinearBandit(ContextualBanditBase):
     def __init__(
         self,
         feature_dim: int,
-        hidden_dims: List[int],  # last one is the input dim for linear regression
-        exploration_module: Optional[ExplorationModule] = None,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
+        hidden_dims: list[int],  # last one is the input dim for linear regression
+        exploration_module: ExplorationModule | None = None,
+        action_representation_module: ActionRepresentationModule | None = None,
         training_rounds: int = 100,
         batch_size: int = 128,
         learning_rate: float = 0.0003,
@@ -84,7 +84,7 @@ class NeuralLinearBandit(ContextualBanditBase):
         use_batch_norm: bool = False,
         use_layer_norm: bool = False,
         hidden_activation: str = "relu",
-        last_activation: Optional[str] = None,
+        last_activation: str | None = None,
         dropout_ratio: float = 0.0,
         use_skip_connections: bool = False,
         nn_e2e: bool = True,
@@ -93,7 +93,7 @@ class NeuralLinearBandit(ContextualBanditBase):
         assert (
             len(hidden_dims) >= 1
         ), "hidden_dims should have at least one value to specify feature dim for linear regression"
-        super(NeuralLinearBandit, self).__init__(
+        super().__init__(
             feature_dim=feature_dim,
             training_rounds=training_rounds,
             batch_size=batch_size,
@@ -153,7 +153,7 @@ class NeuralLinearBandit(ContextualBanditBase):
         self._optimizer.add_param_group({"params": value.parameters()})
         self._history_summarization_module = value
 
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
 
         # get scores for logging purpose
         ucb_scores = self.get_scores(batch.state).mean()
@@ -230,7 +230,7 @@ class NeuralLinearBandit(ContextualBanditBase):
         self,
         subjective_state: SubjectiveState,
         available_action_space: ActionSpace,
-        action_availability_mask: Optional[torch.Tensor] = None,
+        action_availability_mask: torch.Tensor | None = None,
         exploit: bool = False,
     ) -> Action:
         assert isinstance(available_action_space, DiscreteActionSpace)

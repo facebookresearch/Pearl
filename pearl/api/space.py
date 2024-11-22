@@ -22,7 +22,7 @@ class Space(ABC):
     """An abstract base class for action and observation spaces in Pearl."""
 
     @abstractmethod
-    def sample(self, mask: Optional[Tensor] = None) -> Action:
+    def sample(self, mask: Tensor | None = None) -> Action:
         """Samples an element from this space."""
         pass
 

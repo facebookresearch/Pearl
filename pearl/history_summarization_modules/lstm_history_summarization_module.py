@@ -34,7 +34,7 @@ class LSTMHistorySummarizationModule(HistorySummarizationModule):
         state_dim: int = 128,
         num_layers: int = 2,
     ) -> None:
-        super(LSTMHistorySummarizationModule, self).__init__()
+        super().__init__()
         self.num_layers = num_layers
         self.hidden_dim = hidden_dim
         self.history_length = history_length
@@ -53,7 +53,7 @@ class LSTMHistorySummarizationModule(HistorySummarizationModule):
         )
 
     def summarize_history(
-        self, observation: Observation, action: Optional[Action]
+        self, observation: Observation, action: Action | None
     ) -> torch.Tensor:
         assert isinstance(observation, torch.Tensor)
         observation = (

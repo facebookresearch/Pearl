@@ -41,12 +41,12 @@ class ContextualBanditBase(PolicyLearner):
     def __init__(
         self,
         feature_dim: int,
-        exploration_module: Optional[ExplorationModule] = None,
+        exploration_module: ExplorationModule | None = None,
         training_rounds: int = 100,
         batch_size: int = 128,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
+        action_representation_module: ActionRepresentationModule | None = None,
     ) -> None:
-        super(ContextualBanditBase, self).__init__(
+        super().__init__(
             training_rounds=training_rounds,
             batch_size=batch_size,
             exploration_module=exploration_module,
@@ -61,7 +61,7 @@ class ContextualBanditBase(PolicyLearner):
         return self._feature_dim
 
     @abstractmethod
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         pass
 
     @abstractmethod
@@ -69,7 +69,7 @@ class ContextualBanditBase(PolicyLearner):
         self,
         subjective_state: SubjectiveState,
         available_action_space: ActionSpace,
-        action_availability_mask: Optional[torch.Tensor] = None,
+        action_availability_mask: torch.Tensor | None = None,
         exploit: bool = False,
     ) -> Action:
         pass

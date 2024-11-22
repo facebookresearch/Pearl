@@ -7,7 +7,7 @@ from dataclasses import fields, is_dataclass
 from typing import List, Type
 
 
-def get_subdataclass_specific_attributes(a_dataclass: Type[object]) -> List[str]:
+def get_subdataclass_specific_attributes(a_dataclass: type[object]) -> list[str]:
     """
     Assumes argument is a dataclass with a single superclass which is also a dataclass.
     Returns a list of attribute names that are specific to the subclass

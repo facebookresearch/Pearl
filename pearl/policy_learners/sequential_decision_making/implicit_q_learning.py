@@ -76,14 +76,14 @@ class ImplicitQLearning(ActorCriticBase):
     def __init__(
         self,
         action_space: ActionSpace,
-        state_dim: Optional[int] = None,
-        actor_hidden_dims: Optional[List[int]] = None,
-        critic_hidden_dims: Optional[List[int]] = None,
-        value_critic_hidden_dims: Optional[List[int]] = None,
-        exploration_module: Optional[ExplorationModule] = None,
-        actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
-        critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
-        value_network_type: Type[ValueNetwork] = VanillaValueNetwork,
+        state_dim: int | None = None,
+        actor_hidden_dims: list[int] | None = None,
+        critic_hidden_dims: list[int] | None = None,
+        value_critic_hidden_dims: list[int] | None = None,
+        exploration_module: ExplorationModule | None = None,
+        actor_network_type: type[ActorNetwork] = VanillaActorNetwork,
+        critic_network_type: type[QValueNetwork] = VanillaQValueNetwork,
+        value_network_type: type[ValueNetwork] = VanillaValueNetwork,
         value_critic_learning_rate: float = 1e-3,
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,
@@ -95,12 +95,12 @@ class ImplicitQLearning(ActorCriticBase):
         expectile: float = 0.5,
         temperature_advantage_weighted_regression: float = 0.5,
         advantage_clamp: float = 100.0,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
-        actor_network_instance: Optional[ActorNetwork] = None,
-        critic_network_instance: Optional[QValueNetwork] = None,
-        value_network_instance: Optional[ValueNetwork] = None,
+        action_representation_module: ActionRepresentationModule | None = None,
+        actor_network_instance: ActorNetwork | None = None,
+        critic_network_instance: QValueNetwork | None = None,
+        value_network_instance: ValueNetwork | None = None,
     ) -> None:
-        super(ImplicitQLearning, self).__init__(
+        super().__init__(
             state_dim=state_dim,
             action_space=action_space,
             actor_hidden_dims=actor_hidden_dims,
@@ -153,7 +153,7 @@ class ImplicitQLearning(ActorCriticBase):
             amsgrad=True,
         )
 
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         value_loss = self._value_loss(batch)
         critic_loss = self._critic_loss(batch)
         actor_loss = self._actor_loss(batch)

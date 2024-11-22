@@ -47,26 +47,26 @@ class ContinuousSoftActorCritic(ActorCriticBase):
     def __init__(
         self,
         action_space: ActionSpace,
-        state_dim: Optional[int] = None,
-        actor_hidden_dims: Optional[List[int]] = None,
-        critic_hidden_dims: Optional[List[int]] = None,
+        state_dim: int | None = None,
+        actor_hidden_dims: list[int] | None = None,
+        critic_hidden_dims: list[int] | None = None,
         actor_learning_rate: float = 1e-3,
         critic_learning_rate: float = 1e-3,
         history_summarization_learning_rate: float = 1e-3,
-        actor_network_type: Type[ActorNetwork] = GaussianActorNetwork,
-        critic_network_type: Type[QValueNetwork] = VanillaQValueNetwork,
+        actor_network_type: type[ActorNetwork] = GaussianActorNetwork,
+        critic_network_type: type[QValueNetwork] = VanillaQValueNetwork,
         critic_soft_update_tau: float = 0.005,
-        exploration_module: Optional[ExplorationModule] = None,
+        exploration_module: ExplorationModule | None = None,
         discount_factor: float = 0.99,
         training_rounds: int = 100,
         batch_size: int = 256,
         entropy_coef: float = 0.2,
         entropy_autotune: bool = True,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
-        actor_network_instance: Optional[ActorNetwork] = None,
-        critic_network_instance: Optional[Union[QValueNetwork, nn.Module]] = None,
+        action_representation_module: ActionRepresentationModule | None = None,
+        actor_network_instance: ActorNetwork | None = None,
+        critic_network_instance: QValueNetwork | nn.Module | None = None,
     ) -> None:
-        super(ContinuousSoftActorCritic, self).__init__(
+        super().__init__(
             state_dim=state_dim,
             action_space=action_space,
             actor_hidden_dims=actor_hidden_dims,
@@ -121,7 +121,7 @@ class ContinuousSoftActorCritic(ActorCriticBase):
         else:
             self.register_buffer("_entropy_coef", torch.tensor(entropy_coef))
 
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         actor_critic_loss = super().learn_batch(batch)
         state_batch = batch.state  # shape: (batch_size x state_dim)
 

@@ -29,14 +29,14 @@ class Transition:
     reward: torch.Tensor
     terminated: torch.Tensor = torch.tensor(True)  # default True is useful for bandits
     truncated: torch.Tensor = torch.tensor(True)  # default True is useful for bandits
-    next_state: Optional[torch.Tensor] = None
-    next_action: Optional[torch.Tensor] = None
-    curr_available_actions: Optional[torch.Tensor] = None
-    curr_unavailable_actions_mask: Optional[torch.Tensor] = None
-    next_available_actions: Optional[torch.Tensor] = None
-    next_unavailable_actions_mask: Optional[torch.Tensor] = None
-    weight: Optional[torch.Tensor] = None
-    cost: Optional[torch.Tensor] = None
+    next_state: torch.Tensor | None = None
+    next_action: torch.Tensor | None = None
+    curr_available_actions: torch.Tensor | None = None
+    curr_unavailable_actions_mask: torch.Tensor | None = None
+    next_available_actions: torch.Tensor | None = None
+    next_unavailable_actions_mask: torch.Tensor | None = None
+    weight: torch.Tensor | None = None
+    cost: torch.Tensor | None = None
 
     def to(self: T, device: torch.device) -> T:
         # iterate over all fields, move to correct device
@@ -67,15 +67,15 @@ class TransitionBatch:
     reward: torch.Tensor
     terminated: torch.Tensor = torch.tensor(True)  # default True is useful for bandits
     truncated: torch.Tensor = torch.tensor(True)  # default True is useful for bandits
-    next_state: Optional[torch.Tensor] = None
-    next_action: Optional[torch.Tensor] = None
-    curr_available_actions: Optional[torch.Tensor] = None
-    curr_unavailable_actions_mask: Optional[torch.Tensor] = None
-    next_available_actions: Optional[torch.Tensor] = None
-    next_unavailable_actions_mask: Optional[torch.Tensor] = None
-    weight: Optional[torch.Tensor] = None
-    time_diff: Optional[torch.Tensor] = None
-    cost: Optional[torch.Tensor] = None
+    next_state: torch.Tensor | None = None
+    next_action: torch.Tensor | None = None
+    curr_available_actions: torch.Tensor | None = None
+    curr_unavailable_actions_mask: torch.Tensor | None = None
+    next_available_actions: torch.Tensor | None = None
+    next_unavailable_actions_mask: torch.Tensor | None = None
+    weight: torch.Tensor | None = None
+    time_diff: torch.Tensor | None = None
+    cost: torch.Tensor | None = None
 
     def to(self: TB, device: torch.device) -> TB:
         # iterate over all fields
@@ -102,12 +102,12 @@ class TransitionBatch:
 
 @dataclass(frozen=False)
 class TransitionWithBootstrapMask(Transition):
-    bootstrap_mask: Optional[torch.Tensor] = None
+    bootstrap_mask: torch.Tensor | None = None
 
 
 @dataclass(frozen=False)
 class TransitionWithBootstrapMaskBatch(TransitionBatch):
-    bootstrap_mask: Optional[torch.Tensor] = None
+    bootstrap_mask: torch.Tensor | None = None
 
 
 def filter_batch_by_bootstrap_mask(
@@ -124,9 +124,9 @@ def filter_batch_by_bootstrap_mask(
     Returns:
         A filtered `TransitionBatch`.
     """
-    mask: Optional[torch.Tensor] = batch.bootstrap_mask
+    mask: torch.Tensor | None = batch.bootstrap_mask
 
-    def _filter_tensor(x: Optional[torch.Tensor]) -> Optional[torch.Tensor]:
+    def _filter_tensor(x: torch.Tensor | None) -> torch.Tensor | None:
         if x is None or mask is None:
             return None
         return x[mask[:, z] == 1]

@@ -24,7 +24,7 @@ class MeanVarBanditEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
 
     def __init__(
         self,
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ) -> None:
         super().__init__()
         self._size = 2
@@ -32,7 +32,7 @@ class MeanVarBanditEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
         high = np.array([1.0] * self._size, dtype=np.float32)
         self.action_space = gym.spaces.Discrete(2)
         self.observation_space = gym.spaces.Box(-high, high, dtype=np.float32)
-        self.idx: Optional[int] = None
+        self.idx: int | None = None
 
     # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
     def get_observation(self) -> np.ndarray:
@@ -43,10 +43,10 @@ class MeanVarBanditEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
     def reset(
         self,
         *,
-        seed: Optional[int] = None,
-        options: Optional[Dict[str, float]] = None
+        seed: int | None = None,
+        options: dict[str, float] | None = None
         # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
-    ) -> Tuple[np.ndarray, Dict[str, float]]:
+    ) -> tuple[np.ndarray, dict[str, float]]:
         super().reset(seed=seed)
         self.idx = 0
         return self.get_observation(), {}
@@ -55,9 +55,9 @@ class MeanVarBanditEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
     def step(
         self,
         # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
-        action: Union[int, np.ndarray],
+        action: int | np.ndarray,
         # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
-    ) -> Tuple[np.ndarray, float, bool, bool, Dict[str, Any]]:
+    ) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
         reward = 0.0
         if action == 0:
             reward = self.np_random.normal(loc=6.0, scale=1)

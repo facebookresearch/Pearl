@@ -43,7 +43,7 @@ class DiscreteActionSpace(DiscreteSpace, ActionSpace):
     `DiscreteActionSpace` is based on PyTorch tensors instead of NumPy arrays.
     """
 
-    def __init__(self, actions: List[Action], seed: Optional[int] = None) -> None:
+    def __init__(self, actions: list[Action], seed: int | None = None) -> None:
         """Contructs a `DiscreteActionSpace`.
 
         Args:
@@ -51,9 +51,9 @@ class DiscreteActionSpace(DiscreteSpace, ActionSpace):
             seed: Random seed used to initialize the random number generator of the
                 underlying Gym `Discrete` space.
         """
-        super(DiscreteActionSpace, self).__init__(elements=actions, seed=seed)
+        super().__init__(elements=actions, seed=seed)
 
-    def _set_validated_elements(self, elements: List[Tensor]) -> None:
+    def _set_validated_elements(self, elements: list[Tensor]) -> None:
         """Creates the set of actions after validating that a action is a Tensor of
         shape `d` and all actions have the same shape."""
         # Allow scalar or (1, d) Tensors, but reshape them to (d,).
@@ -71,7 +71,7 @@ class DiscreteActionSpace(DiscreteSpace, ActionSpace):
         self.elements = validated_actions
 
     @property
-    def actions(self) -> List[Action]:
+    def actions(self) -> list[Action]:
         """Returns the list of possible `Action` objects."""
         return self.elements
 

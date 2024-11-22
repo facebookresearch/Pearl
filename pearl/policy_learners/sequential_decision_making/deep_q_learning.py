@@ -39,9 +39,9 @@ class DeepQLearning(DeepTDLearning):
 
     def __init__(
         self,
-        action_space: Optional[ActionSpace] = None,
-        hidden_dims: Optional[List[int]] = None,
-        exploration_module: Optional[ExplorationModule] = None,
+        action_space: ActionSpace | None = None,
+        hidden_dims: list[int] | None = None,
+        exploration_module: ExplorationModule | None = None,
         learning_rate: float = 0.001,
         discount_factor: float = 0.99,
         training_rounds: int = 10,
@@ -49,11 +49,11 @@ class DeepQLearning(DeepTDLearning):
         target_update_freq: int = 10,
         soft_update_tau: float = 0.75,  # a value of 1 indicates no soft updates
         is_conservative: bool = False,
-        conservative_alpha: Optional[float] = 2.0,
-        state_dim: Optional[int] = None,
-        network_type: Type[QValueNetwork] = VanillaQValueNetwork,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
-        network_instance: Optional[QValueNetwork] = None,
+        conservative_alpha: float | None = 2.0,
+        state_dim: int | None = None,
+        network_type: type[QValueNetwork] = VanillaQValueNetwork,
+        action_representation_module: ActionRepresentationModule | None = None,
+        network_instance: QValueNetwork | None = None,
         **kwargs: Any,
     ) -> None:
         """Constructs a DeepQLearning policy learner. DeepQLearning is based on DeepTDLearning
@@ -101,7 +101,7 @@ class DeepQLearning(DeepTDLearning):
                 `TwoTowerNetwork` object.
 
         """
-        super(DeepQLearning, self).__init__(
+        super().__init__(
             exploration_module=(
                 exploration_module
                 if exploration_module is not None
@@ -166,7 +166,7 @@ class DeepQLearning(DeepTDLearning):
 
     def _prepare_next_state_action_batch(
         self, batch: TransitionBatch
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[torch.Tensor]]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None, torch.Tensor | None]:
 
         # This function outputs tensors:
         # - next_state_batch: (batch_size x action_space_size x state_dim).

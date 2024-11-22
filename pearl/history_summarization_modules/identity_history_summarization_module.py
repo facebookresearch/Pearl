@@ -26,11 +26,11 @@ class IdentityHistorySummarizationModule(HistorySummarizationModule):
     """
 
     def __init__(self) -> None:
-        super(IdentityHistorySummarizationModule, self).__init__()
+        super().__init__()
         self.history: History = None
 
     def summarize_history(
-        self, observation: Observation, action: Optional[Action]
+        self, observation: Observation, action: Action | None
     ) -> SubjectiveState:
         self.history = observation
         # pyre-fixme[7]: incompatible return type

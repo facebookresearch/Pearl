@@ -18,7 +18,7 @@ from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpac
 
 class DynamicActionSpaceWrapper(gym.Wrapper):
     def __init__(self, env, reduce_action_space_cadence=4):
-        super(DynamicActionSpaceWrapper, self).__init__(env)
+        super().__init__(env)
         self.number_of_steps = 0
         self.reduce_action_space_cadence = reduce_action_space_cadence
 

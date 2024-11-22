@@ -19,7 +19,7 @@ from torch import Tensor
 
 class BasicReplayBuffer(TensorBasedReplayBuffer):
     def __init__(self, capacity: int) -> None:
-        super(BasicReplayBuffer, self).__init__(capacity)
+        super().__init__(capacity)
 
     def _store_transition(
         self,
@@ -28,12 +28,12 @@ class BasicReplayBuffer(TensorBasedReplayBuffer):
         reward: Reward,
         terminated: bool,
         truncated: bool,
-        curr_available_actions_tensor_with_padding: Optional[Tensor],
-        curr_unavailable_actions_mask: Optional[Tensor],
-        next_state: Optional[SubjectiveState],
-        next_available_actions_tensor_with_padding: Optional[Tensor],
-        next_unavailable_actions_mask: Optional[Tensor],
-        cost: Optional[float] = None,
+        curr_available_actions_tensor_with_padding: Tensor | None,
+        curr_unavailable_actions_mask: Tensor | None,
+        next_state: SubjectiveState | None,
+        next_available_actions_tensor_with_padding: Tensor | None,
+        next_unavailable_actions_mask: Tensor | None,
+        cost: float | None = None,
     ) -> None:
         transition = Transition(
             state=self._process_non_optional_single_state(state),

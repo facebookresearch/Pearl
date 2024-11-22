@@ -8,7 +8,8 @@
 # pyre-strict
 
 import logging
-from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from collections.abc import Iterable
+from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
 from pearl.api.action import Action
@@ -64,7 +65,7 @@ class GymEnvironment(Environment):
     """A wrapper for `gym.Env` to behave like Pearl's `Environment`."""
 
     def __init__(
-        self, env_or_env_name: Union[gym.Env, str], *args: Any, **kwargs: Any
+        self, env_or_env_name: gym.Env | str, *args: Any, **kwargs: Any
     ) -> None:
         """Constructs a `GymEnvironment` wrapper.
 
@@ -96,7 +97,7 @@ class GymEnvironment(Environment):
     def observation_space(self) -> Space:
         return self._observation_space
 
-    def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
+    def reset(self, seed: int | None = None) -> tuple[Observation, ActionSpace]:
         """Resets the environment and returns the initial observation and
         initial action space."""
         # pyre-fixme: ActionSpace does not have _gym_space
@@ -184,7 +185,7 @@ def _get_gym_action(
     pearl_action: Action,
     gym_space: gym.Space,
     # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
-) -> Union[int, np.ndarray]:
+) -> int | np.ndarray:
     """A helper function to convert a Pearl `Action` to an action compatible with
     the Gym action space `gym_space`."""
     gym_space_name = gym_space.__class__.__name__
@@ -198,7 +199,7 @@ def _get_gym_action(
 
 
 def _get_pearl_space(
-    gym_space: gym.Space, gym_to_pearl_map: Dict[str, Any]
+    gym_space: gym.Space, gym_to_pearl_map: dict[str, Any]
 ) -> ActionSpace:
     """Returns the Pearl action space for this environment."""
     gym_space_name = gym_space.__class__.__name__

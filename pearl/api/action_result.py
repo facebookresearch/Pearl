@@ -23,9 +23,9 @@ class ActionResult:
     reward: Reward
     terminated: bool
     truncated: bool
-    info: Optional[Dict[str, Any]] = None
-    cost: Optional[float] = None
-    available_action_space: Optional[ActionSpace] = None
+    info: dict[str, Any] | None = None
+    cost: float | None = None
+    available_action_space: ActionSpace | None = None
 
     @property
     def done(self) -> bool:

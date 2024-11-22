@@ -22,10 +22,10 @@ class IdentityActionRepresentationModule(ActionRepresentationModule):
 
     def __init__(
         self,
-        max_number_actions: Optional[int] = None,
-        representation_dim: Optional[int] = None,
+        max_number_actions: int | None = None,
+        representation_dim: int | None = None,
     ) -> None:
-        super(IdentityActionRepresentationModule, self).__init__()
+        super().__init__()
         self._max_number_actions = max_number_actions
         self._representation_dim = representation_dim
 
@@ -37,9 +37,9 @@ class IdentityActionRepresentationModule(ActionRepresentationModule):
     # Not sure why this is not generating Pyre errors.
 
     @property
-    def max_number_actions(self) -> Optional[int]:
+    def max_number_actions(self) -> int | None:
         return self._max_number_actions
 
     @property
-    def representation_dim(self) -> Optional[int]:
+    def representation_dim(self) -> int | None:
         return self._representation_dim

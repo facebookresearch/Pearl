@@ -39,7 +39,7 @@ class Environment(ABC):
         pass
 
     @abstractmethod
-    def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
+    def reset(self, seed: int | None = None) -> tuple[Observation, ActionSpace]:
         """Resets the environment and returns the initial observation and
         initial available action space."""
         pass

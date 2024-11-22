@@ -38,12 +38,12 @@ LOSS_TYPES = {
 
 def mlp_block(
     input_dim: int,
-    hidden_dims: Optional[List[int]],
+    hidden_dims: list[int] | None,
     output_dim: int = 1,
     use_batch_norm: bool = False,
     use_layer_norm: bool = False,
     hidden_activation: str = "relu",
-    last_activation: Optional[str] = None,
+    last_activation: str | None = None,
     dropout_ratio: float = 0.0,
     use_skip_connections: bool = False,
     **kwargs: Any,
@@ -113,10 +113,10 @@ def mlp_block(
 
 def conv_block(
     input_channels_count: int,
-    output_channels_list: List[int],
-    kernel_sizes: List[int],
-    strides: List[int],
-    paddings: List[int],
+    output_channels_list: list[int],
+    kernel_sizes: list[int],
+    strides: list[int],
+    paddings: list[int],
     use_batch_norm: bool = False,
 ) -> nn.Module:
     """
@@ -185,7 +185,7 @@ def update_target_network(
 
 
 def ensemble_forward(
-    models: Union[nn.ModuleList, List[nn.Module]],
+    models: nn.ModuleList | list[nn.Module],
     features: torch.Tensor,
     use_for_loop: bool = True,
 ) -> torch.Tensor:
@@ -220,8 +220,8 @@ def ensemble_forward(
         features = features.permute((1, 0, 2))
 
         def wrapper(
-            params: Dict[str, torch.Tensor],
-            buffers: Dict[str, torch.Tensor],
+            params: dict[str, torch.Tensor],
+            buffers: dict[str, torch.Tensor],
             data: torch.Tensor,
         ) -> torch.Tensor:
             return torch.func.functional_call(models[0], (params, buffers), data)
@@ -236,8 +236,8 @@ def ensemble_forward(
 
 
 def update_target_networks(
-    list_of_target_networks: Union[nn.ModuleList, List[nn.Module]],
-    list_of_source_networks: Union[nn.ModuleList, List[nn.Module]],
+    list_of_target_networks: nn.ModuleList | list[nn.Module],
+    list_of_source_networks: nn.ModuleList | list[nn.Module],
     tau: float,
 ) -> None:
     """

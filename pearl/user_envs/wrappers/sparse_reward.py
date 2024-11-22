@@ -19,7 +19,7 @@ class PendulumSparseRewardWrapper(gym.Wrapper):
     r"""Sparse Reward wrapper for the Pendulum environment."""
 
     def __init__(self, env):
-        super(PendulumSparseRewardWrapper, self).__init__(env)
+        super().__init__(env)
 
     def step(self, action):
         obs, reward, terminated, truncated, info = self.env.step(action)
@@ -46,7 +46,7 @@ class AcrobotSparseRewardWrapper(gym.Wrapper):
     r"""Sparse Reward wrapper for the Acrobot environment."""
 
     def __init__(self, env):
-        super(AcrobotSparseRewardWrapper, self).__init__(env)
+        super().__init__(env)
 
     def step(self, action):
         obs, reward, terminated, truncated, info = self.env.step(action)
@@ -62,7 +62,7 @@ class MountainCarSparseRewardWrapper(gym.Wrapper):
     r"""Sparse Reward wrapper for the Mountain Car environment."""
 
     def __init__(self, env):
-        super(MountainCarSparseRewardWrapper, self).__init__(env)
+        super().__init__(env)
 
     def step(self, action):
         obs, reward, terminated, truncated, info = self.env.step(action)
@@ -80,7 +80,7 @@ class PuckWorldSparseRewardWrapper(gym.Wrapper):
     r"""Sparse Reward wrapper for the Mountain Car environment."""
 
     def __init__(self, env):
-        super(PuckWorldSparseRewardWrapper, self).__init__(env)
+        super().__init__(env)
 
     def step(self, action):
         obs, reward, terminated, truncated, info = self.env.step(action)

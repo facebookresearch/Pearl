@@ -45,10 +45,10 @@ class ExplorationModule(ABC):
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
-        values: Optional[torch.Tensor] = None,
-        exploit_action: Optional[Action] = None,
-        action_availability_mask: Optional[torch.Tensor] = None,
-        representation: Optional[torch.nn.Module] = None,
+        values: torch.Tensor | None = None,
+        exploit_action: Action | None = None,
+        action_availability_mask: torch.Tensor | None = None,
+        representation: torch.nn.Module | None = None,
     ) -> Action:
         pass
 

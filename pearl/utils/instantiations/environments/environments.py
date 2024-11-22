@@ -66,7 +66,7 @@ class FixedNumberOfStepsEnvironment(Environment):
             [torch.tensor(i) for i in range(self.max_number_of_steps + 1)]
         )
 
-    def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
+    def reset(self, seed: int | None = None) -> tuple[Observation, ActionSpace]:
         """
         Provides the observation and action space to the agent.
         """
@@ -118,7 +118,7 @@ class ObservationTransformationEnvironmentAdapterBase(Environment, ABC):
         )
         return action_result
 
-    def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
+    def reset(self, seed: int | None = None) -> tuple[Observation, ActionSpace]:
         observation, action_space = self.base_environment.reset(seed=seed)
         return self.compute_tensor_observation(observation), action_space
 
@@ -142,7 +142,7 @@ class OneHotObservationsFromDiscrete(ObservationTransformationEnvironmentAdapter
     """
 
     def __init__(self, base_environment: Environment) -> None:
-        super(OneHotObservationsFromDiscrete, self).__init__(base_environment)
+        super().__init__(base_environment)
 
     @staticmethod
     def make_observation_space(base_environment: Environment) -> Space:

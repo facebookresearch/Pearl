@@ -28,8 +28,8 @@ def create_offline_data(
     exploit: bool = False,
     learn_after_episode: bool = True,
     evaluation_episodes: int = 100,
-    seed: Optional[int] = None,
-) -> List[Value]:
+    seed: int | None = None,
+) -> list[Value]:
     """
     This function creates offline data by interacting with a given environment using a specified
     agent. This is mostly for illustration with standard benchmark environments. For most
@@ -162,8 +162,8 @@ def create_offline_data(
 # in the training data
 def get_data_collection_agent_returns(
     data_path: str,
-    returns_file_path: Optional[str] = None,
-) -> List[Value]:
+    returns_file_path: str | None = None,
+) -> list[Value]:
     """
     This function returns episode returns of a Pearl Agent using for offline data collection.
     The returns file can be directly provided or we can stitch together trajectories in the offline

@@ -47,7 +47,7 @@ class NeuralBandit(ContextualBanditBase):
     def __init__(
         self,
         feature_dim: int,
-        hidden_dims: List[int],
+        hidden_dims: list[int],
         exploration_module: ExplorationModule,
         output_dim: int = 1,
         training_rounds: int = 100,
@@ -55,9 +55,9 @@ class NeuralBandit(ContextualBanditBase):
         learning_rate: float = 0.001,
         state_features_only: bool = False,
         loss_type: str = "mse",  # one of the LOSS_TYPES names, e.g., mse, mae, xentropy
-        action_representation_module: Optional[ActionRepresentationModule] = None,
+        action_representation_module: ActionRepresentationModule | None = None,
     ) -> None:
-        super(NeuralBandit, self).__init__(
+        super().__init__(
             feature_dim=feature_dim,
             training_rounds=training_rounds,
             batch_size=batch_size,
@@ -75,7 +75,7 @@ class NeuralBandit(ContextualBanditBase):
         self._state_features_only = state_features_only
         self.loss_type = loss_type
 
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         expected_values = batch.reward
         batch_weight = (
             batch.weight
@@ -122,7 +122,7 @@ class NeuralBandit(ContextualBanditBase):
         self,
         subjective_state: SubjectiveState,
         available_action_space: ActionSpace,
-        action_availability_mask: Optional[torch.Tensor] = None,
+        action_availability_mask: torch.Tensor | None = None,
         exploit: bool = False,
     ) -> Action:
         """

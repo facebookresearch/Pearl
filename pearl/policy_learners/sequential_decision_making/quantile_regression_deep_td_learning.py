@@ -54,7 +54,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         action_space: ActionSpace,
         on_policy: bool,
         exploration_module: ExplorationModule,
-        hidden_dims: Optional[List[int]] = None,
+        hidden_dims: list[int] | None = None,
         num_quantiles: int = 10,
         learning_rate: float = 5 * 0.0001,
         discount_factor: float = 0.99,
@@ -62,14 +62,14 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         batch_size: int = 128,
         target_update_freq: int = 10,
         soft_update_tau: float = 0.05,  # typical value for soft update
-        network_type: Type[
+        network_type: type[
             QuantileQValueNetwork
         ] = QuantileQValueNetwork,  # C51 might use a different network type; add that later
-        network_instance: Optional[QuantileQValueNetwork] = None,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
+        network_instance: QuantileQValueNetwork | None = None,
+        action_representation_module: ActionRepresentationModule | None = None,
     ) -> None:
         assert isinstance(action_space, DiscreteActionSpace)
-        super(QuantileRegressionDeepTDLearning, self).__init__(
+        super().__init__(
             training_rounds=training_rounds,
             batch_size=batch_size,
             exploration_module=exploration_module,
@@ -173,7 +173,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
 
     # learn quantiles of q value distribution using distribution temporal
     # difference learning (specifically, quantile regression)
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         """
         Assume N is the number of quantiles.
 

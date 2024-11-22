@@ -53,18 +53,18 @@ from pearl.utils.functional_utils.learning.critic_utils import (
 
 @dataclass(frozen=False)
 class REINFORCETransition(Transition):
-    cum_reward: Optional[torch.Tensor] = None  # cumulative reward
+    cum_reward: torch.Tensor | None = None  # cumulative reward
 
 
 @dataclass(frozen=False)
 class REINFORCETransitionBatch(TransitionBatch):
-    cum_reward: Optional[torch.Tensor] = None  # cumulative reward
+    cum_reward: torch.Tensor | None = None  # cumulative reward
 
     @classmethod
     def from_parent(
         cls,
         parent_obj: TransitionBatch,
-        cum_reward: Optional[torch.Tensor] = None,
+        cum_reward: torch.Tensor | None = None,
     ) -> "REINFORCETransitionBatch":
         # Extract attributes from parent_obj using __dict__ and create a new child object
         child_obj = cls(
@@ -74,7 +74,7 @@ class REINFORCETransitionBatch(TransitionBatch):
         return child_obj
 
 
-REINFORCEReplayBuffer: Type[TensorBasedReplayBuffer] = (
+REINFORCEReplayBuffer: type[TensorBasedReplayBuffer] = (
     make_replay_buffer_class_for_specific_transition_types(
         REINFORCETransition, REINFORCETransitionBatch
     )
@@ -91,24 +91,24 @@ class REINFORCE(ActorCriticBase):
     def __init__(
         self,
         state_dim: int,
-        actor_hidden_dims: Optional[List[int]] = None,
+        actor_hidden_dims: list[int] | None = None,
         use_critic: bool = False,
-        critic_hidden_dims: Optional[List[int]] = None,
-        action_space: Optional[ActionSpace] = None,
+        critic_hidden_dims: list[int] | None = None,
+        action_space: ActionSpace | None = None,
         actor_learning_rate: float = 1e-4,
         critic_learning_rate: float = 1e-4,
         history_summarization_learning_rate: float = 1e-4,
-        actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
-        critic_network_type: Type[ValueNetwork] = VanillaValueNetwork,
-        exploration_module: Optional[ExplorationModule] = None,
+        actor_network_type: type[ActorNetwork] = VanillaActorNetwork,
+        critic_network_type: type[ValueNetwork] = VanillaValueNetwork,
+        exploration_module: ExplorationModule | None = None,
         discount_factor: float = 0.99,
         training_rounds: int = 8,
         batch_size: int = 64,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
-        actor_network_instance: Optional[ActorNetwork] = None,
-        critic_network_instance: Optional[Union[ValueNetwork, nn.Module]] = None,
+        action_representation_module: ActionRepresentationModule | None = None,
+        actor_network_instance: ActorNetwork | None = None,
+        critic_network_instance: ValueNetwork | nn.Module | None = None,
     ) -> None:
-        super(REINFORCE, self).__init__(
+        super().__init__(
             state_dim=state_dim,
             action_space=action_space,
             actor_hidden_dims=actor_hidden_dims,
@@ -171,7 +171,7 @@ class REINFORCE(ActorCriticBase):
             critic=self._critic,
         )
 
-    def learn(self, replay_buffer: ReplayBuffer) -> Dict[str, Any]:
+    def learn(self, replay_buffer: ReplayBuffer) -> dict[str, Any]:
         assert type(replay_buffer) is REINFORCEReplayBuffer
         assert len(replay_buffer.memory) > 0
         # compute return for all states in the buffer

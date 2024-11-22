@@ -51,7 +51,7 @@ class QValueNetwork(abc.ABC, nn.Module):
         self,
         state_batch: torch.Tensor,
         action_batch: torch.Tensor,
-        curr_available_actions_batch: Optional[torch.Tensor] = None,
+        curr_available_actions_batch: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """Returns Q(s, a), given s and a
         Args:
@@ -128,11 +128,11 @@ class VanillaQValueNetwork(QValueNetwork):
         self,
         state_dim: int,
         action_dim: int,
-        hidden_dims: List[int],
+        hidden_dims: list[int],
         output_dim: int,
         use_layer_norm: bool = False,
     ) -> None:
-        super(VanillaQValueNetwork, self).__init__()
+        super().__init__()
         self._state_dim: int = state_dim
         self._action_dim: int = action_dim
         self._model: nn.Module = mlp_block(
@@ -149,7 +149,7 @@ class VanillaQValueNetwork(QValueNetwork):
         self,
         state_batch: Tensor,
         action_batch: Tensor,
-        curr_available_actions_batch: Optional[Tensor] = None,
+        curr_available_actions_batch: Tensor | None = None,
     ) -> Tensor:
         x = torch.cat([state_batch, action_batch], dim=-1)
         return self.forward(x).view(-1)
@@ -186,11 +186,11 @@ class QuantileQValueNetwork(DistributionalQValueNetwork):
         self,
         state_dim: int,
         action_dim: int,
-        hidden_dims: List[int],
+        hidden_dims: list[int],
         num_quantiles: int,
         use_layer_norm: bool = False,
     ) -> None:
-        super(QuantileQValueNetwork, self).__init__()
+        super().__init__()
 
         self._model: nn.Module = mlp_block(
             input_dim=state_dim + action_dim,
@@ -260,13 +260,13 @@ class DuelingQValueNetwork(QValueNetwork):
         self,
         state_dim: int,
         action_dim: int,
-        hidden_dims: List[int],
+        hidden_dims: list[int],
         output_dim: int,
-        value_hidden_dims: Optional[List[int]] = None,
-        advantage_hidden_dims: Optional[List[int]] = None,
-        state_hidden_dims: Optional[List[int]] = None,
+        value_hidden_dims: list[int] | None = None,
+        advantage_hidden_dims: list[int] | None = None,
+        state_hidden_dims: list[int] | None = None,
     ) -> None:
-        super(DuelingQValueNetwork, self).__init__()
+        super().__init__()
         self._state_dim: int = state_dim
         self._action_dim: int = action_dim
 
@@ -328,7 +328,7 @@ class DuelingQValueNetwork(QValueNetwork):
         self,
         state_batch: Tensor,
         action_batch: Tensor,
-        curr_available_actions_batch: Optional[Tensor] = None,
+        curr_available_actions_batch: Tensor | None = None,
     ) -> Tensor:
         """
         Args:
@@ -394,13 +394,13 @@ class TwoTowerNetwork(QValueNetwork):
         action_input_dim: int,
         state_output_dim: int,
         action_output_dim: int,
-        state_hidden_dims: Optional[List[int]],
-        action_hidden_dims: Optional[List[int]],
-        hidden_dims: Optional[List[int]],
+        state_hidden_dims: list[int] | None,
+        action_hidden_dims: list[int] | None,
+        hidden_dims: list[int] | None,
         output_dim: int = 1,
     ) -> None:
 
-        super(TwoTowerNetwork, self).__init__()
+        super().__init__()
 
         """
         Input: batch of state, batch of action. Output: batch of Q-values for (s,a) pairs
@@ -440,7 +440,7 @@ class TwoTowerNetwork(QValueNetwork):
         self,
         state_batch: Tensor,
         action_batch: Tensor,
-        curr_available_actions_batch: Optional[Tensor] = None,
+        curr_available_actions_batch: Tensor | None = None,
     ) -> Tensor:
         state_batch_features = self._state_features.forward(state_batch)
         """ this might need to be done in tensor_based_replay_buffer """
@@ -472,12 +472,12 @@ class TwoTowerQValueNetwork(TwoTowerNetwork):
         self,
         state_dim: int,
         action_dim: int,
-        hidden_dims: List[int],
+        hidden_dims: list[int],
         output_dim: int = 1,
-        state_output_dim: Optional[int] = None,
-        action_output_dim: Optional[int] = None,
-        state_hidden_dims: Optional[List[int]] = None,
-        action_hidden_dims: Optional[List[int]] = None,
+        state_output_dim: int | None = None,
+        action_output_dim: int | None = None,
+        state_hidden_dims: list[int] | None = None,
+        action_hidden_dims: list[int] | None = None,
     ) -> None:
 
         super().__init__(
@@ -503,12 +503,12 @@ class EnsembleQValueNetwork(QValueNetwork):
         self,
         state_dim: int,
         action_dim: int,
-        hidden_dims: Optional[List[int]],
+        hidden_dims: list[int] | None,
         output_dim: int,
         ensemble_size: int,
         prior_scale: float = 1.0,
     ) -> None:
-        super(EnsembleQValueNetwork, self).__init__()
+        super().__init__()
         self._state_dim = state_dim
         self._action_dim = action_dim
         self._model = Ensemble(
@@ -535,7 +535,7 @@ class EnsembleQValueNetwork(QValueNetwork):
         state_batch: Tensor,
         action_batch: Tensor,
         z: Tensor,
-        curr_available_actions_batch: Optional[Tensor] = None,
+        curr_available_actions_batch: Tensor | None = None,
         persistent: bool = False,
     ) -> Tensor:
         x = torch.cat([state_batch, action_batch], dim=-1)
@@ -560,17 +560,17 @@ class CNNQValueNetwork(VanillaCNN):
         input_width: int,
         input_height: int,
         input_channels_count: int,
-        kernel_sizes: List[int],
-        output_channels_list: List[int],
-        strides: List[int],
-        paddings: List[int],
+        kernel_sizes: list[int],
+        output_channels_list: list[int],
+        strides: list[int],
+        paddings: list[int],
         action_dim: int,
-        hidden_dims_fully_connected: Optional[List[int]] = None,
+        hidden_dims_fully_connected: list[int] | None = None,
         output_dim: int = 1,
         use_batch_norm_conv: bool = False,
         use_batch_norm_fully_connected: bool = False,
     ) -> None:
-        super(CNNQValueNetwork, self).__init__(
+        super().__init__(
             input_width=input_width,
             input_height=input_height,
             input_channels_count=input_channels_count,
@@ -601,7 +601,7 @@ class CNNQValueNetwork(VanillaCNN):
         self,
         state_batch: Tensor,
         action_batch: Tensor,
-        curr_available_actions_batch: Optional[Tensor] = None,
+        curr_available_actions_batch: Tensor | None = None,
     ) -> Tensor:
         batch_size = state_batch.shape[0]
         state_representation_batch = self._model_cnn(state_batch)

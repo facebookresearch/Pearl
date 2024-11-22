@@ -18,11 +18,11 @@ class LearningLogger(Protocol):
     def __init__(self) -> None:
         pass
 
-    def __call__(self, results: Dict[str, Any], step: int, prefix: str = "") -> None:
+    def __call__(self, results: dict[str, Any], step: int, prefix: str = "") -> None:
         pass
 
 
-def null_learning_logger(results: Dict[str, str], step: int, prefix: str = "") -> None:
+def null_learning_logger(results: dict[str, str], step: int, prefix: str = "") -> None:
     """
     A null learning logger that does nothing.
     """

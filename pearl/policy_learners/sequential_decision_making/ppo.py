@@ -48,24 +48,24 @@ from torch import nn
 
 @dataclass(frozen=False)
 class PPOTransition(Transition):
-    gae: Optional[torch.Tensor] = None  # generalized advantage estimation
-    lam_return: Optional[torch.Tensor] = None  # lambda return
-    action_probs: Optional[torch.Tensor] = None  # action probs
+    gae: torch.Tensor | None = None  # generalized advantage estimation
+    lam_return: torch.Tensor | None = None  # lambda return
+    action_probs: torch.Tensor | None = None  # action probs
 
 
 @dataclass(frozen=False)
 class PPOTransitionBatch(TransitionBatch):
-    gae: Optional[torch.Tensor] = None  # generalized advantage estimation
-    lam_return: Optional[torch.Tensor] = None  # lambda return
-    action_probs: Optional[torch.Tensor] = None  # action probs
+    gae: torch.Tensor | None = None  # generalized advantage estimation
+    lam_return: torch.Tensor | None = None  # lambda return
+    action_probs: torch.Tensor | None = None  # action probs
 
     @classmethod
     def from_parent(
         cls,
         parent_obj: TransitionBatch,
-        gae: Optional[torch.Tensor] = None,
-        lam_return: Optional[torch.Tensor] = None,
-        action_probs: Optional[torch.Tensor] = None,
+        gae: torch.Tensor | None = None,
+        lam_return: torch.Tensor | None = None,
+        action_probs: torch.Tensor | None = None,
     ) -> "PPOTransitionBatch":
         # Extract attributes from parent_obj using __dict__ and create a new child object
         child_obj = cls(
@@ -77,7 +77,7 @@ class PPOTransitionBatch(TransitionBatch):
         return child_obj
 
 
-PPOReplayBuffer: Type[TensorBasedReplayBuffer] = (
+PPOReplayBuffer: type[TensorBasedReplayBuffer] = (
     make_replay_buffer_class_for_specific_transition_types(
         PPOTransition, PPOTransitionBatch
     )
@@ -92,26 +92,26 @@ class ProximalPolicyOptimization(ActorCriticBase):
     def __init__(
         self,
         action_space: ActionSpace,
-        state_dim: Optional[int] = None,
-        actor_hidden_dims: Optional[List[int]] = None,
-        critic_hidden_dims: Optional[List[int]] = None,
+        state_dim: int | None = None,
+        actor_hidden_dims: list[int] | None = None,
+        critic_hidden_dims: list[int] | None = None,
         actor_learning_rate: float = 1e-4,
         critic_learning_rate: float = 1e-4,
         history_summarization_learning_rate: float = 1e-4,
-        exploration_module: Optional[ExplorationModule] = None,
-        actor_network_type: Type[ActorNetwork] = VanillaActorNetwork,
-        critic_network_type: Type[ValueNetwork] = VanillaValueNetwork,
+        exploration_module: ExplorationModule | None = None,
+        actor_network_type: type[ActorNetwork] = VanillaActorNetwork,
+        critic_network_type: type[ValueNetwork] = VanillaValueNetwork,
         discount_factor: float = 0.99,
         training_rounds: int = 100,
         batch_size: int = 128,
         epsilon: float = 0.0,
         trace_decay_param: float = 0.95,
         entropy_bonus_scaling: float = 0.01,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
-        actor_network_instance: Optional[ActorNetwork] = None,
-        critic_network_instance: Optional[Union[ValueNetwork, nn.Module]] = None,
+        action_representation_module: ActionRepresentationModule | None = None,
+        actor_network_instance: ActorNetwork | None = None,
+        critic_network_instance: ValueNetwork | nn.Module | None = None,
     ) -> None:
-        super(ProximalPolicyOptimization, self).__init__(
+        super().__init__(
             state_dim=state_dim,
             action_space=action_space,
             actor_hidden_dims=actor_hidden_dims,
@@ -187,7 +187,7 @@ class ProximalPolicyOptimization(ActorCriticBase):
             critic=self._critic,
         )
 
-    def learn(self, replay_buffer: ReplayBuffer) -> Dict[str, Any]:
+    def learn(self, replay_buffer: ReplayBuffer) -> dict[str, Any]:
         self.preprocess_replay_buffer(replay_buffer)
         # sample from replay buffer and learn
         result = super().learn(replay_buffer)

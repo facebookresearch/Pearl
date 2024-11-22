@@ -34,13 +34,13 @@ class DeepSARSA(DeepTDLearning):
 
     def __init__(
         self,
-        state_dim: Optional[int] = None,
-        action_space: Optional[ActionSpace] = None,
-        exploration_module: Optional[ExplorationModule] = None,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
+        state_dim: int | None = None,
+        action_space: ActionSpace | None = None,
+        exploration_module: ExplorationModule | None = None,
+        action_representation_module: ActionRepresentationModule | None = None,
         **kwargs: Any,
     ) -> None:
-        super(DeepSARSA, self).__init__(
+        super().__init__(
             state_dim=state_dim,
             action_space=action_space,
             exploration_module=(

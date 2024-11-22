@@ -57,12 +57,12 @@ class BootstrapReplayBuffer(BasicReplayBuffer):
         reward: Reward,
         terminated: bool,
         truncated: bool,
-        curr_available_actions_tensor_with_padding: Optional[Tensor],
-        curr_unavailable_actions_mask: Optional[Tensor],
-        next_state: Optional[SubjectiveState],
-        next_available_actions_tensor_with_padding: Optional[Tensor],
-        next_unavailable_actions_mask: Optional[Tensor],
-        cost: Optional[float] = None,
+        curr_available_actions_tensor_with_padding: Tensor | None,
+        curr_unavailable_actions_mask: Tensor | None,
+        next_state: SubjectiveState | None,
+        next_available_actions_tensor_with_padding: Tensor | None,
+        next_unavailable_actions_mask: Tensor | None,
+        cost: float | None = None,
     ) -> None:
         # sample the bootstrap mask from Bernoulli(p) on each push
         probs = torch.tensor(self.p).repeat(1, self.ensemble_size)

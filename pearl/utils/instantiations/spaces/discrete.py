@@ -10,8 +10,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterator
 
-from typing import Iterator, List, Optional
+from typing import List, Optional
 
 import torch
 from pearl.api.space import Space
@@ -38,7 +39,7 @@ class DiscreteSpace(Space):
     `DiscreteSpace` is also based on PyTorch tensors instead of NumPy arrays.
     """
 
-    def __init__(self, elements: List[Tensor], seed: Optional[int] = None) -> None:
+    def __init__(self, elements: list[Tensor], seed: int | None = None) -> None:
         """Contructs a `DiscreteSpace`.
 
         Args:
@@ -52,7 +53,7 @@ class DiscreteSpace(Space):
         # pyre-fixme[28]: Unexpected keyword argument `start`.
         self._gym_space = Discrete(n=len(elements), seed=seed, start=0)
 
-    def _set_validated_elements(self, elements: List[Tensor]) -> None:
+    def _set_validated_elements(self, elements: list[Tensor]) -> None:
         """Creates the set of elements after validating that they all have the
         same shape."""
         # Use the first shape to determine the expected shape.
@@ -82,7 +83,7 @@ class DiscreteSpace(Space):
         """Returns the shape of an element of the space."""
         return self.elements[0].shape
 
-    def sample(self, mask: Optional[Tensor] = None) -> Tensor:
+    def sample(self, mask: Tensor | None = None) -> Tensor:
         """Sample an element uniformly at random from this space.
 
         Args:
@@ -100,8 +101,7 @@ class DiscreteSpace(Space):
         return self.elements[idx]
 
     def __iter__(self) -> Iterator[Tensor]:
-        for e in self.elements:
-            yield e
+        yield from self.elements
 
     def __getitem__(self, index: int) -> Tensor:
         return self.elements[index]

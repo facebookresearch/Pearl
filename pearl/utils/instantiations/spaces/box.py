@@ -38,10 +38,10 @@ class BoxSpace(Space):
     def __init__(
         self,
         # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
-        low: Union[float, np.ndarray, Tensor],
+        low: float | np.ndarray | Tensor,
         # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
-        high: Union[float, np.ndarray, Tensor],
-        seed: Optional[Union[int, np.random.Generator]] = None,
+        high: float | np.ndarray | Tensor,
+        seed: int | np.random.Generator | None = None,
     ) -> None:
         """Constructs a `BoxSpace`.
 
@@ -64,7 +64,7 @@ class BoxSpace(Space):
         """Checks whether this is a continuous space."""
         return True
 
-    def sample(self, mask: Optional[Tensor] = None) -> Tensor:
+    def sample(self, mask: Tensor | None = None) -> Tensor:
         """Sample an element uniformly at random from the space.
 
         Args:

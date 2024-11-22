@@ -31,7 +31,7 @@ class ThompsonSamplingExplorationLinear(ScoreExplorationBase):
         self,
         enable_efficient_sampling: bool = False,
     ) -> None:
-        super(ThompsonSamplingExplorationLinear, self).__init__()
+        super().__init__()
         self._enable_efficient_sampling = enable_efficient_sampling
 
     def get_scores(
@@ -39,8 +39,8 @@ class ThompsonSamplingExplorationLinear(ScoreExplorationBase):
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
         values: torch.Tensor,
-        representation: Optional[torch.nn.Module] = None,
-        exploit_action: Optional[Action] = None,
+        representation: torch.nn.Module | None = None,
+        exploit_action: Action | None = None,
     ) -> torch.Tensor:
         """
         Given the linear bandit model, sample its parameters,
@@ -81,9 +81,7 @@ class ThompsonSamplingExplorationLinearDisjoint(ThompsonSamplingExplorationLinea
         self,
         enable_efficient_sampling: bool = False,
     ) -> None:
-        super(ThompsonSamplingExplorationLinearDisjoint, self).__init__(
-            enable_efficient_sampling=enable_efficient_sampling
-        )
+        super().__init__(enable_efficient_sampling=enable_efficient_sampling)
 
     def get_scores(
         self,
@@ -92,7 +90,7 @@ class ThompsonSamplingExplorationLinearDisjoint(ThompsonSamplingExplorationLinea
         values: torch.Tensor,
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         representation: Any = None,
-        exploit_action: Optional[Action] = None,
+        exploit_action: Action | None = None,
     ) -> torch.Tensor:
         assert isinstance(action_space, DiscreteActionSpace)
         # DisJoint Linear Bandits
@@ -101,9 +99,7 @@ class ThompsonSamplingExplorationLinearDisjoint(ThompsonSamplingExplorationLinea
         for i, model in enumerate(representation):
             # subjective_state is in shape of batch_size, action_count, feature_dim
             single_action_space = DiscreteActionSpace([action_space[i]])
-            score = super(
-                ThompsonSamplingExplorationLinearDisjoint, self
-            ).get_scores(  # call get_scores() from joint TS
+            score = super().get_scores(  # call get_scores() from joint TS
                 subjective_state=subjective_state[:, i, :],
                 action_space=single_action_space,
                 values=values,

@@ -7,18 +7,19 @@
 
 # pyre-strict
 
-from typing import Dict, Iterable, Optional, Type, TypeVar
+from collections.abc import Iterable
+from typing import Dict, Optional, Type, TypeVar
 
 K = TypeVar("K")
 V = TypeVar("V")
 
 
-def value_of_first_item(d: Dict[K, V]) -> Optional[V]:
+def value_of_first_item(d: dict[K, V]) -> V | None:
     """Returns the first item in a dictionary or None if inexistent."""
     return next(iter(d.values())) if d else None
 
 
-def first_item(i: Iterable[V]) -> Optional[V]:
+def first_item(i: Iterable[V]) -> V | None:
     """Returns the first item of an Iterable or None if there is none."""
     try:
         return next(iter(i))
@@ -43,8 +44,8 @@ ArgType = TypeVar("ArgType")
 
 
 def find_argument(
-    kwarg_key: str, arg_type: Type[ArgType], *args, **kwargs  # pyre-ignore
-) -> Optional[ArgType]:
+    kwarg_key: str, arg_type: type[ArgType], *args, **kwargs  # pyre-ignore
+) -> ArgType | None:
     """
     Finds the first argument in args and kwargs that either has type `arg_type` or
     is a named argument with the given kwarg_key.

@@ -60,14 +60,14 @@ class PolicyLearner(torch.nn.Module, ABC):
         self,
         on_policy: bool,
         is_action_continuous: bool,
-        action_space: Optional[ActionSpace] = None,
+        action_space: ActionSpace | None = None,
         training_rounds: int = 100,
         batch_size: int = 1,
         requires_tensors: bool = True,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
+        action_representation_module: ActionRepresentationModule | None = None,
         **options: Any,
     ) -> None:
-        super(PolicyLearner, self).__init__()
+        super().__init__()
 
         self._exploration_module: ExplorationModule = (
             options.get("exploration_module", None) or NoExploration()
@@ -153,7 +153,7 @@ class PolicyLearner(torch.nn.Module, ABC):
     def learn(
         self,
         replay_buffer: ReplayBuffer,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Args:
             replay_buffer: buffer instance which learn is reading from
@@ -209,7 +209,7 @@ class PolicyLearner(torch.nn.Module, ABC):
         return batch
 
     @abstractmethod
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         """
         Args:
             batch: batch of data that agent is learning from
@@ -235,11 +235,11 @@ class DistributionalPolicyLearner(PolicyLearner):
         is_action_continuous: bool,
         training_rounds: int = 100,
         batch_size: int = 1,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
+        action_representation_module: ActionRepresentationModule | None = None,
         **options: Any,
     ) -> None:
 
-        super(DistributionalPolicyLearner, self).__init__(
+        super().__init__(
             on_policy=on_policy,
             is_action_continuous=is_action_continuous,
             training_rounds=training_rounds,

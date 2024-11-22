@@ -26,7 +26,7 @@ class HistorySummarizationModule(ABC, nn.Module):
 
     @abstractmethod
     def summarize_history(
-        self, observation: Observation, action: Optional[Action]
+        self, observation: Observation, action: Action | None
     ) -> SubjectiveState:
         pass
 

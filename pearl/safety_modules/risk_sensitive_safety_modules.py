@@ -58,7 +58,7 @@ class RiskNeutralSafetyModule(RiskSensitiveSafetyModule):
     """
 
     def __init__(self) -> None:
-        super(RiskNeutralSafetyModule, self).__init__()
+        super().__init__()
 
     def __str__(self) -> str:
         return f"Safety module type {self.__class__.__name__}"
@@ -97,7 +97,7 @@ class QuantileNetworkMeanVarianceSafetyModule(RiskSensitiveSafetyModule):
         self,
         variance_weighting_coefficient: float,
     ) -> None:
-        super(QuantileNetworkMeanVarianceSafetyModule, self).__init__()
+        super().__init__()
         self._beta = variance_weighting_coefficient
 
     def __str__(self) -> str:

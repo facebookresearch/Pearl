@@ -15,8 +15,8 @@ from torch import Tensor
 
 def create_attribute_column_tensor(
     attr_name: str,
-    transitions: List[Transition],
-) -> Optional[torch.Tensor]:
+    transitions: list[Transition],
+) -> torch.Tensor | None:
     """
     Creates a tensor column from a list of transition objects.
 
@@ -39,8 +39,8 @@ def create_attribute_column_tensor(
 
 
 def make_replay_buffer_class_for_specific_transition_types(
-    TransitionType: Type[Transition], TransitionBatchType: Type[TransitionBatch]
-) -> Type[TensorBasedReplayBuffer]:
+    TransitionType: type[Transition], TransitionBatchType: type[TransitionBatch]
+) -> type[TensorBasedReplayBuffer]:
     """
     Creates a subclass of TensorBasedReplayBuffer with the specified
     TransitionType and TransitionBatchType.
@@ -57,7 +57,7 @@ def make_replay_buffer_class_for_specific_transition_types(
         # if this is a generic class on TransitionType, then this function call passes
         # the TypeVar, rather than the value of the TypeVar, as an argument,
         # which is not what we want.
-        attr_names: List[str] = get_subdataclass_specific_attributes(TransitionType)
+        attr_names: list[str] = get_subdataclass_specific_attributes(TransitionType)
 
         def __init__(
             self,
@@ -72,12 +72,12 @@ def make_replay_buffer_class_for_specific_transition_types(
             reward: Reward,
             terminated: bool,
             truncated: bool,
-            curr_available_actions_tensor_with_padding: Optional[Tensor],
-            curr_unavailable_actions_mask: Optional[Tensor],
-            next_state: Optional[SubjectiveState],
-            next_available_actions_tensor_with_padding: Optional[Tensor],
-            next_unavailable_actions_mask: Optional[Tensor],
-            cost: Optional[float] = None,
+            curr_available_actions_tensor_with_padding: Tensor | None,
+            curr_unavailable_actions_mask: Tensor | None,
+            next_state: SubjectiveState | None,
+            next_available_actions_tensor_with_padding: Tensor | None,
+            next_unavailable_actions_mask: Tensor | None,
+            cost: float | None = None,
         ) -> None:
             # Another point that prevents this from being a generic class;
             # in a generic class, TranstionType would be a TypeVar and non-callable.
@@ -98,8 +98,8 @@ def make_replay_buffer_class_for_specific_transition_types(
 
         @staticmethod
         def include_attrs_in_batch(
-            attr_names: List[str],
-            transitions: List[Transition],
+            attr_names: list[str],
+            transitions: list[Transition],
             transition_batch: TransitionBatch,
         ) -> TransitionBatchType:
             new_columns = {
@@ -115,7 +115,7 @@ def make_replay_buffer_class_for_specific_transition_types(
 
         def _create_transition_batch(
             self,
-            transitions: List[Transition],
+            transitions: list[Transition],
             is_action_continuous: bool,
         ) -> TransitionBatchType:
             transition_batch = super()._create_transition_batch(

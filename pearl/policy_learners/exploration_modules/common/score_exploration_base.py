@@ -41,10 +41,10 @@ class ScoreExplorationBase(ExplorationModule):
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
-        values: Optional[torch.Tensor] = None,
-        action_availability_mask: Optional[torch.Tensor] = None,
-        exploit_action: Optional[Action] = None,
-        representation: Optional[torch.nn.Module] = None,
+        values: torch.Tensor | None = None,
+        action_availability_mask: torch.Tensor | None = None,
+        exploit_action: Action | None = None,
+        representation: torch.nn.Module | None = None,
     ) -> Action:
         """
         Args:
@@ -96,8 +96,8 @@ class ScoreExplorationBase(ExplorationModule):
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
         values: torch.Tensor,
-        exploit_action: Optional[Action] = None,
-        representation: Optional[torch.nn.Module] = None,
+        exploit_action: Action | None = None,
+        representation: torch.nn.Module | None = None,
     ) -> Action:
         """
         Get the scores for each action.

@@ -53,8 +53,8 @@ class SparseRewardEnvironment(Environment):
         self._reward_distance = reward_distance
 
         # reset will initialize the agent position, goal and step count
-        self._agent_position: Optional[Tuple[float, float]] = None
-        self._goal: Optional[Tuple[float, float]] = None
+        self._agent_position: tuple[float, float] | None = None
+        self._goal: tuple[float, float] | None = None
         self._step_count = 0
 
     @abstractmethod
@@ -72,7 +72,7 @@ class SparseRewardEnvironment(Environment):
         )
         return observation_space
 
-    def reset(self, seed: Optional[int] = None) -> Tuple[torch.Tensor, ActionSpace]:
+    def reset(self, seed: int | None = None) -> tuple[torch.Tensor, ActionSpace]:
 
         # reset (x, y) for agent position
         self._agent_position = (
@@ -94,7 +94,7 @@ class SparseRewardEnvironment(Environment):
             self.action_space,
         )
 
-    def _update_position(self, delta: Tuple[float, float]) -> None:
+    def _update_position(self, delta: tuple[float, float]) -> None:
         """
         Update the agent position, say (x, y) --> (x', y') where:
         x' = x + delta_x
@@ -170,7 +170,7 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
         step_size: float = 0.01,
         max_episode_duration: int = 500,
     ) -> None:
-        super(DiscreteSparseRewardEnvironment, self).__init__(
+        super().__init__(
             width=width,
             height=height,
             max_episode_duration=max_episode_duration,
@@ -178,7 +178,7 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
         )
         self._step_size = step_size
         self._action_count = action_count
-        self._actions: List[torch.Tensor] = [
+        self._actions: list[torch.Tensor] = [
             torch.tensor(
                 [
                     math.cos(2 * math.pi / self._action_count * i),
@@ -191,9 +191,7 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
 
     def step(self, action: Action) -> ActionResult:
         assert action < self._action_count and action >= 0
-        return super(DiscreteSparseRewardEnvironment, self).step(
-            self._actions[int(action.item())]
-        )
+        return super().step(self._actions[int(action.item())])
 
     @property
     def action_space(self) -> DiscreteActionSpace:

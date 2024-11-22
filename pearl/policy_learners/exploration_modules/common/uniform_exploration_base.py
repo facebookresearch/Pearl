@@ -34,9 +34,9 @@ class UniformExplorationBase(ExplorationModule):
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
-        exploit_action: Optional[Action] = None,
-        values: Optional[torch.Tensor] = None,
-        action_availability_mask: Optional[torch.Tensor] = None,
-        representation: Optional[torch.nn.Module] = None,
+        exploit_action: Action | None = None,
+        values: torch.Tensor | None = None,
+        action_availability_mask: torch.Tensor | None = None,
+        representation: torch.nn.Module | None = None,
     ) -> Action:
         pass

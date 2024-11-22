@@ -7,7 +7,8 @@
 
 # pyre-strict
 
-from typing import cast, Iterable, Optional, Tuple, Type, Union
+from collections.abc import Iterable
+from typing import cast, Optional, Tuple, Type, Union
 
 import torch
 import torch.nn as nn
@@ -41,10 +42,10 @@ as well as compute optimization losses.
 
 def make_critic(
     state_dim: int,
-    hidden_dims: Optional[Iterable[int]],
+    hidden_dims: Iterable[int] | None,
     use_twin_critic: bool,
-    network_type: Union[Type[ValueNetwork], Type[QValueNetwork]],
-    action_dim: Optional[int] = None,
+    network_type: type[ValueNetwork] | type[QValueNetwork],
+    action_dim: int | None = None,
 ) -> nn.Module:
     """
     A utility function to instantiate a critic network. Critic networks are used by different
@@ -75,7 +76,7 @@ def make_critic(
         # cast network_type to get around static Pyre type checking; the runtime check with
         # `issubclass` ensures the network type is a sublcass of QValueNetwork
         # pyre-fixme[22]: The cast is redundant.
-        network_type = cast(Type[QValueNetwork], network_type)
+        network_type = cast(type[QValueNetwork], network_type)
 
         return TwinCritic(
             state_dim=state_dim,
@@ -178,7 +179,7 @@ def twin_critic_action_value_loss(
     action_batch: torch.Tensor,
     expected_target_batch: torch.Tensor,
     critic: TwinCritic,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     This method calculates the sum of the mean squared errors between the predicted Q-values
     using critic networks (LHS of the Bellman equation) and the input target estimates (RHS of the

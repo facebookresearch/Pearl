@@ -32,9 +32,9 @@ class EpistemicNeuralNetwork(ABC, nn.Module):
     """
 
     def __init__(
-        self, input_dim: int, hidden_dims: Optional[List[int]], output_dim: int = 1
+        self, input_dim: int, hidden_dims: list[int] | None, output_dim: int = 1
     ) -> None:
-        super(EpistemicNeuralNetwork, self).__init__()
+        super().__init__()
 
     @abstractmethod
     def forward(self, x: Tensor, z: Tensor) -> Tensor:
@@ -62,11 +62,11 @@ class MLPWithPrior(nn.Module):
     def __init__(
         self,
         input_dim: int,
-        hidden_dims: Optional[List[int]],
+        hidden_dims: list[int] | None,
         output_dim: int = 1,
         scale: float = 1.0,
     ) -> None:
-        super(MLPWithPrior, self).__init__()
+        super().__init__()
         self.base_net: nn.Module = mlp_block(input_dim, hidden_dims, output_dim)
         self.prior_net: nn.Module = mlp_block(input_dim, hidden_dims, output_dim).eval()
         self.scale = scale
@@ -99,12 +99,12 @@ class Ensemble(EpistemicNeuralNetwork):
     def __init__(
         self,
         input_dim: int,
-        hidden_dims: Optional[List[int]],
+        hidden_dims: list[int] | None,
         output_dim: int = 1,
         ensemble_size: int = 10,
         prior_scale: float = 1.0,
     ) -> None:
-        super(Ensemble, self).__init__(input_dim, hidden_dims, output_dim)
+        super().__init__(input_dim, hidden_dims, output_dim)
         self.ensemble_size = ensemble_size
 
         self.models = nn.ModuleList(
@@ -144,9 +144,9 @@ class Priornet(nn.Module):
     """
 
     def __init__(
-        self, input_dim: int, hidden_dims: List[int], output_dim: int, index_dim: int
+        self, input_dim: int, hidden_dims: list[int], output_dim: int, index_dim: int
     ) -> None:
-        super(Priornet, self).__init__()
+        super().__init__()
         self.input_dim = input_dim
         self.hidden_dims = hidden_dims
         self.output_dim = output_dim
@@ -164,8 +164,8 @@ class Priornet(nn.Module):
         self.base_model = self.base_model.to("meta")
         self.models: nn.ModuleList = nn.ModuleList(models)
 
-        self.params: Dict[str, Any]
-        self.buffers: Dict[str, Any]
+        self.params: dict[str, Any]
+        self.buffers: dict[str, Any]
         self.generate_params_buffers()
 
     def generate_params_buffers(self) -> None:
@@ -175,7 +175,7 @@ class Priornet(nn.Module):
         self.params, self.buffers = torch.func.stack_module_state(self.models)
 
     def call_single_model(
-        self, params: Dict[str, Any], buffers: Dict[str, Any], data: Tensor
+        self, params: dict[str, Any], buffers: dict[str, Any], data: Tensor
     ) -> Tensor:
         """
         Method for parallelizing priornet forward passes with torch.vmap.
@@ -210,11 +210,11 @@ class Epinet(EpistemicNeuralNetwork):
         input_dim: int,
         output_dim: int,
         num_indices: int,
-        epi_hiddens: List[int],
-        prior_hiddens: List[int],
+        epi_hiddens: list[int],
+        prior_hiddens: list[int],
         prior_scale: float,
     ) -> None:
-        super(Epinet, self).__init__(input_dim, None, output_dim)
+        super().__init__(input_dim, None, output_dim)
         self.index_dim = index_dim
         self.input_dim = input_dim
         self.output_dim = output_dim

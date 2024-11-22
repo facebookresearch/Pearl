@@ -37,7 +37,7 @@ DATA_PATH: str = "./utils/instantiations/environments/uci_datasets"
 """
 Experiment config
 """
-run_config_def: Dict[str, Any] = {
+run_config_def: dict[str, Any] = {
     "T": 10000,
     "training_rounds": 10,
     "num_of_experiments": 5,
@@ -47,7 +47,7 @@ UCI Dataset configs
 """
 # satimage uci dataset
 satimage_uci: str = os.path.join(DATA_PATH, "satimage/sat.trn")
-satimage_uci_dict: Dict[str, Any] = {
+satimage_uci_dict: dict[str, Any] = {
     "path_filename": satimage_uci,
     "action_embeddings": "discrete",
     "delim_whitespace": True,
@@ -57,14 +57,14 @@ satimage_uci_dict: Dict[str, Any] = {
 
 # letter uci dataset
 letter_uci: str = os.path.join(DATA_PATH, "letter/letter-recognition.data")
-letter_uci_dict: Dict[str, Any] = {
+letter_uci_dict: dict[str, Any] = {
     "path_filename": letter_uci,
     "action_embeddings": "discrete",
 }
 
 # yeast uci dataset
 yeast_uci: str = os.path.join(DATA_PATH, "yeast/yeast.data")
-yeast_uci_dict: Dict[str, Any] = {
+yeast_uci_dict: dict[str, Any] = {
     "path_filename": yeast_uci,
     "action_embeddings": "discrete",
     "delim_whitespace": True,
@@ -74,7 +74,7 @@ yeast_uci_dict: Dict[str, Any] = {
 
 # pendigits uci dataset
 pendigits_uci: str = os.path.join(DATA_PATH, "pendigits/pendigits.tra")
-pendigits_uci_dict: Dict[str, Any] = {
+pendigits_uci_dict: dict[str, Any] = {
     "path_filename": pendigits_uci,
     "action_embeddings": "discrete",
     "delim_whitespace": False,
@@ -89,13 +89,13 @@ CB config
 
 def return_neural_squarecb_config(
     env: SLCBEnvironment,
-    run_config: Dict[str, Any] = run_config_def,
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    run_config: dict[str, Any] = run_config_def,
+) -> tuple[dict[str, Any], dict[str, Any]]:
 
     feature_dim: int = env.observation_dim
     dim_actions: int = env.bits_num
 
-    policy_learner_dict: Dict[str, Any] = {
+    policy_learner_dict: dict[str, Any] = {
         "name": "NeuralBandit",
         "method": NeuralBandit,
         "params": {
@@ -114,7 +114,7 @@ def return_neural_squarecb_config(
         torch.sqrt(torch.tensor(run_config["T"]) * (feature_dim + dim_actions)).item()
         * 10.0
     )
-    exploration_module_dict: Dict[str, Any] = {
+    exploration_module_dict: dict[str, Any] = {
         "name": "SquareCBExploration",
         "method": SquareCBExploration,
         "params": {"gamma": gamma},
@@ -125,14 +125,14 @@ def return_neural_squarecb_config(
 
 def return_neural_lin_ucb_config(
     env: SLCBEnvironment,
-    run_config: Dict[str, Any] = run_config_def,
+    run_config: dict[str, Any] = run_config_def,
     alpha: float = 1.0,
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+) -> tuple[dict[str, Any], dict[str, Any]]:
 
     feature_dim: int = env.observation_dim
     dim_actions: int = env.bits_num
 
-    policy_learner_dict: Dict[str, Any] = {
+    policy_learner_dict: dict[str, Any] = {
         "name": "NeuralLinearBandit",
         "method": NeuralLinearBandit,
         "params": {
@@ -148,7 +148,7 @@ def return_neural_lin_ucb_config(
         },
     }
 
-    exploration_module_dict: Dict[str, Any] = {
+    exploration_module_dict: dict[str, Any] = {
         "name": "UCBExploration",
         "method": UCBExploration,
         "params": {"alpha": alpha},
@@ -159,14 +159,14 @@ def return_neural_lin_ucb_config(
 
 def return_neural_lin_ts_config(
     env: SLCBEnvironment,
-    run_config: Dict[str, Any] = run_config_def,
+    run_config: dict[str, Any] = run_config_def,
     alpha: float = 0.25,
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+) -> tuple[dict[str, Any], dict[str, Any]]:
 
     feature_dim: int = env.observation_dim
     dim_actions: int = env.bits_num
 
-    policy_learner_dict: Dict[str, Any] = {
+    policy_learner_dict: dict[str, Any] = {
         "name": "NeuralTSBandit",
         "method": NeuralLinearBandit,
         "params": {
@@ -182,7 +182,7 @@ def return_neural_lin_ts_config(
         },
     }
 
-    exploration_module_dict: Dict[str, Any] = {
+    exploration_module_dict: dict[str, Any] = {
         "name": "ThompsonSamplingExplorationLinear",
         "method": ThompsonSamplingExplorationLinear,
         "params": {},
@@ -193,7 +193,7 @@ def return_neural_lin_ts_config(
 
 def return_offline_eval_config(
     env: SLCBEnvironment,
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+) -> tuple[dict[str, Any], dict[str, Any]]:
     dim_actions: int = env.bits_num
     exploration_module_dict = {"name": "None"}
     policy_learner_dict = {
@@ -212,13 +212,13 @@ def return_offline_eval_config(
 
 def return_neural_fastcb_config(
     env: SLCBEnvironment,
-    run_config: Dict[str, Any] = run_config_def,
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    run_config: dict[str, Any] = run_config_def,
+) -> tuple[dict[str, Any], dict[str, Any]]:
 
     feature_dim: int = env.observation_dim
     dim_actions: int = env.bits_num
 
-    policy_learner_dict: Dict[str, Any] = {
+    policy_learner_dict: dict[str, Any] = {
         "name": "NeuralBandit",
         "method": NeuralBandit,
         "params": {
@@ -237,7 +237,7 @@ def return_neural_fastcb_config(
         torch.sqrt(torch.tensor(run_config["T"]) * (feature_dim + dim_actions)).item()
         * 10.0
     )
-    exploration_module_dict: Dict[str, Any] = {
+    exploration_module_dict: dict[str, Any] = {
         "name": "FastCBExploration",
         "method": FastCBExploration,
         "params": {"gamma": gamma},

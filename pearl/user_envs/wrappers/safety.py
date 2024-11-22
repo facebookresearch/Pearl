@@ -18,7 +18,7 @@ class PuckWorldSafetyWrapper(gym.Wrapper):
     """
 
     def __init__(self, env, sigma=0.1):
-        super(PuckWorldSafetyWrapper, self).__init__(env)
+        super().__init__(env)
         self.sigma = sigma
 
     def step(self, action):

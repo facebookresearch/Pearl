@@ -41,7 +41,7 @@ class SLCBEnvironment(ContextualBanditEnvironment):
         action_embeddings: str = "discrete",
         delim_whitespace: bool = False,
         target_column: int = 0,
-        ind_to_drop: Optional[List[int]] = None,
+        ind_to_drop: list[int] | None = None,
     ) -> None:
 
         if ind_to_drop is None:
@@ -115,8 +115,8 @@ class SLCBEnvironment(ContextualBanditEnvironment):
         self.reward_noise_sigma = reward_noise_sigma
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-        self._current_label: Union[int, None] = None
-        self._observation: Union[torch.Tensor, None] = None
+        self._current_label: int | None = None
+        self._observation: torch.Tensor | None = None
         self.bits_num: int = bits_num
 
     def action_transfomer(
@@ -145,14 +145,14 @@ class SLCBEnvironment(ContextualBanditEnvironment):
             raise Exception("Invalid action_embeddings type")
 
     @property
-    def observation_space(self) -> Optional[Space]:
+    def observation_space(self) -> Space | None:
         return self._observation_space
 
     @property
     def action_space(self) -> ActionSpace:
         return self._action_space
 
-    def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
+    def reset(self, seed: int | None = None) -> tuple[Observation, ActionSpace]:
         """
         Provides the observation and action space to the agent.
         """
@@ -190,8 +190,8 @@ class SLCBEnvironment(ContextualBanditEnvironment):
         return "Contextual bandits with CB datasets"
 
 
-def decimalToBinary(n: int, bits_num: int = 5) -> List[float]:
-    string = list("{0:b}".format(int(n)))
+def decimalToBinary(n: int, bits_num: int = 5) -> list[float]:
+    string = list(f"{int(n):b}")
     vec = [0.0 for i in range(bits_num)]
     i = bits_num - 1
     for lett in reversed(string):

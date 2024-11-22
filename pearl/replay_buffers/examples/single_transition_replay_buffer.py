@@ -20,7 +20,7 @@ from pearl.utils.device import get_default_device
 
 
 # Preferred to define inside class but that is not working. Pending discussion.
-SingleTransition = Tuple[
+SingleTransition = tuple[
     SubjectiveState,
     Action,
     Reward,
@@ -43,7 +43,7 @@ def to_default_device_if_tensor(obj: object) -> object:
 
 class SingleTransitionReplayBuffer(ReplayBuffer):
     def __init__(self) -> None:
-        self._transition: Optional[SingleTransition] = None
+        self._transition: SingleTransition | None = None
 
     @property
     def device_for_batches(self) -> torch.device:
@@ -60,11 +60,11 @@ class SingleTransitionReplayBuffer(ReplayBuffer):
         reward: Reward,
         terminated: bool,
         truncated: bool,
-        curr_available_actions: Optional[ActionSpace] = None,
-        next_state: Optional[SubjectiveState] = None,
-        next_available_actions: Optional[ActionSpace] = None,
-        max_number_actions: Optional[int] = None,
-        cost: Optional[float] = None,
+        curr_available_actions: ActionSpace | None = None,
+        next_state: SubjectiveState | None = None,
+        next_available_actions: ActionSpace | None = None,
+        max_number_actions: int | None = None,
+        cost: float | None = None,
     ) -> None:
         # TODO: we use pyre-ignore here because tabular Q learning does not use tensors
         # like other policy learners. It should be converted to do so.
@@ -81,7 +81,7 @@ class SingleTransitionReplayBuffer(ReplayBuffer):
             to_default_device_if_tensor(cost),
         )
 
-    def sample(self, batch_size: int) -> List[SingleTransition]:
+    def sample(self, batch_size: int) -> list[SingleTransition]:
         assert batch_size == 1, "Only batch size 1 is supported"
         assert (
             self._transition is not None

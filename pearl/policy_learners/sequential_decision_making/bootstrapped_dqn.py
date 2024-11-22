@@ -63,7 +63,7 @@ class BootstrappedDQN(DeepQLearning):
         batch_size: int = 128,
         target_update_freq: int = 10,
         soft_update_tau: float = 1.0,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
+        action_representation_module: ActionRepresentationModule | None = None,
     ) -> None:
         assert isinstance(action_space, DiscreteActionSpace)
         if action_representation_module is None:
@@ -97,7 +97,7 @@ class BootstrappedDQN(DeepQLearning):
     def ensemble_size(self) -> int:
         return self._Q.ensemble_size
 
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         if not isinstance(batch, TransitionWithBootstrapMaskBatch):
             raise TypeError(
                 f"{type(self).__name__} requires a batch of type "

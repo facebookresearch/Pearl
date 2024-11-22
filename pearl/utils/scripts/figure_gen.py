@@ -36,7 +36,7 @@ from pearl.utils.instantiations.environments.gym_environment import GymEnvironme
 MA_WINDOW_SIZE = 100.0
 
 
-def moving_average(data: List[Value]) -> Value:
+def moving_average(data: list[Value]) -> Value:
     return [
         (
             sum(data[int(i - MA_WINDOW_SIZE + 1) : i + 1]) / MA_WINDOW_SIZE  # pyre-ignore

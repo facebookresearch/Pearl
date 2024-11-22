@@ -8,7 +8,8 @@
 # pyre-strict
 
 import inspect
-from typing import Callable, Iterable, Tuple, Type
+from collections.abc import Callable, Iterable
+from typing import Tuple, Type
 
 import torch
 import torch.nn as nn
@@ -33,10 +34,10 @@ class TwinCritic(torch.nn.Module):
         action_dim: int,
         hidden_dims: Iterable[int],
         init_fn: Callable[[nn.Module], None],
-        network_type: Type[QValueNetwork] = VanillaQValueNetwork,
+        network_type: type[QValueNetwork] = VanillaQValueNetwork,
         output_dim: int = 1,
     ) -> None:
-        super(TwinCritic, self).__init__()
+        super().__init__()
 
         if inspect.isabstract(network_type):
             raise ValueError("network_type must not be abstract")
@@ -68,7 +69,7 @@ class TwinCritic(torch.nn.Module):
         self,
         state_batch: torch.Tensor,
         action_batch: torch.Tensor,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Args:
             state_batch (torch.Tensor): a batch of states with shape (batch_size, state_dim)

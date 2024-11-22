@@ -50,7 +50,7 @@ class DeepExploration(ExplorationModule):
         q_ensemble_network: EnsembleQValueNetwork,
         action_representation_module: torch.nn.Module,
     ) -> None:
-        super(DeepExploration, self).__init__()
+        super().__init__()
         self.q_ensemble_network = q_ensemble_network
         self.action_representation_module = action_representation_module
 
@@ -58,10 +58,10 @@ class DeepExploration(ExplorationModule):
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
-        exploit_action: Optional[Action] = None,
-        values: Optional[torch.Tensor] = None,
-        action_availability_mask: Optional[torch.Tensor] = None,
-        representation: Optional[torch.nn.Module] = None,
+        exploit_action: Action | None = None,
+        values: torch.Tensor | None = None,
+        action_availability_mask: torch.Tensor | None = None,
+        representation: torch.nn.Module | None = None,
     ) -> Action:
         assert isinstance(action_space, DiscreteActionSpace)
         states_repeated = torch.repeat_interleave(

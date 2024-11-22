@@ -66,16 +66,16 @@ class LinearBandit(ContextualBanditBase):
     def __init__(
         self,
         feature_dim: int,
-        exploration_module: Optional[ExplorationModule] = None,
+        exploration_module: ExplorationModule | None = None,
         l2_reg_lambda: float = 1.0,
         gamma: float = 1.0,
         apply_discounting_interval: float = 0.0,
         force_pinv: bool = False,
         training_rounds: int = 100,
         batch_size: int = 128,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
+        action_representation_module: ActionRepresentationModule | None = None,
     ) -> None:
-        super(LinearBandit, self).__init__(
+        super().__init__(
             feature_dim=feature_dim,
             training_rounds=training_rounds,
             batch_size=batch_size,
@@ -107,7 +107,7 @@ class LinearBandit(ContextualBanditBase):
             self.model.apply_discounting()
             self.last_sum_weight_when_discounted = self.model._sum_weight.item()
 
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         """
         A <- A + x*x.t
         b <- b + r*x
@@ -138,7 +138,7 @@ class LinearBandit(ContextualBanditBase):
         self,
         subjective_state: SubjectiveState,
         available_action_space: DiscreteActionSpace,
-        action_availability_mask: Optional[torch.Tensor] = None,
+        action_availability_mask: torch.Tensor | None = None,
         exploit: bool = False,
     ) -> Action:
         """

@@ -24,7 +24,7 @@ class NeuralLinearRegression(MuSigmaCBModel):
     def __init__(
         self,
         feature_dim: int,
-        hidden_dims: List[int],  # last one is the input dim for linear regression
+        hidden_dims: list[int],  # last one is the input dim for linear regression
         l2_reg_lambda_linear: float = 1.0,
         gamma: float = 1.0,
         force_pinv: bool = False,
@@ -32,7 +32,7 @@ class NeuralLinearRegression(MuSigmaCBModel):
         use_batch_norm: bool = False,
         use_layer_norm: bool = False,
         hidden_activation: str = "relu",
-        last_activation: Optional[str] = None,
+        last_activation: str | None = None,
         dropout_ratio: float = 0.0,
         use_skip_connections: bool = True,
         nn_e2e: bool = True,
@@ -61,7 +61,7 @@ class NeuralLinearRegression(MuSigmaCBModel):
                 LinUCB. This can improve learning stability. Sigma is still generated from LinUCB.
 
         """
-        super(NeuralLinearRegression, self).__init__(feature_dim=feature_dim)
+        super().__init__(feature_dim=feature_dim)
         self._nn_layers = VanillaValueNetwork(
             input_dim=feature_dim,
             hidden_dims=hidden_dims,
@@ -122,7 +122,7 @@ class NeuralLinearRegression(MuSigmaCBModel):
 
     def forward_with_intermediate_values(
         self, x: torch.Tensor
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """
         Forward pass, which returns not only the final prediction, but also the intermediate
             values (output of NN layers).

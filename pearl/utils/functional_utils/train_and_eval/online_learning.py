@@ -21,7 +21,7 @@ from pearl.utils.functional_utils.experimentation.plots import fontsize_for
 MA_WINDOW_SIZE = 10
 
 
-def latest_moving_average(data: List[Value]) -> float:
+def latest_moving_average(data: list[Value]) -> float:
     return (
         sum(data[-MA_WINDOW_SIZE:]) * 1.0 / MA_WINDOW_SIZE  # pyre-ignore
         if len(data) >= MA_WINDOW_SIZE
@@ -72,17 +72,17 @@ def online_learning_to_png_graph(
 def online_learning(
     agent: PearlAgent,
     env: Environment,
-    number_of_episodes: Optional[int] = None,
-    number_of_steps: Optional[int] = None,
+    number_of_episodes: int | None = None,
+    number_of_steps: int | None = None,
     learn_after_episode: bool = False,
     learn_every_k_steps: int = 1,
-    print_every_x_episodes: Optional[int] = None,
-    print_every_x_steps: Optional[int] = None,
-    seed: Optional[int] = None,
+    print_every_x_episodes: int | None = None,
+    print_every_x_steps: int | None = None,
+    seed: int | None = None,
     record_period: int = 1,
     learning_start_step: int = 0,
     # TODO: use LearningLogger similarly to offline_learning
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Performs online learning for a number of episodes.
 
@@ -237,9 +237,9 @@ def run_episode(
     learn_after_episode: bool = False,
     learn_every_k_steps: int = 1,
     total_steps: int = 0,
-    seed: Optional[int] = None,
+    seed: int | None = None,
     learning_start_step: int = 0,
-) -> Tuple[Dict[str, Any], int]:
+) -> tuple[dict[str, Any], int]:
     """
     Runs one episode and returns an info dict and number of steps taken.
 

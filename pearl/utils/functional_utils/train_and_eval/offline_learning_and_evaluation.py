@@ -35,9 +35,9 @@ def is_file_readable(file_path: str) -> bool:
 
 def get_offline_data_in_buffer(
     is_action_continuous: bool,
-    url: Optional[str] = None,
-    data_path: Optional[str] = None,
-    max_number_actions_if_discrete: Optional[int] = None,
+    url: str | None = None,
+    data_path: str | None = None,
+    max_number_actions_if_discrete: int | None = None,
     size: int = 1000000,
     device: str = "cpu",
 ) -> ReplayBuffer:
@@ -166,8 +166,8 @@ def offline_evaluation(
     offline_agent: PearlAgent,
     env: Environment,
     number_of_episodes: int = 1000,
-    seed: Optional[int] = None,
-) -> List[float]:
+    seed: int | None = None,
+) -> list[float]:
     """
     Evaluates the performance of an offline trained agent.
 

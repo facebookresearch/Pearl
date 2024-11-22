@@ -36,7 +36,7 @@ class TestHindsightExperienceReplayBuffer(unittest.TestCase):
         ]
         goal = torch.Tensor([1, 1])
         actions = [torch.tensor([i]) for i in range(len(states) - 1)]
-        action_to_next_states: Dict[int, torch.Tensor] = {
+        action_to_next_states: dict[int, torch.Tensor] = {
             int(action.item()): states[i + 1] for i, action in enumerate(actions)
         }
 

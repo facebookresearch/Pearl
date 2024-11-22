@@ -46,13 +46,13 @@ class DisjointBanditContainer(ContextualBanditBase):
     def __init__(
         self,
         feature_dim: int,
-        arm_bandits: List[ContextualBanditBase],
+        arm_bandits: list[ContextualBanditBase],
         exploration_module: ExplorationModule,
         training_rounds: int = 100,
         batch_size: int = 128,
         state_features_only: bool = False,
     ) -> None:
-        super(DisjointBanditContainer, self).__init__(
+        super().__init__(
             feature_dim=feature_dim,
             exploration_module=exploration_module,
             training_rounds=training_rounds,
@@ -62,7 +62,7 @@ class DisjointBanditContainer(ContextualBanditBase):
         self._arm_bandits: torch.nn.ModuleList = torch.nn.ModuleList(arm_bandits)
         self._n_arms: int = len(arm_bandits)
         self._state_features_only = state_features_only
-        self._null_batch: Optional[TransitionBatch] = None
+        self._null_batch: TransitionBatch | None = None
 
     @property
     def n_arms(self) -> int:
@@ -77,7 +77,7 @@ class DisjointBanditContainer(ContextualBanditBase):
             batch.action.max().item() < self._n_arms
         ), "action must be < number of arms"
 
-    def _partition_batch_by_arm(self, batch: TransitionBatch) -> List[TransitionBatch]:
+    def _partition_batch_by_arm(self, batch: TransitionBatch) -> list[TransitionBatch]:
         """
         Break input batch down into per-arm batches based on action
         """
@@ -144,7 +144,7 @@ class DisjointBanditContainer(ContextualBanditBase):
         assert null_batch is not None
         return null_batch
 
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         """
         action_idx determines which of the models the observation will be routed to.
         """
@@ -164,7 +164,7 @@ class DisjointBanditContainer(ContextualBanditBase):
         return returns
 
     @property
-    def models(self) -> List[torch.nn.Module]:
+    def models(self) -> list[torch.nn.Module]:
         """
         Get a list of models of each bandit
         """
@@ -174,7 +174,7 @@ class DisjointBanditContainer(ContextualBanditBase):
         self,
         subjective_state: SubjectiveState,
         available_action_space: ActionSpace,
-        action_availability_mask: Optional[torch.Tensor] = None,
+        action_availability_mask: torch.Tensor | None = None,
         exploit: bool = False,
     ) -> Action:
         assert isinstance(available_action_space, DiscreteActionSpace)

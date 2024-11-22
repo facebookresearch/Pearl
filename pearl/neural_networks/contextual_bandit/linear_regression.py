@@ -45,7 +45,7 @@ class LinearRegression(MuSigmaCBModel):
             we will first try to use regular matrix inversion. If it fails, we will fallback to
             pseudo inverse.
         """
-        super(LinearRegression, self).__init__(feature_dim=feature_dim)
+        super().__init__(feature_dim=feature_dim)
         self.gamma = gamma
         self.l2_reg_lambda = l2_reg_lambda
         self.force_pinv = force_pinv
@@ -136,8 +136,8 @@ class LinearRegression(MuSigmaCBModel):
             return self.pinv(A)
 
     def _validate_train_inputs(
-        self, x: torch.Tensor, y: torch.Tensor, weight: Optional[torch.Tensor]
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        self, x: torch.Tensor, y: torch.Tensor, weight: torch.Tensor | None
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         batch_size = x.shape[0]
         if y.ndim == 1:
             y = y.unsqueeze(-1)
@@ -158,7 +158,7 @@ class LinearRegression(MuSigmaCBModel):
         return x, y, weight
 
     def learn_batch(
-        self, x: torch.Tensor, y: torch.Tensor, weight: Optional[torch.Tensor]
+        self, x: torch.Tensor, y: torch.Tensor, weight: torch.Tensor | None
     ) -> None:
         """
         A <- A + x*x.t

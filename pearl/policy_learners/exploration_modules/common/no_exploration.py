@@ -33,9 +33,9 @@ class NoExploration(ScoreExplorationBase):
         self,
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
-        values: Optional[torch.Tensor] = None,
-        exploit_action: Optional[Action] = None,
-        representation: Optional[torch.nn.Module] = None,
+        values: torch.Tensor | None = None,
+        exploit_action: Action | None = None,
+        representation: torch.nn.Module | None = None,
     ) -> Action:
         if exploit_action is not None:
             raise ValueError("exploit_action shouldn't be used. use `values` instead")

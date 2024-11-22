@@ -53,9 +53,9 @@ class DeepTDLearning(PolicyLearner):
         self,
         exploration_module: ExplorationModule,
         on_policy: bool,
-        state_dim: Optional[int] = None,
-        action_space: Optional[ActionSpace] = None,
-        hidden_dims: Optional[List[int]] = None,
+        state_dim: int | None = None,
+        action_space: ActionSpace | None = None,
+        hidden_dims: list[int] | None = None,
         learning_rate: float = 0.001,
         discount_factor: float = 0.99,
         training_rounds: int = 100,
@@ -63,14 +63,14 @@ class DeepTDLearning(PolicyLearner):
         target_update_freq: int = 10,
         soft_update_tau: float = 0.1,
         is_conservative: bool = False,
-        conservative_alpha: Optional[float] = 2.0,
-        network_type: Type[QValueNetwork] = VanillaQValueNetwork,
-        state_output_dim: Optional[int] = None,
-        action_output_dim: Optional[int] = None,
-        state_hidden_dims: Optional[List[int]] = None,
-        action_hidden_dims: Optional[List[int]] = None,
-        network_instance: Optional[QValueNetwork] = None,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
+        conservative_alpha: float | None = 2.0,
+        network_type: type[QValueNetwork] = VanillaQValueNetwork,
+        state_output_dim: int | None = None,
+        action_output_dim: int | None = None,
+        state_hidden_dims: list[int] | None = None,
+        action_hidden_dims: list[int] | None = None,
+        network_instance: QValueNetwork | None = None,
+        action_representation_module: ActionRepresentationModule | None = None,
     ) -> None:
         """Constructs a DeepTDLearning based policy learner. DeepTDLearning is the base class
         for all value based (i.e. temporal difference learning based) algorithms.
@@ -112,7 +112,7 @@ class DeepTDLearning(PolicyLearner):
                 represent actions as a feature vector. Typically specified at the agent level.
                 Defaults to None.
         """
-        super(DeepTDLearning, self).__init__(
+        super().__init__(
             training_rounds=training_rounds,
             batch_size=batch_size,
             exploration_module=exploration_module,
@@ -252,7 +252,7 @@ class DeepTDLearning(PolicyLearner):
         """
         pass
 
-    def learn_batch(self, batch: TransitionBatch) -> Dict[str, Any]:
+    def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         """
         Batch learning with TD(0) style updates. Different implementations of the
         `get_next_state_values` function correspond to the different RL algorithm implementations,

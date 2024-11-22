@@ -20,7 +20,7 @@ class BinaryActionTensorRepresentationModule(ActionRepresentationModule):
     """
 
     def __init__(self, bits_num: int) -> None:
-        super(BinaryActionTensorRepresentationModule, self).__init__()
+        super().__init__()
         self._bits_num = bits_num
         self._max_number_actions: int = 2**bits_num
 

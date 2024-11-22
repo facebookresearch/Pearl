@@ -47,9 +47,9 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
         self,
         state_dim: int,
         action_space: ActionSpace,
-        hidden_dims: Optional[List[int]] = None,
+        hidden_dims: list[int] | None = None,
         num_quantiles: int = 10,
-        exploration_module: Optional[ExplorationModule] = None,
+        exploration_module: ExplorationModule | None = None,
         on_policy: bool = False,
         learning_rate: float = 5 * 0.0001,
         discount_factor: float = 0.99,
@@ -57,12 +57,12 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
         batch_size: int = 128,
         target_update_freq: int = 10,
         soft_update_tau: float = 0.05,
-        action_representation_module: Optional[ActionRepresentationModule] = None,
-        network_type: Type[QuantileQValueNetwork] = QuantileQValueNetwork,
-        network_instance: Optional[QuantileQValueNetwork] = None,
+        action_representation_module: ActionRepresentationModule | None = None,
+        network_type: type[QuantileQValueNetwork] = QuantileQValueNetwork,
+        network_instance: QuantileQValueNetwork | None = None,
     ) -> None:
         assert isinstance(action_space, DiscreteActionSpace)
-        super(QuantileRegressionDeepQLearning, self).__init__(
+        super().__init__(
             state_dim=state_dim,
             action_space=action_space,
             on_policy=on_policy,

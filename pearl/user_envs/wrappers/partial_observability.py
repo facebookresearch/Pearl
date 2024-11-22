@@ -18,7 +18,7 @@ except ModuleNotFoundError:
 
 class PartialObservableWrapper(gym.Wrapper):
     def __init__(self, env, time_between_two_valid_obs=1):
-        super(PartialObservableWrapper, self).__init__(env)
+        super().__init__(env)
         self.env.number_of_steps = 0
         self.time_between_two_valid_obs = time_between_two_valid_obs
 
@@ -40,9 +40,7 @@ class CartPolePartialObservableWrapper(PartialObservableWrapper):
     r"""Observation wrapper that make CartPole environment partial observable."""
 
     def __init__(self, env, time_between_two_valid_obs=1):
-        super(CartPolePartialObservableWrapper, self).__init__(
-            env, time_between_two_valid_obs
-        )
+        super().__init__(env, time_between_two_valid_obs)
         high = np.array(
             [self.x_threshold * 2, self.theta_threshold_radians * 2, 1.0],
             dtype=np.float32,
@@ -61,9 +59,7 @@ class AcrobotPartialObservableWrapper(PartialObservableWrapper):
     r"""Observation wrapper that make Acrobat environment partial observable."""
 
     def __init__(self, env, time_between_two_valid_obs=1):
-        super(AcrobotPartialObservableWrapper, self).__init__(
-            env, time_between_two_valid_obs
-        )
+        super().__init__(env, time_between_two_valid_obs)
         high = np.array([1.0, 1.0, 1.0, 1.0, 1.0], dtype=np.float32)
         self.observation_space = gym.spaces.Box(low=-high, high=high, dtype=np.float32)
 
@@ -81,9 +77,7 @@ class PendulumPartialObservableWrapper(PartialObservableWrapper):
     r"""Observation wrapper that make Pendulum environment partial observable."""
 
     def __init__(self, env, time_between_two_valid_obs=1):
-        super(PendulumPartialObservableWrapper, self).__init__(
-            env, time_between_two_valid_obs
-        )
+        super().__init__(env, time_between_two_valid_obs)
         high = np.array([1.0, 1.0, 1.0], dtype=np.float32)
         self.observation_space = gym.spaces.Box(low=-high, high=high, dtype=np.float32)
 
@@ -98,9 +92,7 @@ class MountainCarPartialObservableWrapper(PartialObservableWrapper):
     r"""Observation wrapper that make MountainCar environment partial observable."""
 
     def __init__(self, env, time_between_two_valid_obs=1):
-        super(MountainCarPartialObservableWrapper, self).__init__(
-            env, time_between_two_valid_obs
-        )
+        super().__init__(env, time_between_two_valid_obs)
         high = np.array([self.env.max_position, 1.0], dtype=np.float32)
         self.observation_space = gym.spaces.Box(low=-high, high=high, dtype=np.float32)
 
@@ -115,7 +107,7 @@ class PuckWorldPartialObservableWrapper(PartialObservableWrapper):
     r"""Observation wrapper that make PuckWorld environment partial observable."""
 
     def __init__(self, env):
-        super(PuckWorldPartialObservableWrapper, self).__init__(env)
+        super().__init__(env)
         high = np.array([np.inf, np.inf, 3], dtype=np.float32)
         self.observation_space = gym.spaces.Box(low=-high, high=high, dtype=np.float32)
 
