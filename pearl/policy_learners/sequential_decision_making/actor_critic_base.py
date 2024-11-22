@@ -358,8 +358,6 @@ class ActorCriticBase(PolicyLearner):
         # change reward to be the lambda_constraint weighted sum of reward and cost
         if hasattr(self.safety_module, "lambda_constraint"):
             batch.reward = (
-                # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no
-                #  attribute `lambda_constraint`.
                 batch.reward
                 # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no
                 #  attribute `lambda_constraint`.
