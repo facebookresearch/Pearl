@@ -158,7 +158,6 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
     def cost_critic_learn_batch(
         self, batch: TransitionBatch, policy_learner: PolicyLearner
     ) -> dict[str, Any]:
-
         with torch.no_grad():
             # sample next_action from actor's target network; shape (batch_size, action_dim)
             # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute
@@ -179,9 +178,7 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
             # cost + gamma * (min{Qtarget_1(s', a from target actor network),
             #                  Qtarget_2(s', a from target actor network)})
             expected_state_action_values = (
-                next_q
-                * self.cost_discount_factor
-                * (1 - batch.terminated.float())
+                next_q * self.cost_discount_factor * (1 - batch.terminated.float())
                 # pyre-fixme[58]: `+` is not supported for operand types `Tensor` and
                 #  `Optional[Tensor]`.
             ) + batch.cost  # (batch_size)

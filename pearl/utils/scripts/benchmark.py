@@ -14,6 +14,7 @@ To run the code, enter the pearl directory, then run
 (make sure conda and related packages have been installed with
 ./utils/scripts/meta_only/setup_conda_pearl_on_devserver.sh)
 """
+
 import os
 import warnings
 from typing import List
@@ -149,18 +150,18 @@ def evaluate_single(
         if method["action_representation_module"].__name__ in [
             "OneHotActionTensorRepresentationModule",
         ]:
-            method["action_representation_module_args"][
-                "max_number_actions"
-            ] = env.action_space.n
+            method["action_representation_module_args"]["max_number_actions"] = (
+                env.action_space.n
+            )
         if method["action_representation_module"].__name__ in [
             "IdentityActionRepresentationModule"
         ]:
-            method["action_representation_module_args"][
-                "max_number_actions"
-            ] = env.action_space.n
-            method["action_representation_module_args"][
-                "representation_dim"
-            ] = env.action_space.action_dim
+            method["action_representation_module_args"]["max_number_actions"] = (
+                env.action_space.n
+            )
+            method["action_representation_module_args"]["representation_dim"] = (
+                env.action_space.action_dim
+            )
         policy_learner_args["action_representation_module"] = method[
             "action_representation_module"
         ](**method["action_representation_module_args"])

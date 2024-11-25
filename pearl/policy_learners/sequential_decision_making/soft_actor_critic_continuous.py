@@ -151,7 +151,6 @@ class ContinuousSoftActorCritic(ActorCriticBase):
         return actor_critic_loss
 
     def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
-
         reward_batch = batch.reward  # shape: (batch_size)
         terminated_batch = batch.terminated  # shape: (batch_size)
 

@@ -154,7 +154,6 @@ class NeuralLinearBandit(ContextualBanditBase):
         self._history_summarization_module = value
 
     def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
-
         # get scores for logging purpose
         ucb_scores = self.get_scores(batch.state).mean()
 

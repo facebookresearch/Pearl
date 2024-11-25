@@ -76,7 +76,6 @@ def create_offline_data(
         agent.reset(observation, action_space)
         done = False
         while not done:
-
             # exploit is explicitly set to False as we want exploration during data collection with
             # standard benchmark environments like Gym, MuJoCo etc.
             action = agent.act(exploit=False)

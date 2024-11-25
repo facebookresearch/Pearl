@@ -156,9 +156,7 @@ def online_learning(
             info_period = {}
         if number_of_steps is not None and old_total_steps // record_period < (
             total_steps
-        ) // (
-            record_period
-        ):  # record average info value every record_period steps
+        ) // (record_period):  # record average info value every record_period steps
             for key in info_period:
                 info.setdefault(key, []).append(np.mean(info_period[key]))
             info_period = {}

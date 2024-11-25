@@ -43,7 +43,6 @@ class SLCBEnvironment(ContextualBanditEnvironment):
         target_column: int = 0,
         ind_to_drop: list[int] | None = None,
     ) -> None:
-
         if ind_to_drop is None:
             ind_to_drop = []
 
@@ -104,11 +103,9 @@ class SLCBEnvironment(ContextualBanditEnvironment):
 
         # Set observation space and observation dimension
         self.observation_dim: int = tensor.size()[1] - 1  # 0th index is the target
-        self._observation_space: Space = (
-            BoxSpace(  # Box space with low for each dimension = -inf, high for each dimension = inf
-                high=torch.full((self.observation_dim,), float("inf")),
-                low=torch.full((self.observation_dim,), float("-inf")),
-            )
+        self._observation_space: Space = BoxSpace(  # Box space with low for each dimension = -inf, high for each dimension = inf
+            high=torch.full((self.observation_dim,), float("inf")),
+            low=torch.full((self.observation_dim,), float("-inf")),
         )
 
         # Set noise to be added to reward
@@ -157,8 +154,9 @@ class SLCBEnvironment(ContextualBanditEnvironment):
         Provides the observation and action space to the agent.
         """
         data_point = next(iter(self.dataloader_tr))
-        label, observation = data_point[1].to(self.device), data_point[0].to(
-            self.device
+        label, observation = (
+            data_point[1].to(self.device),
+            data_point[0].to(self.device),
         )
         self._observation = torch.squeeze(observation)
         self._current_label = label.to(int)

@@ -90,9 +90,8 @@ class ActorCriticBase(PolicyLearner):
         on_policy: bool = False,
         action_representation_module: ActionRepresentationModule | None = None,
         actor_network_instance: ActorNetwork | None = None,
-        critic_network_instance: None | (
-            ValueNetwork | QValueNetwork | nn.Module
-        ) = None,
+        critic_network_instance: None
+        | (ValueNetwork | QValueNetwork | nn.Module) = None,
     ) -> None:
         super().__init__(
             on_policy=on_policy,

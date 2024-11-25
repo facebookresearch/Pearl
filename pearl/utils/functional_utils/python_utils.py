@@ -44,7 +44,11 @@ ArgType = TypeVar("ArgType")
 
 
 def find_argument(
-    kwarg_key: str, arg_type: type[ArgType], *args, **kwargs  # pyre-ignore
+    kwarg_key: str,
+    arg_type: type[ArgType],
+    # pyre-fixme[2]: Parameter must be annotated.
+    *args,
+    **kwargs,  # pyre-ignore
 ) -> ArgType | None:
     """
     Finds the first argument in args and kwargs that either has type `arg_type` or

@@ -118,7 +118,6 @@ class SoftActorCritic(ActorCriticBase):
         self.scheduler.step()
 
     def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
-
         reward_batch = batch.reward  # (batch_size)
         terminated_batch = batch.terminated  # (batch_size)
 

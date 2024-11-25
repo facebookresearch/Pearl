@@ -52,7 +52,6 @@ def make_replay_buffer_class_for_specific_transition_types(
     # We define a local class using the given transition types,
     # and that will be returned as the result.
     class ReplayBufferForGivenTransitionTypes(TensorBasedReplayBuffer):
-
         # This statement is one reason why making this a generic class does not work;
         # if this is a generic class on TransitionType, then this function call passes
         # the TypeVar, rather than the value of the TypeVar, as an argument,

@@ -167,7 +167,6 @@ class DeepQLearning(DeepTDLearning):
     def _prepare_next_state_action_batch(
         self, batch: TransitionBatch
     ) -> tuple[torch.Tensor, torch.Tensor | None, torch.Tensor | None]:
-
         # This function outputs tensors:
         # - next_state_batch: (batch_size x action_space_size x state_dim).
         # - next_available_actions_batch: (batch_size x action_space_size x action_dim).

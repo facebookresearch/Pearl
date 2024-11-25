@@ -14,6 +14,7 @@ To RUN: (assume under fbcode/)
     second time, something like:
     ../buck-out/v2/gen/fbcode/e97a0788aa35bdc8/pearl/scripts/__figure_gen__/figure_gen.par
 """
+
 import logging
 import sys
 from typing import List
@@ -39,7 +40,9 @@ MA_WINDOW_SIZE = 100.0
 def moving_average(data: list[Value]) -> Value:
     return [
         (
-            sum(data[int(i - MA_WINDOW_SIZE + 1) : i + 1]) / MA_WINDOW_SIZE  # pyre-ignore
+            # pyre-fixme[6]: For 1st argument expected `Iterable[Union[Literal[-20], ...
+            sum(data[int(i - MA_WINDOW_SIZE + 1) : i + 1])
+            / MA_WINDOW_SIZE  # pyre-ignore
             if i >= MA_WINDOW_SIZE
             # pyre-fixme[6]: For 1st argument expected `Iterable[Union[typing_extensi...
             else sum(data[: i + 1]) * 1.0 / (i + 1)

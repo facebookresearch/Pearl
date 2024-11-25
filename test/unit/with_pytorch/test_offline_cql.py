@@ -43,7 +43,6 @@ class TestOfflineCQL(unittest.TestCase):
     """
 
     def test_create_offline_data_and_learn_cql(self) -> None:
-
         # Cartpole environment
         env = GymEnvironment("CartPole-v1")
         assert isinstance(env.action_space, DiscreteActionSpace)

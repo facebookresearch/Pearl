@@ -220,9 +220,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
                 batch, batch_size
             ) * self._discount_factor * (1 - batch.terminated.float()).unsqueeze(
                 -1
-            ) + batch.reward.unsqueeze(
-                -1
-            )
+            ) + batch.reward.unsqueeze(-1)
 
         """
         Step 3: pairwise distributional quantile loss:

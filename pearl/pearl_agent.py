@@ -156,7 +156,11 @@ class PearlAgent(Agent):
             safe_action_space.to(self.device)
 
         action = self.policy_learner.act(
-            subjective_state_to_be_used, safe_action_space, exploit=exploit  # pyre-fixme[6]
+            # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+            #  `Optional[Tensor]`.
+            subjective_state_to_be_used,
+            safe_action_space,
+            exploit=exploit,  # pyre-fixme[6]
         )
 
         self._latest_action = action

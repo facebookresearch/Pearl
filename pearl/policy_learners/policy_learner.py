@@ -238,7 +238,6 @@ class DistributionalPolicyLearner(PolicyLearner):
         action_representation_module: ActionRepresentationModule | None = None,
         **options: Any,
     ) -> None:
-
         super().__init__(
             on_policy=on_policy,
             is_action_continuous=is_action_continuous,

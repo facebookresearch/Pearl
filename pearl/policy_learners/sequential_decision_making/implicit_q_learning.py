@@ -188,7 +188,6 @@ class ImplicitQLearning(ActorCriticBase):
         }
 
     def _value_loss(self, batch: TransitionBatch) -> torch.Tensor:
-
         with torch.no_grad():
             # pyre-fixme[29]: `Union[Tensor, Module]` is not a function.
             q1, q2 = self._critic_target.get_q_values(batch.state, batch.action)

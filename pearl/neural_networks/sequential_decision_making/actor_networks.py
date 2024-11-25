@@ -11,7 +11,6 @@
 This module defines several types of actor neural networks.
 """
 
-
 from typing import List, Optional, Tuple, Union
 
 import torch

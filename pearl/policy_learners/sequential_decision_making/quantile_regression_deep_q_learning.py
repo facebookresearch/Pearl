@@ -122,9 +122,7 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
         #  `get_q_values_under_risk_metric`.
         next_state_action_values = self.safety_module.get_q_values_under_risk_metric(
             next_state_batch_repeated, next_available_actions_batch, self._Q_target
-        ).view(
-            batch_size, -1
-        )  # shape: (batch_size, action_space_size)
+        ).view(batch_size, -1)  # shape: (batch_size, action_space_size)
 
         # make sure that unavailable actions' Q values are assigned to -inf
         next_state_action_values[next_unavailable_actions_mask_batch] = -float("inf")

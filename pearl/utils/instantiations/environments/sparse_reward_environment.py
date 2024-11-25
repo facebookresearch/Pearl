@@ -21,6 +21,7 @@ There are 2 versions in this file:
 - one for discrete action space
 - one for continuous action space
 """
+
 import math
 import random
 from abc import abstractmethod
@@ -73,7 +74,6 @@ class SparseRewardEnvironment(Environment):
         return observation_space
 
     def reset(self, seed: int | None = None) -> tuple[torch.Tensor, ActionSpace]:
-
         # reset (x, y) for agent position
         self._agent_position = (
             self._width / 2,

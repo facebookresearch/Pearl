@@ -98,7 +98,6 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
         )
 
     def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
-
         # sample a batch of actions from the actor network; shape (batch_size, action_dim)
         # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         action_batch = self._actor.sample_action(batch.state)
@@ -116,7 +115,6 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
         return loss
 
     def _critic_loss(self, batch: TransitionBatch) -> torch.Tensor:
-
         with torch.no_grad():
             # sample a batch of next actions from target actor network;
             # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.

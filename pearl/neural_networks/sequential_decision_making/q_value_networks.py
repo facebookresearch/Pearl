@@ -220,7 +220,6 @@ class QuantileQValueNetwork(DistributionalQValueNetwork):
         state_batch: Tensor,
         action_batch: Tensor,
     ) -> Tensor:
-
         x = torch.cat([state_batch, action_batch], dim=-1)
         return self.forward(x)
 
@@ -375,9 +374,7 @@ class DuelingQValueNetwork(QValueNetwork):
             # q value of (state, action) pair of interest
             state_action_values = torch.gather(
                 values_state_available_actions, 1, action_idx
-            ).view(
-                -1
-            )  # shape: (batch_size)
+            ).view(-1)  # shape: (batch_size)
         return state_action_values
 
 
@@ -399,7 +396,6 @@ class TwoTowerNetwork(QValueNetwork):
         hidden_dims: list[int] | None,
         output_dim: int = 1,
     ) -> None:
-
         super().__init__()
 
         """
@@ -479,7 +475,6 @@ class TwoTowerQValueNetwork(TwoTowerNetwork):
         state_hidden_dims: list[int] | None = None,
         action_hidden_dims: list[int] | None = None,
     ) -> None:
-
         super().__init__(
             state_input_dim=state_dim,
             action_input_dim=action_dim,

@@ -289,7 +289,6 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         transitions: list[Transition],
         is_action_continuous: bool,
     ) -> TransitionBatch:
-
         if len(transitions) == 0:
             return TransitionBatch(
                 state=torch.empty(0),

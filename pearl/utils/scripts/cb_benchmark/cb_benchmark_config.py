@@ -91,7 +91,6 @@ def return_neural_squarecb_config(
     env: SLCBEnvironment,
     run_config: dict[str, Any] = run_config_def,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-
     feature_dim: int = env.observation_dim
     dim_actions: int = env.bits_num
 
@@ -128,7 +127,6 @@ def return_neural_lin_ucb_config(
     run_config: dict[str, Any] = run_config_def,
     alpha: float = 1.0,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-
     feature_dim: int = env.observation_dim
     dim_actions: int = env.bits_num
 
@@ -162,7 +160,6 @@ def return_neural_lin_ts_config(
     run_config: dict[str, Any] = run_config_def,
     alpha: float = 0.25,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-
     feature_dim: int = env.observation_dim
     dim_actions: int = env.bits_num
 
@@ -214,7 +211,6 @@ def return_neural_fastcb_config(
     env: SLCBEnvironment,
     run_config: dict[str, Any] = run_config_def,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-
     feature_dim: int = env.observation_dim
     dim_actions: int = env.bits_num
 

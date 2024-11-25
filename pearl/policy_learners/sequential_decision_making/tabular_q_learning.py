@@ -122,7 +122,6 @@ class TabularQLearning(PolicyLearner):
         self,
         replay_buffer: ReplayBuffer,
     ) -> dict[str, Any]:
-
         # We know the sampling result from SingleTransitionReplayBuffer
         # is a list with a single tuple.
         transitions = replay_buffer.sample(1)

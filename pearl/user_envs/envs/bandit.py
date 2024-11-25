@@ -44,7 +44,7 @@ class MeanVarBanditEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
         self,
         *,
         seed: int | None = None,
-        options: dict[str, float] | None = None
+        options: dict[str, float] | None = None,
         # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
     ) -> tuple[np.ndarray, dict[str, float]]:
         super().reset(seed=seed)

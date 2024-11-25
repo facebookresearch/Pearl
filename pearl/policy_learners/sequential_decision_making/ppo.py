@@ -262,9 +262,7 @@ class ProximalPolicyOptimization(ActorCriticBase):
         # and the truncated lambda return for all states in the replay buffer.
         next_value = self._critic(
             self._history_summarization_module(next_state_in_device)
-        ).detach()[
-            0
-        ]  # shape (1,)
+        ).detach()[0]  # shape (1,)
         gae = torch.tensor([0.0]).to(state_values.device)
         for i, transition in enumerate(reversed(replay_buffer.memory)):
             original_transition_device = transition.device

@@ -252,7 +252,6 @@ class TD3BC(TD3):
         self._behavior_policy: torch.nn.Module = behavior_policy
 
     def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
-
         # sample a batch of actions from the actor network; shape (batch_size, action_dim)
         # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         action_batch = self._actor.sample_action(batch.state)

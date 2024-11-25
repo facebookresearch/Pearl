@@ -50,9 +50,7 @@ class DoubleDQN(DeepQLearning):
 
         next_state_action_values = self._Q.get_q_values(
             next_state_batch_repeated, next_available_actions_batch
-        ).view(
-            (batch_size, -1)
-        )  # (batch_size x action_space_size)
+        ).view((batch_size, -1))  # (batch_size x action_space_size)
         # Make sure that unavailable actions' Q values are assigned to -inf
         next_state_action_values[next_unavailable_actions_mask_batch] = -float("inf")
 

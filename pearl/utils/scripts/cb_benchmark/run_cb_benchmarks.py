@@ -307,7 +307,6 @@ def run_cb_benchmarks(
 
 
 def main() -> None:
-
     # load CB algorithm
     cb_algorithms_config: dict[str, Any] = {
         "NeuralSquareCB": return_neural_squarecb_config,

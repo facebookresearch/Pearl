@@ -11,7 +11,6 @@
 This module defines several types of value neural networks.
 """
 
-
 from abc import ABC
 from typing import Any, List, Optional
 
@@ -86,14 +85,12 @@ class VanillaCNN(ValueNetwork):
         output_channels_list: list[int],
         strides: list[int],
         paddings: list[int],
-        hidden_dims_fully_connected: None | (
-            list[int]
-        ) = None,  # hidden dims for fully connected layers
+        hidden_dims_fully_connected: None
+        | (list[int]) = None,  # hidden dims for fully connected layers
         use_batch_norm_conv: bool = False,
         use_batch_norm_fully_connected: bool = False,
         output_dim: int = 1,  # dimension of the final output
     ) -> None:
-
         assert (
             len(kernel_sizes)
             == len(output_channels_list)
