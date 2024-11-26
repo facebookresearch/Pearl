@@ -41,26 +41,51 @@ class LinearBandit(ContextualBanditBase):
     Policy Learner for Contextual Bandit with Linear Policy.
 
     This class implements a policy learner for a contextual bandit problem where the policy is
-    linear. It supports learning through linear regression and can apply discounting to observations
-    based on the number of weighted data points processed. The learner also supports exploration
-    modules for acting based on learned policies.
+    linear and learned through linear regression.
+    See the documentation of LinearRegression for more details on the underlying model.
+
+    It furthermore allows for _discounting_. This provides the model with the ability
+    to "forget" old data and adjust to a new data distribution in a non-stationary
+    environment. The discounting is applied periodically and consists of multiplying
+    the underlying linear system matrices A and b (the model's weights) by gamma
+    (the discounting multiplier). The discounting period is controlled by
+    apply_discounting_interval, which consists of the number of inputs to be
+    processed between different rounds of discounting. Note that, because inputs
+    are weighted,  apply_discounting_interval is more precisely described as
+    the sum of weights of inputs that need to be processed before
+    discounting takes place again. This is expressed in pseudo-code as
+    ```
+    if apply_discounting_interval > 0 and (
+            sum_weights - sum_weights_when_last_discounted
+            >= apply_discounting_interval:
+        A *= discount factor
+        b *= discount factor
+    ```
+    To disable discounting, simply set gamma to 1.
+
+    The learner also supports exploration modules for acting based on learned policies.
 
     Attributes:
         model (LinearRegression): Linear regression model used for learning.
-        apply_discounting_interval (float): Interval for applying discounting to the data points.
-        last_sum_weight_when_discounted (float): The counter for the last data point when discounting was applied.
+        last_sum_weight_when_discounted (float): The counter for the last data point
+                                                 when discounting was applied.
 
     Args:
         feature_dim (int): Dimension of the feature space.
-        exploration_module (Optional[ExplorationModule]): Module for exploring actions.
-        l2_reg_lambda (float): L2 regularization parameter for the linear regression model.
-        gamma (float): Discount factor for discounting observations.
-        apply_discounting_interval (float): number of (weighted observations) for applying discounting to the data points.
-                                            Set to 0.0 to disable.
-        force_pinv (bool): If True, use pseudo-inverse for matrix inversion in the linear model.
-        training_rounds (int): Number of training rounds.
-        batch_size (int): Size of the batches used during training.
-        action_representation_module (Optional[ActionRepresentationModule]): Module for representing actions.
+        exploration_module (Optional[ExplorationModule]): module for exploring actions.
+        l2_reg_lambda (float, default 1.0): L2 regularization parameter for the linear
+                                            regression model.
+        gamma (float, default 1.0): the discounting factor.
+        apply_discounting_interval (float, default 0): number of (weighted) observations for
+                                   applying discounting to the data points. Set to 0.0 to disable.
+        force_pinv (float, default False): if True, we will always use pseudo-inversion to invert
+                                   the A matrix. If False, we will first try to use regular
+                                   matrix inversion.
+                                   If it fails, we will fallback to pseudo-inverse.
+        training_rounds (int): number of training rounds.
+        batch_size (int, default 128): size of the batches used during training.
+        action_representation_module (Optional[ActionRepresentationModule], default identity):
+                                     module for representing actions.
     """
 
     def __init__(

@@ -28,13 +28,38 @@ class LinearRegression(MuSigmaCBModel):
     ) -> None:
         """
         A linear regression model which can estimate both point prediction and uncertainty
-            (standard delivation).
+            (standard deviation).
         Based on the LinUCB paper: https://arxiv.org/pdf/1003.0146.pdf
-        Note that instead of being trained by a PyTorch optimizer, we explicitly
-            update attributes A and b (according to the LinUCB formulas implemented in
-            learn_batch() method)
+
+        Note that instead of being trained by a PyTorch optimizer,
+        we use the analytical Weight Least Square solution to update the model parameters,
+        where the regression coefficients are updated in closed form:
+        coefs = (X^T * X)^-1 * X^T * W * y
+        where W is an optional weight tensor (e.g. for weighted least squares).
+        To compute coefficients, we maintain matrix A = X^T * X and vector b = X^T * W * y,
+        which are updated as new data comes in.
+
         An extra column of ones is appended to the input data for the intercept where necessary.
-            A user should not append a column of ones to the input data.
+        A user should not append a column of ones to the input data.
+
+        It furthermore allows for _discounting_. This provides the model with the ability
+        to "forget" old data and adjust to a new data distribution in a non-stationary
+        environment. The discounting is applied periodically and consists of multiplying
+        the underlying linear system matrices A and b (the model's weights) by gamma
+        (the discounting multiplier). The discounting period is controlled by
+        apply_discounting_interval, which consists of the number of inputs to be
+        processed between different rounds of discounting. Note that, because inputs
+        are weighted,  apply_discounting_interval is more precisely described as
+        the sum of weights of inputs that need to be processed before
+        discounting takes place again. This is expressed in pseudo-code as
+        ```
+        if apply_discounting_interval > 0 and (
+                sum_weights - sum_weights_when_last_discounted
+                >= apply_discounting_interval:
+            A *= discount factor
+            b *= discount factor
+        ```
+        To disable discounting, simply set gamma to 1.
 
         feature_dim: number of features
         l2_reg_lambda: L2 regularization parameter
@@ -192,9 +217,10 @@ class LinearRegression(MuSigmaCBModel):
         A <- A * gamma
         b <- b * gamma
         """
-        logger.info(f"Applying discounting at sum_weight={self._sum_weight}")
-        self._A *= self.gamma
-        self._b *= self.gamma
+        if self.gamma < 1:
+            logger.info(f"Applying discounting at sum_weight={self._sum_weight}")
+            self._A *= self.gamma
+            self._b *= self.gamma
         # don't dicount sum_weight because it's used to determine when to apply discounting
 
         self.calculate_coefs()  # update coefs using new A and b
