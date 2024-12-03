@@ -10,8 +10,6 @@
 import io
 import os
 
-from typing import List, Optional
-
 import torch
 
 from pearl.api.environment import Environment
@@ -27,6 +25,9 @@ from pearl.utils.functional_utils.train_and_eval.learning_logger import (
 )
 from pearl.utils.functional_utils.train_and_eval.online_learning import run_episode
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+
+
+TRAINING_TAG = "training"
 
 
 def is_file_readable(file_path: str) -> bool:
@@ -159,7 +160,7 @@ def offline_learning(
         batch = data_buffer.sample(offline_agent.policy_learner.batch_size)
         assert isinstance(batch, TransitionBatch)
         loss = offline_agent.learn_batch(batch=batch)
-        logger(loss, i, "training")
+        logger(loss, i, TRAINING_TAG)
 
 
 def offline_evaluation(

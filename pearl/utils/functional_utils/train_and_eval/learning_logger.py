@@ -2,7 +2,7 @@
 
 # pyre-strict
 
-from typing import Any, Dict, Protocol
+from typing import Any, Protocol
 
 
 class LearningLogger(Protocol):
