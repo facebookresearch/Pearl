@@ -226,6 +226,8 @@ def ensemble_forward(
         ) -> torch.Tensor:
             return torch.func.functional_call(models[0], (params, buffers), data)
 
+        # pyre-fixme[6]: For 1st argument expected `List[Module]` but got
+        #  `Union[List[Module], ModuleList]`.
         params, buffers = stack_module_state(models)
         values = torch.vmap(wrapper)(params, buffers, features).view(
             (-1, batch_size)

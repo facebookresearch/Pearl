@@ -172,6 +172,7 @@ class Priornet(nn.Module):
         """
         Generate parameters and buffers for the priornet.
         """
+        # pyre-fixme[6]: For 1st argument expected `List[Module]` but got `ModuleList`.
         self.params, self.buffers = torch.func.stack_module_state(self.models)
 
     def call_single_model(
