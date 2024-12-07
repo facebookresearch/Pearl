@@ -347,7 +347,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
                     x.next_unavailable_actions_mask
                 )
 
-        state_batch = torch.cat(state_list)
+        state_batch = torch.cat(state_list).type(torch.float32)
         action_batch = torch.cat(action_list)
         reward_batch = torch.cat(reward_list)
         terminated_batch = torch.cat(terminated_list)
@@ -358,7 +358,7 @@ class TensorBasedReplayBuffer(ReplayBuffer):
             cost_batch = None
         next_state_batch, next_action_batch = None, None
         if has_next_state:
-            next_state_batch = torch.cat(next_state_list)
+            next_state_batch = torch.cat(next_state_list).type(torch.float32)
         if has_next_action:
             next_action_batch = torch.cat(next_action_list)
         curr_available_actions_batch, curr_unavailable_actions_mask_batch = None, None
