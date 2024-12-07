@@ -43,7 +43,7 @@ from pearl.utils.functional_utils.learning.critic_utils import (
 from pearl.utils.replay_buffer_utils import (
     make_replay_buffer_class_for_specific_transition_types,
 )
-from torch import nn
+from torch import nn, optim
 
 
 @dataclass(frozen=False)
@@ -110,6 +110,9 @@ class ProximalPolicyOptimization(ActorCriticBase):
         action_representation_module: ActionRepresentationModule | None = None,
         actor_network_instance: ActorNetwork | None = None,
         critic_network_instance: ValueNetwork | nn.Module | None = None,
+        actor_optimizer: Optional[optim.Optimizer] = None,
+        critic_optimizer: Optional[optim.Optimizer] = None,
+        history_summarization_optimizer: Optional[optim.Optimizer] = None,
     ) -> None:
         super().__init__(
             state_dim=state_dim,
@@ -140,6 +143,9 @@ class ProximalPolicyOptimization(ActorCriticBase):
             action_representation_module=action_representation_module,
             actor_network_instance=actor_network_instance,
             critic_network_instance=critic_network_instance,
+            actor_optimizer=actor_optimizer,
+            critic_optimizer=critic_optimizer,
+            history_summarization_optimizer=history_summarization_optimizer,
         )
         self._epsilon = epsilon
         self._trace_decay_param = trace_decay_param

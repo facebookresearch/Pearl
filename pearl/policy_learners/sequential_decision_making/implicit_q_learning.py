@@ -99,6 +99,10 @@ class ImplicitQLearning(ActorCriticBase):
         actor_network_instance: ActorNetwork | None = None,
         critic_network_instance: QValueNetwork | None = None,
         value_network_instance: ValueNetwork | None = None,
+        actor_optimizer: Optional[optim.Optimizer] = None,
+        critic_optimizer: Optional[optim.Optimizer] = None,
+        history_summarization_optimizer: Optional[optim.Optimizer] = None,
+        value_optimizer: Optional[optim.Optimizer] = None,
     ) -> None:
         super().__init__(
             state_dim=state_dim,
@@ -127,6 +131,9 @@ class ImplicitQLearning(ActorCriticBase):
             action_representation_module=action_representation_module,
             actor_network_instance=actor_network_instance,
             critic_network_instance=critic_network_instance,
+            actor_optimizer=actor_optimizer,
+            critic_optimizer=critic_optimizer,
+            history_summarization_optimizer=history_summarization_optimizer,
         )
 
         self._expectile = expectile
@@ -147,11 +154,14 @@ class ImplicitQLearning(ActorCriticBase):
                 hidden_dims=value_critic_hidden_dims,
                 output_dim=1,
             )
-        self._value_network_optimizer = optim.AdamW(
-            self._value_network.parameters(),
-            lr=value_critic_learning_rate,
-            amsgrad=True,
-        )
+        if value_optimizer is not None:
+            self._value_network_optimizer: optim.Optimizer = value_optimizer
+        else:
+            self._value_network_optimizer = optim.AdamW(
+                self._value_network.parameters(),
+                lr=value_critic_learning_rate,
+                amsgrad=True,
+            )
 
     def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         value_loss = self._value_loss(batch)

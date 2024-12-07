@@ -64,6 +64,7 @@ class BootstrappedDQN(DeepQLearning):
         target_update_freq: int = 10,
         soft_update_tau: float = 1.0,
         action_representation_module: ActionRepresentationModule | None = None,
+        optimizer: Optional[optim.Optimizer] = None,
     ) -> None:
         assert isinstance(action_space, DiscreteActionSpace)
         if action_representation_module is None:
@@ -89,9 +90,12 @@ class BootstrappedDQN(DeepQLearning):
         self._soft_update_tau = soft_update_tau
         self._Q = q_ensemble_network
         self._Q_target: EnsembleQValueNetwork = deepcopy(self._Q)
-        self._optimizer = optim.AdamW(
-            self._Q.parameters(), lr=self._learning_rate, amsgrad=True
-        )
+        if optimizer is not None:
+            self._optimizer: optim.Optimizer = optimizer
+        else:
+            self._optimizer = optim.AdamW(
+                self._Q.parameters(), lr=self._learning_rate, amsgrad=True
+            )
 
     @property
     def ensemble_size(self) -> int:

@@ -71,6 +71,8 @@ class DeepTDLearning(PolicyLearner):
         action_hidden_dims: list[int] | None = None,
         network_instance: QValueNetwork | None = None,
         action_representation_module: ActionRepresentationModule | None = None,
+        optimizer: Optional[optim.Optimizer] = None,
+        **kwargs: Any,
     ) -> None:
         """Constructs a DeepTDLearning based policy learner. DeepTDLearning is the base class
         for all value based (i.e. temporal difference learning based) algorithms.
@@ -165,9 +167,12 @@ class DeepTDLearning(PolicyLearner):
             self._Q = make_specified_network()
 
         self._Q_target: QValueNetwork = copy.deepcopy(self._Q)
-        self._optimizer: torch.optim.Optimizer = optim.AdamW(
-            self._Q.parameters(), lr=learning_rate, amsgrad=True
-        )
+        if optimizer is not None:
+            self._optimizer = optimizer
+        else:
+            self._optimizer: torch.optim.Optimizer = optim.AdamW(
+                self._Q.parameters(), lr=learning_rate, amsgrad=True
+            )
 
     @property
     def optimizer(self) -> torch.optim.Optimizer:

@@ -30,6 +30,7 @@ from pearl.policy_learners.sequential_decision_making.deep_td_learning import (
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from torch import optim
 
 
 class DeepQLearning(DeepTDLearning):
@@ -54,6 +55,7 @@ class DeepQLearning(DeepTDLearning):
         network_type: type[QValueNetwork] = VanillaQValueNetwork,
         action_representation_module: ActionRepresentationModule | None = None,
         network_instance: QValueNetwork | None = None,
+        optimizer: Optional[optim.Optimizer] = None,
         **kwargs: Any,
     ) -> None:
         """Constructs a DeepQLearning policy learner. DeepQLearning is based on DeepTDLearning
@@ -122,6 +124,7 @@ class DeepQLearning(DeepTDLearning):
             batch_size=batch_size,
             target_update_freq=target_update_freq,
             network_instance=network_instance,
+            optimizer=optimizer,
             **kwargs,
         )
 

@@ -92,6 +92,9 @@ class ActorCriticBase(PolicyLearner):
         actor_network_instance: ActorNetwork | None = None,
         critic_network_instance: None
         | (ValueNetwork | QValueNetwork | nn.Module) = None,
+        actor_optimizer: Optional[optim.Optimizer] = None,
+        critic_optimizer: Optional[optim.Optimizer] = None,
+        history_summarization_optimizer: Optional[optim.Optimizer] = None,
     ) -> None:
         super().__init__(
             on_policy=on_policy,
@@ -148,15 +151,19 @@ class ActorCriticBase(PolicyLearner):
                 action_space=action_space,
             )
         self._actor.apply(init_weights)
-        self._actor_optimizer = optim.AdamW(
-            [
-                {
-                    "params": self._actor.parameters(),
-                    "lr": actor_learning_rate,
-                    "amsgrad": True,
-                },
-            ]
-        )
+        if actor_optimizer is not None:
+            self._actor_optimizer: optim.Optimizer = actor_optimizer
+        else:
+            # default actor optimizer
+            self._actor_optimizer = optim.AdamW(
+                [
+                    {
+                        "params": self._actor.parameters(),
+                        "lr": actor_learning_rate,
+                        "amsgrad": True,
+                    },
+                ]
+            )
         self._actor_soft_update_tau = actor_soft_update_tau
 
         # make a copy of the actor network to be used as the actor target network
@@ -189,20 +196,27 @@ class ActorCriticBase(PolicyLearner):
                     network_type=critic_network_type,
                 )
 
-            self._critic_optimizer: optim.Optimizer = optim.AdamW(
-                [
-                    {
-                        "params": self._critic.parameters(),
-                        "lr": critic_learning_rate,
-                        "amsgrad": True,
-                    },
-                ]
-            )
+            if critic_optimizer is not None:
+                self._critic_optimizer: optim.Optimizer = critic_optimizer
+            else:
+                # default actor optimizer
+                self._critic_optimizer: optim.Optimizer = optim.AdamW(
+                    [
+                        {
+                            "params": self._critic.parameters(),
+                            "lr": critic_learning_rate,
+                            "amsgrad": True,
+                        },
+                    ]
+                )
             if self._use_critic_target:
                 self._critic_target: nn.Module = copy.deepcopy(self._critic)
 
         self._discount_factor = discount_factor
+        self._history_summarization_optimizer = history_summarization_optimizer
         self._history_summarization_learning_rate = history_summarization_learning_rate
+        self._actor_learning_rate: float = self._actor_optimizer.param_groups[0]["lr"]
+        self._critic_learning_rate: float = self._critic_optimizer.param_groups[0]["lr"]
 
     def set_history_summarization_module(
         self, value: HistorySummarizationModule
@@ -212,15 +226,17 @@ class ActorCriticBase(PolicyLearner):
         """
         # pyre-fixme[16]: `ActorCriticBase` has no attribute
         #  `_history_summarization_optimizer`.
-        self._history_summarization_optimizer: optim.Optimizer = optim.AdamW(
-            [
-                {
-                    "params": value.parameters(),
-                    "lr": self._history_summarization_learning_rate,
-                    "amsgrad": True,
-                }
-            ]
-        )
+        if self._history_summarization_optimizer is None:
+            # default history summarization optimizer
+            self._history_summarization_optimizer: optim.Optimizer = optim.AdamW(
+                [
+                    {
+                        "params": value.parameters(),
+                        "lr": self._history_summarization_learning_rate,
+                        "amsgrad": True,
+                    }
+                ]
+            )
         self._history_summarization_module = value
 
     def act(
@@ -311,8 +327,7 @@ class ActorCriticBase(PolicyLearner):
             Dict[str, Any]: A dictionary containing the loss reports from the critic
             and actor updates. These can be useful to track for debugging purposes.
         """
-        # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute
-        #  `zero_grad`.
+        assert self._history_summarization_optimizer is not None
         self._history_summarization_optimizer.zero_grad()
         actor_loss = self._actor_loss(batch)
         self._actor_optimizer.zero_grad()
@@ -332,7 +347,7 @@ class ActorCriticBase(PolicyLearner):
             critic_loss.backward()
             self._critic_optimizer.step()
             report["critic_loss"] = critic_loss.item()
-        # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute `step`.
+        assert self._history_summarization_optimizer is not None
         self._history_summarization_optimizer.step()
 
         if self._use_critic_target:

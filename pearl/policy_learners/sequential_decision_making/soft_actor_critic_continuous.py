@@ -65,6 +65,9 @@ class ContinuousSoftActorCritic(ActorCriticBase):
         action_representation_module: ActionRepresentationModule | None = None,
         actor_network_instance: ActorNetwork | None = None,
         critic_network_instance: QValueNetwork | nn.Module | None = None,
+        actor_optimizer: Optional[optim.Optimizer] = None,
+        critic_optimizer: Optional[optim.Optimizer] = None,
+        history_summarization_optimizer: Optional[optim.Optimizer] = None,
     ) -> None:
         super().__init__(
             state_dim=state_dim,
@@ -94,6 +97,9 @@ class ContinuousSoftActorCritic(ActorCriticBase):
             action_representation_module=action_representation_module,
             actor_network_instance=actor_network_instance,
             critic_network_instance=critic_network_instance,
+            actor_optimizer=actor_optimizer,
+            critic_optimizer=critic_optimizer,
+            history_summarization_optimizer=history_summarization_optimizer,
         )
 
         self._entropy_autotune = entropy_autotune
@@ -108,7 +114,7 @@ class ContinuousSoftActorCritic(ActorCriticBase):
                 #  Any]], Iterable[Tuple[str, Tensor]], Iterable[Tensor]]` but got
                 #  `List[Union[Module, Tensor]]`.
                 [self._log_entropy],
-                lr=critic_learning_rate,
+                lr=self._critic_learning_rate,
                 amsgrad=True,
             )
             # pyre-fixme[6]: For 1st argument expected `Tensor` but got

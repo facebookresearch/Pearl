@@ -71,6 +71,9 @@ class SoftActorCritic(ActorCriticBase):
         action_representation_module: ActionRepresentationModule | None = None,
         actor_network_instance: ActorNetwork | None = None,
         critic_network_instance: QValueNetwork | nn.Module | None = None,
+        actor_optimizer: Optional[optim.Optimizer] = None,
+        critic_optimizer: Optional[optim.Optimizer] = None,
+        history_summarization_optimizer: Optional[optim.Optimizer] = None,
     ) -> None:
         super().__init__(
             state_dim=state_dim,
@@ -100,6 +103,9 @@ class SoftActorCritic(ActorCriticBase):
             action_representation_module=action_representation_module,
             actor_network_instance=actor_network_instance,
             critic_network_instance=critic_network_instance,
+            actor_optimizer=actor_optimizer,
+            critic_optimizer=critic_optimizer,
+            history_summarization_optimizer=history_summarization_optimizer,
         )
 
         # This is needed to avoid actor softmax overflow issue.

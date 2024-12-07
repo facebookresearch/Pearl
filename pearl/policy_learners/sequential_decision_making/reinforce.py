@@ -49,6 +49,7 @@ from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.critic_utils import (
     single_critic_state_value_loss,
 )
+from torch import optim
 
 
 @dataclass(frozen=False)
@@ -107,6 +108,9 @@ class REINFORCE(ActorCriticBase):
         action_representation_module: ActionRepresentationModule | None = None,
         actor_network_instance: ActorNetwork | None = None,
         critic_network_instance: ValueNetwork | nn.Module | None = None,
+        actor_optimizer: Optional[optim.Optimizer] = None,
+        critic_optimizer: Optional[optim.Optimizer] = None,
+        history_summarization_optimizer: Optional[optim.Optimizer] = None,
     ) -> None:
         super().__init__(
             state_dim=state_dim,
@@ -137,6 +141,9 @@ class REINFORCE(ActorCriticBase):
             action_representation_module=action_representation_module,
             actor_network_instance=actor_network_instance,
             critic_network_instance=critic_network_instance,
+            actor_optimizer=actor_optimizer,
+            critic_optimizer=critic_optimizer,
+            history_summarization_optimizer=history_summarization_optimizer,
         )
 
     def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:

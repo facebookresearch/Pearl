@@ -36,7 +36,7 @@ from pearl.utils.functional_utils.learning.critic_utils import (
     update_critic_target_network,
 )
 from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
-from torch import nn
+from torch import nn, optim
 
 
 class TD3(DeepDeterministicPolicyGradient):
@@ -68,6 +68,9 @@ class TD3(DeepDeterministicPolicyGradient):
         action_representation_module: ActionRepresentationModule | None = None,
         actor_network_instance: ActorNetwork | None = None,
         critic_network_instance: QValueNetwork | nn.Module | None = None,
+        actor_optimizer: Optional[optim.Optimizer] = None,
+        critic_optimizer: Optional[optim.Optimizer] = None,
+        history_summarization_optimizer: Optional[optim.Optimizer] = None,
     ) -> None:
         assert isinstance(action_space, BoxActionSpace)
         super().__init__(
@@ -88,6 +91,9 @@ class TD3(DeepDeterministicPolicyGradient):
             action_representation_module=action_representation_module,
             actor_network_instance=actor_network_instance,
             critic_network_instance=critic_network_instance,
+            actor_optimizer=actor_optimizer,
+            critic_optimizer=critic_optimizer,
+            history_summarization_optimizer=history_summarization_optimizer,
         )
         self._action_space: BoxActionSpace = action_space
         self._actor_update_freq = actor_update_freq

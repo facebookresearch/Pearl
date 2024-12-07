@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, Dict, List, Type
+from typing import Any, Optional
 
 import torch
 from pearl.api.action_space import ActionSpace
@@ -55,6 +55,7 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
         batch_size: int = 256,
         use_twin_critic: bool = True,
         critic_network_type: type[QValueNetwork] = VanillaQValueNetwork,
+        cost_critic_optimizer: Optional[optim.Optimizer] = None,
     ) -> None:
         super().__init__()
 
@@ -84,15 +85,18 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
             use_twin_critic=self.use_twin_critic,
             network_type=critic_network_type,
         )
-        self.cost_critic_optimizer = optim.AdamW(
-            [
-                {
-                    "params": self.cost_critic.parameters(),
-                    "lr": self.critic_learning_rate,
-                    "amsgrad": True,
-                },
-            ]
-        )
+        if cost_critic_optimizer is not None:
+            self.cost_critic_optimizer: optim.Optimizer = cost_critic_optimizer
+        else:
+            self.cost_critic_optimizer = optim.AdamW(
+                [
+                    {
+                        "params": self.cost_critic.parameters(),
+                        "lr": self.critic_learning_rate,
+                        "amsgrad": True,
+                    },
+                ]
+            )
         self.target_of_cost_critic: nn.Module = make_critic(
             state_dim=self.state_dim,
             action_dim=self.action_dim,

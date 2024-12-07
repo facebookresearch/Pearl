@@ -30,6 +30,7 @@ from pearl.policy_learners.sequential_decision_making.quantile_regression_deep_t
 )
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from torch import optim
 
 
 class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
@@ -60,6 +61,7 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
         action_representation_module: ActionRepresentationModule | None = None,
         network_type: type[QuantileQValueNetwork] = QuantileQValueNetwork,
         network_instance: QuantileQValueNetwork | None = None,
+        optimizer: Optional[optim.Optimizer] = None,
     ) -> None:
         assert isinstance(action_space, DiscreteActionSpace)
         super().__init__(
@@ -82,6 +84,7 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
             network_type=network_type,
             network_instance=network_instance,
             action_representation_module=action_representation_module,
+            optimizer=optimizer,
         )
 
     # QR-DQN is based on QuantileRegressionDeepTDLearning class.

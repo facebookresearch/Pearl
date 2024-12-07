@@ -67,6 +67,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         ] = QuantileQValueNetwork,  # C51 might use a different network type; add that later
         network_instance: QuantileQValueNetwork | None = None,
         action_representation_module: ActionRepresentationModule | None = None,
+        optimizer: Optional[optim.Optimizer] = None,
     ) -> None:
         assert isinstance(action_space, DiscreteActionSpace)
         super().__init__(
@@ -76,6 +77,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             on_policy=on_policy,
             is_action_continuous=False,
             action_representation_module=action_representation_module,
+            optimizer=optimizer,
         )
 
         if hidden_dims is None:
@@ -111,9 +113,12 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             self._Q: QuantileQValueNetwork = make_specified_network()
 
         self._Q_target: QuantileQValueNetwork = copy.deepcopy(self._Q)
-        self._optimizer = optim.AdamW(
-            self._Q.parameters(), lr=learning_rate, amsgrad=True
-        )
+        if optimizer is not None:
+            self._optimizer: optim.Optimizer = optimizer
+        else:
+            self._optimizer = optim.AdamW(
+                self._Q.parameters(), lr=learning_rate, amsgrad=True
+            )
 
     def set_history_summarization_module(
         self, value: HistorySummarizationModule

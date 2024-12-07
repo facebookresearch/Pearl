@@ -25,6 +25,7 @@ from pearl.policy_learners.sequential_decision_making.deep_td_learning import (
     DeepTDLearning,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from torch import optim
 
 
 class DeepSARSA(DeepTDLearning):
@@ -38,6 +39,7 @@ class DeepSARSA(DeepTDLearning):
         action_space: ActionSpace | None = None,
         exploration_module: ExplorationModule | None = None,
         action_representation_module: ActionRepresentationModule | None = None,
+        optimizer: Optional[optim.Optimizer] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(
@@ -50,6 +52,7 @@ class DeepSARSA(DeepTDLearning):
             ),
             on_policy=True,
             action_representation_module=action_representation_module,
+            optimizer=optimizer,
             **kwargs,
         )
 
