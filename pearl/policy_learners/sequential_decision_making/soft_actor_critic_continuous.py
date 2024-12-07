@@ -120,23 +120,17 @@ class ContinuousSoftActorCritic(ActorCriticBase):
             )
         else:
             self.register_buffer("_entropy_coef", torch.tensor(entropy_coef))
+        self._action_batch_log_prob_cache: torch.Tensor = torch.tensor(0.0)
 
     def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         actor_critic_loss = super().learn_batch(batch)
-        state_batch = batch.state  # shape: (batch_size x state_dim)
 
         if self._entropy_autotune:
-            with torch.no_grad():
-                # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
-                _, action_batch_log_prob = self._actor.sample_action(
-                    state_batch, get_log_prob=True
-                )
-
             entropy_optimizer_loss = (
                 # pyre-fixme[6]: For 1st argument expected `Tensor` but got
                 #  `Union[Module, Tensor]`.
                 -torch.exp(self._log_entropy)
-                * (action_batch_log_prob + self._target_entropy)
+                * (self._action_batch_log_prob_cache + self._target_entropy).detach()
             ).mean()
 
             self._entropy_optimizer.zero_grad()
@@ -214,6 +208,7 @@ class ContinuousSoftActorCritic(ActorCriticBase):
             # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         ) = self._actor.sample_action(state_batch, get_log_prob=True)
 
+        self._action_batch_log_prob_cache = action_batch_log_prob
         # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         q1, q2 = self._critic.get_q_values(
             state_batch=state_batch, action_batch=action_batch
