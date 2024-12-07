@@ -93,7 +93,6 @@ class TD3(DeepDeterministicPolicyGradient):
         self._actor_update_freq = actor_update_freq
         self._actor_update_noise = actor_update_noise
         self._actor_update_noise_clip = actor_update_noise_clip
-        self._critic_update_count = 0
         self._last_actor_loss: float = 0.0
 
     def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
@@ -101,13 +100,12 @@ class TD3(DeepDeterministicPolicyGradient):
         # for the same reason as in the comment "If the history summarization module ..."
         # in the learn_batch function in actor_critic_base.py.
 
-        self._critic_update_count += 1
         report = {}
         # delayed actor update
         # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute
         #  `zero_grad`.
         self._history_summarization_optimizer.zero_grad()
-        if self._critic_update_count % self._actor_update_freq == 0:
+        if self._training_steps % self._actor_update_freq == 0:
             self._actor_optimizer.zero_grad()
             actor_loss = self._actor_loss(batch)
             actor_loss.backward(retain_graph=True)
@@ -123,7 +121,7 @@ class TD3(DeepDeterministicPolicyGradient):
         # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute `step`.
         self._history_summarization_optimizer.step()
 
-        if self._critic_update_count % self._actor_update_freq == 0:
+        if self._training_steps % self._actor_update_freq == 0:
             # update targets of critics using soft updates
             update_critic_target_network(
                 self._critic_target,
