@@ -7,6 +7,7 @@
 
 # pyre-strict
 
+from .atari_wrappers import EpisodicLifeEnv, FireResetEnv, MaxAndSkipEnv, NoopResetEnv
 from .dynamic_action_env import DynamicActionSpaceWrapper
 from .gym_avg_torque_cost import GymAvgTorqueWrapper
 from .partial_observability import (
@@ -39,4 +40,8 @@ __all__ = [
     "PartialObservableWrapper",
     "GymAvgTorqueWrapper",
     "DynamicActionSpaceWrapper",
+    "NoopResetEnv",
+    "FireResetEnv",
+    "EpisodicLifeEnv",
+    "MaxAndSkipEnv",
 ]

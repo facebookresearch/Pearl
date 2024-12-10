@@ -23,6 +23,7 @@ from pearl.neural_networks.sequential_decision_making.actor_networks import (
     VanillaContinuousActorNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.q_value_networks import (
+    CNNQValueNetwork,
     DuelingQValueNetwork,
     EnsembleQValueNetwork,
     VanillaQValueNetwork,
@@ -91,9 +92,13 @@ from pearl.user_envs.wrappers import (
     AcrobotPartialObservableWrapper,
     AcrobotSparseRewardWrapper,
     CartPolePartialObservableWrapper,
+    EpisodicLifeEnv,
+    FireResetEnv,
     GymAvgTorqueWrapper,
+    MaxAndSkipEnv,
     MountainCarPartialObservableWrapper,
     MountainCarSparseRewardWrapper,
+    NoopResetEnv,
     PendulumPartialObservableWrapper,
     PendulumSparseRewardWrapper,
     PuckWorldPartialObservableWrapper,
@@ -139,6 +144,29 @@ DQN_LSTM_method = {
         "history_length": 4,
         "num_layers": 1,
     },
+}
+DQN_Atari_method = {
+    "name": "DQN",
+    "policy_learner": DeepQLearning,
+    "policy_learner_args": {
+        "training_rounds": 1,
+        "target_update_freq": 250,
+        "batch_size": 32,
+    },
+    "network_module": CNNQValueNetwork,
+    "network_args": {
+        "hidden_dims_fully_connected": [512],
+        "kernel_sizes": [8, 4, 3],
+        "output_channels_list": [32, 64, 64],
+        "strides": [4, 2, 1],
+        "paddings": [0, 0, 0],
+    },
+    "exploration_module": EGreedyExploration,
+    "exploration_module_args": {"epsilon": 0.1},
+    "replay_buffer": BasicReplayBuffer,
+    "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
 }
 CDQN_method = {
     "name": "Conservative DQN",
@@ -1309,6 +1337,24 @@ benchmark_cartpole_v1_part_1 = [
     ]
 ]
 
+benchmark_atari = [
+    {
+        "exp_name": "benchmark_atari",
+        "env_name": env_name,
+        "num_runs": 1,
+        "num_steps": classic_control_steps,
+        "print_every_x_steps": print_every_x_steps,
+        "record_period": 10000,
+        "methods": [
+            DQN_Atari_method,
+        ],
+        "device_id": 0,
+    }
+    for env_name in [
+        "PongNoFrameskip-v4",
+    ]
+]
+
 benchmark_cartpole_v1_part_2 = [
     {
         "exp_name": "benchmark_cartpole_v1_part_2",
@@ -1557,5 +1603,19 @@ def get_env(env_name: str) -> GymEnvironment:
     elif env_name[-7:] == "_w_cost":
         env_name = env_name[:-7]
         return GymEnvironment(GymAvgTorqueWrapper(gym.make(env_name)))
+    elif "ALE/" in env_name or "NoFrameskip" in env_name:
+        # Atari envs
+        env = gym.make(
+            env_name,
+        )
+        env = NoopResetEnv(env, noop_max=30)
+        env = MaxAndSkipEnv(env, skip=4)
+        env = EpisodicLifeEnv(env)
+        if "FIRE" in env.unwrapped.get_action_meanings():
+            env = FireResetEnv(env)
+        env = gym.wrappers.ResizeObservation(env, (84, 84))
+        env = gym.wrappers.GrayscaleObservation(env)
+        env = gym.wrappers.FrameStackObservation(env, 4)
+        return GymEnvironment(env)
     else:
         return GymEnvironment(env_name)

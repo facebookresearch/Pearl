@@ -19,9 +19,16 @@ import os
 import warnings
 from typing import List
 
+import ale_py
 import matplotlib.pyplot as plt
 import numpy as np
 import torch.multiprocessing as mp
+from pearl.action_representation_modules.identity_action_representation_module import (
+    IdentityActionRepresentationModule,
+)
+from pearl.neural_networks.sequential_decision_making.q_value_networks import (
+    CNNQValueNetwork,
+)
 from pearl.pearl_agent import PearlAgent
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 
@@ -30,6 +37,7 @@ from pearl.utils.scripts.benchmark_config import (  # noqa: F401
     benchmark_acrobot_v1_part_1,
     benchmark_acrobot_v1_part_2,
     benchmark_ant_v4,
+    benchmark_atari,
     benchmark_cartpole_v1_part_1,
     benchmark_cartpole_v1_part_2,
     benchmark_halfcheetah_v4,
@@ -166,6 +174,11 @@ def evaluate_single(
             "action_representation_module"
         ](**method["action_representation_module_args"])
 
+    else:
+        policy_learner_args["action_representation_module"] = (
+            IdentityActionRepresentationModule()
+        )
+
     if (
         "history_summarization_module" in method
         and "history_summarization_module_args" in method
@@ -205,6 +218,18 @@ def evaluate_single(
         agent_args["history_summarization_module"] = method[
             "history_summarization_module"
         ](**method["history_summarization_module_args"])
+
+    if "network_module" in method and method["network_module"] is CNNQValueNetwork:
+        policy_learner_args["network_instance"] = method["network_module"](
+            input_width=env.observation_space.shape[2],
+            input_height=env.observation_space.shape[1],
+            input_channels_count=env.observation_space.shape[0],
+            action_dim=policy_learner_args[
+                "action_representation_module"
+            ].representation_dim,
+            output_dim=1,
+            **method["network_args"],
+        )
 
     if method["name"] == "DuelingDQN":  # only for Dueling DQN
         assert "network_module" in method and "network_args" in method
@@ -309,8 +334,9 @@ def generate_one_plot(experiment, attributes):
 
 
 if __name__ == "__main__":
-    run(benchmark_pendulum_v1_lstm)
-    generate_plots(benchmark_pendulum_v1_lstm, ["return"])
+    run(benchmark_atari)
+    # run(benchmark_pendulum_v1_lstm)
+    # generate_plots(benchmark_pendulum_v1_lstm, ["return"])
     # run(benchmark_pendulum_v1_lstm2)
     # generate_plots(benchmark_pendulum_v1_lstm2, ["return"])
     # run(benchmark_pendulum_v1_lstm3)
