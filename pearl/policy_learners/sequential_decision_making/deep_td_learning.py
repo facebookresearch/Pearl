@@ -27,6 +27,7 @@ from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     DuelingQValueNetwork,
     QValueNetwork,
     TwoTowerQValueNetwork,
+    VanillaQValueMultiHeadNetwork,
     VanillaQValueNetwork,
 )
 
@@ -146,6 +147,17 @@ class DeepTDLearning(PolicyLearner):
                     state_hidden_dims=state_hidden_dims,
                     action_hidden_dims=action_hidden_dims,
                     output_dim=1,
+                )
+            elif network_type is VanillaQValueMultiHeadNetwork:
+                return network_type(
+                    state_dim=state_dim,
+                    # pyre-fixme[6]: For 2nd argument expected `int` but got
+                    #  `Union[Tensor, Module]`.
+                    action_dim=self._action_representation_module.representation_dim,
+                    hidden_dims=hidden_dims,
+                    # pyre-fixme[6]: For 3rd argument expected `int` but got
+                    # `Union[Tensor, Module]`.
+                    output_dim=self._action_representation_module.max_number_actions,
                 )
             else:
                 assert (

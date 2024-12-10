@@ -24,6 +24,7 @@ from pearl.neural_networks.common.value_networks import VanillaCNN, VanillaValue
 from pearl.utils.functional_utils.learning.extend_state_feature import (
     extend_state_feature_by_available_action_space,
 )
+from pearl.utils.functional_utils.learning.is_one_hot_tensor import is_one_hot_tensor
 from torch import nn, Tensor
 
 
@@ -167,6 +168,73 @@ class VanillaQValueNetwork(QValueNetwork):
         q_values = self.forward(x).squeeze(
             -1
         )  # (batch_size, number_of_actions_to_query)
+        return q_values if len(action_batch) == 3 else q_values.squeeze(-1)
+
+    @property
+    def state_dim(self) -> int:
+        return self._state_dim
+
+    @property
+    def action_dim(self) -> int:
+        return self._action_dim
+
+
+class VanillaQValueMultiHeadNetwork(QValueNetwork):
+    """
+    A vanilla version of state-action value (Q-value) multi-head network.
+    """
+
+    def __init__(
+        self,
+        state_dim: int,
+        action_dim: int,
+        hidden_dims: List[int],
+        output_dim: int,  # action space size
+        use_layer_norm: bool = False,
+    ) -> None:
+        super(VanillaQValueMultiHeadNetwork, self).__init__()
+        self._state_dim: int = state_dim
+        self._action_dim: int = action_dim
+        self._output_dim: int = output_dim
+        self._model: nn.Module = mlp_block(
+            input_dim=state_dim,
+            hidden_dims=hidden_dims,
+            output_dim=output_dim,
+            use_layer_norm=use_layer_norm,
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        return self._model(x)
+
+    def get_q_values(
+        self,
+        state_batch: Tensor,  # (batch_size, state_dim)
+        # (batch_size, number of query actions, action_dim) or (batch_size, action_dim)
+        action_batch: Tensor,
+        curr_available_actions_batch: Optional[Tensor] = None,
+    ) -> Tensor:
+        # action representation is assumed to be one-hot
+        assert is_one_hot_tensor(action_batch)
+        assert self._output_dim == action_batch.shape[-1]  # num actions = action_dim
+        assert len(state_batch.shape) == 2
+        assert len(action_batch.shape) == 3 or len(action_batch.shape) == 2
+        if len(action_batch.shape) == 2:
+            extended_action_batch = action_batch.unsqueeze(1)
+        else:
+            extended_action_batch = action_batch
+
+        # We obtain the values for all actions and filter the queries/available actions
+        # by multiplying q_values for all actions by the one-hot action batch.
+        # We unsqueeze the last dimension to make the q-value column vectors matrices
+        # so they can be multiplied with torch.bmm. Afterwards we squeeze the added dimension back.
+        q_values = self.forward(state_batch).unsqueeze(
+            -1
+        )  # (batch_size x num actions x 1)
+        q_values = torch.bmm(
+            extended_action_batch,  # shape: (batch_size, number of query actions, num actions)
+            q_values,  # (batch_size x num actions x 1)
+        )  # (batch_size x number of query actions x 1)
+        q_values = q_values.squeeze(-1)  # (batch_size x number of query actions)
         return q_values if len(action_batch) == 3 else q_values.squeeze(-1)
 
     @property

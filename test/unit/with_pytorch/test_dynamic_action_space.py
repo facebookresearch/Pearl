@@ -119,7 +119,7 @@ class TestDynamicActionSpaceReplayBuffer(unittest.TestCase):
                         [1, 0, 0, 0, 0],
                     ]
                 ]
-            ),
+            ).float(),
             rtol=0.0,
             atol=0.0,
         )
@@ -146,7 +146,7 @@ class TestDynamicActionSpaceReplayBuffer(unittest.TestCase):
                         [1, 0, 0, 0, 0],
                     ]
                 ]
-            ),
+            ).float(),
             rtol=0.0,
             atol=0.0,
         )

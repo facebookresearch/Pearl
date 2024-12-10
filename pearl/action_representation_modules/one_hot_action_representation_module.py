@@ -27,7 +27,11 @@ class OneHotActionTensorRepresentationModule(ActionRepresentationModule):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if len(x.shape) == 1:
             x = x.unsqueeze(-1)
-        return F.one_hot(x.long(), num_classes=self._max_number_actions).squeeze(dim=-2)
+        return (
+            F.one_hot(x.long(), num_classes=self._max_number_actions)
+            .squeeze(dim=-2)
+            .float()
+        )
         # (batch_size x action_dim)
 
     @property

@@ -60,7 +60,7 @@ def compute_cql_loss(
 
     # Step 2
     q_values_state_actions_in_batch = q_values_state_all_available_actions.gather(
-        1, batch.action
+        1, batch.action.long()
     )
 
     # Step 3

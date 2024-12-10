@@ -15,6 +15,7 @@ from pearl.neural_networks.sequential_decision_making.actor_networks import (
     VanillaContinuousActorNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.q_value_networks import (
+    VanillaQValueMultiHeadNetwork,
     VanillaQValueNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
@@ -122,6 +123,45 @@ class TestIntegration(unittest.TestCase):
                 training_rounds=20,
                 action_representation_module=OneHotActionTensorRepresentationModule(
                     max_number_actions=num_actions
+                ),
+            ),
+            replay_buffer=BasicReplayBuffer(10_000),
+        )
+        self.assertTrue(
+            target_return_is_reached(
+                target_return=500,
+                max_episodes=1000,
+                agent=agent,
+                env=env,
+                learn=True,
+                learn_after_episode=True,
+                exploit=False,
+            )
+        )
+
+    def test_dqn_multi_head_networks(self) -> None:
+        """
+        This test is checking if DQN with multi-head q value networks
+        will eventually get to 500 return for CartPole-v1
+        """
+        env = GymEnvironment("CartPole-v1")
+
+        assert isinstance(env.action_space, DiscreteActionSpace)
+        num_actions = env.action_space.n
+        agent = PearlAgent(
+            policy_learner=DeepQLearning(
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                hidden_dims=[64, 64],
+                training_rounds=20,
+                action_representation_module=OneHotActionTensorRepresentationModule(
+                    max_number_actions=num_actions
+                ),
+                network_instance=VanillaQValueMultiHeadNetwork(
+                    state_dim=env.observation_space.shape[0],
+                    action_dim=num_actions,
+                    hidden_dims=[64, 64],
+                    output_dim=num_actions,
                 ),
             ),
             replay_buffer=BasicReplayBuffer(10_000),
