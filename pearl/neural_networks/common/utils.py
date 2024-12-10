@@ -253,3 +253,13 @@ def update_target_networks(
         list_of_target_networks, list_of_source_networks
     ):
         update_target_network(target_network, source_network, tau)
+
+
+def compute_output_dim_model_cnn(
+    input_channels: int, input_width: int, input_height: int, model_cnn: nn.Module
+) -> int:
+    dummy_input = torch.zeros(1, input_channels, input_width, input_height)
+    dummy_output_flattened = torch.flatten(
+        model_cnn(dummy_input), start_dim=1, end_dim=-1
+    )
+    return dummy_output_flattened.shape[1]

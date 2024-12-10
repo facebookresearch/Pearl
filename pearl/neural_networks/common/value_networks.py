@@ -12,12 +12,16 @@ This module defines several types of value neural networks.
 """
 
 from abc import ABC
-from typing import Any, List, Optional
+from typing import Any
 
 import torch
 import torch.nn as nn
 
-from pearl.neural_networks.common.utils import conv_block, mlp_block
+from pearl.neural_networks.common.utils import (
+    compute_output_dim_model_cnn,
+    conv_block,
+    mlp_block,
+)
 from torch import Tensor
 
 
@@ -124,22 +128,18 @@ class VanillaCNN(ValueNetwork):
             use_batch_norm=self._use_batch_norm_conv,
         )
 
-        self._mlp_input_dims: int = self.compute_output_dim_model_cnn()
+        self._mlp_input_dims: int = compute_output_dim_model_cnn(
+            input_channels=input_channels_count,
+            input_width=input_width,
+            input_height=input_height,
+            model_cnn=self._model_cnn,
+        )
         self._model_fc: nn.Module = mlp_block(
             input_dim=self._mlp_input_dims,
             hidden_dims=self._hidden_dims_fully_connected,
             output_dim=self._output_dim,
             use_batch_norm=self._use_batch_norm_fully_connected,
         )
-
-    def compute_output_dim_model_cnn(self) -> int:
-        dummy_input = torch.zeros(
-            1, self._input_channels, self._input_width, self._input_height
-        )
-        dummy_output_flattened = torch.flatten(
-            self._model_cnn(dummy_input), start_dim=1, end_dim=-1
-        )
-        return dummy_output_flattened.shape[1]
 
     def forward(self, x: Tensor) -> Tensor:
         out_cnn = self._model_cnn(x)

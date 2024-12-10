@@ -77,12 +77,28 @@ class BoxSpace(Space):
     @property
     def low(self) -> Tensor:
         """Returns the lower bound of the space."""
-        return reshape_to_1d_tensor(torch.from_numpy(self._gym_space.low))
+        shape_length = len(self._gym_space.low.shape)
+        if (
+            shape_length == 1
+            or shape_length == 0
+            or (shape_length == 2 and self._gym_space.low.shape[0] == 1)
+        ):
+            return reshape_to_1d_tensor(torch.from_numpy(self._gym_space.low))
+        else:
+            return torch.from_numpy(self._gym_space.low)
 
     @property
     def high(self) -> Tensor:
         """Returns the upper bound of the space."""
-        return reshape_to_1d_tensor(torch.from_numpy(self._gym_space.high))
+        shape_length = len(self._gym_space.low.shape)
+        if (
+            shape_length == 1
+            or shape_length == 0
+            or (shape_length == 2 and self._gym_space.low.shape[0] == 1)
+        ):
+            return reshape_to_1d_tensor(torch.from_numpy(self._gym_space.high))
+        else:
+            return torch.from_numpy(self._gym_space.high)
 
     @property
     def shape(self) -> torch.Size:

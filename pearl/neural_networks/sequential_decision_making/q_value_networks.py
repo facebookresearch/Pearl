@@ -19,8 +19,12 @@ from typing import List, Optional
 
 import torch
 from pearl.neural_networks.common.epistemic_neural_networks import Ensemble
-from pearl.neural_networks.common.utils import mlp_block
-from pearl.neural_networks.common.value_networks import VanillaCNN, VanillaValueNetwork
+from pearl.neural_networks.common.utils import (
+    compute_output_dim_model_cnn,
+    conv_block,
+    mlp_block,
+)
+from pearl.neural_networks.common.value_networks import VanillaValueNetwork
 from pearl.utils.functional_utils.learning.extend_state_feature import (
     extend_state_feature_by_available_action_space,
 )
@@ -702,9 +706,11 @@ class EnsembleQValueNetwork(QValueNetwork):
         return self._action_dim
 
 
-class CNNQValueNetwork(VanillaCNN):
+class CNNQValueNetwork(QValueNetwork):
     """
     A CNN version of state-action value (Q-value) network.
+    The states are assumed to be tensors (input_channels, input_height, input_width)
+    and actions are vectors (action_dim).
     """
 
     def __init__(
@@ -722,49 +728,89 @@ class CNNQValueNetwork(VanillaCNN):
         use_batch_norm_conv: bool = False,
         use_batch_norm_fully_connected: bool = False,
     ) -> None:
-        super().__init__(
-            input_width=input_width,
-            input_height=input_height,
-            input_channels_count=input_channels_count,
-            kernel_sizes=kernel_sizes,
-            output_channels_list=output_channels_list,
-            strides=strides,
-            paddings=paddings,
-            hidden_dims_fully_connected=hidden_dims_fully_connected,
-            use_batch_norm_conv=use_batch_norm_conv,
-            use_batch_norm_fully_connected=use_batch_norm_fully_connected,
-            output_dim=output_dim,
+        super().__init__()
+
+        self._input_channels = input_channels_count
+        self._input_height = input_height
+        self._input_width = input_width
+        self._output_channels = output_channels_list
+        self._kernel_sizes = kernel_sizes
+        self._strides = strides
+        self._paddings = paddings
+        if hidden_dims_fully_connected is None:
+            self._hidden_dims_fully_connected: List[int] = []
+        else:
+            self._hidden_dims_fully_connected: List[int] = hidden_dims_fully_connected
+
+        self._use_batch_norm_conv = use_batch_norm_conv
+        self._use_batch_norm_fully_connected = use_batch_norm_fully_connected
+        self._output_dim = output_dim
+
+        self._model_cnn: nn.Module = conv_block(
+            input_channels_count=self._input_channels,
+            output_channels_list=self._output_channels,
+            kernel_sizes=self._kernel_sizes,
+            strides=self._strides,
+            paddings=self._paddings,
+            use_batch_norm=self._use_batch_norm_conv,
         )
         # we concatenate actions to state representations in the mlp block of the Q-value network
-        self._mlp_input_dims: int = self.compute_output_dim_model_cnn() + action_dim
+        self._mlp_input_dims: int = (
+            compute_output_dim_model_cnn(
+                input_channels=input_channels_count,
+                input_width=input_width,
+                input_height=input_height,
+                model_cnn=self._model_cnn,
+            )
+            + action_dim
+        )
         self._model_fc: nn.Module = mlp_block(
             input_dim=self._mlp_input_dims,
             hidden_dims=self._hidden_dims_fully_connected,
             output_dim=self._output_dim,
             use_batch_norm=self._use_batch_norm_fully_connected,
         )
+        self._state_dim: int = input_channels_count * input_height * input_width
         self._action_dim = action_dim
-
-    def forward(self, x: Tensor) -> Tensor:
-        # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
-        return self._model(x)
 
     def get_q_values(
         self,
-        state_batch: Tensor,
+        state_batch: Tensor,  # shape: (batch_size, input_channels, input_height, input_width)
+        # shape: (batch_size, number_of_actions_to_query, action_dim) or (batch_size, action_dim)
         action_batch: Tensor,
         curr_available_actions_batch: Tensor | None = None,
     ) -> Tensor:
-        batch_size = state_batch.shape[0]
-        state_representation_batch = self._model_cnn(state_batch)
-        state_embedding_batch = torch.flatten(
-            state_representation_batch, start_dim=1, end_dim=-1
-        ).view(batch_size, -1)
+        assert len(state_batch.shape) == 4
+        assert len(action_batch.shape) == 3 or len(action_batch.shape) == 2
+        if len(action_batch.shape) == 2:
+            extended_action_batch = action_batch.unsqueeze(1)
+        else:
+            extended_action_batch = action_batch
 
+        batch_size = state_batch.shape[0]
+        num_query_actions = extended_action_batch.shape[1]
+        state_representation_batch = self._model_cnn(
+            state_batch / 255.0
+        )  # (batch_size, output_channels[-1], output_height, output_width)
+        state_representation_batch = state_representation_batch.view(
+            batch_size, -1
+        )  # (batch_size, state dim)
         # concatenate actions to state representations and do a forward pass through the mlp_block
-        x = torch.cat([state_embedding_batch, action_batch], dim=-1)
-        q_values_batch = self._model_fc(x)
-        return q_values_batch.view(-1)
+        state_representation_batch = torch.repeat_interleave(
+            state_representation_batch.unsqueeze(1), num_query_actions, dim=1
+        )  # (batch_size, number_of_actions_to_query, state_dim)
+        x = torch.cat(
+            [state_representation_batch, extended_action_batch], dim=-1
+        )  # (batch_size, number_of_actions_to_query, (state_dim + action_dim))
+        x = x.view(-1, x.shape[-1])
+        q_values = self._model_fc(x).reshape(
+            batch_size, num_query_actions
+        )  # (batch_size, number_of_actions_to_query)
+        return q_values if len(action_batch) == 3 else q_values.squeeze(-1)
+
+    @property
+    def state_dim(self) -> int:
+        return self._state_dim
 
     @property
     def action_dim(self) -> int:
