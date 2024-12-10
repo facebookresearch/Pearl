@@ -103,11 +103,6 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
 
         assert next_state_batch is not None
         assert isinstance(self._action_space, DiscreteActionSpace)
-        next_state_batch_repeated = torch.repeat_interleave(
-            next_state_batch.unsqueeze(1),
-            self._action_space.n,  # pyre-ignore[16]
-            dim=1,
-        )  # shape: (batch_size x action_space_size x state_dim)
 
         """
         Step 1: get quantiles for all possible actions in the batch
@@ -115,7 +110,7 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
         """
         assert next_available_actions_batch is not None
         next_state_action_quantiles = self._Q_target.get_q_value_distribution(
-            next_state_batch_repeated, next_available_actions_batch
+            next_state_batch, next_available_actions_batch
         )
 
         # get q values from a q value distribution under a risk metric
@@ -124,8 +119,8 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
         # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute
         #  `get_q_values_under_risk_metric`.
         next_state_action_values = self.safety_module.get_q_values_under_risk_metric(
-            next_state_batch_repeated, next_available_actions_batch, self._Q_target
-        ).view(batch_size, -1)  # shape: (batch_size, action_space_size)
+            next_state_batch, next_available_actions_batch, self._Q_target
+        )  # shape: (batch_size, action_space_size)
 
         # make sure that unavailable actions' Q values are assigned to -inf
         next_state_action_values[next_unavailable_actions_mask_batch] = -float("inf")

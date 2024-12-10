@@ -73,7 +73,8 @@ class TwinCritic(torch.nn.Module):
         """
         Args:
             state_batch (torch.Tensor): a batch of states with shape (batch_size, state_dim)
-            action_batch (torch.Tensor): a batch of actions with shape (batch_size, action_dim)
+            action_batch (torch.Tensor): a batch of actions with shape (batch_size,
+                number_of_actions_to_query, action_dim)
         Returns:
             Tuple[torch.Tensor, torch.Tensor]: Q-values of (state, action) pairs with shape
             (batch_size)

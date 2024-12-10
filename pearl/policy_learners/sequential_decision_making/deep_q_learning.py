@@ -147,51 +147,19 @@ class DeepQLearning(DeepTDLearning):
             torch.Tensor: Maximum Q-value over all available actions in the next state.
         """
 
-        (
-            next_state,  # (batch_size x action_space_size x state_dim)
-            next_available_actions,  # (batch_size x action_space_size x action_dim)
-            next_unavailable_actions_mask,  # (batch_size x action_space_size)
-        ) = self._prepare_next_state_action_batch(batch)
-
-        assert next_available_actions is not None
+        assert batch.next_state is not None
+        assert batch.next_available_actions is not None
+        assert batch.next_unavailable_actions_mask is not None
+        assert isinstance(self._action_space, DiscreteActionSpace)
 
         # Get Q values for each (state, action), where action \in {available_actions}
         next_state_action_values = self._Q_target.get_q_values(
-            next_state, next_available_actions
-        ).view(batch_size, -1)
-        # (batch_size x action_space_size)
+            batch.next_state,  # (batch_size x state_dim)
+            batch.next_available_actions,  # (batch_size x action_space_size x action_dim)
+        )  # (batch_size x action_space_size)
 
         # Make sure that unavailable actions' Q values are assigned to -inf
-        next_state_action_values[next_unavailable_actions_mask] = -float("inf")
+        next_state_action_values[batch.next_unavailable_actions_mask] = -float("inf")
 
         # Torch.max(1) returns value, indices
         return next_state_action_values.max(1)[0]  # (batch_size)
-
-    def _prepare_next_state_action_batch(
-        self, batch: TransitionBatch
-    ) -> tuple[torch.Tensor, torch.Tensor | None, torch.Tensor | None]:
-        # This function outputs tensors:
-        # - next_state_batch: (batch_size x action_space_size x state_dim).
-        # - next_available_actions_batch: (batch_size x action_space_size x action_dim).
-        # - next_unavailable_actions_mask_batch: (batch_size x action_space_size).
-
-        next_state_batch = batch.next_state  # (batch_size x state_dim)
-        assert next_state_batch is not None
-
-        next_available_actions_batch = batch.next_available_actions
-        # (batch_size x action_space_size x action_dim)
-
-        next_unavailable_actions_mask_batch = batch.next_unavailable_actions_mask
-        # (batch_size x action_space_size)
-
-        assert isinstance(self._action_space, DiscreteActionSpace)
-        number_of_actions = self._action_space.n
-        next_state_batch_repeated = torch.repeat_interleave(
-            next_state_batch.unsqueeze(1), number_of_actions, dim=1
-        )  # (batch_size x action_space_size x state_dim)
-
-        return (
-            next_state_batch_repeated,
-            next_available_actions_batch,
-            next_unavailable_actions_mask_batch,
-        )

@@ -214,22 +214,17 @@ class DeepTDLearning(PolicyLearner):
         # Fix the available action space.
         assert isinstance(available_action_space, DiscreteActionSpace)
         with torch.no_grad():
-            states_repeated = torch.repeat_interleave(
-                subjective_state.unsqueeze(0),
-                available_action_space.n,
-                dim=0,
-            )
-            # (action_space_size x state_dim)
+            batched_actions_representation = self._action_representation_module(
+                available_action_space.actions_batch.to(subjective_state)
+            ).unsqueeze(0)  # (1 x number of actions x action_dim)
 
-            actions = self._action_representation_module(
-                available_action_space.actions_batch.to(states_repeated)
-            )
-            # (action_space_size, action_dim)
-
-            q_values = self._Q.get_q_values(states_repeated, actions)
+            q_values = self._Q.get_q_values(
+                subjective_state.unsqueeze(0),  # (1 x state_dim)
+                batched_actions_representation,
+            )  # (1 x number of actions)
             # this does a forward pass since all avaialble
             # actions are already stacked together
-
+            q_values = q_values.squeeze(0)  # (number of actions)
             exploit_action_index = torch.argmax(q_values)
             exploit_action = available_action_space.actions[exploit_action_index]
 
@@ -282,7 +277,7 @@ class DeepTDLearning(PolicyLearner):
             state_batch=state_batch,
             action_batch=action_batch,
             curr_available_actions_batch=batch.curr_available_actions,
-        )
+        )  # (batch_size)
         # for duelling dqn, specifying the `curr_available_actions_batch` field takes care of
         # the mean subtraction for advantage estimation
 

@@ -147,12 +147,27 @@ class VanillaQValueNetwork(QValueNetwork):
 
     def get_q_values(
         self,
-        state_batch: Tensor,
+        state_batch: Tensor,  # (batch_size, state_dim)
+        # (batch_size, number of query actions, action_dim) or (batch_size, action_dim)
         action_batch: Tensor,
         curr_available_actions_batch: Tensor | None = None,
     ) -> Tensor:
-        x = torch.cat([state_batch, action_batch], dim=-1)
-        return self.forward(x).view(-1)
+        assert len(state_batch.shape) == 2
+        assert len(action_batch.shape) == 3 or len(action_batch.shape) == 2
+        if len(action_batch.shape) == 2:
+            extended_action_batch = action_batch.unsqueeze(1)
+        else:
+            extended_action_batch = action_batch
+        state_batch = extend_state_feature_by_available_action_space(
+            state_batch, extended_action_batch
+        )  # (batch_size, number_of_actions_to_query, state_dim)
+        x = torch.cat(
+            [state_batch, extended_action_batch], dim=-1
+        )  # (batch_size, number_of_actions_to_query, (state_dim + action_dim))
+        q_values = self.forward(x).squeeze(
+            -1
+        )  # (batch_size, number_of_actions_to_query)
+        return q_values if len(action_batch) == 3 else q_values.squeeze(-1)
 
     @property
     def state_dim(self) -> int:
@@ -217,11 +232,27 @@ class QuantileQValueNetwork(DistributionalQValueNetwork):
 
     def get_q_value_distribution(
         self,
-        state_batch: Tensor,
+        state_batch: Tensor,  # (batch_size x state_dim)
+        # (batch_size, number of query actions, action_dim) or (batch_size, action_dim)
         action_batch: Tensor,
     ) -> Tensor:
-        x = torch.cat([state_batch, action_batch], dim=-1)
-        return self.forward(x)
+        assert len(state_batch.shape) == 2
+        assert len(action_batch.shape) == 3 or len(action_batch.shape) == 2
+        if len(action_batch.shape) == 2:
+            extended_action_batch = action_batch.unsqueeze(1)
+        else:
+            extended_action_batch = action_batch
+
+        state_batch = extend_state_feature_by_available_action_space(
+            state_batch, extended_action_batch
+        )  # (batch_size, number_of_actions_to_query, state_dim)
+        x = torch.cat(
+            [state_batch, extended_action_batch], dim=-1
+        )  # (batch_size, number_of_actions_to_query, (state_dim + action_dim))
+        q_values = self.forward(
+            x
+        )  # (batch_size, number_of_actions_to_query, number_of_quantiles)
+        return q_values if len(action_batch) == 3 else q_values.squeeze(-2)
 
     @property
     def quantiles(self) -> Tensor:
@@ -300,39 +331,18 @@ class DuelingQValueNetwork(QValueNetwork):
     def action_dim(self) -> int:
         return self._action_dim
 
-    def forward(self, state: Tensor, action: Tensor) -> Tensor:
-        assert state.shape[-1] == self.state_dim
-        assert action.shape[-1] == self.action_dim
-
-        # state feature architecture : state --> feature
-        state_features = self.state_arch(
-            state
-        )  # shape: (?, state_dim); state_dim is the output dimension of state_arch mlp
-
-        # value architecture : feature --> value
-        state_value = self.value_arch(state_features)  # shape: (batch_size)
-
-        # advantage architecture : [state feature, actions] --> advantage
-        state_action_features = torch.cat(
-            (state_features, action), dim=-1
-        )  # shape: (?, state_dim + action_dim)
-
-        advantage = self.advantage_arch(state_action_features)
-        advantage_mean = torch.mean(
-            advantage, dim=-2, keepdim=True
-        )  # -2 is dimension denoting number of actions
-        return state_value + advantage - advantage_mean
-
     def get_q_values(
         self,
-        state_batch: Tensor,
+        state_batch: Tensor,  # (batch_size, state_dim)
+        # (batch_size, number of query actions, action_dim) or (batch_size, action_dim)
         action_batch: Tensor,
         curr_available_actions_batch: Tensor | None = None,
     ) -> Tensor:
         """
         Args:
             batch of states: (batch_size, state_dim)
-            batch of actions: (batch_size, action_dim)
+            batch of actions: (batch_size, number of query actions, action_dim)
+            or (batch_size, action_dim)
             (Optional) batch of available actions (one set of available actions per state):
                     (batch_size, available_action_space_size, action_dim)
 
@@ -351,31 +361,77 @@ class DuelingQValueNetwork(QValueNetwork):
 
         TODO: assumes a gym environment interface with fixed action space, change it with masking
         """
+        assert len(state_batch.shape) == 2
+        assert len(action_batch.shape) == 3 or len(action_batch.shape) == 2
+        if len(action_batch.shape) == 2:
+            extended_action_batch = action_batch.unsqueeze(1)
+        else:
+            extended_action_batch = action_batch
+
+        # state feature architecture : state --> feature
+        state_features = self.state_arch(
+            state_batch
+        )  # shape: (batch_size, state_feature_dim)
+        # state_feature_dim is the output dimension of state_arch mlp
+
+        # value architecture : feature --> value
+        state_value = self.value_arch(state_features)  # shape: (batch_size, 1)
+
+        # Create a new tensor by repeating state_features for a certain number of times.
+        # The number is the max of the number of query actions and the number of available actions.
+        # In this way, we do not need to call extend_state_feature_by_available_action_space twice
+        # for extended_action_batch and curr_available_actions_batch respectively.
+        number_of_query_actions = extended_action_batch.shape[1]
+        if (
+            curr_available_actions_batch is None
+            or number_of_query_actions > curr_available_actions_batch.shape[1]
+        ):
+            extended_state_features = extend_state_feature_by_available_action_space(
+                state_features, extended_action_batch
+            )  # (batch_size, number_of_actions_to_query, state_dim)
+        else:
+            extended_state_features = extend_state_feature_by_available_action_space(
+                state_features, curr_available_actions_batch
+            )  # (batch_size, number_of_available_actions, state_dim)
+
+        # advantage architecture : [state feature, actions] --> advantage
+        state_action_features = torch.cat(
+            (
+                extended_state_features[:, :number_of_query_actions, :],
+                extended_action_batch,
+            ),
+            dim=-1,
+        )  # shape: (batch_size, number_of_actions_to_query, state_dim + action_dim)
+        advantage = self.advantage_arch(state_action_features).squeeze(
+            -1
+        )  # shape: (batch_size, number of query actions)
 
         if curr_available_actions_batch is None:
-            return self.forward(state_batch, action_batch).view(-1)
+            advantage_mean = torch.mean(
+                advantage, dim=-1, keepdim=True
+            )  # shape: (batch_size, 1)
         else:
-            # calculate the q value of all available actions
-            state_repeated_batch = extend_state_feature_by_available_action_space(
-                state_batch=state_batch,
-                curr_available_actions_batch=curr_available_actions_batch,
-            )  # shape: (batch_size, available_action_space_size, state_dim)
+            # advantage architecture : [state feature, actions] --> advantage
+            state_action_features = torch.cat(
+                (
+                    extended_state_features[
+                        :, : curr_available_actions_batch.shape[1], :
+                    ],
+                    curr_available_actions_batch,
+                ),
+                dim=-1,
+            )  # shape: (batch_size, action_space_size, state_dim + action_dim)
+            available_actions_advantage = self.advantage_arch(
+                state_action_features
+            ).squeeze(-1)  # shape: (batch_size, action_space_size)
+            advantage_mean = torch.mean(
+                available_actions_advantage, dim=-1, keepdim=True
+            )  # shape: (batch_size, 1)
+        q_values = (
+            state_value + advantage - advantage_mean
+        )  # shape: (batch_size, number of query actions)
 
-            # collect Q values of a state and all available actions
-            values_state_available_actions = self.forward(
-                state_repeated_batch, curr_available_actions_batch
-            )  # shape: (batch_size, available_action_space_size, action_dim)
-
-            # gather only the q value of the action that we are interested in.
-            action_idx = (
-                torch.argmax(action_batch, dim=1).unsqueeze(-1).unsqueeze(-1)
-            )  # one_hot to decimal
-
-            # q value of (state, action) pair of interest
-            state_action_values = torch.gather(
-                values_state_available_actions, 1, action_idx
-            ).view(-1)  # shape: (batch_size)
-        return state_action_values
+        return q_values if len(action_batch) == 3 else q_values.squeeze(-1)
 
 
 """
@@ -434,18 +490,35 @@ class TwoTowerNetwork(QValueNetwork):
 
     def get_q_values(
         self,
-        state_batch: Tensor,
+        state_batch: Tensor,  # (batch_size, state_dim)
+        # (batch_size, number of query actions, action_dim) or (batch_size, action_dim)
         action_batch: Tensor,
         curr_available_actions_batch: Tensor | None = None,
     ) -> Tensor:
+        assert len(state_batch.shape) == 2
+        assert len(action_batch.shape) == 3 or len(action_batch.shape) == 2
+        if len(action_batch.shape) == 2:
+            extended_action_batch = action_batch.unsqueeze(1)
+        else:
+            extended_action_batch = action_batch
+
+        state_batch = extend_state_feature_by_available_action_space(
+            state_batch, extended_action_batch
+        )  # (batch_size, number_of_actions_to_query, state_dim)
+
         state_batch_features = self._state_features.forward(state_batch)
         """ this might need to be done in tensor_based_replay_buffer """
         action_batch_features = self._action_features.forward(
-            action_batch.to(torch.get_default_dtype())
+            extended_action_batch.to(torch.get_default_dtype())
         )
 
-        x = torch.cat([state_batch_features, action_batch_features], dim=-1)
-        return self._interaction_features.forward(x).view(-1)  # (batch_size)
+        x = torch.cat(
+            [state_batch_features, action_batch_features], dim=-1
+        )  # (batch_size, number_of_actions_to_query, state_feature_dim + action_feature_dim)
+        q_values = self._interaction_features.forward(x).squeeze(
+            -1
+        )  # (batch_size, number_of_actions_to_query)
+        return q_values if len(action_batch) == 3 else q_values.squeeze(-1)
 
     @property
     def state_dim(self) -> int:
@@ -527,14 +600,30 @@ class EnsembleQValueNetwork(QValueNetwork):
 
     def get_q_values(
         self,
-        state_batch: Tensor,
+        state_batch: Tensor,  # (batch_size, state_dim)
+        # (batch_size, number of query actions, action_dim) or (batch_size, action_dim)
         action_batch: Tensor,
         z: Tensor,
         curr_available_actions_batch: Tensor | None = None,
         persistent: bool = False,
     ) -> Tensor:
-        x = torch.cat([state_batch, action_batch], dim=-1)
-        return self.forward(x, z=z, persistent=persistent).view(-1)
+        assert len(state_batch.shape) == 2
+        assert len(action_batch.shape) == 3 or len(action_batch.shape) == 2
+        if len(action_batch.shape) == 2:
+            extended_action_batch = action_batch.unsqueeze(1)
+        else:
+            extended_action_batch = action_batch
+
+        state_batch = extend_state_feature_by_available_action_space(
+            state_batch, extended_action_batch
+        )  # (batch_size, number_of_actions_to_query, state_dim)
+        x = torch.cat(
+            [state_batch, extended_action_batch], dim=-1
+        )  # (batch_size, number_of_actions_to_query, (state_dim + action_dim))
+        q_values = self.forward(x, z=z, persistent=persistent).squeeze(
+            -1
+        )  # (batch_size, number_of_actions_to_query)
+        return q_values if len(action_batch) == 3 else q_values.squeeze(-1)
 
     @property
     def state_dim(self) -> int:

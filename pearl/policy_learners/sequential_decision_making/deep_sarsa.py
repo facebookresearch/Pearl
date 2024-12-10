@@ -71,6 +71,6 @@ class DeepSARSA(DeepTDLearning):
         # use get_batch method instead of doing forward pass
         next_state_action_values = self._Q_target.get_q_values(
             next_state_batch, next_action_batch
-        )
+        )  # (batch_size)
 
         return next_state_action_values

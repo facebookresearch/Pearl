@@ -138,24 +138,17 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         assert isinstance(available_action_space, DiscreteActionSpace)
         # Fix the available action space.
         with torch.no_grad():
-            states_repeated = torch.repeat_interleave(
-                subjective_state.unsqueeze(0),
-                available_action_space.n,
-                dim=0,
-            )  # (action_space_size x state_dim)
-
-            actions = F.one_hot(torch.arange(0, available_action_space.n)).to(
-                subjective_state.device
-            )
-            # (action_space_size, action_dim)
+            batched_actions_representation = self._action_representation_module(
+                available_action_space.actions_batch.to(subjective_state)
+            ).unsqueeze(0)  # (1, action_space_size, action_dim)
 
             # instead of using the 'get_q_values' method of the QuantileQValueNetwork,
             # we invoke a method from the risk sensitive safety module
             # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute
             #  `get_q_values_under_risk_metric`.
             q_values = self.safety_module.get_q_values_under_risk_metric(
-                states_repeated, actions, self._Q
-            )
+                subjective_state.unsqueeze(0), batched_actions_representation, self._Q
+            )  # (1, action_space_size)
             exploit_action_index = torch.argmax(q_values)
             exploit_action = available_action_space.actions[exploit_action_index]
 

@@ -64,19 +64,17 @@ class DeepExploration(ExplorationModule):
         representation: torch.nn.Module | None = None,
     ) -> Action:
         assert isinstance(action_space, DiscreteActionSpace)
-        states_repeated = torch.repeat_interleave(
-            subjective_state.unsqueeze(0), action_space.n, dim=0
-        )
-        # (action_space_size x state_dim)
 
         actions = action_space.actions_batch.to(subjective_state.device)
         # (action_space_size, action_dim)
 
-        actions = self.action_representation_module(actions)
+        actions = self.action_representation_module(actions).unsqueeze(
+            0
+        )  # (1 x action_space_size x action_dim)
 
         with torch.no_grad():
             q_values = self.q_ensemble_network.get_q_values(
-                state_batch=states_repeated,
+                state_batch=subjective_state.unsqueeze(0),
                 action_batch=actions,
                 z=self.q_ensemble_network._model.z,
                 persistent=True,

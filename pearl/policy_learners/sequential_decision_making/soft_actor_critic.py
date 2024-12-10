@@ -156,20 +156,12 @@ class SoftActorCritic(ActorCriticBase):
 
         assert next_state_batch is not None
         assert next_available_actions_batch is not None
-        next_state_batch_repeated = torch.repeat_interleave(
-            next_state_batch.unsqueeze(1),
-            # pyre-fixme[6]: For 2nd argument expected `Tensor` but got
-            #  `Union[Module, Tensor]`.
-            self.action_representation_module.max_number_actions,
-            dim=1,
-        )  # (batch_size x action_space_size x state_dim)
-
         # get q values of (states, all actions) from twin critics
         # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         next_q1, next_q2 = self._critic_target.get_q_values(
-            state_batch=next_state_batch_repeated,
+            state_batch=next_state_batch,
             action_batch=next_available_actions_batch,
-        )
+        )  # (batch_size, action_space_size), (batch_size, action_space_size)
 
         # clipped double q-learning (reduce overestimation bias)
         next_q = torch.minimum(next_q1, next_q2)
@@ -178,15 +170,11 @@ class SoftActorCritic(ActorCriticBase):
         # random_index = torch.randint(0, 2, (1,)).item()
         # next_q = next_q1 if random_index == 0 else next_q2
 
-        next_state_action_values = next_q.view(
-            next_state_batch.shape[0], -1
-        )  # (batch_size x action_space_size)
-
         # Make sure that unavailable actions' Q values are assigned to 0.0
         # since we are calculating expectation
 
         if next_unavailable_actions_mask_batch is not None:
-            next_state_action_values[next_unavailable_actions_mask_batch] = 0.0
+            next_q[next_unavailable_actions_mask_batch] = 0.0
 
         # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         next_state_policy_dist = self._actor.get_policy_distribution(
@@ -196,22 +184,14 @@ class SoftActorCritic(ActorCriticBase):
         )  # (batch_size x action_space_size)
 
         # Entropy Regularization
-        next_state_action_values = (
-            next_state_action_values
-            - self._entropy_coef * torch.log(next_state_policy_dist + 1e-8)
+        next_q = (
+            next_q - self._entropy_coef * torch.log(next_state_policy_dist + 1e-8)
         ) * next_state_policy_dist  # (batch_size x action_space_size)
 
-        return next_state_action_values.sum(dim=1)
+        return next_q.sum(dim=1)
 
     def _actor_loss(self, batch: TransitionBatch) -> torch.Tensor:
         state_batch = batch.state  # (batch_size x state_dim)
-        state_batch_repeated = torch.repeat_interleave(
-            state_batch.unsqueeze(1),
-            # pyre-fixme[6]: For 2nd argument expected `Tensor` but got
-            #  `Union[Module, Tensor]`.
-            self.action_representation_module.max_number_actions,
-            dim=1,
-        )  # (batch_size x action_space_size x state_dim)
 
         available_actions = (
             batch.curr_available_actions
@@ -220,8 +200,9 @@ class SoftActorCritic(ActorCriticBase):
         # get q values of (states, all actions) from twin critics
         # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
         q1, q2 = self._critic.get_q_values(
-            state_batch=state_batch_repeated, action_batch=available_actions
-        )
+            state_batch=state_batch,
+            action_batch=available_actions,
+        )  # (batch_size, action_space_size), (batch_size, action_space_size)
         # clipped double q learning (reduce overestimation bias)
         q = torch.minimum(q1, q2)
 
@@ -235,23 +216,13 @@ class SoftActorCritic(ActorCriticBase):
             available_actions=available_actions,
             unavailable_actions_mask=unavailable_actions_mask,
         )  # (batch_size x action_space_size)
-
-        state_action_values = q.view(
-            # pyre-fixme[6]: For 1st argument expected `dtype` but got `Tuple[int,
-            #  Union[Module, Tensor]]`.
-            (state_batch.shape[0], self.action_representation_module.max_number_actions)
-        )  # (batch_size x action_space_size)
-
         if unavailable_actions_mask is not None:
-            state_action_values[unavailable_actions_mask] = 0.0
+            q[unavailable_actions_mask] = 0.0
 
         loss = (
             (
                 new_policy_dist
-                * (
-                    self._entropy_coef * torch.log(new_policy_dist + 1e-8)
-                    - state_action_values
-                )
+                * (self._entropy_coef * torch.log(new_policy_dist + 1e-8) - q)
             )
             .sum(dim=1)
             .mean()

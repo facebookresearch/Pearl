@@ -12,9 +12,6 @@ from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     QValueNetwork,
 )
 from pearl.replay_buffers.transition import TransitionBatch
-from pearl.utils.functional_utils.learning.extend_state_feature import (
-    extend_state_feature_by_available_action_space,
-)
 from torch import Tensor
 
 
@@ -50,28 +47,23 @@ def compute_cql_loss(
     for each state in the batch while the second term only uses (state, action) in the batch.
     """
     assert batch.curr_available_actions is not None
-    # Step 1
-    state_repeated_batch = extend_state_feature_by_available_action_space(
-        state_batch=batch.state,
-        curr_available_actions_batch=batch.curr_available_actions,
-    )  # output shape: [batch_size, available_action_space_size, state_dim(dim of state features)]
 
     # TODO: change the output shape of get_q_values method - .view(-1) should not be done in
     # value_networks.py
 
-    # Step 2
+    # Step 1
     assert batch.curr_available_actions is not None
     q_values_state_all_available_actions = q_network.get_q_values(
-        state_repeated_batch, batch.curr_available_actions
+        batch.state, batch.curr_available_actions
     ).view(batch_size, -1)
     # shape: [batch_size, available_action_space_size]
 
-    # Step 3
+    # Step 2
     q_values_state_actions_in_batch = q_values_state_all_available_actions.gather(
         1, batch.action
     )
 
-    # Step 4
+    # Step 3
     cql_loss = (
         torch.logsumexp(q_values_state_all_available_actions, dim=-1).mean()
         - q_values_state_actions_in_batch.mean()

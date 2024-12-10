@@ -72,13 +72,16 @@ class RiskNeutralSafetyModule(RiskSensitiveSafetyModule):
         """Returns Q(s, a), given s and a
         Args:
             state_batch: a batch of state tensors (batch_size, state_dim)
-            action_batch: a batch of action tensors (batch_size, action_dim)
+            action_batch: a batch of action tensors
+            (batch_size, number_query_actions, action_dim) or (batch_size, action_dim)
             q_value_distribution_network: a distributional q value network that
                                           approximates the return distribution
         Returns:
             Q-values of (state, action) pairs: (batch_size) under a risk neutral measure,
             that is, Q(s, a) = E[Z(s, a)]
         """
+        assert len(state_batch.shape) == 2
+        assert len(action_batch.shape) == 3 or len(action_batch.shape) == 2
         q_value_distribution = q_value_distribution_network.get_q_value_distribution(
             state_batch, action_batch
         )
@@ -105,23 +108,29 @@ class QuantileNetworkMeanVarianceSafetyModule(RiskSensitiveSafetyModule):
 
     def get_q_values_under_risk_metric(
         self,
-        state_batch: Tensor,
-        action_batch: Tensor,
+        state_batch: Tensor,  # (batch_size, state_dim)
+        action_batch: Tensor,  # (batch_size, number_query_actions, state_dim)
         q_value_distribution_network: DistributionalQValueNetwork,
     ) -> torch.Tensor:
         q_value_distribution = q_value_distribution_network.get_q_value_distribution(
             state_batch,
             action_batch,
-        )
+        )  # (batch_size, number_query_actions, num quantiles)
         """
         variance computation:
             - sum_{i=0}^{N-1} (tau_{i+1} - tau_{i}) * (q_value_distribution_{tau_i} - mean_value)^2
         """
-        mean_value = q_value_distribution.mean(dim=-1, keepdim=True)
-        quantiles = q_value_distribution_network.quantiles
-        quantile_differences = quantiles[1:] - quantiles[:-1]
+        assert len(state_batch.shape) == 2
+        assert len(action_batch.shape) == 3
+        mean_value = q_value_distribution.mean(
+            dim=-1, keepdim=True
+        )  # (batch_size, number_query_actions, 1)
+        quantiles = q_value_distribution_network.quantiles  # (num quantiles + 1,)
+        quantile_differences = quantiles[1:] - quantiles[:-1]  # (num quantiles)
         variance = (
             quantile_differences * torch.square(q_value_distribution - mean_value)
-        ).sum(dim=-1, keepdim=True)
-        variance_adjusted_mean = (mean_value - (self._beta * variance)).view(-1)
-        return variance_adjusted_mean
+        ).sum(dim=-1, keepdim=True)  # (batch_size, number_query_actions, 1)
+        variance_adjusted_mean = mean_value - (
+            self._beta * variance
+        )  # (batch_size, number_query_actions, 1)
+        return variance_adjusted_mean.squeeze(-1)

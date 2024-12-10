@@ -161,21 +161,15 @@ class BootstrappedDQN(DeepQLearning):
         # Fix the available action space.
         assert isinstance(available_action_space, DiscreteActionSpace)
         with torch.no_grad():
-            states_repeated = torch.repeat_interleave(
-                subjective_state.unsqueeze(0),
-                available_action_space.n,
-                dim=0,
-            )
-            # (action_space_size x state_dim)
-
-            actions = self._action_representation_module(
-                available_action_space.actions_batch.to(states_repeated)
-            )
-            # (action_space_size, action_dim)
+            batched_actions_representation = self._action_representation_module(
+                available_action_space.actions_batch.to(subjective_state)
+            ).unsqueeze(0)  # (1 x action_space_size x action_dim)
 
             q_values = self._Q.get_q_values(
-                states_repeated, actions, z=self._Q._model.z
-            )
+                subjective_state.unsqueeze(0),  # (1 x state_dim)
+                batched_actions_representation,
+                z=self._Q._model.z,
+            )  # (1 x action_space_size)
             # this does a forward pass since all avaialble
             # actions are already stacked together
 
@@ -197,27 +191,32 @@ class BootstrappedDQN(DeepQLearning):
     def _get_next_state_values(
         self, batch: TransitionBatch, batch_size: int, z: Tensor
     ) -> torch.Tensor:
-        (
-            next_state,
-            next_available_actions,
-            next_available_actions_mask,
-        ) = self._prepare_next_state_action_batch(batch)
-
-        assert next_available_actions is not None
+        assert batch.next_state is not None
+        assert isinstance(self._action_space, DiscreteActionSpace)
+        assert batch.next_available_actions is not None
+        assert batch.next_unavailable_actions_mask is not None
 
         # for dueling, this does a forward pass; since the batch of next available
         # actions is already input
-        # (batch_size x action_space_size)
         next_state_action_values = self._Q.get_q_values(
-            state_batch=next_state, action_batch=next_available_actions, z=z
-        ).view(batch_size, -1)
+            state_batch=batch.next_state,  # (batch_size x state_dim)
+            # (batch_size x action_space_size x action_dim)
+            action_batch=batch.next_available_actions,
+            z=z,
+        )  # (batch_size x action_space_size)
 
         target_next_state_action_values = self._Q_target.get_q_values(
-            state_batch=next_state, action_batch=next_available_actions, z=z
-        ).view(batch_size, -1)
+            # pyre-fixme6]: In call `EnsembleQValueNetwork.get_q_values`,
+            # for argument `state_batch`, expected `Tensor` but got `Optional[Tensor]`
+            state_batch=batch.next_state,
+            # pyre-fixme6]: In call `EnsembleQValueNetwork.get_q_values`,
+            # for argument `action_batch`, expected `Tensor` but got `Optional[Tensor]`
+            action_batch=batch.next_available_actions,
+            z=z,
+        )
 
         # Make sure that unavailable actions' Q values are assigned to -inf
-        next_state_action_values[next_available_actions_mask] = -float("inf")
+        next_state_action_values[batch.next_unavailable_actions_mask] = -float("inf")
 
         # Get argmax actions indices
         argmax_actions = next_state_action_values.max(1)[1]  # (batch_size)
