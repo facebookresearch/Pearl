@@ -81,6 +81,12 @@ class TensorBasedReplayBuffer(ReplayBuffer):
                 None,
             )
         else:
+            # If the action space is discrete and max_number_actions is not specified,
+            # then we assume that the size of the action space does not change over time
+            # and use this size as max_number_actions.
+            if max_number_actions is None:
+                assert isinstance(curr_available_actions, DiscreteActionSpace)
+                max_number_actions = curr_available_actions.n
             (
                 curr_available_actions_tensor_with_padding,
                 curr_unavailable_actions_mask,

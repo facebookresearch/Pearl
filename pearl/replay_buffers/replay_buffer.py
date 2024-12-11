@@ -58,6 +58,8 @@ class ReplayBuffer(ABC):
         curr_available_actions: ActionSpace | None = None,
         next_state: SubjectiveState | None = None,
         next_available_actions: ActionSpace | None = None,
+        # max_number_actions should be specified when the size of the action space
+        # varies across different time steps.
         max_number_actions: int | None = None,
         cost: float | None = None,
     ) -> None:
