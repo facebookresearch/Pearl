@@ -1,8 +1,6 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 
 # pyre-strict
-from typing import List, Optional, Type
-
 import torch
 
 from pearl.api.action import Action

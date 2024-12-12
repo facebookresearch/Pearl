@@ -121,7 +121,7 @@ class TestOfflineCQL(unittest.TestCase):
         offline_learning(
             offline_agent=conservative_agent,
             data_buffer=offline_data_replay_buffer,
-            training_epochs=10,
+            number_of_batches=10,
             seed=100,
         )
 

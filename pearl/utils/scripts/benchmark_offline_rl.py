@@ -114,7 +114,7 @@ def evaluate_offline_rl(
     is_action_continuous: bool,
     offline_agent: PearlAgent,
     method_name: str,
-    training_epochs: int = 1000,
+    number_of_batches: int = 1000,
     evaluation_episodes: int = 500,
     url: str | None = None,
     data_path: str | None = None,
@@ -137,7 +137,7 @@ def evaluate_offline_rl(
             compatible with a Pearl Agent (see class TensorBasedReplayBuffer for details).
         offline_agent: an offline agent to train and evaluate (for example, IQL or CQL based agent).
         method_name: name of the agent's policy learner (used for saving results).
-        training_epochs: number of epochs to train the offline agent for.
+        number_of_batches: number of batches sampled to train the offline agent for.
         evaluation_episodes: number of episodes to evaluate the offline agent for.
         url: url to download data from.
         data_path: path to a local file containing offline data to use for training.
@@ -196,8 +196,8 @@ def evaluate_offline_rl(
     offline_learning(
         offline_agent=offline_agent,
         data_buffer=offline_data_replay_buffer,
-        training_epochs=training_epochs,
-        seed=seed,
+        number_of_batches=number_of_batches,
+        seed=seed if seed is not None else 0,
     )
 
     print("\n")
@@ -224,7 +224,7 @@ def evaluate_offline_rl(
         + "returns_offline_agent_"
         + dataset
         + "_"
-        + str(training_epochs)
+        + str(number_of_batches)
         + ".pickle",
         "wb",
     ) as handle:
@@ -310,7 +310,7 @@ if __name__ == "__main__":
         is_action_continuous=is_action_continuous,
         offline_agent=offline_agent,
         method_name="Implicit Q learning",
-        training_epochs=10000,
+        number_of_batches=10000,
         # data_path=data_path,
         data_collection_agent=data_collection_agent,
         file_name=file_name,

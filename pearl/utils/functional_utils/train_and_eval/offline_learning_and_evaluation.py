@@ -8,6 +8,7 @@
 # pyre-strict
 
 import io
+import math
 import os
 import time
 
@@ -141,8 +142,9 @@ def get_offline_data_in_buffer(
 def offline_learning(
     offline_agent: PearlAgent,
     data_buffer: ReplayBuffer,
-    training_epochs: int = 1000,
-    logger: LearningLogger = null_learning_logger,
+    training_epochs: Optional[float] = None,
+    number_of_batches: Optional[int] = None,
+    learning_logger: LearningLogger = null_learning_logger,
     seed: Optional[int] = None,
 ) -> None:
     """
@@ -153,7 +155,12 @@ def offline_learning(
     Args:
         offline agent (PearAgent): a Pearl agent (typically conservative one such as CQL or IQL).
         data_buffer (ReplayBuffer): a replay buffer to sample a batch of transition data.
-        training_epochs (int): number of sampled batches used for offline learning.
+        number_of_batches (Optional[int], default 1000): number of batches to sample
+                                         from the replay buffer.
+                                         Mutually exclusive with training_epochs.
+        training_epochs (Optional[float], default 1): number of passes over training data.
+                        Fractional values result in a rounded up number of samples batches.
+                        Mutually exclusive with number_of_batches.
         logger (LearningLogger, optional): a LearningLogger to log the training loss
                                            (default is no-op logger).
         seed (int, optional): random seed (default is `int(time.time())`).
@@ -162,15 +169,27 @@ def offline_learning(
         seed = int(time.time())
     set_seed(seed=seed)
 
+    if number_of_batches is None:
+        if training_epochs is None:
+            training_epochs = 1
+        number_of_batches = math.ceil(
+            training_epochs * len(data_buffer) / offline_agent.policy_learner.batch_size
+        )
+    elif training_epochs is not None:
+        raise ValueError(
+            f"{offline_learning.__name__} must receive at most one of number_of_batches and "
+            + "training_epochs, but got both."
+        )
+
     # move replay buffer to device of the offline agent
     data_buffer.device_for_batches = offline_agent.device
 
     # training loop
-    for i in range(training_epochs):
+    for i in range(number_of_batches):
         batch = data_buffer.sample(offline_agent.policy_learner.batch_size)
         assert isinstance(batch, TransitionBatch)
         loss = offline_agent.learn_batch(batch=batch)
-        logger(loss, i, TRAINING_TAG)
+        learning_logger(loss, i, batch, TRAINING_TAG)
 
 
 def offline_evaluation(

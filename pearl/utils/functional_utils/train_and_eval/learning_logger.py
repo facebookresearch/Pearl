@@ -2,7 +2,9 @@
 
 # pyre-strict
 
-from typing import Any, Protocol
+from typing import Any, Optional, Protocol
+
+from pearl.replay_buffers.transition import TransitionBatch
 
 
 class LearningLogger(Protocol):
@@ -12,18 +14,30 @@ class LearningLogger(Protocol):
     Args:
         results: A dictionary of results.
         step: The current step of the learning process.
+        batch: The batch of data used for the current step.
         prefix: A prefix to add to the logged results.
     """
 
     def __init__(self) -> None:
         pass
 
-    def __call__(self, results: dict[str, Any], step: int, prefix: str = "") -> None:
+    def __call__(
+        self,
+        results: dict[str, Any],
+        step: int,
+        batch: Optional[TransitionBatch] = None,
+        prefix: str = "",
+    ) -> None:
         pass
 
 
-def null_learning_logger(results: dict[str, str], step: int, prefix: str = "") -> None:
+def null_learning_logger(
+    results: dict[str, Any],
+    step: int,
+    batch: Optional[TransitionBatch] = None,
+    prefix: str = "",
+) -> None:
     """
-    A null learning logger that does nothing.
+    A learning logger that does nothing.
     """
     pass
