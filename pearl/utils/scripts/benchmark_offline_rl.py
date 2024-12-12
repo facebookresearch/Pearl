@@ -7,11 +7,9 @@
 
 import os
 import pickle
-from typing import List, Optional
 
 import torch
 
-from pearl.api.agent import Agent
 from pearl.api.environment import Environment
 
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
@@ -43,7 +41,7 @@ from pearl.utils.instantiations.environments.gym_environment import GymEnvironme
 
 
 def get_random_agent_returns(
-    agent: Agent,
+    agent: PearlAgent,
     env: Environment,
     save_path: str | None,
     file_path: str | None = None,
@@ -79,6 +77,7 @@ def get_random_agent_returns(
         else:
             raise FileNotFoundError(f"No file found at {file_path}")
     else:
+        assert save_path is not None
         print(
             "no returns file path provided; proceeding to collect data from environment directly"
         )
@@ -121,7 +120,7 @@ def evaluate_offline_rl(
     data_path: str | None = None,
     data_collection_agent: PearlAgent | None = None,
     file_name: str | None = None,
-    data_save_path: str | None = "offline_rl_data/",
+    data_save_path: str = "offline_rl_data/",
     data_size: int = 1000000,
     seed: int | None = None,
 ) -> list[float]:
@@ -162,6 +161,7 @@ def evaluate_offline_rl(
         if url is not None:
             print("downloading data from the given url")
         else:
+            assert data_path is not None
             if os.path.isfile(data_path):
                 print("reading data from the given path")
             else:
@@ -171,9 +171,9 @@ def evaluate_offline_rl(
             is_action_continuous, url, data_path, size=data_size
         )
     else:
+        assert data_collection_agent is not None
         if file_name is None:
             raise ValueError("Must provide a name of file to store data.")
-
         file_name = file_name
         create_offline_data(
             agent=data_collection_agent,

@@ -9,6 +9,9 @@
 
 import io
 import os
+import time
+
+from typing import Optional
 
 import torch
 
@@ -88,7 +91,9 @@ def get_offline_data_in_buffer(
     if url is not None:
         offline_transitions_data = requests_get(url)
         stream = io.BytesIO(offline_transitions_data.content)  # implements seek()
-        raw_transitions_buffer = torch.load(stream, map_location=torch.device(device))
+        raw_transitions_buffer = torch.load(
+            stream, map_location=torch.device(device), weights_only=False
+        )
     else:
         if data_path is None:
             raise ValueError(
@@ -97,7 +102,7 @@ def get_offline_data_in_buffer(
 
         # loads data on the specified device
         raw_transitions_buffer = torch.load(
-            data_path, map_location=torch.device(device)
+            data_path, map_location=torch.device(device), weights_only=False
         )
 
     offline_data_replay_buffer = BasicReplayBuffer(size)
@@ -138,18 +143,23 @@ def offline_learning(
     data_buffer: ReplayBuffer,
     training_epochs: int = 1000,
     logger: LearningLogger = null_learning_logger,
-    seed: int = 100,
+    seed: Optional[int] = None,
 ) -> None:
     """
     Trains the offline agent using transition tuples from offline data (provided in
-    the data_buffer). Must provide a replay buffer with transition tuples - please
-    use the method get_offline_data_in_buffer to create an offline data buffer.
+    the data_buffer). Must provide a replay buffer with transition tuples.
+    You may want to use get_offline_data_in_buffer to create an offline data buffer.
 
     Args:
-        offline agent: a conservative learning agent (CQL or IQL).
-        data_buffer: a replay buffer to sample a batch of transition data.
-        training_epochs: number of training epochs for offline learning.
+        offline agent (PearAgent): a Pearl agent (typically conservative one such as CQL or IQL).
+        data_buffer (ReplayBuffer): a replay buffer to sample a batch of transition data.
+        training_epochs (int): number of sampled batches used for offline learning.
+        logger (LearningLogger, optional): a LearningLogger to log the training loss
+                                           (default is no-op logger).
+        seed (int, optional): random seed (default is `int(time.time())`).
     """
+    if seed is None:
+        seed = int(time.time())
     set_seed(seed=seed)
 
     # move replay buffer to device of the offline agent

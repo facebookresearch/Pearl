@@ -8,7 +8,7 @@
 # pyre-strict
 
 import typing
-from typing import Any, Dict, Optional
+from typing import Any
 
 import torch
 from pearl.api.action import Action

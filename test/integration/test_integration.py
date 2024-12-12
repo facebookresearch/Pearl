@@ -939,6 +939,7 @@ class TestIntegration(unittest.TestCase):
             offline_agent=conservativeDQN_agent,
             data_buffer=offline_data_replay_buffer,
             training_epochs=2000,
+            seed=100,
         )
 
         # offline evaluation
@@ -997,6 +998,7 @@ class TestIntegration(unittest.TestCase):
             offline_agent=IQLAgent,
             data_buffer=offline_data_replay_buffer,
             training_epochs=2000,
+            seed=100,
         )
 
         # offline evaluation

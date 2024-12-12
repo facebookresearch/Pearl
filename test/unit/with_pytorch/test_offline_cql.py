@@ -82,7 +82,9 @@ class TestOfflineCQL(unittest.TestCase):
 
         # Load offline data into a Pearl replay buffer
         offline_data_replay_buffer = BasicReplayBuffer(max_len_offline_data)
-        raw_transitions_buffer = torch.load("offline_raw_transitions_dict.pt")
+        raw_transitions_buffer = torch.load(
+            "offline_raw_transitions_dict.pt", weights_only=False
+        )
         for transition in raw_transitions_buffer:
             offline_data_replay_buffer.push(
                 state=transition["observation"],
@@ -120,6 +122,7 @@ class TestOfflineCQL(unittest.TestCase):
             offline_agent=conservative_agent,
             data_buffer=offline_data_replay_buffer,
             training_epochs=10,
+            seed=100,
         )
 
         # Run evaluation for trained agent with environment interactions
