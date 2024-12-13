@@ -146,7 +146,10 @@ class ContinuousSoftActorCritic(ActorCriticBase):
             # pyre-fixme[6]: For 1st argument expected `Tensor` but got
             #  `Union[Module, Tensor]`.
             self._entropy_coef = torch.exp(self._log_entropy).detach()
-            {**actor_critic_loss, **{"entropy_coef": entropy_optimizer_loss}}
+            actor_critic_loss = {
+                **actor_critic_loss,
+                **{"entropy_coef": entropy_optimizer_loss},
+            }
 
         return actor_critic_loss
 
