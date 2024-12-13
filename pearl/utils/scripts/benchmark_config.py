@@ -33,6 +33,7 @@ from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     EnsembleQValueNetwork,
     VanillaQValueNetwork,
 )
+from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (  # noqa E501
     EGreedyExploration,
 )
@@ -531,6 +532,72 @@ SAC_dynamic_method = {
     "replay_buffer_args": {"capacity": 50000},
     "action_representation_module": OneHotActionTensorRepresentationModule,
     "action_representation_module_args": {},
+}
+SAC_Atari_method = {
+    "name": "SAC",
+    "policy_learner": SoftActorCritic,
+    "policy_learner_args": {
+        "actor_hidden_dims": [64, 64],
+        "critic_hidden_dims": [64, 64],
+        "training_rounds": 50,
+        "batch_size": 32,
+        "entropy_coef": 0.1,
+    },
+    "actor_network_module": CNNActorNetwork,
+    "actor_network_args": {
+        "hidden_dims_fully_connected": [512],
+        "kernel_sizes": [8, 4, 3],
+        "output_channels_list": [32, 64, 64],
+        "strides": [4, 2, 1],
+        "paddings": [0, 0, 0],
+    },
+    "use_twin_critic": True,
+    "critic_network_module": CNNQValueNetwork,
+    "critic_network_args": {
+        "hidden_dims_fully_connected": [512],
+        "kernel_sizes": [8, 4, 3],
+        "output_channels_list": [32, 64, 64],
+        "strides": [4, 2, 1],
+        "paddings": [0, 0, 0],
+    },
+    "replay_buffer": BasicReplayBuffer,
+    "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
+    "learn_every_k_steps": 200,
+}
+SAC_multi_head_Atari_method = {
+    "name": "SAC",
+    "policy_learner": SoftActorCritic,
+    "policy_learner_args": {
+        "actor_hidden_dims": [64, 64],
+        "critic_hidden_dims": [64, 64],
+        "training_rounds": 50,
+        "batch_size": 32,
+        "entropy_coef": 0.1,
+    },
+    "actor_network_module": CNNActorNetwork,
+    "actor_network_args": {
+        "hidden_dims_fully_connected": [512],
+        "kernel_sizes": [8, 4, 3],
+        "output_channels_list": [32, 64, 64],
+        "strides": [4, 2, 1],
+        "paddings": [0, 0, 0],
+    },
+    "use_twin_critic": True,
+    "critic_network_module": CNNQValueMultiHeadNetwork,
+    "critic_network_args": {
+        "hidden_dims_fully_connected": [512],
+        "kernel_sizes": [8, 4, 3],
+        "output_channels_list": [32, 64, 64],
+        "strides": [4, 2, 1],
+        "paddings": [0, 0, 0],
+    },
+    "replay_buffer": BasicReplayBuffer,
+    "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
+    "learn_every_k_steps": 200,
 }
 IQL_online_method = {
     "name": "IQL",
@@ -1408,6 +1475,8 @@ benchmark_atari = [
             DQN_Atari_method,
             DQN_multi_head_Atari_method,
             PPO_Atari_method,
+            SAC_Atari_method,
+            SAC_multi_head_Atari_method,
         ],
         "device_id": 0,
     }

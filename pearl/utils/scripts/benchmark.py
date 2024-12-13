@@ -34,6 +34,7 @@ from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     CNNQValueMultiHeadNetwork,
     CNNQValueNetwork,
 )
+from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.pearl_agent import PearlAgent
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 
@@ -244,6 +245,46 @@ def evaluate_single(
             ),
             **method["network_args"],
         )
+    if "critic_network_module" in method and method["critic_network_module"] in [
+        CNNQValueNetwork,
+        CNNQValueMultiHeadNetwork,
+    ]:
+        action_dim = policy_learner_args[
+            "action_representation_module"
+        ].representation_dim
+        output_dim = (
+            1 if method["critic_network_module"] is CNNQValueNetwork else action_dim
+        )
+        if "use_twin_critic" in method and method["use_twin_critic"]:
+            policy_learner_args["critic_network_instance"] = TwinCritic(
+                network_instance_1=method["critic_network_module"](
+                    input_width=env.observation_space.shape[2],
+                    input_height=env.observation_space.shape[1],
+                    input_channels_count=env.observation_space.shape[0],
+                    action_dim=action_dim,
+                    output_dim=output_dim,
+                    **method["critic_network_args"],
+                ),
+                network_instance_2=method["critic_network_module"](
+                    input_width=env.observation_space.shape[2],
+                    input_height=env.observation_space.shape[1],
+                    input_channels_count=env.observation_space.shape[0],
+                    action_dim=action_dim,
+                    output_dim=output_dim,
+                    **method["critic_network_args"],
+                ),
+            )
+        else:
+            policy_learner_args["critic_network_instance"] = method[
+                "critic_network_module"
+            ](
+                input_width=env.observation_space.shape[2],
+                input_height=env.observation_space.shape[1],
+                input_channels_count=env.observation_space.shape[0],
+                action_dim=action_dim,
+                output_dim=output_dim,
+                **method["critic_network_args"],
+            )
 
     if (
         "critic_network_module" in method
