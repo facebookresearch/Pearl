@@ -13,14 +13,14 @@ import numpy as np
 
 import torch
 import torchvision
-from pearl.neural_networks.common.value_networks import VanillaCNN
+from pearl.neural_networks.common.value_networks import CNNValueNetwork
 
 from torch import optim
 from torch.utils.data import DataLoader, Subset
 from torchvision import transforms
 
 
-class TestVanillaCNNs(unittest.TestCase):
+class TestCNNValueNetworks(unittest.TestCase):
     def setUp(self) -> None:
         transform = transforms.Compose([transforms.ToTensor()])
         mnist_dataset = torchvision.datasets.MNIST(
@@ -42,7 +42,7 @@ class TestVanillaCNNs(unittest.TestCase):
             self.mnist_train_dataset, self.batch_size, shuffle=True
         )
 
-    def test_vanilla_cnns(self) -> None:
+    def test_cnns(self) -> None:
         """
         a simple cnn should be able to fit the mnist digit dataset and the training
         accuracy should be close to 90%
@@ -58,7 +58,7 @@ class TestVanillaCNNs(unittest.TestCase):
         paddings = [2]
         hidden_dims_fully_connected = [64]
         output_dim = 10
-        network = VanillaCNN(
+        network = CNNValueNetwork(
             input_width=input_width,
             input_height=input_height,
             input_channels_count=input_channels,

@@ -8,7 +8,7 @@
 
 from .epistemic_neural_networks import Ensemble, EpistemicNeuralNetwork, MLPWithPrior
 from .residual_wrapper import ResidualWrapper
-from .value_networks import ValueNetwork, VanillaCNN, VanillaValueNetwork
+from .value_networks import CNNValueNetwork, ValueNetwork, VanillaValueNetwork
 
 __all__ = [
     "Ensemble",
@@ -16,7 +16,7 @@ __all__ = [
     "MLPWithPrior",
     "ResidualWrapper",
     "ValueNetwork",
-    "VanillaCNN",
+    "CNNValueNetwork",
     "VanillaValueNetwork",
     "Epinet",
 ]

@@ -61,7 +61,7 @@ class VanillaValueNetwork(ValueNetwork):
                 nn.init.xavier_normal_(layer.weight)
 
 
-class VanillaCNN(ValueNetwork):
+class CNNValueNetwork(ValueNetwork):
     """
     Vanilla CNN with a convolutional block followed by an mlp block.
     Args:
@@ -101,7 +101,7 @@ class VanillaCNN(ValueNetwork):
             == len(strides)
             == len(paddings)
         )
-        super().__init__()
+        super(CNNValueNetwork, self).__init__()
 
         self._input_channels = input_channels_count
         self._input_height = input_height
@@ -142,7 +142,7 @@ class VanillaCNN(ValueNetwork):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        out_cnn = self._model_cnn(x)
+        out_cnn = self._model_cnn(x / 255.0)
         out_flattened = torch.flatten(out_cnn, start_dim=1, end_dim=-1)
         out_fc = self._model_fc(out_flattened)
         return out_fc
