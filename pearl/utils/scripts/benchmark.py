@@ -27,6 +27,7 @@ from pearl.action_representation_modules.identity_action_representation_module i
     IdentityActionRepresentationModule,
 )
 from pearl.neural_networks.sequential_decision_making.q_value_networks import (
+    CNNQValueMultiHeadNetwork,
     CNNQValueNetwork,
 )
 from pearl.pearl_agent import PearlAgent
@@ -219,7 +220,10 @@ def evaluate_single(
             "history_summarization_module"
         ](**method["history_summarization_module_args"])
 
-    if "network_module" in method and method["network_module"] is CNNQValueNetwork:
+    if "network_module" in method and method["network_module"] in [
+        CNNQValueNetwork,
+        CNNQValueMultiHeadNetwork,
+    ]:
         policy_learner_args["network_instance"] = method["network_module"](
             input_width=env.observation_space.shape[2],
             input_height=env.observation_space.shape[1],
@@ -227,7 +231,13 @@ def evaluate_single(
             action_dim=policy_learner_args[
                 "action_representation_module"
             ].representation_dim,
-            output_dim=1,
+            output_dim=(
+                1
+                if method["network_module"] is CNNQValueNetwork
+                else policy_learner_args[
+                    "action_representation_module"
+                ].representation_dim
+            ),
             **method["network_args"],
         )
 

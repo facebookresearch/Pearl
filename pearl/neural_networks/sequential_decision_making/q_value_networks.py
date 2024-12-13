@@ -815,3 +815,106 @@ class CNNQValueNetwork(QValueNetwork):
     @property
     def action_dim(self) -> int:
         return self._action_dim
+
+
+class CNNQValueMultiHeadNetwork(QValueNetwork):
+    """
+    A CNN version of state-action value (Q-value) network.
+    """
+
+    def __init__(
+        self,
+        input_width: int,
+        input_height: int,
+        input_channels_count: int,
+        kernel_sizes: List[int],
+        output_channels_list: List[int],
+        strides: List[int],
+        paddings: List[int],
+        action_dim: int,
+        hidden_dims_fully_connected: Optional[List[int]] = None,
+        output_dim: int = 1,
+        use_batch_norm_conv: bool = False,
+        use_batch_norm_fully_connected: bool = False,
+    ) -> None:
+        super(CNNQValueMultiHeadNetwork, self).__init__()
+
+        self._input_channels = input_channels_count
+        self._input_height = input_height
+        self._input_width = input_width
+        self._output_channels = output_channels_list
+        self._kernel_sizes = kernel_sizes
+        self._strides = strides
+        self._paddings = paddings
+        if hidden_dims_fully_connected is None:
+            self._hidden_dims_fully_connected: List[int] = []
+        else:
+            self._hidden_dims_fully_connected: List[int] = hidden_dims_fully_connected
+
+        self._use_batch_norm_conv = use_batch_norm_conv
+        self._use_batch_norm_fully_connected = use_batch_norm_fully_connected
+        self._output_dim = output_dim
+
+        self._model_cnn: nn.Module = conv_block(
+            input_channels_count=self._input_channels,
+            output_channels_list=self._output_channels,
+            kernel_sizes=self._kernel_sizes,
+            strides=self._strides,
+            paddings=self._paddings,
+            use_batch_norm=self._use_batch_norm_conv,
+        )
+        # we concatenate actions to state representations in the mlp block of the Q-value network
+        self._mlp_input_dims: int = compute_output_dim_model_cnn(
+            input_channels=input_channels_count,
+            input_width=input_width,
+            input_height=input_height,
+            model_cnn=self._model_cnn,
+        )
+        self._model_fc: nn.Module = mlp_block(
+            input_dim=self._mlp_input_dims,
+            hidden_dims=self._hidden_dims_fully_connected,
+            output_dim=self._output_dim,
+            use_batch_norm=self._use_batch_norm_fully_connected,
+        )
+        self._state_dim: int = input_channels_count * input_height * input_width
+        self._action_dim = action_dim
+
+    def get_q_values(
+        self,
+        state_batch: Tensor,  # shape: (batch_size, input_channels, input_height, input_width)
+        action_batch: Tensor,  # shape: (batch_size, number_of_actions_to_query, action_dim) or (batch_size, action_dim)
+        curr_available_actions_batch: Optional[Tensor] = None,
+    ) -> Tensor:
+        # action representation is assumed to be one-hot
+        assert is_one_hot_tensor(action_batch)
+        assert self._output_dim == action_batch.shape[-1]  # action_dim = num actions
+        assert len(state_batch.shape) == 4
+        assert len(action_batch.shape) == 3 or len(action_batch.shape) == 2
+        if len(action_batch.shape) == 2:
+            action_batch = action_batch.unsqueeze(1)
+
+        batch_size = state_batch.shape[0]
+        state_representation_batch = self._model_cnn(
+            state_batch / 255.0
+        )  # (batch_size x output_channels[-1] x output_height x output_width)
+        state_representation_batch = state_representation_batch.view(
+            batch_size, -1
+        )  # (batch_size x state dim)
+        q_values = self._model_fc(state_representation_batch).unsqueeze(
+            -1
+        )  # (batch_size x num actions x 1)
+
+        q_values = torch.bmm(
+            action_batch,  # shape: (batch_size, number_of_actions_to_query, action_dim)
+            q_values,  # (batch_size x num actions x 1)
+        )  # (batch_size x number_of_actions_to_query x 1)
+        q_values = q_values.squeeze(-1)  # (batch_size x number_of_actions_to_query)
+        return q_values if len(action_batch) == 3 else q_values.squeeze(-1)
+
+    @property
+    def state_dim(self) -> int:
+        return self._state_dim
+
+    @property
+    def action_dim(self) -> int:
+        return self._action_dim

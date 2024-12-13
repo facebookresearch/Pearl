@@ -23,6 +23,7 @@ from pearl.neural_networks.sequential_decision_making.actor_networks import (
     VanillaContinuousActorNetwork,
 )
 from pearl.neural_networks.sequential_decision_making.q_value_networks import (
+    CNNQValueMultiHeadNetwork,
     CNNQValueNetwork,
     DuelingQValueNetwork,
     EnsembleQValueNetwork,
@@ -154,6 +155,29 @@ DQN_Atari_method = {
         "batch_size": 32,
     },
     "network_module": CNNQValueNetwork,
+    "network_args": {
+        "hidden_dims_fully_connected": [512],
+        "kernel_sizes": [8, 4, 3],
+        "output_channels_list": [32, 64, 64],
+        "strides": [4, 2, 1],
+        "paddings": [0, 0, 0],
+    },
+    "exploration_module": EGreedyExploration,
+    "exploration_module_args": {"epsilon": 0.1},
+    "replay_buffer": BasicReplayBuffer,
+    "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
+}
+DQN_multi_head_Atari_method = {
+    "name": "DQN",
+    "policy_learner": DeepQLearning,
+    "policy_learner_args": {
+        "training_rounds": 1,
+        "target_update_freq": 250,
+        "batch_size": 32,
+    },
+    "network_module": CNNQValueMultiHeadNetwork,
     "network_args": {
         "hidden_dims_fully_connected": [512],
         "kernel_sizes": [8, 4, 3],
@@ -1347,6 +1371,7 @@ benchmark_atari = [
         "record_period": 10000,
         "methods": [
             DQN_Atari_method,
+            DQN_multi_head_Atari_method,
         ],
         "device_id": 0,
     }
