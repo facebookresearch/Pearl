@@ -209,7 +209,7 @@ class TabularQLearning(PolicyLearner):
         assert isinstance(exploration_module, EGreedyExploration)
         items = [
             "α=" + str(self.learning_rate),
-            "ε=" + str(exploration_module.epsilon),
+            "ε=" + str(exploration_module.curr_epsilon),
             "λ=" + str(self.discount_factor),
         ]
         return "Q-Learning" + (
