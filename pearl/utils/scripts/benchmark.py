@@ -26,6 +26,10 @@ import torch.multiprocessing as mp
 from pearl.action_representation_modules.identity_action_representation_module import (
     IdentityActionRepresentationModule,
 )
+from pearl.neural_networks.common.value_networks import CNNValueNetwork
+from pearl.neural_networks.sequential_decision_making.actor_networks import (
+    CNNActorNetwork,
+)
 from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     CNNQValueMultiHeadNetwork,
     CNNQValueNetwork,
@@ -239,6 +243,34 @@ def evaluate_single(
                 ].representation_dim
             ),
             **method["network_args"],
+        )
+
+    if (
+        "critic_network_module" in method
+        and method["critic_network_module"] is CNNValueNetwork
+    ):
+        policy_learner_args["critic_network_instance"] = method[
+            "critic_network_module"
+        ](
+            input_width=env.observation_space.shape[2],
+            input_height=env.observation_space.shape[1],
+            input_channels_count=env.observation_space.shape[0],
+            output_dim=1,
+            **method["critic_network_args"],
+        )
+
+    if (
+        "actor_network_module" in method
+        and method["actor_network_module"] is CNNActorNetwork
+    ):
+        policy_learner_args["actor_network_instance"] = method["actor_network_module"](
+            input_width=env.observation_space.shape[2],
+            input_height=env.observation_space.shape[1],
+            input_channels_count=env.observation_space.shape[0],
+            output_dim=policy_learner_args[
+                "action_representation_module"
+            ].representation_dim,
+            **method["actor_network_args"],
         )
 
     if method["name"] == "DuelingDQN":  # only for Dueling DQN

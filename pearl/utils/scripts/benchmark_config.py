@@ -15,8 +15,12 @@ from pearl.action_representation_modules.one_hot_action_representation_module im
 from pearl.history_summarization_modules.lstm_history_summarization_module import (
     LSTMHistorySummarizationModule,
 )
-from pearl.neural_networks.common.value_networks import VanillaValueNetwork
+from pearl.neural_networks.common.value_networks import (
+    CNNValueNetwork,
+    VanillaValueNetwork,
+)
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
+    CNNActorNetwork,
     DynamicActionActorNetwork,
     GaussianActorNetwork,
     VanillaActorNetwork,
@@ -392,7 +396,38 @@ PPO_method = {
         "training_rounds": 50,
         "batch_size": 32,
         "epsilon": 0.1,
-        "use_critic": True,
+    },
+    "replay_buffer": PPOReplayBuffer,
+    "replay_buffer_args": {"capacity": 50000},
+    "action_representation_module": OneHotActionTensorRepresentationModule,
+    "action_representation_module_args": {},
+    "learn_every_k_steps": 200,
+}
+PPO_Atari_method = {
+    "name": "PPO",
+    "policy_learner": ProximalPolicyOptimization,
+    "policy_learner_args": {
+        "actor_hidden_dims": [64, 64],
+        "critic_hidden_dims": [64, 64],
+        "training_rounds": 50,
+        "batch_size": 32,
+        "epsilon": 0.1,
+    },
+    "actor_network_module": CNNActorNetwork,
+    "actor_network_args": {
+        "hidden_dims_fully_connected": [512],
+        "kernel_sizes": [8, 4, 3],
+        "output_channels_list": [32, 64, 64],
+        "strides": [4, 2, 1],
+        "paddings": [0, 0, 0],
+    },
+    "critic_network_module": CNNValueNetwork,
+    "critic_network_args": {
+        "hidden_dims_fully_connected": [512],
+        "kernel_sizes": [8, 4, 3],
+        "output_channels_list": [32, 64, 64],
+        "strides": [4, 2, 1],
+        "paddings": [0, 0, 0],
     },
     "replay_buffer": PPOReplayBuffer,
     "replay_buffer_args": {"capacity": 50000},
@@ -1372,6 +1407,7 @@ benchmark_atari = [
         "methods": [
             DQN_Atari_method,
             DQN_multi_head_Atari_method,
+            PPO_Atari_method,
         ],
         "device_id": 0,
     }
