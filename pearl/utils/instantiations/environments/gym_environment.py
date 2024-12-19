@@ -112,7 +112,7 @@ class GymEnvironment(Environment):
             # TODO: Deprecate this part at some point and only support new
             # version of Gymnasium?
             observation = list(reset_result.values())[0]  # pyre-ignore
-        if isinstance(observation, np.float64):
+        if isinstance(observation, np.ndarray) and observation.dtype == np.float64:
             observation = observation.astype(np.float32)
         return observation, self.action_space
 
@@ -151,7 +151,7 @@ class GymEnvironment(Environment):
         else:
             available_action_space = None
 
-        if isinstance(observation, np.float64):
+        if isinstance(observation, np.ndarray) and observation.dtype == np.float64:
             observation = observation.astype(np.float32)
         if isinstance(reward, np.float64):
             reward = reward.astype(np.float32)
