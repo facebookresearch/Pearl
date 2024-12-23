@@ -189,7 +189,8 @@ def offline_learning(
         batch = data_buffer.sample(offline_agent.policy_learner.batch_size)
         assert isinstance(batch, TransitionBatch)
         loss = offline_agent.learn_batch(batch=batch)
-        learning_logger(loss, i, batch, TRAINING_TAG)
+        if i % 1000 == 0:
+            learning_logger(loss, i, batch, TRAINING_TAG)
 
 
 def offline_evaluation(
