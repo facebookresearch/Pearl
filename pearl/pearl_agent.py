@@ -160,7 +160,7 @@ class PearlAgent(Agent):
             #  `Optional[Tensor]`.
             subjective_state_to_be_used,
             safe_action_space,
-            exploit=exploit,  # pyre-fixme[6]
+            exploit=exploit,
         )
 
         self._latest_action = action

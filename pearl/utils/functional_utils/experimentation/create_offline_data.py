@@ -9,7 +9,6 @@
 
 import pickle
 from collections import deque
-from typing import List, Optional
 
 import torch
 from pearl.api.environment import Environment
@@ -179,7 +178,9 @@ def get_data_collection_agent_returns(
             f"using offline training data in {data_path} to stitch trajectories and compute returns"
         )
         with open(data_path, "rb") as file:
-            data = torch.load(file, map_location=torch.device("cpu"))
+            data = torch.load(
+                file, map_location=torch.device("cpu"), weights_only=False
+            )
 
         data_collection_agent_returns = []
         g = 0

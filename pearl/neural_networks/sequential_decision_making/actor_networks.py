@@ -11,7 +11,7 @@
 This module defines several types of actor neural networks.
 """
 
-from typing import List, Optional, Tuple, Union
+from typing import List
 
 import torch
 import torch.nn as nn
@@ -190,11 +190,11 @@ class CNNActorNetwork(ActorNetwork):
         output_channels_list: List[int],
         strides: List[int],
         paddings: List[int],
-        hidden_dims_fully_connected: Optional[List[int]] = None,
+        hidden_dims_fully_connected: List[int] | None = None,
         output_dim: int = 1,
         use_batch_norm_conv: bool = False,
         use_batch_norm_fully_connected: bool = False,
-        action_space: Optional[ActionSpace] = None,
+        action_space: ActionSpace | None = None,
     ) -> None:
         """A CNN Actor Network is meant to be used with CNN to deal with images.
         For an input state (batch of states), it outputs a probability distribution over
@@ -265,8 +265,8 @@ class CNNActorNetwork(ActorNetwork):
     def get_policy_distribution(
         self,
         state_batch: torch.Tensor,  # shape: (batch_size, input_channels, input_height, input_width)
-        available_actions: Optional[torch.Tensor] = None,
-        unavailable_actions_mask: Optional[torch.Tensor] = None,
+        available_actions: torch.Tensor | None = None,
+        unavailable_actions_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Gets a policy distribution from a discrete actor network.
@@ -288,8 +288,8 @@ class CNNActorNetwork(ActorNetwork):
         self,
         state_batch: torch.Tensor,  # shape: (batch_size, input_channels, input_height, input_width)
         action_batch: torch.Tensor,  # shape: (batch_size, action_dim)
-        available_actions: Optional[torch.Tensor] = None,
-        unavailable_actions_mask: Optional[torch.Tensor] = None,
+        available_actions: torch.Tensor | None = None,
+        unavailable_actions_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Gets probabilities of different actions from a discrete actor network.

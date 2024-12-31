@@ -11,8 +11,6 @@ from __future__ import annotations
 
 import logging
 
-from typing import Optional, Union
-
 import numpy as np
 import torch
 from pearl.api.action_space import ActionSpace

@@ -18,7 +18,7 @@ from pearl.policy_learners.contextual_bandits.neural_linear_bandit import (
 from pearl.policy_learners.exploration_modules.contextual_bandits.squarecb_exploration import (
     SquareCBExploration,
 )
-from pearl.policy_learners.exploration_modules.contextual_bandits.thompson_sampling_exploration import (
+from pearl.policy_learners.exploration_modules.contextual_bandits.thompson_sampling_exploration import (  # noqa E501
     ThompsonSamplingExplorationLinear,
 )
 from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (

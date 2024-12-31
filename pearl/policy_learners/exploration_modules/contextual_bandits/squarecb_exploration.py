@@ -7,8 +7,6 @@
 
 # pyre-strict
 
-from typing import Optional, Union
-
 import torch
 
 from pearl.api.action import Action

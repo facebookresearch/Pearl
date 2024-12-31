@@ -11,8 +11,6 @@
 This file contains helpers for unittest creation
 """
 
-from typing import Tuple
-
 import torch
 
 

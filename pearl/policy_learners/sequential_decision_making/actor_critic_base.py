@@ -9,7 +9,7 @@
 
 import copy
 from abc import abstractmethod
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Optional
 
 import torch
 
@@ -224,8 +224,6 @@ class ActorCriticBase(PolicyLearner):
         """
         The history summarization module uses its own optimizer.
         """
-        # pyre-fixme[16]: `ActorCriticBase` has no attribute
-        #  `_history_summarization_optimizer`.
         if self._history_summarization_optimizer is None:
             # default history summarization optimizer
             self._history_summarization_optimizer: optim.Optimizer = optim.AdamW(

@@ -8,7 +8,7 @@
 # pyre-strict
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, TypeVar
+from typing import Any, TypeVar
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (

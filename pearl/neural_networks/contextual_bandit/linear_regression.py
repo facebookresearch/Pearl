@@ -8,7 +8,6 @@
 # pyre-strict
 
 import logging
-from typing import Optional, Tuple
 
 import torch
 from pearl.neural_networks.contextual_bandit.base_cb_model import MuSigmaCBModel

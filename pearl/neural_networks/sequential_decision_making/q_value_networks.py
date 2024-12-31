@@ -882,7 +882,8 @@ class CNNQValueMultiHeadNetwork(QValueNetwork):
     def get_q_values(
         self,
         state_batch: Tensor,  # shape: (batch_size, input_channels, input_height, input_width)
-        action_batch: Tensor,  # shape: (batch_size, number_of_actions_to_query, action_dim) or (batch_size, action_dim)
+        action_batch: Tensor,  # shape: (batch_size, number_of_actions_to_query, action_dim) or
+        #                               (batch_size, action_dim)
         curr_available_actions_batch: Optional[Tensor] = None,
     ) -> Tensor:
         # action representation is assumed to be one-hot

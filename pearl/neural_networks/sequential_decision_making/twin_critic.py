@@ -9,7 +9,7 @@
 
 import inspect
 from collections.abc import Callable, Iterable
-from typing import Optional, Tuple, Type
+from typing import Optional
 
 import torch
 import torch.nn as nn

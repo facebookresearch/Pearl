@@ -17,7 +17,6 @@ To run the code, enter the pearl directory, then run
 
 import os
 import warnings
-from typing import List
 
 import ale_py
 import matplotlib.pyplot as plt

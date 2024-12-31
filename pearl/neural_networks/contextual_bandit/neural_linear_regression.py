@@ -8,7 +8,6 @@
 # pyre-strict
 
 import logging
-from typing import Dict, List, Optional
 
 import torch
 import torch.nn as nn

@@ -10,7 +10,7 @@
 import random
 
 from collections import deque
-from typing import Deque, List, Optional, Tuple, Union
+from typing import Deque
 
 import torch
 

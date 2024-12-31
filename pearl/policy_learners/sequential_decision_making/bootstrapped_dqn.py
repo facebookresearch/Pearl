@@ -8,7 +8,7 @@
 # pyre-strict
 
 from copy import deepcopy
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (

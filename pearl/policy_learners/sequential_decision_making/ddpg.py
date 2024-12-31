@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import List, Optional, Type, Union
+from typing import Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (

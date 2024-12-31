@@ -11,8 +11,6 @@ from __future__ import annotations
 
 import logging
 
-from typing import List, Optional
-
 import torch
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace

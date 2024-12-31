@@ -8,7 +8,7 @@
 # pyre-strict
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (

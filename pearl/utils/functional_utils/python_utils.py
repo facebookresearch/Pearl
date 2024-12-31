@@ -8,7 +8,7 @@
 # pyre-strict
 
 from collections.abc import Iterable
-from typing import Dict, Optional, Type, TypeVar
+from typing import TypeVar
 
 K = TypeVar("K")
 V = TypeVar("V")

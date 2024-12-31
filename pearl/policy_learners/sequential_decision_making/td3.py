@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -201,7 +201,8 @@ class TD3(DeepDeterministicPolicyGradient):
 
 class TD3BC(TD3):
     """
-    Implementation of the TD3BC algorithm in which a behaviour cloning term is added to the actor loss.
+    Implementation of the TD3BC algorithm in which a behaviour cloning term is added
+    to the actor loss.
     The actor loss is implemented similarly to https://arxiv.org/pdf/2106.06860.pdf.
     """
 

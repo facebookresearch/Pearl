@@ -33,7 +33,6 @@ from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     EnsembleQValueNetwork,
     VanillaQValueNetwork,
 )
-from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (  # noqa E501
     EGreedyExploration,
 )

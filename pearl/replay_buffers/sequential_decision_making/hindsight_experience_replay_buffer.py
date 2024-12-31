@@ -8,7 +8,6 @@
 # pyre-strict
 
 from collections.abc import Callable
-from typing import List, Optional, Tuple
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace

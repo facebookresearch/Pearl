@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -15,9 +15,6 @@ from pearl.action_representation_modules.action_representation_module import (
 )
 
 from pearl.api.action_space import ActionSpace
-from pearl.history_summarization_modules.history_summarization_module import (
-    HistorySummarizationModule,
-)
 from pearl.neural_networks.common.utils import update_target_networks
 from pearl.neural_networks.common.value_networks import (
     ValueNetwork,
@@ -26,7 +23,6 @@ from pearl.neural_networks.common.value_networks import (
 
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetwork,
-    GaussianActorNetwork,
     VanillaActorNetwork,
     VanillaContinuousActorNetwork,
 )

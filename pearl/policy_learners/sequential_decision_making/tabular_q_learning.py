@@ -8,7 +8,7 @@
 # pyre-strict
 
 from collections.abc import Iterable
-from typing import Any, Dict, Tuple
+from typing import Any
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace

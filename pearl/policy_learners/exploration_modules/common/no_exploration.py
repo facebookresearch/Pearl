@@ -7,7 +7,6 @@
 
 # pyre-strict
 
-from typing import Optional
 
 import torch
 

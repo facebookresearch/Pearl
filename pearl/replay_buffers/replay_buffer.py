@@ -8,7 +8,6 @@
 # pyre-strict
 
 from abc import ABC, abstractmethod
-from typing import Optional
 
 import torch
 from pearl.api.action import Action

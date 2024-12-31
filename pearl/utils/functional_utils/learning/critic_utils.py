@@ -8,7 +8,7 @@
 # pyre-strict
 
 from collections.abc import Iterable
-from typing import cast, Optional, Tuple, Type, Union
+from typing import cast
 
 import torch
 import torch.nn as nn

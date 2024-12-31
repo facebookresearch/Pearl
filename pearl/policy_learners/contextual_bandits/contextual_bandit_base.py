@@ -8,7 +8,7 @@
 # pyre-strict
 
 from abc import abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -20,7 +20,6 @@ from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.reward import Value
 from pearl.history_summarization_modules.history_summarization_module import (
-    HistorySummarizationModule,
     SubjectiveState,
 )
 from pearl.policy_learners.exploration_modules.exploration_module import (

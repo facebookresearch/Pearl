@@ -8,7 +8,7 @@
 # pyre-strict
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pearl.api.action_space import ActionSpace
 

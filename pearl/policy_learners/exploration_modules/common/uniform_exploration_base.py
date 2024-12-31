@@ -8,7 +8,6 @@
 # pyre-strict
 
 from abc import abstractmethod
-from typing import Optional
 
 import torch
 

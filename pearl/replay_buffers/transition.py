@@ -9,7 +9,7 @@
 
 import dataclasses
 from dataclasses import dataclass
-from typing import Optional, TypeVar
+from typing import TypeVar
 
 import torch
 from torch import Tensor

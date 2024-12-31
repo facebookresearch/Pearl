@@ -4,8 +4,6 @@
 
 from dataclasses import fields, is_dataclass
 
-from typing import List, Type
-
 
 def get_subdataclass_specific_attributes(a_dataclass: type[object]) -> list[str]:
     """

@@ -10,7 +10,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Optional, Tuple
 
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult

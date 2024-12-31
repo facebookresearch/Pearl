@@ -13,7 +13,7 @@ This module defines epistemic neural networks that can model posterior distribut
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -172,7 +172,6 @@ class Priornet(nn.Module):
         """
         Generate parameters and buffers for the priornet.
         """
-        # pyre-fixme[6]: For 1st argument expected `List[Module]` but got `ModuleList`.
         self.params, self.buffers = torch.func.stack_module_state(self.models)
 
     def call_single_model(

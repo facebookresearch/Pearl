@@ -12,8 +12,6 @@ from __future__ import annotations
 import logging
 from collections.abc import Iterator
 
-from typing import List, Optional
-
 import torch
 from pearl.api.space import Space
 from torch import Tensor

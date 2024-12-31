@@ -9,10 +9,9 @@
 
 import copy
 from abc import abstractmethod
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Optional
 
 import torch
-import torch.nn.functional as F
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
