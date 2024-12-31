@@ -74,6 +74,15 @@ from pearl.policy_learners.exploration_modules.sequential_decision_making.deep_e
     DeepExploration,
 )
 from pearl.policy_learners.exploration_modules.wrappers.warmup import Warmup
+from pearl.safety_modules.identity_safety_module import IdentitySafetyModule
+from pearl.safety_modules.reward_constrained_safety_module import (
+    RCSafetyModuleCostCriticContinuousAction,
+)
+from pearl.safety_modules.risk_sensitive_safety_modules import (
+    QuantileNetworkMeanVarianceSafetyModule,
+    RiskNeutralSafetyModule,
+)
+from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import nn
 
@@ -691,6 +700,89 @@ class TestCompare(TestCase):
 
         # Modify an attribute of module2 to create a difference
         module2.loss_type = "mae"
+
+        # Now the comparison should show a difference
+        self.assertNotEqual(module1.compare(module2), "")
+
+    def test_compare_identity_safety_module(self) -> None:
+        module1 = IdentitySafetyModule()
+        module2 = IdentitySafetyModule()
+
+        # Compare module1 with itself
+        self.assertEqual(module1.compare(module1), "")
+
+        # Compare module1 with module2 (should have no differences)
+        self.assertEqual(module1.compare(module2), "")
+
+    def test_compare_rc_safety_module_cost_critic_continuous_action(self) -> None:
+        action_space1 = BoxActionSpace(
+            low=torch.tensor([-1.0, -1.0]), high=torch.tensor([1.0, 1.0])
+        )
+        action_space2 = BoxActionSpace(
+            low=torch.tensor([-1.0, -1.0]), high=torch.tensor([1.0, 1.0])
+        )
+
+        module1 = RCSafetyModuleCostCriticContinuousAction(
+            constraint_value=1.0,
+            state_dim=10,
+            action_space=action_space1,
+            critic_hidden_dims=[32, 16],
+        )
+        module2 = RCSafetyModuleCostCriticContinuousAction(
+            constraint_value=1.0,
+            state_dim=10,
+            action_space=action_space2,
+            critic_hidden_dims=[32, 16],
+        )
+
+        # Compare module1 with itself
+        self.assertEqual(module1.compare(module1), "")
+
+        # Compare module1 with module2
+        # (should have differences initially due to random initialization)
+        self.assertNotEqual(module1.compare(module2), "")
+
+        # Make them equal
+        module1.cost_critic.load_state_dict(module2.cost_critic.state_dict())
+        module1.target_of_cost_critic.load_state_dict(
+            module2.target_of_cost_critic.state_dict()
+        )
+
+        # Should now be equal
+        self.assertEqual(module1.compare(module2), "")
+
+        # Modify an attribute of module2 to create a difference
+        module2.constraint_value = 2.0
+
+        # Now the comparison should show a difference
+        self.assertNotEqual(module1.compare(module2), "")
+
+    def test_compare_risk_neutral_safety_module(self) -> None:
+        module1 = RiskNeutralSafetyModule()
+        module2 = RiskNeutralSafetyModule()
+
+        # Compare module1 with itself
+        self.assertEqual(module1.compare(module1), "")
+
+        # Compare module1 with module2 (should have no differences)
+        self.assertEqual(module1.compare(module2), "")
+
+    def test_compare_quantile_network_mean_variance_safety_module(self) -> None:
+        module1 = QuantileNetworkMeanVarianceSafetyModule(
+            variance_weighting_coefficient=0.1
+        )
+        module2 = QuantileNetworkMeanVarianceSafetyModule(
+            variance_weighting_coefficient=0.1
+        )
+
+        # Compare module1 with itself
+        self.assertEqual(module1.compare(module1), "")
+
+        # Compare module1 with module2 (should have no differences initially)
+        self.assertEqual(module1.compare(module2), "")
+
+        # Modify an attribute of module2 to create a difference
+        module2._beta = 0.2
 
         # Now the comparison should show a difference
         self.assertNotEqual(module1.compare(module2), "")

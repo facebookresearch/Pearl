@@ -8,6 +8,7 @@
 # pyre-strict
 
 from abc import abstractmethod
+from typing import List
 
 import torch
 from pearl.api.action_space import ActionSpace
@@ -88,6 +89,27 @@ class RiskNeutralSafetyModule(RiskSensitiveSafetyModule):
 
         return q_value_distribution.mean(dim=-1)
 
+    def compare(self, other: SafetyModule) -> str:
+        """
+        Compares two RiskNeutralSafetyModule instances for equality.
+
+        Since this module has no attributes or buffers to compare,
+        it only checks if the `other` object is an instance of the same class.
+
+        Args:
+          other: The other SafetyModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, RiskNeutralSafetyModule):
+            differences.append("other is not an instance of RiskNeutralSafetyModule")
+
+        return "\n".join(differences)
+
 
 class QuantileNetworkMeanVarianceSafetyModule(RiskSensitiveSafetyModule):
     """
@@ -134,3 +156,27 @@ class QuantileNetworkMeanVarianceSafetyModule(RiskSensitiveSafetyModule):
             self._beta * variance
         )  # (batch_size, number_query_actions, 1)
         return variance_adjusted_mean.squeeze(-1)
+
+    def compare(self, other: SafetyModule) -> str:
+        """
+        Compares two QuantileNetworkMeanVarianceSafetyModule instances for equality,
+        checking the variance_weighting_coefficient.
+
+        Args:
+          other: The other SafetyModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, QuantileNetworkMeanVarianceSafetyModule):
+            differences.append(
+                "other is not an instance of QuantileNetworkMeanVarianceSafetyModule"
+            )
+        else:
+            if self._beta != other._beta:
+                differences.append(f"_beta is different: {self._beta} vs {other._beta}")
+
+        return "\n".join(differences)

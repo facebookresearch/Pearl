@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import torch
 from pearl.api.action_space import ActionSpace
@@ -28,6 +28,7 @@ from pearl.utils.functional_utils.learning.critic_utils import (
     twin_critic_action_value_loss,
     update_critic_target_network,
 )
+from pearl.utils.module_utils import modules_have_similar_state_dict
 from torch import nn, optim
 
 
@@ -225,3 +226,94 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
 
     def __str__(self) -> str:
         return "RCSafetyModuleCostCriticContinuousAction"
+
+    def compare(self, other: SafetyModule) -> str:
+        """
+        Compares two RCSafetyModuleCostCriticContinuousAction instances for equality,
+        checking attributes and the cost critic.
+
+        Args:
+          other: The other SafetyModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, RCSafetyModuleCostCriticContinuousAction):
+            differences.append(
+                "other is not an instance of RCSafetyModuleCostCriticContinuousAction"
+            )
+        else:  # Type refinement with else block
+            # Compare attributes
+            if self.constraint_value != other.constraint_value:
+                differences.append(
+                    f"constraint_value is different: {self.constraint_value} "
+                    + f"vs {other.constraint_value}"
+                )
+            if self.lr_lambda != other.lr_lambda:
+                differences.append(
+                    f"lr_lambda is different: {self.lr_lambda} "
+                    + f"vs {other.lr_lambda}"
+                )
+            if self.lambda_constraint_ub_value != other.lambda_constraint_ub_value:
+                differences.append(
+                    f"lambda_constraint_ub_value is different: {self.lambda_constraint_ub_value} "
+                    + f"vs {other.lambda_constraint_ub_value}"
+                )
+            if self.lambda_constraint != other.lambda_constraint:
+                differences.append(
+                    f"lambda_constraint is different: {self.lambda_constraint} "
+                    + f"vs {other.lambda_constraint}"
+                )
+            if self._batch_size != other._batch_size:
+                differences.append(
+                    f"_batch_size is different: {self._batch_size} "
+                    + f"vs {other._batch_size}"
+                )
+            if self.use_twin_critic != other.use_twin_critic:
+                differences.append(
+                    f"use_twin_critic is different: {self.use_twin_critic} "
+                    + f"vs {other.use_twin_critic}"
+                )
+            if self.state_dim != other.state_dim:
+                differences.append(
+                    f"state_dim is different: {self.state_dim} "
+                    + f"vs {other.state_dim}"
+                )
+            if self.action_dim != other.action_dim:
+                differences.append(
+                    f"action_dim is different: {self.action_dim} "
+                    + f"vs {other.action_dim}"
+                )
+            if self.hidden_dims != other.hidden_dims:
+                differences.append(
+                    f"hidden_dims is different: {self.hidden_dims} "
+                    + f"vs {other.hidden_dims}"
+                )
+            if self.critic_learning_rate != other.critic_learning_rate:
+                differences.append(
+                    f"critic_learning_rate is different: {self.critic_learning_rate} "
+                    + f"vs {other.critic_learning_rate}"
+                )
+            if self.cost_discount_factor != other.cost_discount_factor:
+                differences.append(
+                    f"cost_discount_factor is different: {self.cost_discount_factor} "
+                    + f"vs {other.cost_discount_factor}"
+                )
+            if self.critic_soft_update_tau != other.critic_soft_update_tau:
+                differences.append(
+                    f"critic_soft_update_tau is different: {self.critic_soft_update_tau} "
+                    + f"vs {other.critic_soft_update_tau}"
+                )
+
+            # Compare cost critics using modules_have_similar_state_dict
+            if (
+                reason := modules_have_similar_state_dict(
+                    self.cost_critic, other.cost_critic
+                )
+            ) != "":
+                differences.append(f"cost_critic is different: {reason}")
+
+        return "\n".join(differences)

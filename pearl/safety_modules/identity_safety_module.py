@@ -7,6 +7,8 @@
 
 # pyre-strict
 
+from typing import List
+
 from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
@@ -32,3 +34,24 @@ class IdentitySafetyModule(SafetyModule):
 
     def learn_batch(self, batch: TransitionBatch) -> None:
         pass
+
+    def compare(self, other: SafetyModule) -> str:
+        """
+        Compares two IdentitySafetyModule instances for equality.
+
+        Since this module has no attributes or buffers to compare,
+        it only checks if the `other` object is an instance of the same class.
+
+        Args:
+          other: The other SafetyModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, IdentitySafetyModule):
+            differences.append("other is not an instance of IdentitySafetyModule")
+
+        return "\n".join(differences)
