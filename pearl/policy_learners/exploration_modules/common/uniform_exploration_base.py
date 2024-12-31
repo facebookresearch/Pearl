@@ -8,6 +8,7 @@
 # pyre-strict
 
 from abc import abstractmethod
+from typing import List
 
 import torch
 
@@ -39,3 +40,29 @@ class UniformExplorationBase(ExplorationModule):
         representation: torch.nn.Module | None = None,
     ) -> Action:
         pass
+
+    def compare(self, other: ExplorationModule) -> str:
+        """
+        Compares two UniformExplorationBase instances for equality.
+
+        Since this module has no attributes or buffers to compare,
+        it only checks if the `other` object is an instance of the same class.
+
+        Args:
+          other: The other ExplorationModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+        differences: List[str] = []
+
+        if not isinstance(other, UniformExplorationBase):
+            differences.append("other is not an instance of UniformExplorationBase")
+        else:
+            if self.exploration_type != other.exploration_type:
+                differences.append(
+                    f"exploration_type is different: {self.exploration_type} "
+                    + f"vs {other.exploration_type}"
+                )
+
+        return "\n".join(differences)

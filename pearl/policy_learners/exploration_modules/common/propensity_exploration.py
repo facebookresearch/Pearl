@@ -7,6 +7,8 @@
 
 # pyre-strict
 
+from typing import List
+
 import torch
 
 from pearl.api.action import Action
@@ -39,3 +41,24 @@ class PropensityExploration(ExplorationModule):
             raise TypeError("action space must be discrete")
         action_index = torch.distributions.Categorical(values).sample()
         return action_space.actions[action_index]
+
+    def compare(self, other: ExplorationModule) -> str:
+        """
+        Compares two PropensityExploration instances for equality.
+
+        Since this module has no attributes or buffers to compare,
+        it only checks if the `other` object is an instance of the same class.
+
+        Args:
+          other: The other ExplorationModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, PropensityExploration):
+            differences.append("other is not an instance of PropensityExploration")
+
+        return "\n".join(differences)

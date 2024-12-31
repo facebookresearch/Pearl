@@ -7,10 +7,13 @@
 
 # pyre-strict
 
+from typing import List
+
 import torch
 
 from pearl.api.action import Action
 from pearl.api.state import SubjectiveState
+from pearl.policy_learners.exploration_modules import ExplorationModule
 
 from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
     ScoreExplorationBase,
@@ -123,6 +126,44 @@ class SquareCBExploration(ScoreExplorationBase):
     ) -> Action:
         return values.view(-1, action_space.n)
 
+    def compare(self, other: ExplorationModule) -> str:
+        """
+        Compares two SquareCBExploration instances for equality,
+        checking attributes.
+
+        Args:
+          other: The other ExplorationModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, SquareCBExploration):
+            differences.append("other is not an instance of SquareCBExploration")
+        else:
+            if self._gamma != other._gamma:
+                differences.append(
+                    f"_gamma is different: {self._gamma} vs {other._gamma}"
+                )
+            if self.reward_lb != other.reward_lb:
+                differences.append(
+                    f"reward_lb is different: {self.reward_lb} vs {other.reward_lb}"
+                )
+            if self.reward_ub != other.reward_ub:
+                differences.append(
+                    f"reward_ub is different: {self.reward_ub} vs {other.reward_ub}"
+                )
+            if self.clamp_values != other.clamp_values:
+                differences.append(
+                    f"clamp_values is different: {self.clamp_values} vs {other.clamp_values}"
+                )
+
+        return "\n".join(differences)
+
 
 class FastCBExploration(SquareCBExploration):
     """
@@ -174,3 +215,24 @@ class FastCBExploration(SquareCBExploration):
             action_num * (max_val - self.reward_lb) + self._gamma * empirical_gaps,
         )
         return prob_policy
+
+    def compare(self, other: ExplorationModule) -> str:
+        """
+        Compares two FastCBExploration instances for equality,
+        checking attributes.
+
+        Args:
+          other: The other ExplorationModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, FastCBExploration):
+            differences.append("other is not an instance of FastCBExploration")
+
+        return "\n".join(differences)

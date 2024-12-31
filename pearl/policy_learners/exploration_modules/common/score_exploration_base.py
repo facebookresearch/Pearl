@@ -8,6 +8,7 @@
 # pyre-strict
 
 from abc import abstractmethod
+from typing import List
 from warnings import warn
 
 import torch
@@ -109,3 +110,29 @@ class ScoreExplorationBase(ExplorationModule):
             return shape(batch_size, action_count)
         """
         pass
+
+    def compare(self, other: ExplorationModule) -> str:
+        """
+        Compares two UniformExplorationBase instances for equality.
+
+        Since this module has no attributes or buffers to compare,
+        it only checks if the `other` object is an instance of the same class.
+
+        Args:
+          other: The other ExplorationModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+        differences: List[str] = []
+
+        if not isinstance(other, ScoreExplorationBase):
+            differences.append("other is not an instance of ScoreExplorationBase")
+        else:
+            if self.exploration_type != other.exploration_type:
+                differences.append(
+                    f"exploration_type is different: {self.exploration_type} "
+                    + f"vs {other.exploration_type}"
+                )
+
+        return "\n".join(differences)

@@ -7,13 +7,14 @@
 
 # pyre-strict
 
-from typing import Any
+from typing import Any, List
 
 import torch
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
+from pearl.policy_learners.exploration_modules import ExplorationModule
 from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
     ScoreExplorationBase,
 )
@@ -85,6 +86,32 @@ class UCBExploration(ScoreExplorationBase):
         ucb_scores = values + self._alpha * sigma
         return ucb_scores.view(-1, action_count)  # batch_size, action_count
 
+    def compare(self, other: ExplorationModule) -> str:
+        """
+        Compares two UCBExploration instances for equality,
+        checking attributes.
+
+        Args:
+          other: The other ExplorationModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, UCBExploration):
+            differences.append("other is not an instance of UCBExploration")
+        else:
+            if self._alpha != other._alpha:
+                differences.append(
+                    f"_alpha is different: {self._alpha} vs {other._alpha}"
+                )
+
+        return "\n".join(differences)
+
 
 class DisjointUCBExploration(UCBExploration):
     """
@@ -113,6 +140,32 @@ class DisjointUCBExploration(UCBExploration):
             )
         sigmas = torch.cat(sigmas, dim=1)
         return sigmas
+
+    def compare(self, other: ExplorationModule) -> str:
+        """
+        Compares two DisjointUCBExploration instances for equality,
+        checking attributes.
+
+        Args:
+          other: The other ExplorationModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, DisjointUCBExploration):
+            differences.append("other is not an instance of DisjointUCBExploration")
+        else:
+            if self._alpha != other._alpha:
+                differences.append(
+                    f"_alpha is different: {self._alpha} vs {other._alpha}"
+                )
+
+        return "\n".join(differences)
 
 
 class VanillaUCBExploration(UCBExploration):
@@ -167,3 +220,35 @@ class VanillaUCBExploration(UCBExploration):
         self.action_execution_count[selected_action] += 1
         self.action_executed += 1
         return selected_action
+
+    def compare(self, other: ExplorationModule) -> str:
+        """
+        Compares two VanillaUCBExploration instances for equality,
+        checking attributes and action execution counts.
+
+        Args:
+          other: The other ExplorationModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, VanillaUCBExploration):
+            differences.append("other is not an instance of VanillaUCBExploration")
+        else:
+            if self.action_execution_count != other.action_execution_count:
+                differences.append(
+                    f"action_execution_count is different: {self.action_execution_count} "
+                    + "vs {other.action_execution_count}"
+                )
+            if self.action_executed != other.action_executed:
+                differences.append(
+                    f"action_executed is different: {self.action_executed} "
+                    + "vs {other.action_executed}"
+                )
+
+        return "\n".join(differences)

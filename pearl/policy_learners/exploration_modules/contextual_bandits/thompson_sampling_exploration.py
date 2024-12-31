@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any
+from typing import Any, List
 
 import torch
 
@@ -15,6 +15,7 @@ from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
 from pearl.neural_networks.contextual_bandit.linear_regression import LinearRegression
+from pearl.policy_learners.exploration_modules import ExplorationModule
 from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
     ScoreExplorationBase,
 )
@@ -71,6 +72,35 @@ class ThompsonSamplingExplorationLinear(ScoreExplorationBase):
 
         return scores.view(-1, action_space.n)
 
+    def compare(self, other: ExplorationModule) -> str:
+        """
+        Compares two ThompsonSamplingExplorationLinear instances for equality,
+        checking attributes.
+
+        Args:
+          other: The other ExplorationModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, ThompsonSamplingExplorationLinear):
+            differences.append(
+                "other is not an instance of ThompsonSamplingExplorationLinear"
+            )
+        else:
+            if self._enable_efficient_sampling != other._enable_efficient_sampling:
+                differences.append(
+                    f"_enable_efficient_sampling is different: {self._enable_efficient_sampling} "
+                    + "vs {other._enable_efficient_sampling}"
+                )
+
+        return "\n".join(differences)
+
 
 class ThompsonSamplingExplorationLinearDisjoint(ThompsonSamplingExplorationLinear):
     """
@@ -109,3 +139,30 @@ class ThompsonSamplingExplorationLinearDisjoint(ThompsonSamplingExplorationLinea
             scores.append(score)
         scores = torch.stack(scores)
         return scores.view(-1, action_space.n)
+
+    def compare(self, other: ExplorationModule) -> str:
+        """
+        Compares two ThompsonSamplingExplorationLinearDisjoint instances for equality.
+
+        Args:
+          other: The other ExplorationModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        # Inherit comparisons from the base class (ThompsonSamplingExplorationLinear)
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, ThompsonSamplingExplorationLinearDisjoint):
+            differences.append(
+                "other is not an instance of ThompsonSamplingExplorationLinearDisjoint"
+            )
+
+        # No additional attributes to compare
+
+        return "\n".join(differences)

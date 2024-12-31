@@ -8,13 +8,14 @@
 # pyre-strict
 
 import random
-from typing import Optional
+from typing import List, Optional
 
 import torch
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
+from pearl.policy_learners.exploration_modules import ExplorationModule
 from pearl.policy_learners.exploration_modules.common.uniform_exploration_base import (
     UniformExplorationBase,
 )
@@ -81,3 +82,50 @@ class EGreedyExploration(UniformExplorationBase):
             )
         else:
             return exploit_action
+
+    def compare(self, other: ExplorationModule) -> str:
+        """
+        Compares two EGreedyExploration instances for equality,
+        checking attributes.
+
+        Args:
+        other: The other ExplorationModule to compare with.
+
+        Returns:
+        str: A string describing the differences, or an empty string if they are identical.
+        """
+        differences: List[str] = []
+
+        # Call the compare method of the parent class (UniformExplorationBase)
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, EGreedyExploration):
+            differences.append("other is not an instance of EGreedyExploration")
+        else:
+            if self.start_epsilon != other.start_epsilon:
+                differences.append(
+                    f"start_epsilon is different: {self.start_epsilon} vs {other.start_epsilon}"
+                )
+            if self.end_epsilon != other.end_epsilon:
+                differences.append(
+                    f"end_epsilon is different: {self.end_epsilon} vs {other.end_epsilon}"
+                )
+            if self.time_step != other.time_step:
+                differences.append(
+                    f"time_step is different: {self.time_step} vs {other.time_step}"
+                )
+            if self._epsilon_scheduling != other._epsilon_scheduling:
+                differences.append(
+                    f"_epsilon_scheduling is different: {self._epsilon_scheduling} "
+                    + f"vs {other._epsilon_scheduling}"
+                )
+            if self.warmup_steps != other.warmup_steps:
+                differences.append(
+                    f"warmup_steps is different: {self.warmup_steps} vs {other.warmup_steps}"
+                )
+            if self.curr_epsilon != other.curr_epsilon:
+                differences.append(
+                    f"curr_epsilon is different: {self.curr_epsilon} vs {other.curr_epsilon}"
+                )
+
+        return "\n".join(differences)

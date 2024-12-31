@@ -54,3 +54,14 @@ class ExplorationModule(ABC):
     def learn(self, replay_buffer: ReplayBuffer) -> None:  # noqa: B027
         """Learns from the replay buffer. Default implementation does nothing."""
         pass
+
+    @abstractmethod
+    def compare(self, other: "ExplorationModule") -> str:
+        """
+        Compares two exploration modules.
+        Args:
+            other: The other exploration module to compare with.
+        Returns:
+            A string describing the differences, or an empty string if they are identical.
+        """
+        ...

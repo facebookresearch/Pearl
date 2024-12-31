@@ -7,6 +7,8 @@
 
 # pyre-strict
 
+from typing import List
+
 import torch
 
 from pearl.api.action import Action
@@ -19,6 +21,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from pearl.utils.module_utils import modules_have_similar_state_dict
 
 
 class DeepExploration(ExplorationModule):
@@ -88,3 +91,41 @@ class DeepExploration(ExplorationModule):
         # sample a new epistemic index (i.e., a Q-network) at the beginning of a
         # new episode for temporally consistent exploration
         self.q_ensemble_network.resample_epistemic_index()
+
+    def compare(self, other: ExplorationModule) -> str:
+        """
+        Compares two DeepExploration instances for equality,
+        checking attributes (q_ensemble_network and action_representation_module).
+
+        Args:
+          other: The other ExplorationModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, DeepExploration):
+            differences.append("other is not an instance of DeepExploration")
+        else:
+            # Compare q_ensemble_network using modules_have_similar_state_dict
+            if (
+                reason := modules_have_similar_state_dict(
+                    self.q_ensemble_network, other.q_ensemble_network
+                )
+            ) != "":
+                differences.append(f"q_ensemble_network is different: {reason}")
+
+            # Compare action_representation_module using modules_have_similar_state_dict
+            if (
+                reason := modules_have_similar_state_dict(
+                    self.action_representation_module,
+                    other.action_representation_module,
+                )
+            ) != "":
+                differences.append(
+                    f"action_representation_module is different: {reason}"
+                )
+
+        return "\n".join(differences)

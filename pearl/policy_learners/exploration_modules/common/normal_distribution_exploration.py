@@ -7,6 +7,8 @@
 
 # pyre-strict
 
+from typing import List
+
 import torch
 
 from pearl.api.action import Action
@@ -72,3 +74,31 @@ class NormalDistributionExploration(ExplorationModule):
 
         # clip final action value to be within bounds of the action space
         return torch.clamp(action, low, high)
+
+    def compare(self, other: ExplorationModule) -> str:
+        """
+        Compares two NormalDistributionExploration instances for equality,
+        checking attributes.
+
+        Args:
+          other: The other ExplorationModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, NormalDistributionExploration):
+            differences.append(
+                "other is not an instance of NormalDistributionExploration"
+            )
+        else:
+            if self._mean != other._mean:
+                differences.append(f"_mean is different: {self._mean} vs {other._mean}")
+            if self._std_dev != other._std_dev:
+                differences.append(
+                    f"_std_dev is different: {self._std_dev} vs {other._std_dev}"
+                )
+
+        return "\n".join(differences)

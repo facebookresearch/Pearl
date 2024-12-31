@@ -7,6 +7,8 @@
 
 # pyre-strict
 
+from typing import List
+
 import torch
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -56,3 +58,37 @@ class Warmup(ExplorationModuleWrapper):
             )
         self.time_step += 1
         return action
+
+    def compare(self, other: ExplorationModule) -> str:
+        """
+        Compares two Warmup instances for equality,
+        checking attributes and the underlying exploration module.
+
+        Args:
+          other: The other ExplorationModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, Warmup):
+            differences.append("other is not an instance of Warmup")
+        else:
+            if self.warmup_steps != other.warmup_steps:
+                differences.append(
+                    f"warmup_steps is different: {self.warmup_steps} vs {other.warmup_steps}"
+                )
+            if self.time_step != other.time_step:
+                differences.append(
+                    f"time_step is different: {self.time_step} vs {other.time_step}"
+                )
+
+            # Compare the underlying exploration modules
+            if (
+                reason := self.exploration_module.compare(other.exploration_module)
+            ) != "":
+                differences.append(f"exploration_module is different: {reason}")
+
+        return "\n".join(differences)
