@@ -243,12 +243,12 @@ class VanillaUCBExploration(UCBExploration):
             if self.action_execution_count != other.action_execution_count:
                 differences.append(
                     f"action_execution_count is different: {self.action_execution_count} "
-                    + "vs {other.action_execution_count}"
+                    + f"vs {other.action_execution_count}"
                 )
             if self.action_executed != other.action_executed:
                 differences.append(
                     f"action_executed is different: {self.action_executed} "
-                    + "vs {other.action_executed}"
+                    + f"vs {other.action_executed}"
                 )
 
         return "\n".join(differences)

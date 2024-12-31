@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any
+from typing import Any, List
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -35,11 +35,13 @@ from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploratio
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.action_utils import (
     concatenate_actions_to_state,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from pearl.utils.module_utils import optimizers_have_similar_state_dict
 from torch import optim
 
 
@@ -307,3 +309,64 @@ class NeuralLinearBandit(ContextualBanditBase):
                 representation=self.model._linear_regression_layer,
             )
         return scores.reshape(batch_size, -1).squeeze(-1)
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two NeuralLinearBandit instances for equality,
+        checking attributes, model, and exploration module.
+
+        Args:
+          other: The other ContextualBanditBase to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, NeuralLinearBandit):
+            differences.append("other is not an instance of NeuralLinearBandit")
+        else:  # Type refinement with else block
+            # Compare attributes
+            if self._state_features_only != other._state_features_only:
+                differences.append(
+                    f"_state_features_only is different: {self._state_features_only} "
+                    + f"vs {other._state_features_only}"
+                )
+            if self.loss_type != other.loss_type:
+                differences.append(
+                    f"loss_type is different: {self.loss_type} vs {other.loss_type}"
+                )
+            if self.apply_discounting_interval != other.apply_discounting_interval:
+                differences.append(
+                    f"apply_discounting_interval is different: {self.apply_discounting_interval} "
+                    + f"vs {other.apply_discounting_interval}"
+                )
+            if (
+                self.last_sum_weight_when_discounted
+                != other.last_sum_weight_when_discounted
+            ):
+                differences.append(
+                    "last_sum_weight_when_discounted is different: "
+                    + f"{self.last_sum_weight_when_discounted} "
+                    + f"vs {other.last_sum_weight_when_discounted}"
+                )
+            if self.separate_uncertainty != other.separate_uncertainty:
+                differences.append(
+                    f"separate_uncertainty is different: {self.separate_uncertainty} "
+                    + f"vs {other.separate_uncertainty}"
+                )
+
+            # Compare models using their compare method
+            if (reason := self.model.compare(other.model)) != "":
+                differences.append(f"model is different: {reason}")
+
+            if (
+                reason := optimizers_have_similar_state_dict(
+                    self._optimizer, other._optimizer
+                )
+            ) != "":
+                differences.append(f"optimizer is different: {reason}")
+
+        return "\n".join(differences)

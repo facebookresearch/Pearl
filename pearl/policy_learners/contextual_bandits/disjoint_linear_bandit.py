@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any
+from typing import Any, List
 
 import torch
 
@@ -24,6 +24,7 @@ from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.action_utils import (
     concatenate_actions_to_state,
@@ -154,3 +155,39 @@ class DisjointLinearBandit(ContextualBanditBase):
         # to the optimizer of the bandit, but disjoint bandits do not use a pytorch optimizer.
         # Instead, the optimization uses Pearl's own linear regression module.
         self._history_summarization_module = value
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two DisjointLinearBandit instances for equality,
+        checking attributes, linear regressions, and exploration module.
+
+        Args:
+          other: The other ContextualBanditBase to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, DisjointLinearBandit):
+            differences.append("other is not an instance of DisjointLinearBandit")
+        else:
+            # Compare attributes
+            if self._state_features_only != other._state_features_only:
+                differences.append(
+                    f"_state_features_only is different: {self._state_features_only} vs "
+                    + "{other._state_features_only}"
+                )
+
+            # Compare linear regressions
+            for i, (lr1, lr2) in enumerate(
+                zip(self._linear_regressions_list, other._linear_regressions_list)
+            ):
+                assert isinstance(lr1, LinearRegression)
+                assert isinstance(lr2, LinearRegression)
+                if (reason := lr1.compare(lr2)) != "":
+                    differences.append(f"Linear regression {i} is different: {reason}")
+
+        return "\n".join(differences)

@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any
+from typing import Any, List
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -30,11 +30,16 @@ from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.action_utils import (
     concatenate_actions_to_state,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from pearl.utils.module_utils import (
+    modules_have_similar_state_dict,
+    optimizers_have_similar_state_dict,
+)
 from torch import optim
 
 
@@ -181,3 +186,47 @@ class NeuralBandit(ContextualBanditBase):
     @property
     def optimizer(self) -> torch.optim.Optimizer:
         return self._optimizer
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two NeuralBandit instances for equality,
+        checking attributes, model, and exploration module.
+
+        Args:
+          other: The other ContextualBanditBase to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, NeuralBandit):
+            differences.append("other is not an instance of NeuralBandit")
+        else:  # Type refinement with else block
+            # Compare attributes
+            if self._state_features_only != other._state_features_only:
+                differences.append(
+                    f"_state_features_only is different: {self._state_features_only} "
+                    + f"vs {other._state_features_only}"
+                )
+            if self.loss_type != other.loss_type:
+                differences.append(
+                    f"loss_type is different: {self.loss_type} vs {other.loss_type}"
+                )
+
+            # Compare models using modules_have_similar_state_dict
+            if (
+                reason := modules_have_similar_state_dict(self.model, other.model)
+            ) != "":
+                differences.append(f"model is different: {reason}")
+
+            if (
+                reason := optimizers_have_similar_state_dict(
+                    self._optimizer, other._optimizer
+                )
+            ) != "":
+                differences.append(f"optimizer is different: {reason}")
+
+        return "\n".join(differences)

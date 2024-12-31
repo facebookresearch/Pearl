@@ -162,7 +162,11 @@ class ThompsonSamplingExplorationLinearDisjoint(ThompsonSamplingExplorationLinea
             differences.append(
                 "other is not an instance of ThompsonSamplingExplorationLinearDisjoint"
             )
-
-        # No additional attributes to compare
+        else:
+            if self._enable_efficient_sampling != other._enable_efficient_sampling:
+                differences.append(
+                    f"_enable_efficient_sampling is different: {self._enable_efficient_sampling} "
+                    + f"vs {other._enable_efficient_sampling}"
+                )
 
         return "\n".join(differences)

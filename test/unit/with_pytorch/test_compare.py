@@ -2,6 +2,8 @@
 
 # pyre-strict
 
+from typing import List
+
 import torch
 from later.unittest import TestCase
 from pearl.action_representation_modules.binary_action_representation_module import (
@@ -28,6 +30,20 @@ from pearl.neural_networks.contextual_bandit.neural_linear_regression import (
 )
 from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     EnsembleQValueNetwork,
+)
+from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
+    ContextualBanditBase,
+)
+from pearl.policy_learners.contextual_bandits.disjoint_bandit import (
+    DisjointBanditContainer,
+)
+from pearl.policy_learners.contextual_bandits.disjoint_linear_bandit import (
+    DisjointLinearBandit,
+)
+from pearl.policy_learners.contextual_bandits.linear_bandit import LinearBandit
+from pearl.policy_learners.contextual_bandits.neural_bandit import NeuralBandit
+from pearl.policy_learners.contextual_bandits.neural_linear_bandit import (
+    NeuralLinearBandit,
 )
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
     EGreedyExploration,
@@ -58,6 +74,7 @@ from pearl.policy_learners.exploration_modules.sequential_decision_making.deep_e
     DeepExploration,
 )
 from pearl.policy_learners.exploration_modules.wrappers.warmup import Warmup
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import nn
 
 
@@ -410,6 +427,41 @@ class TestCompare(TestCase):
         # Now the comparison should show a difference
         self.assertNotEqual(module1.compare(module2), "")
 
+    def test_compare_neural_linear_bandit(self) -> None:
+        # Create exploration modules (e.g., UCBExploration)
+        exploration_module1 = UCBExploration(alpha=1.0)
+        exploration_module2 = UCBExploration(alpha=1.0)
+
+        # Initialize with the same random seed for consistent initialization
+        torch.manual_seed(0)
+        module1 = NeuralLinearBandit(
+            feature_dim=10,
+            hidden_dims=[32, 16],
+            exploration_module=exploration_module1,
+            loss_type="mse",
+            apply_discounting_interval=100,
+        )
+        torch.manual_seed(0)  # Reset the seed for the second module
+        module2 = NeuralLinearBandit(
+            feature_dim=10,
+            hidden_dims=[32, 16],
+            exploration_module=exploration_module2,
+            loss_type="mse",
+            apply_discounting_interval=100,
+        )
+
+        # Compare module1 with itself
+        self.assertEqual(module1.compare(module1), "")
+
+        # Compare module1 with module2 (should have no differences now)
+        self.assertEqual(module1.compare(module2), "")
+
+        # Modify an attribute of module2 to create a difference
+        module2.loss_type = "mae"
+
+        # Now the comparison should show a difference
+        self.assertNotEqual(module1.compare(module2), "")
+
     def test_compare_warmup(self) -> None:
         # Create some exploration module (e.g., EGreedyExploration)
         base_exploration_module1 = EGreedyExploration(epsilon=0.1)
@@ -478,6 +530,167 @@ class TestCompare(TestCase):
 
         # Modify an attribute of module2 to create a difference
         module2._max_number_actions = 5
+
+        # Now the comparison should show a difference
+        self.assertNotEqual(module1.compare(module2), "")
+
+    def test_compare_linear_bandit(self) -> None:
+        # Create exploration modules (e.g., UCBExploration)
+        exploration_module1 = UCBExploration(alpha=1.0)
+        exploration_module2 = UCBExploration(alpha=1.0)
+
+        module1 = LinearBandit(
+            feature_dim=10,
+            exploration_module=exploration_module1,
+            apply_discounting_interval=100,
+        )
+        module2 = LinearBandit(
+            feature_dim=10,
+            exploration_module=exploration_module2,
+            apply_discounting_interval=100,
+        )
+
+        # Compare module1 with itself
+        self.assertEqual(module1.compare(module1), "")
+
+        # Compare module1 with module2 (should have no differences initially)
+        self.assertEqual(module1.compare(module2), "")
+
+        # Modify an attribute of module2 to create a difference
+        module2.apply_discounting_interval = 200
+
+        # Now the comparison should show a difference
+        self.assertNotEqual(module1.compare(module2), "")
+
+    def test_compare_disjoint_bandit_container(self) -> None:
+        arm_bandits1: List[ContextualBanditBase] = [
+            LinearBandit(
+                feature_dim=10,
+                l2_reg_lambda=0.1,
+                gamma=0.95,
+                exploration_module=UCBExploration(alpha=1.0),  # Add exploration module
+            )
+            for _ in range(3)
+        ]
+        arm_bandits2: List[ContextualBanditBase] = [
+            LinearBandit(
+                feature_dim=10,
+                l2_reg_lambda=0.1,
+                gamma=0.95,
+                exploration_module=UCBExploration(alpha=1.0),  # Add exploration module
+            )
+            for _ in range(3)
+        ]
+
+        # Create exploration modules (using a dummy one for this example)
+        exploration_module1 = NoExploration()
+        exploration_module2 = NoExploration()
+
+        module1 = DisjointBanditContainer(
+            feature_dim=10,
+            arm_bandits=arm_bandits1,
+            exploration_module=exploration_module1,
+        )
+        module2 = DisjointBanditContainer(
+            feature_dim=10,
+            arm_bandits=arm_bandits2,
+            exploration_module=exploration_module2,
+        )
+
+        # Compare module1 with itself
+        self.assertEqual(module1.compare(module1), "")
+
+        # Compare module1 with module2 (should have no differences initially)
+        self.assertEqual(module1.compare(module2), "")
+
+        # Modify an attribute of module2 to create a difference
+        module2._state_features_only = not module2._state_features_only
+
+        # Now the comparison should show a difference
+        self.assertNotEqual(module1.compare(module2), "")
+
+        # Modify an arm bandit in module2
+        assert isinstance((ab0 := arm_bandits2[0]), LinearBandit)
+        ab0.model.gamma = 0.9
+
+        # Now the comparison should show a difference
+        self.assertNotEqual(module1.compare(module2), "")
+
+    def test_compare_disjoint_linear_bandit(self) -> None:
+        # Create action spaces
+        action_space1 = DiscreteActionSpace([torch.tensor(i) for i in range(3)])
+        action_space2 = DiscreteActionSpace([torch.tensor(i) for i in range(3)])
+
+        # Create exploration modules (e.g., UCBExploration)
+        exploration_module1 = UCBExploration(alpha=1.0)
+        exploration_module2 = UCBExploration(alpha=1.0)
+
+        module1 = DisjointLinearBandit(
+            feature_dim=10,
+            action_space=action_space1,
+            exploration_module=exploration_module1,
+        )
+        module2 = DisjointLinearBandit(
+            feature_dim=10,
+            action_space=action_space2,
+            exploration_module=exploration_module2,
+        )
+
+        # Compare module1 with itself
+        self.assertEqual(module1.compare(module1), "")
+
+        # Compare module1 with module2 (should have no differences initially)
+        self.assertEqual(module1.compare(module2), "")
+
+        # Modify an attribute of module2 to create a difference
+        module2._state_features_only = not module2._state_features_only
+
+        # Now the comparison should show a difference
+        self.assertNotEqual(module1.compare(module2), "")
+
+        # Modify a linear regression in module2
+        module2_lr_0 = module2._linear_regressions_list[0]
+        assert isinstance(module2_lr_0, LinearRegression)
+        module2_lr_0.gamma = 0.9
+
+        # Now the comparison should show a difference
+        self.assertNotEqual(module1.compare(module2), "")
+
+    def test_compare_neural_bandit(self) -> None:
+        # Create exploration modules (e.g., UCBExploration)
+        exploration_module1 = UCBExploration(alpha=1.0)
+        exploration_module2 = UCBExploration(alpha=1.0)
+
+        module1 = NeuralBandit(
+            feature_dim=10,
+            hidden_dims=[32, 16],
+            exploration_module=exploration_module1,
+            loss_type="mse",
+        )
+        module2 = NeuralBandit(
+            feature_dim=10,
+            hidden_dims=[32, 16],
+            exploration_module=exploration_module2,
+            loss_type="mse",
+        )
+
+        # Compare module1 with itself
+        self.assertEqual(module1.compare(module1), "")
+
+        # Compare module1 with module2 (should have differences due to random initialization)
+        self.assertNotEqual(module1.compare(module2), "")
+
+        # Make the neural networks have the same weights
+        for param1, param2 in zip(
+            module1.model.parameters(), module2.model.parameters()
+        ):
+            param2.data.copy_(param1.data)
+
+        # Now the comparison should show no differences
+        self.assertEqual(module1.compare(module2), "")
+
+        # Modify an attribute of module2 to create a difference
+        module2.loss_type = "mae"
 
         # Now the comparison should show a difference
         self.assertNotEqual(module1.compare(module2), "")

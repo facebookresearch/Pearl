@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any
+from typing import Any, List
 
 import torch
 
@@ -28,6 +28,7 @@ from pearl.policy_learners.exploration_modules.common.score_exploration_base imp
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.action_utils import (
     concatenate_actions_to_state,
@@ -238,3 +239,41 @@ class DisjointBanditContainer(ContextualBanditBase):
         # to the optimizer of the bandit, but disjoint bandits do not use a pytorch optimizer.
         # Instead, the optimization uses Pearl's own linear regression module.
         self._history_summarization_module = value
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two DisjointBanditContainer instances for equality,
+        checking attributes, arm bandits, and exploration module.
+
+        Args:
+        other: The other DisjointBanditContainer to compare with.
+
+        Returns:
+        str: A string describing the differences, or an empty string if they are identical.
+        """
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, DisjointBanditContainer):
+            differences.append("other is not an instance of DisjointBanditContainer")
+        else:
+            # Compare attributes
+            if self._n_arms != other._n_arms:
+                differences.append(
+                    f"_n_arms is different: {self._n_arms} vs {other._n_arms}"
+                )
+            if self._state_features_only != other._state_features_only:
+                differences.append(
+                    f"_state_features_only is different: {self._state_features_only} "
+                    + f"vs {other._state_features_only}"
+                )
+
+            # Compare arm bandits
+            for i, (arm_bandit1, arm_bandit2) in enumerate(
+                zip(self._arm_bandits, other._arm_bandits)
+            ):
+                if (reason := arm_bandit1.compare(arm_bandit2)) != "":
+                    differences.append(f"Arm bandit {i} is different: {reason}")
+
+        return "\n".join(differences)  # Join the differences with newlines

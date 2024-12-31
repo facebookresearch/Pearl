@@ -8,7 +8,7 @@
 # pyre-strict
 
 from abc import ABC, abstractmethod
-from typing import Any, TypeVar
+from typing import Any, List, TypeVar
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -221,6 +221,73 @@ class PolicyLearner(torch.nn.Module, ABC):
 
     def __str__(self) -> str:
         return self.__class__.__name__
+
+    def compare(self, other: "PolicyLearner") -> str:
+        """
+        Compares two PolicyLearner instances for equality,
+        checking attributes and modules.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+        differences: List[str] = []
+
+        if not isinstance(other, PolicyLearner):
+            differences.append("other is not an instance of PolicyLearner")
+        else:
+            # Compare attributes
+            if self._training_rounds != other._training_rounds:
+                differences.append(
+                    f"_training_rounds is different: {self._training_rounds} vs {other._training_rounds}"
+                )
+            if self._batch_size != other._batch_size:
+                differences.append(
+                    f"_batch_size is different: {self._batch_size} vs {other._batch_size}"
+                )
+            if self.on_policy != other.on_policy:
+                differences.append(
+                    f"on_policy is different: {self.on_policy} vs {other.on_policy}"
+                )
+            if self._is_action_continuous != other._is_action_continuous:
+                differences.append(
+                    f"_is_action_continuous is different: {self._is_action_continuous} vs {other._is_action_continuous}"
+                )
+
+            # Compare exploration modules
+            if self._exploration_module is None:
+                if other._exploration_module is not None:
+                    differences.append(
+                        "exploration_module is different: None vs not None"
+                    )
+            elif (
+                reason := self._exploration_module.compare(other._exploration_module)
+            ) != "":
+                differences.append(f"exploration_module is different: {reason}")
+
+            # Compare action representation modules
+            if (
+                reason := self._action_representation_module.compare(
+                    other._action_representation_module
+                )
+            ) != "":
+                differences.append(
+                    f"action_representation_module is different: {reason}"
+                )
+
+            # Compare history summarization modules
+            if (
+                reason := self._history_summarization_module.compare(
+                    other._history_summarization_module
+                )
+            ) != "":
+                differences.append(
+                    f"history summarization module is different: {reason}"
+                )
+
+        return "\n".join(differences)
 
 
 class DistributionalPolicyLearner(PolicyLearner):

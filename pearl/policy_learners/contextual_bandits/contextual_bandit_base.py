@@ -8,7 +8,7 @@
 # pyre-strict
 
 from abc import abstractmethod
-from typing import Any
+from typing import Any, List
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -83,3 +83,30 @@ class ContextualBanditBase(PolicyLearner):
             Return scores trained by this contextual bandit algorithm
         """
         pass
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two ContextualBanditBase instances for equality,
+        checking attributes and exploration module.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        differences.append(super().compare(other))
+
+        if not isinstance(other, ContextualBanditBase):
+            differences.append("other is not an instance of ContextualBanditBase")
+        else:
+            # Compare attributes
+            if self._feature_dim != other._feature_dim:
+                differences.append(
+                    f"_feature_dim is different: {self._feature_dim} vs {other._feature_dim}"
+                )
+
+        return "\n".join(differences)

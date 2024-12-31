@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any
+from typing import Any, List
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -29,6 +29,7 @@ from pearl.policy_learners.exploration_modules.common.score_exploration_base imp
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.action_utils import (
     concatenate_actions_to_state,
@@ -223,3 +224,43 @@ class LinearBandit(ContextualBanditBase):
         # currently linear bandit algorithm does not update
         # parameters of the history summarization module
         self._history_summarization_module = value
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two LinearBandit instances for equality,
+        checking attributes, model, and exploration module.
+
+        Args:
+          other: The other ContextualBanditBase to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, LinearBandit):
+            differences.append("other is not an instance of LinearBandit")
+        else:  # Type refinement with else block
+            # Compare attributes
+            if self.apply_discounting_interval != other.apply_discounting_interval:
+                differences.append(
+                    f"apply_discounting_interval is different: {self.apply_discounting_interval} "
+                    + f"vs {other.apply_discounting_interval}"
+                )
+            if (
+                self.last_sum_weight_when_discounted
+                != other.last_sum_weight_when_discounted
+            ):
+                differences.append(
+                    "last_sum_weight_when_discounted is different: "
+                    + f"{self.last_sum_weight_when_discounted} "
+                    + f"vs {other.last_sum_weight_when_discounted}"
+                )
+
+            # Compare models using their compare method
+            if (reason := self.model.compare(other.model)) != "":
+                differences.append(f"model is different: {reason}")
+
+        return "\n".join(differences)
