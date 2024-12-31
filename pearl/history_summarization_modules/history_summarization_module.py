@@ -40,3 +40,11 @@ class HistorySummarizationModule(ABC, nn.Module):
     @abstractmethod
     def reset(self) -> None:
         pass
+
+    @abstractmethod
+    def compare(self, other: "HistorySummarizationModule") -> str:
+        """
+        Compare two history summarization modules and return a string
+        describing the differences, or "" if equal.
+        """
+        pass

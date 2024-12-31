@@ -7,6 +7,8 @@
 
 # pyre-strict
 
+from typing import List
+
 import torch
 import torch.nn as nn
 from pearl.api.action import Action
@@ -14,6 +16,7 @@ from pearl.api.observation import Observation
 from pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
 )
+from pearl.utils.module_utils import modules_have_similar_state_dict
 
 
 class LSTMHistorySummarizationModule(HistorySummarizationModule):
@@ -29,7 +32,6 @@ class LSTMHistorySummarizationModule(HistorySummarizationModule):
         action_dim: int,
         history_length: int = 8,
         hidden_dim: int = 128,
-        state_dim: int = 128,
         num_layers: int = 2,
     ) -> None:
         super().__init__()
@@ -88,3 +90,55 @@ class LSTMHistorySummarizationModule(HistorySummarizationModule):
             "history",
             torch.zeros((self.history_length, self.action_dim + self.observation_dim)),
         )
+
+    def compare(self, other: HistorySummarizationModule) -> str:
+        """
+        Compares two HistorySummarizationModule instances for equality,
+        checking attributes and LSTM state.
+
+        Args:
+        other: The other HistorySummarizationModule to compare with.
+
+        Returns:
+        str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, LSTMHistorySummarizationModule):
+            differences.append(
+                "other is not an instance of LSTMHistorySummarizationModule"
+            )
+        assert isinstance(other, LSTMHistorySummarizationModule)
+        if self.history_length != other.history_length:
+            differences.append(
+                f"history_length is different: {self.history_length} vs {other.history_length}"
+            )
+        if self.hidden_dim != other.hidden_dim:
+            differences.append(
+                f"hidden_dim is different: {self.hidden_dim} vs {other.hidden_dim}"
+            )
+        if self.num_layers != other.num_layers:
+            differences.append(
+                f"num_layers is different: {self.num_layers} vs {other.num_layers}"
+            )
+        if self.observation_dim != other.observation_dim:
+            differences.append(
+                f"observation_dim is different: {self.observation_dim} vs {other.observation_dim}"
+            )
+        if self.action_dim != other.action_dim:
+            differences.append(
+                f"action_dim is different: {self.action_dim} vs {other.action_dim}"
+            )
+        if not torch.allclose(self.default_action, other.default_action):
+            differences.append(
+                f"default_action is different: {self.default_action} vs {other.default_action}"
+            )
+        if not torch.allclose(self.history, other.history):
+            differences.append(
+                f"history is different: {self.history} vs {other.history}"
+            )
+        if (reason := modules_have_similar_state_dict(self.lstm, other.lstm)) != "":
+            differences.append(f"lstm is different: {reason}")
+
+        return "\n".join(differences)  # Join the differences with newlines

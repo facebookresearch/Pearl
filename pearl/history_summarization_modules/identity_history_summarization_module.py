@@ -7,6 +7,8 @@
 
 # pyre-strict
 
+from typing import List
+
 import torch
 
 from pearl.api.action import Action
@@ -44,3 +46,26 @@ class IdentityHistorySummarizationModule(HistorySummarizationModule):
 
     def reset(self) -> None:
         self.history = None
+
+    def compare(self, other: HistorySummarizationModule) -> str:
+        """
+        Compares two IdentityHistorySummarizationModule instances for equality.
+
+        Since this module has no attributes or buffers to compare,
+        it only checks if the `other` object is an instance of the same class.
+
+        Args:
+        other: The other HistorySummarizationModule to compare with.
+
+        Returns:
+        str: A string describing any differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, IdentityHistorySummarizationModule):
+            differences.append(
+                "other is not an instance of IdentityHistorySummarizationModule"
+            )
+
+        return "\n".join(differences)  # Join the differences with newlines

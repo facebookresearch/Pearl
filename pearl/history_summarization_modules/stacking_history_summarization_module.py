@@ -7,6 +7,8 @@
 
 # pyre-strict
 
+from typing import List
+
 import torch
 from pearl.api.action import Action
 from pearl.api.history import History
@@ -69,3 +71,45 @@ class StackingHistorySummarizationModule(HistorySummarizationModule):
             "history",
             torch.zeros((self.history_length, self.action_dim + self.observation_dim)),
         )
+
+    def compare(self, other: HistorySummarizationModule) -> str:
+        """
+        Compares two StackingHistorySummarizationModule instances for equality,
+        checking attributes and history buffer.
+
+        Args:
+        other: The other StackingHistorySummarizationModule to compare with.
+
+        Returns:
+        str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, StackingHistorySummarizationModule):
+            differences.append(
+                "other is not an instance of StackingHistorySummarizationModule"
+            )
+        assert isinstance(other, StackingHistorySummarizationModule)
+        if self.history_length != other.history_length:
+            differences.append(
+                f"history_length is different: {self.history_length} vs {other.history_length}"
+            )
+        if self.observation_dim != other.observation_dim:
+            differences.append(
+                f"observation_dim is different: {self.observation_dim} vs {other.observation_dim}"
+            )
+        if self.action_dim != other.action_dim:
+            differences.append(
+                f"action_dim is different: {self.action_dim} vs {other.action_dim}"
+            )
+        if not torch.allclose(self.default_action, other.default_action):
+            differences.append(
+                f"default_action is different: {self.default_action} vs {other.default_action}"
+            )
+        if not torch.allclose(self.history, other.history):
+            differences.append(
+                f"history is different: {self.history} vs {other.history}"
+            )
+
+        return "\n".join(differences)  # Join the differences with newlines
