@@ -8,6 +8,7 @@
 # pyre-strict
 
 import logging
+from typing import List
 
 import torch
 from pearl.neural_networks.contextual_bandit.base_cb_model import MuSigmaCBModel
@@ -182,7 +183,7 @@ class LinearRegression(MuSigmaCBModel):
         return x, y, weight
 
     def learn_batch(
-        self, x: torch.Tensor, y: torch.Tensor, weight: torch.Tensor | None
+        self, x: torch.Tensor, y: torch.Tensor, weight: torch.Tensor | None = None
     ) -> None:
         """
         A <- A + x*x.t
@@ -257,3 +258,52 @@ class LinearRegression(MuSigmaCBModel):
 
     def __str__(self) -> str:
         return f"LinearRegression(A:\n{self.A}\nb:\n{self._b})"
+
+    from typing import List
+
+    def compare(self, other: MuSigmaCBModel) -> str:
+        """
+        Compares two LinearRegression instances for equality,
+        checking attributes and buffers.
+
+        Args:
+        other: The other LinearRegression instance to compare with.
+
+        Returns:
+        str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, LinearRegression):
+            differences.append("other is not an instance of LinearRegression")
+        assert isinstance(other, LinearRegression)
+        if self.gamma != other.gamma:
+            differences.append(f"gamma is different: {self.gamma} vs {other.gamma}")
+        if self.l2_reg_lambda != other.l2_reg_lambda:
+            differences.append(
+                f"l2_reg_lambda is different: {self.l2_reg_lambda} vs {other.l2_reg_lambda}"
+            )
+        if self.force_pinv != other.force_pinv:
+            differences.append(
+                f"force_pinv is different: {self.force_pinv} vs {other.force_pinv}"
+            )
+        if self.distribution_enabled != other.distribution_enabled:
+            differences.append(
+                f"distribution_enabled is different: {self.distribution_enabled} "
+                + f"vs {other.distribution_enabled}"
+            )
+        if not torch.allclose(self._A, other._A):
+            differences.append(f"_A is different: {self._A} vs {other._A}")
+        if not torch.allclose(self._b, other._b):
+            differences.append(f"_b is different: {self._b} vs {other._b}")
+        if not torch.allclose(self._sum_weight, other._sum_weight):
+            differences.append(
+                f"_sum_weight is different: {self._sum_weight} vs {other._sum_weight}"
+            )
+        if not torch.allclose(self._inv_A, other._inv_A):
+            differences.append(f"_inv_A is different: {self._inv_A} vs {other._inv_A}")
+        if not torch.allclose(self._coefs, other._coefs):
+            differences.append(f"_coefs is different: {self._coefs} vs {other._coefs}")
+
+        return "\n".join(differences)  # Join the differences with newlines

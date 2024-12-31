@@ -8,6 +8,7 @@
 # pyre-strict
 
 import logging
+from typing import List
 
 import torch
 import torch.nn as nn
@@ -15,6 +16,7 @@ from pearl.neural_networks.common.utils import ACTIVATION_MAP
 from pearl.neural_networks.common.value_networks import VanillaValueNetwork
 from pearl.neural_networks.contextual_bandit.base_cb_model import MuSigmaCBModel
 from pearl.neural_networks.contextual_bandit.linear_regression import LinearRegression
+from pearl.utils.module_utils import modules_have_similar_state_dict
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -152,3 +154,55 @@ class NeuralLinearRegression(MuSigmaCBModel):
             "pred_label": self.output_activation(x).reshape(batch_size, -1),
             "nn_output": nn_output,
         }
+
+    def compare(self, other: MuSigmaCBModel) -> str:
+        """
+        Compares to a LinearRegression instance for equality,
+        checking attributes, NN layers, and the linear regression layer.
+
+        Args:
+        other: The other NeuralLinearRegression instance to compare with.
+
+        Returns:
+        str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, NeuralLinearRegression):
+            differences.append("other is not an instance of NeuralLinearRegression")
+        assert isinstance(other, NeuralLinearRegression)
+
+        # Compare attributes
+        if self.nn_e2e != other.nn_e2e:
+            differences.append(f"nn_e2e is different: {self.nn_e2e} vs {other.nn_e2e}")
+
+        if type(self.output_activation) is not type(other.output_activation):
+            differences.append(
+                f"output_activation is different: {self.output_activation} "
+                + f"vs {other.output_activation}"
+            )
+
+        # Compare NN layers using modules_have_similar_state_dict
+        if (
+            reason := modules_have_similar_state_dict(self._nn_layers, other._nn_layers)
+        ) != "":
+            differences.append(f"_nn_layers are different: {reason}")
+
+        # Compare linear regression layers using their compare method
+        if (
+            reason := self._linear_regression_layer.compare(
+                other._linear_regression_layer
+            )
+        ) != "":
+            differences.append(f"_linear_regression_layer is different: {reason}")
+
+        # Compare linear layer for e2e case
+        if (
+            reason := modules_have_similar_state_dict(
+                self.linear_layer_e2e, other.linear_layer_e2e
+            )
+        ) != "":
+            differences.append(f"linear_layer_e2e is different: {reason}")
+
+        return "\n".join(differences)  # Join the differences with newlines
