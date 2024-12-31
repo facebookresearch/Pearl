@@ -22,3 +22,14 @@ class ActionRepresentationModule(ABC, nn.Module):
     @abstractmethod
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         pass
+
+    @abstractmethod
+    def compare(self, other: "ActionRepresentationModule") -> str:
+        """
+        Compares two action representation modules for equality.
+        Args:
+            other: The other action representation module to compare with.
+        Returns:
+            str: A string describing the differences, or an empty string if they are identical.
+        """
+        pass

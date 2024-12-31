@@ -7,6 +7,8 @@
 
 # pyre-strict
 
+from typing import List
+
 import torch
 
 from pearl.action_representation_modules.action_representation_module import (
@@ -42,3 +44,34 @@ class BinaryActionTensorRepresentationModule(ActionRepresentationModule):
     @property
     def representation_dim(self) -> int:
         return self._bits_num
+
+    def compare(self, other: ActionRepresentationModule) -> str:
+        """
+        Compares two BinaryActionTensorRepresentationModule instances for equality,
+        checking the bits_num and max_number_actions.
+
+        Args:
+          other: The other ActionRepresentationModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, BinaryActionTensorRepresentationModule):
+            differences.append(
+                "other is not an instance of BinaryActionTensorRepresentationModule"
+            )
+        else:
+            if self._bits_num != other._bits_num:
+                differences.append(
+                    f"bits_num is different: {self._bits_num} vs {other._bits_num}"
+                )
+            if self.max_number_actions != other.max_number_actions:
+                differences.append(
+                    f"max_number_actions is different: {self.max_number_actions} "
+                    + f"vs {other.max_number_actions}"
+                )
+
+        return "\n".join(differences)

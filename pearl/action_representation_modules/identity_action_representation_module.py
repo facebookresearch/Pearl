@@ -7,6 +7,8 @@
 
 # pyre-strict
 
+from typing import List
+
 import torch
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
@@ -41,3 +43,35 @@ class IdentityActionRepresentationModule(ActionRepresentationModule):
     @property
     def representation_dim(self) -> int | None:
         return self._representation_dim
+
+    def compare(self, other: ActionRepresentationModule) -> str:
+        """
+        Compares two IdentityActionRepresentationModule instances for equality,
+        checking max_number_actions and representation_dim.
+
+        Args:
+          other: The other ActionRepresentationModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, IdentityActionRepresentationModule):
+            differences.append(
+                "other is not an instance of IdentityActionRepresentationModule"
+            )
+        else:
+            if self.max_number_actions != other.max_number_actions:
+                differences.append(
+                    f"max_number_actions is different: {self.max_number_actions} "
+                    + f"vs {other.max_number_actions}"
+                )
+            if self.representation_dim != other.representation_dim:
+                differences.append(
+                    f"representation_dim is different: {self.representation_dim} "
+                    + f"vs {other.representation_dim}"
+                )
+
+        return "\n".join(differences)

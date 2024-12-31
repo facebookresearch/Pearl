@@ -7,6 +7,8 @@
 
 # pyre-strict
 
+from typing import List
+
 import torch
 import torch.nn.functional as F
 
@@ -41,3 +43,29 @@ class OneHotActionTensorRepresentationModule(ActionRepresentationModule):
     @property
     def representation_dim(self) -> int:
         return self._max_number_actions
+
+    def compare(self, other: ActionRepresentationModule) -> str:
+        """
+        Compares two OneHotActionTensorRepresentationModule instances for equality,
+        checking the max_number_actions.
+
+        Args:
+          other: The other ActionRepresentationModule to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, OneHotActionTensorRepresentationModule):
+            differences.append(
+                "other is not an instance of OneHotActionTensorRepresentationModule"
+            )
+        else:
+            if self.max_number_actions != other.max_number_actions:
+                differences.append(
+                    f"max_number_actions is different: {self.max_number_actions} vs {other.max_number_actions}"
+                )
+
+        return "\n".join(differences)

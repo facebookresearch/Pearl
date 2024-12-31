@@ -4,6 +4,15 @@
 
 import torch
 from later.unittest import TestCase
+from pearl.action_representation_modules.binary_action_representation_module import (
+    BinaryActionTensorRepresentationModule,
+)
+from pearl.action_representation_modules.identity_action_representation_module import (
+    IdentityActionRepresentationModule,
+)
+from pearl.action_representation_modules.one_hot_action_representation_module import (
+    OneHotActionTensorRepresentationModule,
+)
 from pearl.history_summarization_modules.identity_history_summarization_module import (
     IdentityHistorySummarizationModule,
 )
@@ -417,6 +426,58 @@ class TestCompare(TestCase):
 
         # Modify an attribute of module2 to create a difference
         module2.warmup_steps = 500
+
+        # Now the comparison should show a difference
+        self.assertNotEqual(module1.compare(module2), "")
+
+    def test_compare_one_hot_action_tensor_representation_module(self) -> None:
+        module1 = OneHotActionTensorRepresentationModule(max_number_actions=4)
+        module2 = OneHotActionTensorRepresentationModule(max_number_actions=4)
+
+        # Compare module1 with itself
+        self.assertEqual(module1.compare(module1), "")
+
+        # Compare module1 with module2 (should have no differences)
+        self.assertEqual(module1.compare(module2), "")
+
+        # Modify an attribute of module2 to create a difference
+        module2._max_number_actions = 5
+
+        # Now the comparison should show a difference
+        self.assertNotEqual(module1.compare(module2), "")
+
+    def test_compare_binary_action_tensor_representation_module(self) -> None:
+        module1 = BinaryActionTensorRepresentationModule(bits_num=3)
+        module2 = BinaryActionTensorRepresentationModule(bits_num=3)
+
+        # Compare module1 with itself
+        self.assertEqual(module1.compare(module1), "")
+
+        # Compare module1 with module2 (should have no differences)
+        self.assertEqual(module1.compare(module2), "")
+
+        # Modify an attribute of module2 to create a difference
+        module2._bits_num = 4
+
+        # Now the comparison should show a difference
+        self.assertNotEqual(module1.compare(module2), "")
+
+    def test_compare_identity_action_representation_module(self) -> None:
+        module1 = IdentityActionRepresentationModule(
+            max_number_actions=4, representation_dim=2
+        )
+        module2 = IdentityActionRepresentationModule(
+            max_number_actions=4, representation_dim=2
+        )
+
+        # Compare module1 with itself
+        self.assertEqual(module1.compare(module1), "")
+
+        # Compare module1 with module2 (should have no differences)
+        self.assertEqual(module1.compare(module2), "")
+
+        # Modify an attribute of module2 to create a difference
+        module2._max_number_actions = 5
 
         # Now the comparison should show a difference
         self.assertNotEqual(module1.compare(module2), "")
