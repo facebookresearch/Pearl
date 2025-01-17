@@ -8,7 +8,7 @@
 # pyre-strict
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
@@ -17,6 +17,7 @@ from pearl.action_representation_modules.action_representation_module import (
 from pearl.neural_networks.common.value_networks import ValueNetwork
 
 from pearl.neural_networks.sequential_decision_making.actor_networks import ActorNetwork
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
 from pearl.replay_buffers.transition import Transition
 from pearl.utils.replay_buffer_utils import (
@@ -208,3 +209,25 @@ class REINFORCE(ActorCriticBase):
         # sample from replay buffer and learn
         result = super().learn(replay_buffer)
         return result
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two REINFORCE instances for equality.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, REINFORCE):
+            differences.append("other is not an instance of REINFORCE")
+
+        # No additional attributes to compare in REINFORCE
+
+        return "\n".join(differences)

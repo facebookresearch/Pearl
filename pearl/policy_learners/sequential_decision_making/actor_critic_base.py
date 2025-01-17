@@ -9,7 +9,7 @@
 
 import copy
 from abc import abstractmethod
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import torch
 
@@ -47,6 +47,10 @@ from pearl.utils.functional_utils.learning.critic_utils import (
 )
 
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from pearl.utils.module_utils import (
+    modules_have_similar_state_dict,
+    optimizers_have_similar_state_dict,
+)
 from torch import nn, optim
 
 
@@ -216,7 +220,10 @@ class ActorCriticBase(PolicyLearner):
         self._history_summarization_optimizer = history_summarization_optimizer
         self._history_summarization_learning_rate = history_summarization_learning_rate
         self._actor_learning_rate: float = self._actor_optimizer.param_groups[0]["lr"]
-        self._critic_learning_rate: float = self._critic_optimizer.param_groups[0]["lr"]
+        if self._use_critic:
+            self._critic_learning_rate: float = self._critic_optimizer.param_groups[0][
+                "lr"
+            ]
 
     def set_history_summarization_module(
         self, value: HistorySummarizationModule
@@ -404,3 +411,144 @@ class ActorCriticBase(PolicyLearner):
             loss (Tensor): The critic loss.
         """
         pass
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two ActorCriticBase instances for equality,
+        checking attributes, networks, and exploration module.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, ActorCriticBase):
+            differences.append("other is not an instance of ActorCriticBase")
+        else:  # Type refinement with else block
+            # Compare attributes
+            if self._use_actor_target != other._use_actor_target:
+                differences.append(
+                    f"_use_actor_target is different: {self._use_actor_target} "
+                    + f"vs {other._use_actor_target}"
+                )
+            if self._use_critic_target != other._use_critic_target:
+                differences.append(
+                    f"_use_critic_target is different: {self._use_critic_target} "
+                    + f"vs {other._use_critic_target}"
+                )
+            if self._actor_learning_rate != other._actor_learning_rate:
+                differences.append(
+                    f"_actor_learning_rate is different: {self._actor_learning_rate} "
+                    + f"vs {other._actor_learning_rate}"
+                )
+            if self._use_critic != other._use_critic:
+                differences.append(
+                    f"_use_critic is different: {self._use_critic} vs {other._use_critic}"
+                )
+            if (
+                self._history_summarization_learning_rate
+                != other._history_summarization_learning_rate
+            ):
+                differences.append(
+                    "_history_summarization_learning_rate is different: "
+                    + f"{self._history_summarization_learning_rate} "
+                    + f"vs {other._history_summarization_learning_rate}"
+                )
+            if self._actor_soft_update_tau != other._actor_soft_update_tau:
+                differences.append(
+                    f"_actor_soft_update_tau is different: {self._actor_soft_update_tau} "
+                    + f"vs {other._actor_soft_update_tau}"
+                )
+            if self._discount_factor != other._discount_factor:
+                differences.append(
+                    f"_discount_factor is different: {self._discount_factor} "
+                    + f"vs {other._discount_factor}"
+                )
+
+            # Compare networks using modules_have_similar_state_dict
+            if (
+                reason := modules_have_similar_state_dict(self._actor, other._actor)
+            ) != "":
+                differences.append(f"_actor is different: {reason}")
+            if self._use_critic:
+                if self._critic_soft_update_tau != other._critic_soft_update_tau:
+                    differences.append(
+                        f"_critic_soft_update_tau is different: {self._critic_soft_update_tau} "
+                        + f"vs {other._critic_soft_update_tau}"
+                    )
+                if self._critic_learning_rate != other._critic_learning_rate:
+                    differences.append(
+                        f"_critic_learning_rate is different: {self._critic_learning_rate} "
+                        + f"vs {other._critic_learning_rate}"
+                    )
+                if (
+                    reason := modules_have_similar_state_dict(
+                        self._critic, other._critic
+                    )
+                ) != "":
+                    differences.append(f"_critic is different: {reason}")
+
+            # Compare target networks if they exist
+            if self._use_actor_target:
+                if (
+                    reason := modules_have_similar_state_dict(
+                        self._actor_target, other._actor_target
+                    )
+                ) != "":
+                    differences.append(f"_actor_target is different: {reason}")
+            if self._use_critic_target:
+                if (
+                    reason := modules_have_similar_state_dict(
+                        self._critic_target, other._critic_target
+                    )
+                ) != "":
+                    differences.append(f"_critic_target is different: {reason}")
+
+            self.compare_optimizers(other, differences)
+
+        return "\n".join(differences)
+
+    def compare_optimizers(
+        self, other: "ActorCriticBase", differences: List[str]
+    ) -> None:
+        if (
+            reason := optimizers_have_similar_state_dict(
+                self._actor_optimizer, other._actor_optimizer
+            )
+        ) != "":
+            differences.append(f"_actor_optimizer is different: {reason}")
+        if (
+            reason := optimizers_have_similar_state_dict(
+                self._critic_optimizer, other._critic_optimizer
+            )
+        ) != "":
+            differences.append(f"_critic_optimizer is different: {reason}")
+        if (self._history_summarization_optimizer is not None) != (
+            other._history_summarization_optimizer is not None
+        ):
+            differences.append(
+                "_history_summarization_optimizer is different: "
+                + f"{self._history_summarization_optimizer} "
+                + f"vs {other._history_summarization_optimizer}"
+            )
+        if (
+            self._history_summarization_optimizer is not None
+            and other._history_summarization_optimizer is not None
+        ):
+            assert (hso1 := self._history_summarization_optimizer) is not None
+            assert (hso2 := other._history_summarization_optimizer) is not None
+            if (
+                reason := optimizers_have_similar_state_dict(
+                    hso1,
+                    hso2,
+                )
+            ) != "":
+                differences.append(
+                    f"_history_summarization_optimizer is different: {reason}"
+                )

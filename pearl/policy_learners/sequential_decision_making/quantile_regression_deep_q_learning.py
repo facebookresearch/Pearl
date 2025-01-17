@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Optional
+from typing import List, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -25,6 +25,7 @@ from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.policy_learners.sequential_decision_making.quantile_regression_deep_td_learning import (
     QuantileRegressionDeepTDLearning,
 )
@@ -146,3 +147,27 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
             ),  # expands shape to (batch_size x 1 x num_quantiles)
         )
         return quantiles_greedy_action.view(batch_size, -1)  # shape: (batch_size, N)
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two QuantileRegressionDeepQLearning instances for equality.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, QuantileRegressionDeepQLearning):
+            differences.append(
+                "other is not an instance of QuantileRegressionDeepQLearning"
+            )
+
+        # No additional attributes to compare in QuantileRegressionDeepQLearning
+
+        return "\n".join(differences)

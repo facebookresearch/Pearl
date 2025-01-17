@@ -8,7 +8,7 @@
 # pyre-strict
 
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, List
 
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
@@ -215,3 +215,40 @@ class TabularQLearning(PolicyLearner):
         return "Q-Learning" + (
             " (" + ", ".join(str(item) for item in items) + ")" if items else ""
         )
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two TabularQLearning instances for equality,
+        checking attributes and q-values.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, TabularQLearning):
+            differences.append("other is not an instance of TabularQLearning")
+        else:  # Type refinement with else block
+            # Compare attributes
+            if self.learning_rate != other.learning_rate:
+                differences.append(
+                    f"learning_rate is different: {self.learning_rate} vs {other.learning_rate}"
+                )
+            if self.discount_factor != other.discount_factor:
+                differences.append(
+                    f"discount_factor is different: {self.discount_factor} "
+                    + f"vs {other.discount_factor}"
+                )
+            if self.debug != other.debug:
+                differences.append(f"debug is different: {self.debug} vs {other.debug}")
+
+            # Compare q-values
+            if self.q_values != other.q_values:
+                differences.append("q_values are different")
+
+        return "\n".join(differences)

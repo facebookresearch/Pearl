@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -25,6 +25,7 @@ from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.policy_learners.sequential_decision_making.deep_td_learning import (
     DeepTDLearning,
 )
@@ -163,3 +164,25 @@ class DeepQLearning(DeepTDLearning):
 
         # Torch.max(1) returns value, indices
         return next_state_action_values.max(1)[0]  # (batch_size)
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two DeepQLearning instances for equality.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+        differences: List[str] = []
+
+        # First, perform the comparisons from the base class
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, DeepQLearning):
+            differences.append("other is not an instance of DeepQLearning")
+
+        # No additional attributes to compare in DeepQLearning
+
+        return "\n".join(differences)

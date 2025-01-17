@@ -7,7 +7,10 @@
 
 # pyre-strict
 
+from typing import List
+
 import torch
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,
 )
@@ -55,3 +58,26 @@ class DoubleDQN(DeepQLearning):
             batch.next_state,
             next_action_batch,
         )  # (batch_size)
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two DoubleDQN instances for equality.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        # First, perform the comparisons from the base class
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, DoubleDQN):
+            differences.append("other is not an instance of DoubleDQN")
+
+        # No additional attributes to compare in DoubleDQN
+
+        return "\n".join(differences)

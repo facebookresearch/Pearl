@@ -8,7 +8,7 @@
 # pyre-strict
 
 from copy import deepcopy
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -38,6 +38,7 @@ from pearl.replay_buffers.transition import (
     TransitionWithBootstrapMaskBatch,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from pearl.utils.module_utils import modules_have_similar_state_dict
 from torch import optim, Tensor
 
 
@@ -223,3 +224,89 @@ class BootstrappedDQN(DeepQLearning):
         return target_next_state_action_values[
             torch.arange(batch_size), argmax_actions
         ]  # (batch_size)
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two BootstrappedDQN instances for equality.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+        differences: List[str] = []
+
+        # Do not invoke super().compare() because this class is anomalous in
+        # its __init__; it does not invoke super().__init__.
+        # differences.extend(super().compare(other))
+
+        if not isinstance(other, BootstrappedDQN):
+            differences.append("other is not an instance of BootstrappedDQN")
+        else:  # Type refinement with else block
+            # Compare attributes from PolicyLearner
+            # (since BootstrappedDQN doesn't call super().__init__)
+            if self._training_rounds != other._training_rounds:
+                differences.append(
+                    f"_training_rounds is different: {self._training_rounds} "
+                    + f"vs {other._training_rounds}"
+                )
+            if self._batch_size != other._batch_size:
+                differences.append(
+                    f"_batch_size is different: {self._batch_size} vs "
+                    + f"{other._batch_size}"
+                )
+            if self.on_policy != other.on_policy:
+                differences.append(
+                    f"on_policy is different: {self.on_policy} vs "
+                    + f"{other.on_policy}"
+                )
+            if self._is_action_continuous != other._is_action_continuous:
+                differences.append(
+                    f"_is_action_continuous is different: {self._is_action_continuous} vs "
+                    + f"{other._is_action_continuous}"
+                )
+
+            # Compare attributes from BootstrappedDQN
+            if self._learning_rate != other._learning_rate:
+                differences.append(
+                    f"_learning_rate is different: {self._learning_rate} vs {other._learning_rate}"
+                )
+            if self._discount_factor != other._discount_factor:
+                differences.append(
+                    f"_discount_factor is different: {self._discount_factor} vs "
+                    + f"{other._discount_factor}"
+                )
+            if self._target_update_freq != other._target_update_freq:
+                differences.append(
+                    f"_target_update_freq is different: {self._target_update_freq} vs "
+                    + f"{other._target_update_freq}"
+                )
+            if self._soft_update_tau != other._soft_update_tau:
+                differences.append(
+                    f"_soft_update_tau is different: {self._soft_update_tau} vs "
+                    + f"{other._soft_update_tau}"
+                )
+
+            # Compare Q-networks and target Q-networks using modules_have_similar_state_dict
+            if (reason := modules_have_similar_state_dict(self._Q, other._Q)) != "":
+                differences.append(f"_Q is different: {reason}")
+            if (
+                reason := modules_have_similar_state_dict(
+                    self._Q_target, other._Q_target
+                )
+            ) != "":
+                differences.append(f"_Q_target is different: {reason}")
+
+            # Compare exploration modules
+            if self._exploration_module is None:
+                if other._exploration_module is not None:
+                    differences.append(
+                        "exploration_module is different: None vs not None"
+                    )
+            elif (
+                reason := self._exploration_module.compare(other._exploration_module)
+            ) != "":
+                differences.append(f"exploration_module is different: {reason}")
+
+        return "\n".join(differences)

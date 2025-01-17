@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -21,6 +21,7 @@ from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.policy_learners.sequential_decision_making.deep_td_learning import (
     DeepTDLearning,
 )
@@ -74,3 +75,25 @@ class DeepSARSA(DeepTDLearning):
         )  # (batch_size)
 
         return next_state_action_values
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two DeepSARSA instances for equality.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+        differences: List[str] = []
+
+        # Inherit comparisons from the base class
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, DeepSARSA):
+            differences.append("other is not an instance of DeepSARSA")
+
+        # No additional attributes to compare in DeepSARSA
+
+        return "\n".join(differences)

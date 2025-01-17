@@ -9,7 +9,7 @@
 
 import copy
 from abc import abstractmethod
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -39,6 +39,7 @@ from pearl.replay_buffers.transition import TransitionBatch
 
 from pearl.utils.functional_utils.learning.loss_fn_utils import compute_cql_loss
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from pearl.utils.module_utils import modules_have_similar_state_dict
 from torch import optim
 
 
@@ -326,3 +327,64 @@ class DeepTDLearning(PolicyLearner):
             .mean()
             .item()
         }
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two DeepTDLearning instances for equality,
+        checking attributes, Q-networks, and exploration module.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, DeepTDLearning):
+            differences.append("other is not an instance of DeepTDLearning")
+        else:
+            # Compare attributes
+            if self._learning_rate != other._learning_rate:
+                differences.append(
+                    f"_learning_rate is different: {self._learning_rate} vs {other._learning_rate}"
+                )
+            if self._discount_factor != other._discount_factor:
+                differences.append(
+                    f"_discount_factor is different: {self._discount_factor} "
+                    + f"vs {other._discount_factor}"
+                )
+            if self._target_update_freq != other._target_update_freq:
+                differences.append(
+                    f"_target_update_freq is different: {self._target_update_freq} "
+                    + f"vs {other._target_update_freq}"
+                )
+            if self._soft_update_tau != other._soft_update_tau:
+                differences.append(
+                    f"_soft_update_tau is different: {self._soft_update_tau} "
+                    + f"vs {other._soft_update_tau}"
+                )
+            if self._is_conservative != other._is_conservative:
+                differences.append(
+                    f"_is_conservative is different: {self._is_conservative} "
+                    + f"vs {other._is_conservative}"
+                )
+            if self._conservative_alpha != other._conservative_alpha:
+                differences.append(
+                    f"_conservative_alpha is different: {self._conservative_alpha} "
+                    + f"vs {other._conservative_alpha}"
+                )
+
+            # Compare Q-networks and target Q-networks using modules_have_similar_state_dict
+            if (reason := modules_have_similar_state_dict(self._Q, other._Q)) != "":
+                differences.append(f"_Q is different: {reason}")
+            if (
+                reason := modules_have_similar_state_dict(
+                    self._Q_target, other._Q_target
+                )
+            ) != "":
+                differences.append(f"_Q_target is different: {reason}")
+
+        return "\n".join(differences)

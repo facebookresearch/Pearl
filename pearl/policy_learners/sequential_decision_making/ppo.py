@@ -8,7 +8,7 @@
 # pyre-strict
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -30,6 +30,7 @@ from pearl.policy_learners.exploration_modules.common.propensity_exploration imp
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
 )
@@ -293,3 +294,39 @@ class ProximalPolicyOptimization(ActorCriticBase):
             transition.action_probs = action_probs[i]
             next_value = state_values[i]
             transition.to(original_transition_device)
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two ProximalPolicyOptimization instances for equality.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, ProximalPolicyOptimization):
+            differences.append("other is not an instance of ProximalPolicyOptimization")
+        else:
+            # Compare attributes specific to ProximalPolicyOptimization
+            if self._epsilon != other._epsilon:
+                differences.append(
+                    f"_epsilon is different: {self._epsilon} vs {other._epsilon}"
+                )
+            if self._trace_decay_param != other._trace_decay_param:
+                differences.append(
+                    f"_trace_decay_param is different: {self._trace_decay_param} "
+                    + f"vs {other._trace_decay_param}"
+                )
+            if self._entropy_bonus_scaling != other._entropy_bonus_scaling:
+                differences.append(
+                    f"_entropy_bonus_scaling is different: {self._entropy_bonus_scaling} "
+                    + f"vs {other._entropy_bonus_scaling}"
+                )
+
+        return "\n".join(differences)

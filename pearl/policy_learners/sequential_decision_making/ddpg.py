@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Optional
+from typing import List, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -30,6 +30,7 @@ from pearl.policy_learners.exploration_modules.common.normal_distribution_explor
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
 )
@@ -155,3 +156,28 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
         )
 
         return loss
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two DeepDeterministicPolicyGradient instances for equality.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        # Inherit comparisons from the base class
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, DeepDeterministicPolicyGradient):
+            differences.append(
+                "other is not an instance of DeepDeterministicPolicyGradient"
+            )
+
+        # No additional attributes to compare in DeepDeterministicPolicyGradient
+
+        return "\n".join(differences)

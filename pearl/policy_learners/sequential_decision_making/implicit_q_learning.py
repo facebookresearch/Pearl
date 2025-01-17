@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -38,6 +38,7 @@ from pearl.policy_learners.exploration_modules.common.no_exploration import (
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
 )
@@ -46,6 +47,7 @@ from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.critic_utils import (
     twin_critic_action_value_loss,
 )
+from pearl.utils.module_utils import modules_have_similar_state_dict
 from torch import optim
 
 
@@ -303,3 +305,52 @@ class ImplicitQLearning(ActorCriticBase):
         """
         weight = torch.where(input_loss > 0, self._expectile, (1 - self._expectile))
         return weight * (input_loss.pow(2))
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two ImplicitQLearning instances for equality.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        # Inherit comparisons from the base class
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, ImplicitQLearning):
+            differences.append("other is not an instance of ImplicitQLearning")
+        else:
+            # Compare attributes specific to ImplicitQLearning
+            if self._expectile != other._expectile:
+                differences.append(
+                    f"_expectile is different: {self._expectile} vs {other._expectile}"
+                )
+            if (
+                self._temperature_advantage_weighted_regression
+                != other._temperature_advantage_weighted_regression
+            ):
+                differences.append(
+                    "_temperature_advantage_weighted_regression is different: "
+                    + f"{self._temperature_advantage_weighted_regression} "
+                    + f"vs {other._temperature_advantage_weighted_regression}"
+                )
+            if self._advantage_clamp != other._advantage_clamp:
+                differences.append(
+                    f"_advantage_clamp is different: {self._advantage_clamp} "
+                    + f"vs {other._advantage_clamp}"
+                )
+
+            # Compare value network using modules_have_similar_state_dict
+            if (
+                reason := modules_have_similar_state_dict(
+                    self._value_network, other._value_network
+                )
+            ) != "":
+                differences.append(f"_value_network is different: {reason}")
+
+        return "\n".join(differences)

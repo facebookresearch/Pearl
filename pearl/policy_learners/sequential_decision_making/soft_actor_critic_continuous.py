@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -28,6 +28,7 @@ from pearl.policy_learners.exploration_modules.common.no_exploration import (
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
 )
@@ -230,3 +231,39 @@ class ContinuousSoftActorCritic(ActorCriticBase):
         loss = (self._entropy_coef * action_batch_log_prob - state_action_values).mean()
 
         return loss
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two ContinuousSoftActorCritic instances for equality.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, ContinuousSoftActorCritic):
+            differences.append("other is not an instance of ContinuousSoftActorCritic")
+        else:
+            # Compare attributes specific to ContinuousSoftActorCritic
+            if self._entropy_autotune != other._entropy_autotune:
+                differences.append(
+                    f"_entropy_autotune is different: {self._entropy_autotune} "
+                    + f"vs {other._entropy_autotune}"
+                )
+            if not torch.allclose(self._entropy_coef, other._entropy_coef):
+                differences.append(
+                    f"_entropy_coef is different: {self._entropy_coef} vs {other._entropy_coef}"
+                )
+            if not torch.allclose(self._target_entropy, other._target_entropy):
+                differences.append(
+                    f"_target_entropy is different: {self._target_entropy} "
+                    + f"vs {other._target_entropy}"
+                )
+
+        return "\n".join(differences)

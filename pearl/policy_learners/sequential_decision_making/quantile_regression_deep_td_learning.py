@@ -9,7 +9,7 @@
 
 import copy
 from abc import abstractmethod
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -29,7 +29,10 @@ from pearl.neural_networks.sequential_decision_making.q_value_networks import (
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
-from pearl.policy_learners.policy_learner import DistributionalPolicyLearner
+from pearl.policy_learners.policy_learner import (
+    DistributionalPolicyLearner,
+    PolicyLearner,
+)
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.safety_modules.risk_sensitive_safety_modules import (  # noqa
     RiskNeutralSafetyModule,  # noqa
@@ -38,6 +41,7 @@ from pearl.utils.functional_utils.learning.loss_fn_utils import (
     compute_elementwise_huber_loss,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from pearl.utils.module_utils import modules_have_similar_state_dict
 from torch import optim
 
 
@@ -265,3 +269,57 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             .mean()
             .item()
         }
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two QuantileRegressionDeepTDLearning instances for equality.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, QuantileRegressionDeepTDLearning):
+            differences.append(
+                "other is not an instance of QuantileRegressionDeepTDLearning"
+            )
+        else:  # Type refinement with else block
+            # Compare attributes from QuantileRegressionDeepTDLearning
+            if self._discount_factor != other._discount_factor:
+                differences.append(
+                    f"_discount_factor is different: {self._discount_factor} "
+                    + f"vs {other._discount_factor}"
+                )
+            if self._target_update_freq != other._target_update_freq:
+                differences.append(
+                    f"_target_update_freq is different: {self._target_update_freq} "
+                    + f"vs {other._target_update_freq}"
+                )
+            if self._soft_update_tau != other._soft_update_tau:
+                differences.append(
+                    f"_soft_update_tau is different: {self._soft_update_tau} "
+                    + f"vs {other._soft_update_tau}"
+                )
+            if self._num_quantiles != other._num_quantiles:
+                differences.append(
+                    f"_num_quantiles is different: {self._num_quantiles} "
+                    + f"vs {other._num_quantiles}"
+                )
+
+            # Compare Q-networks and target Q-networks using modules_have_similar_state_dict
+            if (reason := modules_have_similar_state_dict(self._Q, other._Q)) != "":
+                differences.append(f"_Q is different: {reason}")
+            if (
+                reason := modules_have_similar_state_dict(
+                    self._Q_target, other._Q_target
+                )
+            ) != "":
+                differences.append(f"_Q_target is different: {reason}")
+
+        return "\n".join(differences)

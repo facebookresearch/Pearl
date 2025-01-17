@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -27,6 +27,7 @@ from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCri
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.policy_learners.sequential_decision_making.ddpg import (
     DeepDeterministicPolicyGradient,
 )
@@ -36,6 +37,7 @@ from pearl.utils.functional_utils.learning.critic_utils import (
     update_critic_target_network,
 )
 from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
+from pearl.utils.module_utils import modules_have_similar_state_dict
 from torch import nn, optim
 
 
@@ -198,6 +200,43 @@ class TD3(DeepDeterministicPolicyGradient):
         )
         return loss
 
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two TD3 instances for equality.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, TD3):
+            differences.append("other is not an instance of TD3")
+        else:
+            # Compare attributes specific to TD3
+            if self._actor_update_freq != other._actor_update_freq:
+                differences.append(
+                    f"_actor_update_freq is different: {self._actor_update_freq} "
+                    + f"vs {other._actor_update_freq}"
+                )
+            if self._actor_update_noise != other._actor_update_noise:
+                differences.append(
+                    f"_actor_update_noise is different: {self._actor_update_noise} "
+                    + f"vs {other._actor_update_noise}"
+                )
+            if self._actor_update_noise_clip != other._actor_update_noise_clip:
+                differences.append(
+                    f"_actor_update_noise_clip is different: {self._actor_update_noise_clip} "
+                    + f"vs {other._actor_update_noise_clip}"
+                )
+
+        return "\n".join(differences)
+
 
 class TD3BC(TD3):
     """
@@ -277,3 +316,28 @@ class TD3BC(TD3):
         loss = behavior_loss_mse - lmbda * q.mean()
 
         return loss
+
+    def compare(self, other: PolicyLearner) -> str:
+        differences: List[str] = []
+
+        # Inherit comparisons from the base class (TD3)
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, TD3BC):
+            differences.append("other is not an instance of TD3BC")
+        else:
+            # Compare attributes specific to TD3BC
+            if self.alpha_bc != other.alpha_bc:
+                differences.append(
+                    f"alpha_bc is different: {self.alpha_bc} vs {other.alpha_bc}"
+                )
+
+            # Compare behavior policies using modules_have_similar_state_dict
+            if (
+                reason := modules_have_similar_state_dict(
+                    self._behavior_policy, other._behavior_policy
+                )
+            ) != "":
+                differences.append(f"_behavior_policy is different: {reason}")
+
+        return "\n".join(differences)

@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -31,6 +31,7 @@ from pearl.policy_learners.exploration_modules.common.propensity_exploration imp
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
 )
@@ -289,3 +290,37 @@ class SoftActorCritic(ActorCriticBase):
         ).mean()
 
         return loss
+
+    def compare(self, other: PolicyLearner) -> str:
+        """
+        Compares two SoftActorCritic instances for equality.
+
+        Args:
+          other: The other PolicyLearner to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        differences.extend(super().compare(other))
+
+        if not isinstance(other, SoftActorCritic):
+            differences.append("other is not an instance of SoftActorCritic")
+        else:
+            # Compare attributes specific to SoftActorCritic
+            if self._entropy_autotune != other._entropy_autotune:
+                differences.append(
+                    f"_entropy_autotune is different: {self._entropy_autotune} vs {other._entropy_autotune}"
+                )
+            if not torch.allclose(self._entropy_coef, other._entropy_coef):
+                differences.append(
+                    f"_entropy_coef is different: {self._entropy_coef} vs {other._entropy_coef}"
+                )
+            if not torch.allclose(self._target_entropy, other._target_entropy):
+                differences.append(
+                    f"_target_entropy is different: {self._target_entropy} vs {other._target_entropy}"
+                )
+
+        return "\n".join(differences)
