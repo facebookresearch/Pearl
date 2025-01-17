@@ -141,7 +141,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         assert isinstance(available_action_space, DiscreteActionSpace)
         # Fix the available action space.
         with torch.no_grad():
-            batched_actions_representation = self._action_representation_module(
+            batched_actions_representation = self.action_representation_module(
                 available_action_space.actions_batch.to(subjective_state)
             ).unsqueeze(0)  # (1, action_space_size, action_dim)
 
@@ -158,7 +158,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         if exploit:
             return exploit_action
 
-        return self._exploration_module.act(
+        return self.exploration_module.act(
             subjective_state,
             available_action_space,
             exploit_action,

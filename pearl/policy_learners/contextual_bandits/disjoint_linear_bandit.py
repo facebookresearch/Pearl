@@ -128,14 +128,14 @@ class DisjointLinearBandit(ContextualBanditBase):
             subjective_state=subjective_state,
             action_space=action_space,
             state_features_only=self._state_features_only,
-            action_representation_module=self._action_representation_module,
+            action_representation_module=self.action_representation_module,
         )
         # (batch_size, action_count, feature_size)
 
         values = ensemble_forward(
             self._linear_regressions_list, feature, use_for_loop=True
         )
-        return self._exploration_module.act(
+        return self.exploration_module.act(
             subjective_state=feature,
             action_space=action_space,
             values=values,

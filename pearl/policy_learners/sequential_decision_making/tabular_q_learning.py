@@ -112,7 +112,7 @@ class TabularQLearning(PolicyLearner):
         if exploit:
             return exploit_action
 
-        return self._exploration_module.act(
+        return self.exploration_module.act(
             subjective_state,
             available_action_space,
             exploit_action,
@@ -205,7 +205,7 @@ class TabularQLearning(PolicyLearner):
         print("q-values:", self.q_values)
 
     def __str__(self) -> str:
-        exploration_module = self._exploration_module
+        exploration_module = self.exploration_module
         assert isinstance(exploration_module, EGreedyExploration)
         items = [
             "α=" + str(self.learning_rate),

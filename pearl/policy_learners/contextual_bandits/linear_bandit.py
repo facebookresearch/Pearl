@@ -177,17 +177,17 @@ class LinearBandit(ContextualBanditBase):
         """
         # It doesnt make sense to call act if we are not working with action vector
         assert (
-            self._exploration_module is not None
+            self.exploration_module is not None
         ), "exploration module must be set to call act()"
         action_count = available_action_space.n
         new_feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
             action_space=available_action_space,
-            action_representation_module=self._action_representation_module,
+            action_representation_module=self.action_representation_module,
         )
         values = self.model(new_feature)  # (batch_size, action_count)
         assert values.shape == (new_feature.shape[0], action_count)
-        return self._exploration_module.act(
+        return self.exploration_module.act(
             subjective_state=new_feature,
             action_space=available_action_space,
             values=values,
@@ -208,10 +208,10 @@ class LinearBandit(ContextualBanditBase):
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
             action_space=action_space,
-            action_representation_module=self._action_representation_module,
+            action_representation_module=self.action_representation_module,
         )
-        assert isinstance(self._exploration_module, ScoreExplorationBase)
-        return self._exploration_module.get_scores(
+        assert isinstance(self.exploration_module, ScoreExplorationBase)
+        return self.exploration_module.get_scores(
             subjective_state=feature,
             values=self.model(feature),
             action_space=action_space,

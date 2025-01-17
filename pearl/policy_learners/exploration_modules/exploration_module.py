@@ -18,6 +18,7 @@ from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
+from torch import nn
 
 
 class ExplorationType(Enum):
@@ -28,7 +29,7 @@ class ExplorationType(Enum):
     VALUE = 4
 
 
-class ExplorationModule(ABC):
+class ExplorationModule(ABC, nn.Module):
     """
     An abstract interface for exploration module.
     """

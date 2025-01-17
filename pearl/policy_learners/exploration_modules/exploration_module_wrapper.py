@@ -23,6 +23,7 @@ class ExplorationModuleWrapper(ExplorationModule):
     """
 
     def __init__(self, exploration_module: ExplorationModule) -> None:
+        super().__init__()
         self.exploration_module: ExplorationModule = exploration_module
 
     def reset(self) -> None:  # noqa: B027

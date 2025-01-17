@@ -242,7 +242,7 @@ class NeuralLinearBandit(ContextualBanditBase):
             subjective_state=subjective_state,
             action_space=available_action_space,
             state_features_only=self._state_features_only,
-            action_representation_module=self._action_representation_module,
+            action_representation_module=self.action_representation_module,
         )
         model_ret = self.model.forward_with_intermediate_values(new_feature)
         values = model_ret["pred_label_pre_activation"]
@@ -252,7 +252,7 @@ class NeuralLinearBandit(ContextualBanditBase):
 
         # subjective_state=mlp_values because uncertainty is only measure in the output linear layer
         # revisit for other exploration module
-        return self._exploration_module.act(
+        return self.exploration_module.act(
             subjective_state=model_ret["nn_output"],
             action_space=available_action_space,
             values=values,
@@ -271,7 +271,7 @@ class NeuralLinearBandit(ContextualBanditBase):
             subjective_state=subjective_state,
             action_space=action_space,
             state_features_only=self._state_features_only,
-            action_representation_module=self._action_representation_module,
+            action_representation_module=self.action_representation_module,
         )
         batch_size = feature.shape[0]
         feature_dim = feature.shape[-1]
@@ -283,11 +283,11 @@ class NeuralLinearBandit(ContextualBanditBase):
         # "pred_label_pre_activation" is the output of linear regression layer without activation.
         # "pred_label" is the output of linear regression layer with an activation.
         # dim: [batch_size * num_arms, 1]
-        assert isinstance(self._exploration_module, ScoreExplorationBase)
+        assert isinstance(self.exploration_module, ScoreExplorationBase)
         if self.separate_uncertainty is False:
             # ucb = self.model.output_activation(mu + ucb_alpha*sigma)
             # here mu is obtained by feeding model_ret["pred_label_pre_activation"] to exploration
-            scores = self._exploration_module.get_scores(
+            scores = self.exploration_module.get_scores(
                 subjective_state=model_ret["nn_output"],
                 values=model_ret[
                     "pred_label_pre_activation"
@@ -302,7 +302,7 @@ class NeuralLinearBandit(ContextualBanditBase):
         else:
             # ucb = mu + ucb_alpha*sigma
             # here mu is obtained by feeding model_ret["pred_label"] to exploration
-            scores = self._exploration_module.get_scores(
+            scores = self.exploration_module.get_scores(
                 subjective_state=model_ret["nn_output"],
                 values=model_ret["pred_label"],  # post-activation values
                 action_space=action_space,

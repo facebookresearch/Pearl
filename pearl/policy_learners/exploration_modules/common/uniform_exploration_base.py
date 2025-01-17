@@ -27,6 +27,7 @@ class UniformExplorationBase(ExplorationModule):
     """
 
     def __init__(self) -> None:
+        super().__init__()
         self.exploration_type: ExplorationType = ExplorationType.UNIFORM
 
     @abstractmethod

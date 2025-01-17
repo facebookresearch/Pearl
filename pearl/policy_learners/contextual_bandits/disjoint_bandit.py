@@ -184,12 +184,12 @@ class DisjointBanditContainer(ContextualBanditBase):
             subjective_state=subjective_state,
             action_space=available_action_space,
             state_features_only=self._state_features_only,
-            action_representation_module=self._action_representation_module,
+            action_representation_module=self.action_representation_module,
         )
         # (batch_size, action_count, feature_size)
 
         values = ensemble_forward(self.models, feature, use_for_loop=True)
-        return self._exploration_module.act(
+        return self.exploration_module.act(
             subjective_state=feature,
             action_space=available_action_space,
             values=values,
@@ -209,14 +209,14 @@ class DisjointBanditContainer(ContextualBanditBase):
             UCB scores when exploration module is UCB
             Shape is (batch, num_arms) or (num_arms,)
         """
-        exploration_module = self._exploration_module
+        exploration_module = self.exploration_module
         assert isinstance(exploration_module, ScoreExplorationBase)
 
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
             action_space=action_space,
             state_features_only=self._state_features_only,
-            action_representation_module=self._action_representation_module,
+            action_representation_module=self.action_representation_module,
         )
         # (batch_size, action_count, feature_size)
 

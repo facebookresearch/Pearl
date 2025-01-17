@@ -69,9 +69,8 @@ class PolicyLearner(torch.nn.Module, ABC):
     ) -> None:
         super().__init__()
 
-        self._exploration_module: ExplorationModule = (
-            options.get("exploration_module", None) or NoExploration()
-        )
+        exploration_module = options.get("exploration_module", None) or NoExploration()
+        self.exploration_module = exploration_module
 
         # User needs to either provide the action space or an action representation module at
         # policy learner's initialization for sequential decision making.
@@ -79,26 +78,24 @@ class PolicyLearner(torch.nn.Module, ABC):
             if action_space is not None:
                 # If a policy learner is initialized with an action space, then we assume that
                 # the agent does not need dynamic action space support.
-                self._action_representation_module: ActionRepresentationModule = (
-                    IdentityActionRepresentationModule(
-                        max_number_actions=(
-                            action_space.n
-                            if isinstance(action_space, DiscreteActionSpace)
-                            else None
-                        ),
-                        representation_dim=action_space.action_dim,
-                    )
+                action_representation_module = IdentityActionRepresentationModule(
+                    max_number_actions=(
+                        action_space.n
+                        if isinstance(action_space, DiscreteActionSpace)
+                        else None
+                    ),
+                    representation_dim=action_space.action_dim,
                 )
             else:
                 # This is only used in the case of bandit learning applications.
                 # TODO: add action representation module for bandit learning applications.
-                self._action_representation_module = (
-                    IdentityActionRepresentationModule()
-                )
+                action_representation_module = IdentityActionRepresentationModule()
         else:
             # User needs to at least specify action dimensions if no action_space is provided.
             assert action_representation_module.representation_dim is not None
-            self._action_representation_module = action_representation_module
+            action_representation_module = action_representation_module
+
+        self.action_representation_module = action_representation_module
 
         self._history_summarization_module: HistorySummarizationModule = (
             IdentityHistorySummarizationModule()
@@ -118,18 +115,32 @@ class PolicyLearner(torch.nn.Module, ABC):
 
     @property
     def exploration_module(self) -> ExplorationModule:
-        return self._exploration_module
+        exploration_module = self._modules["exploration_module"]
+        assert exploration_module is not None
+        assert isinstance(exploration_module, ExplorationModule)
+        return exploration_module
+
+    # Setter is never executed because nn.Module overrides __setattr__ of modules.
+    # This is defined to satisfy the type checker.
+    @exploration_module.setter
+    def exploration_module(self, value: ExplorationModule) -> None:
+        self._modules["exploration_module"] = value
 
     @property
     def action_representation_module(self) -> ActionRepresentationModule:
-        return self._action_representation_module
+        action_representation_module = self._modules["action_representation_module"]
+        assert action_representation_module is not None
+        assert isinstance(action_representation_module, ActionRepresentationModule)
+        return action_representation_module
 
-    @exploration_module.setter
-    def exploration_module(self, new_exploration_module: ExplorationModule) -> None:
-        self._exploration_module = new_exploration_module
+    # Setter is never executed because nn.Module overrides __setattr__ of modules.
+    # This is defined to satisfy the type checker.
+    @action_representation_module.setter
+    def action_representation_module(self, value: ActionRepresentationModule) -> None:
+        self._modules["action_representation_module"] = value
 
     def get_action_representation_module(self) -> ActionRepresentationModule:
-        return self._action_representation_module
+        return self.action_representation_module
 
     @abstractmethod
     def set_history_summarization_module(
@@ -195,15 +206,15 @@ class PolicyLearner(torch.nn.Module, ABC):
         with torch.no_grad():
             batch.next_state = self._history_summarization_module(batch.next_state)
 
-        batch.action = self._action_representation_module(batch.action)
+        batch.action = self.action_representation_module(batch.action)
         if batch.next_action is not None:
-            batch.next_action = self._action_representation_module(batch.next_action)
+            batch.next_action = self.action_representation_module(batch.next_action)
         if batch.curr_available_actions is not None:
-            batch.curr_available_actions = self._action_representation_module(
+            batch.curr_available_actions = self.action_representation_module(
                 batch.curr_available_actions
             )
         if batch.next_available_actions is not None:
-            batch.next_available_actions = self._action_representation_module(
+            batch.next_available_actions = self.action_representation_module(
                 batch.next_available_actions
             )
         return batch
@@ -241,7 +252,8 @@ class PolicyLearner(torch.nn.Module, ABC):
             # Compare attributes
             if self._training_rounds != other._training_rounds:
                 differences.append(
-                    f"_training_rounds is different: {self._training_rounds} vs {other._training_rounds}"
+                    f"_training_rounds is different: {self._training_rounds} vs "
+                    + f"{other._training_rounds}"
                 )
             if self._batch_size != other._batch_size:
                 differences.append(
@@ -253,24 +265,25 @@ class PolicyLearner(torch.nn.Module, ABC):
                 )
             if self._is_action_continuous != other._is_action_continuous:
                 differences.append(
-                    f"_is_action_continuous is different: {self._is_action_continuous} vs {other._is_action_continuous}"
+                    f"_is_action_continuous is different: {self._is_action_continuous} vs "
+                    + f"{other._is_action_continuous}"
                 )
 
             # Compare exploration modules
-            if self._exploration_module is None:
-                if other._exploration_module is not None:
+            if self.exploration_module is None:
+                if other.exploration_module is not None:
                     differences.append(
                         "exploration_module is different: None vs not None"
                     )
             elif (
-                reason := self._exploration_module.compare(other._exploration_module)
+                reason := self.exploration_module.compare(other.exploration_module)
             ) != "":
                 differences.append(f"exploration_module is different: {reason}")
 
             # Compare action representation modules
             if (
-                reason := self._action_representation_module.compare(
-                    other._action_representation_module
+                reason := self.action_representation_module.compare(
+                    other.action_representation_module
                 )
             ) != "":
                 differences.append(

@@ -76,6 +76,7 @@ class PearlAgent(Agent):
             replay_buffer (ReplayBuffer, optional): A replay buffer. Defaults to a single-transition
                 replay buffer (note: this default is likely to change).
         """
+        super().__init__()
         self.policy_learner: PolicyLearner = policy_learner
         self._device_id: int = device_id
         self.device: torch.device = get_pearl_device(device_id)

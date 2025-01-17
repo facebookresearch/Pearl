@@ -211,9 +211,9 @@ def run_experiments(
                 **policy_learner_dict["params"]
             )
             # override action representation module
-            policy_learner._action_representation_module = policy_learner_dict[
-                "params"
-            ]["action_representation_module"]
+            policy_learner.action_representation_module = policy_learner_dict["params"][
+                "action_representation_module"
+            ]
 
             regret_single_run = run_experiments_online(
                 env, policy_learner, T, replay_buffer_size=T

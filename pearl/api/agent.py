@@ -13,9 +13,10 @@ from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
 from pearl.api.observation import Observation
+from torch import nn
 
 
-class Agent(ABC):
+class Agent(ABC, nn.Module):
     """
     An abstract interface for agents.
     """

@@ -144,12 +144,12 @@ class NeuralBandit(ContextualBanditBase):
             subjective_state=subjective_state,
             action_space=available_action_space,
             state_features_only=self._state_features_only,
-            action_representation_module=self._action_representation_module,
+            action_representation_module=self.action_representation_module,
         )
         values = self.model(new_feature).squeeze(-1)
         # batch_size * action_count
         assert values.numel() == new_feature.shape[0] * action_count
-        return self._exploration_module.act(
+        return self.exploration_module.act(
             subjective_state=subjective_state,
             action_space=available_action_space,
             values=values,
@@ -174,7 +174,7 @@ class NeuralBandit(ContextualBanditBase):
             subjective_state=subjective_state,
             action_space=action_space,
             state_features_only=self._state_features_only,
-            action_representation_module=self._action_representation_module,
+            action_representation_module=self.action_representation_module,
         )
         batch_size = feature.shape[0]
         feature_dim = feature.shape[-1]

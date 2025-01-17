@@ -151,7 +151,7 @@ class BootstrappedDQN(DeepQLearning):
 
     def reset(self, action_space: ActionSpace) -> None:
         # Reset the `DeepExploration` module, which will resample the epistemic index.
-        self._exploration_module.reset()
+        self.exploration_module.reset()
 
     def act(
         self,
@@ -162,7 +162,7 @@ class BootstrappedDQN(DeepQLearning):
         # Fix the available action space.
         assert isinstance(available_action_space, DiscreteActionSpace)
         with torch.no_grad():
-            batched_actions_representation = self._action_representation_module(
+            batched_actions_representation = self.action_representation_module(
                 available_action_space.actions_batch.to(subjective_state)
             ).unsqueeze(0)  # (1 x action_space_size x action_dim)
 
@@ -180,8 +180,8 @@ class BootstrappedDQN(DeepQLearning):
         if exploit:
             return exploit_action
 
-        assert self._exploration_module is not None
-        return self._exploration_module.act(
+        assert self.exploration_module is not None
+        return self.exploration_module.act(
             subjective_state=subjective_state,
             action_space=available_action_space,
             exploit_action=exploit_action,
@@ -299,13 +299,13 @@ class BootstrappedDQN(DeepQLearning):
                 differences.append(f"_Q_target is different: {reason}")
 
             # Compare exploration modules
-            if self._exploration_module is None:
-                if other._exploration_module is not None:
+            if self.exploration_module is None:
+                if other.exploration_module is not None:
                     differences.append(
                         "exploration_module is different: None vs not None"
                     )
             elif (
-                reason := self._exploration_module.compare(other._exploration_module)
+                reason := self.exploration_module.compare(other.exploration_module)
             ) != "":
                 differences.append(f"exploration_module is different: {reason}")
 

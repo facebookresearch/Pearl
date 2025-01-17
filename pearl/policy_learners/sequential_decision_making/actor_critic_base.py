@@ -299,7 +299,7 @@ class ActorCriticBase(PolicyLearner):
             return exploit_action
 
         # TODO: carefully check if safe action space is integrated with the exploration module
-        return self._exploration_module.act(
+        return self.exploration_module.act(
             exploit_action=exploit_action,
             action_space=available_action_space,
             subjective_state=subjective_state,

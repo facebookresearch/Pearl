@@ -141,7 +141,7 @@ class DeepTDLearning(PolicyLearner):
                     state_dim=state_dim,
                     # pyre-fixme[6]: For 2nd argument expected `int` but got
                     #  `Union[Tensor, Module]`.
-                    action_dim=self._action_representation_module.representation_dim,
+                    action_dim=self.action_representation_module.representation_dim,
                     hidden_dims=hidden_dims,
                     state_output_dim=state_output_dim,
                     action_output_dim=action_output_dim,
@@ -154,11 +154,11 @@ class DeepTDLearning(PolicyLearner):
                     state_dim=state_dim,
                     # pyre-fixme[6]: For 2nd argument expected `int` but got
                     #  `Union[Tensor, Module]`.
-                    action_dim=self._action_representation_module.representation_dim,
+                    action_dim=self.action_representation_module.representation_dim,
                     hidden_dims=hidden_dims,
                     # pyre-fixme[6]: For 3rd argument expected `int` but got
                     # `Union[Tensor, Module]`.
-                    output_dim=self._action_representation_module.max_number_actions,
+                    output_dim=self.action_representation_module.max_number_actions,
                 )
             else:
                 assert (
@@ -169,7 +169,7 @@ class DeepTDLearning(PolicyLearner):
                     state_dim=state_dim,
                     # pyre-fixme[6]: For 2nd argument expected `int` but got
                     #  `Union[Tensor, Module]`.
-                    action_dim=self._action_representation_module.representation_dim,
+                    action_dim=self.action_representation_module.representation_dim,
                     hidden_dims=hidden_dims,
                     output_dim=1,
                 )
@@ -227,7 +227,7 @@ class DeepTDLearning(PolicyLearner):
         # Fix the available action space.
         assert isinstance(available_action_space, DiscreteActionSpace)
         with torch.no_grad():
-            batched_actions_representation = self._action_representation_module(
+            batched_actions_representation = self.action_representation_module(
                 available_action_space.actions_batch.to(subjective_state)
             ).unsqueeze(0)  # (1 x number of actions x action_dim)
 
@@ -244,8 +244,8 @@ class DeepTDLearning(PolicyLearner):
         if exploit:
             return exploit_action
 
-        assert self._exploration_module is not None
-        return self._exploration_module.act(
+        assert self.exploration_module is not None
+        return self.exploration_module.act(
             subjective_state=subjective_state,
             action_space=available_action_space,
             exploit_action=exploit_action,

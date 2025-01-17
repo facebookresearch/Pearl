@@ -253,6 +253,7 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
             )
 
     def test_ucb_act(self) -> None:
+        # TODO: the condition below is never satisfied. The test should be on self.bandit_class
         if not isinstance(self.policy_learner, LinearBandit):
             # This test is reliable only for linear bandits. NN have too much
             # variance during training

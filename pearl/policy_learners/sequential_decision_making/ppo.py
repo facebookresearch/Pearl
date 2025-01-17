@@ -229,7 +229,7 @@ class ProximalPolicyOptimization(ActorCriticBase):
         history_summary_batch = self._history_summarization_module(
             torch.cat(state_list)
         ).detach()
-        action_representation_batch = self._action_representation_module(
+        action_representation_batch = self.action_representation_module(
             torch.cat(action_list)
         )
 
