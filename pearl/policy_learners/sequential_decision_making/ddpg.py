@@ -171,7 +171,7 @@ class DeepDeterministicPolicyGradient(ActorCriticBase):
         differences: List[str] = []
 
         # Inherit comparisons from the base class
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, DeepDeterministicPolicyGradient):
             differences.append(

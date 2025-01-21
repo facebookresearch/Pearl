@@ -412,6 +412,25 @@ class ActorCriticBase(PolicyLearner):
         """
         pass
 
+    def get_extra_state(self) -> dict[str, Any]:
+        state_dict = {
+            "actor_optimizer": self._actor_optimizer.state_dict(),
+            "critic_optimizer": self._critic_optimizer.state_dict(),
+        }
+        if self._history_summarization_optimizer is not None:
+            state_dict["history_summarization_optimizer"] = (
+                self._history_summarization_optimizer.state_dict()
+            )
+        return state_dict
+
+    def set_extra_state(self, state: dict[str, Any]) -> None:
+        self._actor_optimizer.load_state_dict(state["actor_optimizer"])
+        self._critic_optimizer.load_state_dict(state["critic_optimizer"])
+        if self._history_summarization_optimizer is not None:
+            self._history_summarization_optimizer.load_state_dict(
+                state["history_summarization_optimizer"]
+            )
+
     def compare(self, other: PolicyLearner) -> str:
         """
         Compares two ActorCriticBase instances for equality,
@@ -426,7 +445,7 @@ class ActorCriticBase(PolicyLearner):
 
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, ActorCriticBase):
             differences.append("other is not an instance of ActorCriticBase")
@@ -477,11 +496,6 @@ class ActorCriticBase(PolicyLearner):
             ) != "":
                 differences.append(f"_actor is different: {reason}")
             if self._use_critic:
-                if self._critic_soft_update_tau != other._critic_soft_update_tau:
-                    differences.append(
-                        f"_critic_soft_update_tau is different: {self._critic_soft_update_tau} "
-                        + f"vs {other._critic_soft_update_tau}"
-                    )
                 if self._critic_learning_rate != other._critic_learning_rate:
                     differences.append(
                         f"_critic_learning_rate is different: {self._critic_learning_rate} "
@@ -550,5 +564,5 @@ class ActorCriticBase(PolicyLearner):
                 )
             ) != "":
                 differences.append(
-                    f"_history_summarization_optimizer is different: {reason}"
+                    "_history_summarization_optimizer is different: " + f"{reason}"
                 )

@@ -213,7 +213,7 @@ class TD3(DeepDeterministicPolicyGradient):
 
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, TD3):
             differences.append("other is not an instance of TD3")
@@ -321,7 +321,7 @@ class TD3BC(TD3):
         differences: List[str] = []
 
         # Inherit comparisons from the base class (TD3)
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, TD3BC):
             differences.append("other is not an instance of TD3BC")

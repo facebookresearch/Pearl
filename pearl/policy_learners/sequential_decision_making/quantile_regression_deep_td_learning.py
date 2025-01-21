@@ -283,7 +283,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
 
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, QuantileRegressionDeepTDLearning):
             differences.append(

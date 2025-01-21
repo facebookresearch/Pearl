@@ -38,3 +38,16 @@ class Agent(ABC, nn.Module):
         self, observation: Observation, available_action_space: ActionSpace
     ) -> None:
         pass
+
+    @abstractmethod
+    def compare(self, other: "Agent") -> str:
+        """
+        Compare two agents and return a string representation of the differences.
+        Note: subcomponents which are PyTorch modules are
+        compared by state dict only.
+        Args:
+            other: The other agent to compare with.
+        Returns:
+            A string describing the differences, or an empty string if they are identical.
+        """
+        pass

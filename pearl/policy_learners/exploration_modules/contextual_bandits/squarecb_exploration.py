@@ -140,7 +140,7 @@ class SquareCBExploration(ScoreExplorationBase):
 
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, SquareCBExploration):
             differences.append("other is not an instance of SquareCBExploration")
@@ -230,7 +230,7 @@ class FastCBExploration(SquareCBExploration):
 
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, FastCBExploration):
             differences.append("other is not an instance of FastCBExploration")

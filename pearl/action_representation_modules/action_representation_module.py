@@ -27,6 +27,8 @@ class ActionRepresentationModule(ABC, nn.Module):
     def compare(self, other: "ActionRepresentationModule") -> str:
         """
         Compares two action representation modules for equality.
+        Note: subcomponents which are PyTorch modules are
+        compared by state dict only.
         Args:
             other: The other action representation module to compare with.
         Returns:

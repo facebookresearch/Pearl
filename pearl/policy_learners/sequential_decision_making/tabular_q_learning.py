@@ -229,7 +229,7 @@ class TabularQLearning(PolicyLearner):
         """
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, TabularQLearning):
             differences.append("other is not an instance of TabularQLearning")
@@ -252,3 +252,14 @@ class TabularQLearning(PolicyLearner):
                 differences.append("q_values are different")
 
         return "\n".join(differences)
+
+    def get_extra_state(self) -> dict[str, Any]:
+        # We must define q_values as extra state since it is
+        # not a PyTorch parameter or buffer
+        # (which are detected automatically).
+        return {
+            "q_values": self.q_values,
+        }
+
+    def set_extra_state(self, state: dict[str, Any]) -> None:
+        self.q_values = state["q_values"]

@@ -8,7 +8,7 @@
 # pyre-strict
 
 import typing
-from typing import Any
+from typing import Any, List
 
 import torch
 from pearl.api.action import Action
@@ -282,3 +282,50 @@ class PearlAgent(Agent):
         return "PearlAgent" + (
             " with " + ", ".join(str(item) for item in items) if items else ""
         )
+
+    def compare(self, other: Agent) -> str:
+        """
+        Compares two PearlAgent instances for equality,
+        checking policy learner, safety module, replay buffer,
+        and history summarization module.
+        Note: subcomponents which are PyTorch modules are
+        compared by state dict only.
+
+        Args:
+          other: The other Agent to compare with.
+
+        Returns:
+          str: A string describing the differences, or an empty string if they are identical.
+        """
+
+        differences: List[str] = []
+
+        if not isinstance(other, PearlAgent):
+            differences.append("other is not an instance of PearlAgent")
+        else:  # Type refinement with else block
+            # Compare policy learners
+            if (reason := self.policy_learner.compare(other.policy_learner)) != "":
+                differences.append(f"Policy learner is different: {reason}")
+
+            # Compare safety modules
+            if (reason := self.safety_module.compare(other.safety_module)) != "":
+                differences.append(f"Safety module is different: {reason}")
+
+            # Compare replay buffers
+            if type(self.replay_buffer) is not type(other.replay_buffer):
+                differences.append(
+                    f"Replay buffer type is different: {type(self.replay_buffer)} "
+                    + f"vs {type(other.replay_buffer)}"
+                )
+
+            # Compare history summarization modules
+            if (
+                reason := self.history_summarization_module.compare(
+                    other.history_summarization_module
+                )
+            ) != "":
+                differences.append(
+                    f"History summarization module is different: {reason}"
+                )
+
+        return "\n".join(differences)

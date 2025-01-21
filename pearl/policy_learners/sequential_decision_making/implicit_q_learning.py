@@ -320,7 +320,7 @@ class ImplicitQLearning(ActorCriticBase):
         differences: List[str] = []
 
         # Inherit comparisons from the base class
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, ImplicitQLearning):
             differences.append("other is not an instance of ImplicitQLearning")

@@ -100,7 +100,7 @@ class UCBExploration(ScoreExplorationBase):
 
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, UCBExploration):
             differences.append("other is not an instance of UCBExploration")
@@ -155,7 +155,7 @@ class DisjointUCBExploration(UCBExploration):
 
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, DisjointUCBExploration):
             differences.append("other is not an instance of DisjointUCBExploration")
@@ -235,7 +235,7 @@ class VanillaUCBExploration(UCBExploration):
 
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, VanillaUCBExploration):
             differences.append("other is not an instance of VanillaUCBExploration")

@@ -89,7 +89,7 @@ class DeepSARSA(DeepTDLearning):
         differences: List[str] = []
 
         # Inherit comparisons from the base class
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, DeepSARSA):
             differences.append("other is not an instance of DeepSARSA")

@@ -253,7 +253,7 @@ class DisjointBanditContainer(ContextualBanditBase):
         """
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, DisjointBanditContainer):
             differences.append("other is not an instance of DisjointBanditContainer")

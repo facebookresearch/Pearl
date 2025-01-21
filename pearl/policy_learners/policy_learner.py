@@ -237,6 +237,8 @@ class PolicyLearner(torch.nn.Module, ABC):
         """
         Compares two PolicyLearner instances for equality,
         checking attributes and modules.
+        Note: subcomponents which are PyTorch modules are
+        compared by state dict only.
 
         Args:
           other: The other PolicyLearner to compare with.

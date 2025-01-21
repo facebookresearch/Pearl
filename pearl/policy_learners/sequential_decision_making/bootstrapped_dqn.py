@@ -239,7 +239,7 @@ class BootstrappedDQN(DeepQLearning):
 
         # Do not invoke super().compare() because this class is anomalous in
         # its __init__; it does not invoke super().__init__.
-        # differences.extend(super().compare(other))
+        # differences.append(super().compare(other))
 
         if not isinstance(other, BootstrappedDQN):
             differences.append("other is not an instance of BootstrappedDQN")

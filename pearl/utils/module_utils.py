@@ -38,7 +38,7 @@ def state_dict_owners_have_similar_state_dict(
     if set(sd1.keys()) != set(sd2.keys()):
         return (
             f"State dicts have differing keys: {set(sd1.keys())} vs {set(sd2.keys())}, "
-            + "difference: {set(sd1.keys()) ^ set(sd2.keys())}"
+            + f"difference: {set(sd1.keys()) ^ set(sd2.keys())}"
         )
 
     for key in sd1:

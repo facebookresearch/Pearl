@@ -60,6 +60,8 @@ class ExplorationModule(ABC, nn.Module):
     def compare(self, other: "ExplorationModule") -> str:
         """
         Compares two exploration modules.
+        Note: subcomponents which are PyTorch modules are
+        compared by state dict only.
         Args:
             other: The other exploration module to compare with.
         Returns:

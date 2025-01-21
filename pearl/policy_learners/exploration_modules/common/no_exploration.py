@@ -61,7 +61,7 @@ class NoExploration(ScoreExplorationBase):
 
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, NoExploration):
             differences.append("other is not an instance of NoExploration")

@@ -245,7 +245,7 @@ class ContinuousSoftActorCritic(ActorCriticBase):
 
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, ContinuousSoftActorCritic):
             differences.append("other is not an instance of ContinuousSoftActorCritic")

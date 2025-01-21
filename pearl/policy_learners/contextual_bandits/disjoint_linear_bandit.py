@@ -169,7 +169,7 @@ class DisjointLinearBandit(ContextualBanditBase):
         """
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, DisjointLinearBandit):
             differences.append("other is not an instance of DisjointLinearBandit")

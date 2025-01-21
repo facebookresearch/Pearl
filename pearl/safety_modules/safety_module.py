@@ -39,3 +39,18 @@ class SafetyModule(torch.nn.Module, ABC):
     @abstractmethod
     def learn_batch(self, batch: TransitionBatch) -> None:
         pass
+
+    @abstractmethod
+    def compare(self, other: "SafetyModule") -> str:
+        """
+        Compares two SafetyModule instances for equality.
+        Note: subcomponents which are PyTorch modules are
+        compared by state dict only.
+
+        Args:
+            other: another SafetyModule instance to compare with
+        Returns:
+            str: a string describing the differences,
+            or an empty string if they are identical.
+        """
+        pass

@@ -316,14 +316,14 @@ class NeuralLinearBandit(ContextualBanditBase):
         checking attributes, model, and exploration module.
 
         Args:
-          other: The other ContextualBanditBase to compare with.
+          other: The other PolicyLearner to compare with.
 
         Returns:
           str: A string describing the differences, or an empty string if they are identical.
         """
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, NeuralLinearBandit):
             differences.append("other is not an instance of NeuralLinearBandit")

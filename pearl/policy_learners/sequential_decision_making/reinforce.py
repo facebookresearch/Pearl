@@ -223,7 +223,7 @@ class REINFORCE(ActorCriticBase):
 
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, REINFORCE):
             differences.append("other is not an instance of REINFORCE")

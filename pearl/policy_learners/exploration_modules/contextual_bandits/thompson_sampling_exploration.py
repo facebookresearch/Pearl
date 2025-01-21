@@ -86,7 +86,7 @@ class ThompsonSamplingExplorationLinear(ScoreExplorationBase):
 
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, ThompsonSamplingExplorationLinear):
             differences.append(
@@ -153,10 +153,7 @@ class ThompsonSamplingExplorationLinearDisjoint(ThompsonSamplingExplorationLinea
 
         differences: List[str] = []
 
-        differences.extend(super().compare(other))
-
-        # Inherit comparisons from the base class (ThompsonSamplingExplorationLinear)
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, ThompsonSamplingExplorationLinearDisjoint):
             differences.append(

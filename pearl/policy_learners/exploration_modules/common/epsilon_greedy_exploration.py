@@ -8,7 +8,7 @@
 # pyre-strict
 
 import random
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import torch
 
@@ -83,6 +83,25 @@ class EGreedyExploration(UniformExplorationBase):
         else:
             return exploit_action
 
+    def get_extra_state(self) -> dict[str, Any]:
+        return {
+            "start_epsilon": self.start_epsilon,
+            "curr_epsilon": self.curr_epsilon,
+            "end_epsilon": self.end_epsilon,
+            "time_step": self.time_step,
+            "warmup_steps": self.warmup_steps,
+            "epsilon_scheduling": self._epsilon_scheduling,
+        }
+
+    def set_extra_state(self, state: Any) -> None:  # pyre-ignore
+        assert isinstance(state, dict)
+        self.start_epsilon = state["start_epsilon"]
+        self.curr_epsilon = state["curr_epsilon"]
+        self.end_epsilon = state["end_epsilon"]
+        self.time_step = state["time_step"]
+        self.warmup_steps = state["warmup_steps"]
+        self._epsilon_scheduling = state["epsilon_scheduling"]
+
     def compare(self, other: ExplorationModule) -> str:
         """
         Compares two EGreedyExploration instances for equality,
@@ -97,7 +116,7 @@ class EGreedyExploration(UniformExplorationBase):
         differences: List[str] = []
 
         # Call the compare method of the parent class (UniformExplorationBase)
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, EGreedyExploration):
             differences.append("other is not an instance of EGreedyExploration")

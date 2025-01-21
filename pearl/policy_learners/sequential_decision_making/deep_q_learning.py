@@ -178,7 +178,7 @@ class DeepQLearning(DeepTDLearning):
         differences: List[str] = []
 
         # First, perform the comparisons from the base class
-        differences.extend(super().compare(other))
+        differences.append(super().compare(other))
 
         if not isinstance(other, DeepQLearning):
             differences.append("other is not an instance of DeepQLearning")
