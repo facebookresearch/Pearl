@@ -19,6 +19,33 @@ Our NeurIPS 2023 Presentation Slides is released [here](https://pearlagent.githu
 ## Overview
 Pearl is a new production-ready Reinforcement Learning AI agent library open-sourced by the Applied Reinforcement Learning team at Meta. Furthering our efforts on open AI innovation, Pearl enables researchers and practitioners to develop Reinforcement Learning AI agents. These AI agents prioritize cumulative long-term feedback over immediate feedback and can adapt to environments with limited observability, sparse feedback, and high stochasticity. We hope that Pearl offers the community a means to build state-of-the-art Reinforcement Learning AI agents that can adapt to a wide range of complex production environments.
 
+## News
+
+### January 22, 2025 - Pearl components serialization
+Pearl components can now produce state dicts just like PyTorch modules, and these state dicts can be saved and loaded with `torch.save` and `torch.load`!
+
+Here's a basic example:
+```python
+agent = PearlAgent(...)
+# Save the agent's state dict
+torch.save(agent.state_dict(), 'agent_state.pth')
+
+agent2 = PearlAgent(...)  # agent2 must have the same structure as agent
+# Load the agent's state dict
+agent2.load_state_dict(torch.load('agent_state.pth'))
+
+assert agent2.compare(agent) == ""  # `compare` is a newly introduced method
+```
+Note that this works for subcomponents as well, such as `PolicyLearner`, `ExplorationModule`, etc.
+
+If your component has attributes that are not parameters, buffers, or sub-modules, they are not included automatically in the state dict.
+In those cases, (just like in PyTorch) define methods `get_extra_state` and `set_extra_state` for including such attributes in the state dict
+(see, for example, [`ActorCriticBase.get_extra_state`](https://github.com/facebookresearch/Pearl/blob/01c16fd482ade4e6c5d3bc7a83f3c7065f9afa8d/pearl/policy_learners/sequential_decision_making/actor_critic_base.py#L415)).
+
+When defining your own components, you must now define a `compare` method which returns a string listing the differences between two components
+(see, for example, [`PearlAgent.compare`](https://github.com/facebookresearch/Pearl/blob/01c16fd482ade4e6c5d3bc7a83f3c7065f9afa8d/pearl/pearl_agent.py#L286)).
+This method serves as a general comparison method for testing purposes.
+
 ## Getting Started
 
 ### Installation
