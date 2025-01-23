@@ -32,9 +32,9 @@ class TestSerialization(TestCase):
             new_agent, _ = new_agent_function()
             trained_agent, _ = trained_agent_function()
             print(f"Testing serialization for {agent_type}")
-            self.assertNotEquals(new_agent.compare(trained_agent), "")
+            self.assertNotEqual(new_agent.compare(trained_agent), "")
             save_and_load_state_dict(trained_agent, new_agent)
             differences = new_agent.compare(trained_agent)
             if differences != "":
                 print(f"Found differences in {agent_type}:\n{differences}\n-----\n")
-            self.assertEquals(differences, "")
+            self.assertEqual(differences, "")
