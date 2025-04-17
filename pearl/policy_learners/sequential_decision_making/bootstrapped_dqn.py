@@ -207,10 +207,10 @@ class BootstrappedDQN(DeepQLearning):
         )  # (batch_size x action_space_size)
 
         target_next_state_action_values = self._Q_target.get_q_values(
-            # pyre-fixme6]: In call `EnsembleQValueNetwork.get_q_values`,
+            # pyre-fixme[6]: In call `EnsembleQValueNetwork.get_q_values`,
             # for argument `state_batch`, expected `Tensor` but got `Optional[Tensor]`
             state_batch=batch.next_state,
-            # pyre-fixme6]: In call `EnsembleQValueNetwork.get_q_values`,
+            # pyre-fixme[6]: In call `EnsembleQValueNetwork.get_q_values`,
             # for argument `action_batch`, expected `Tensor` but got `Optional[Tensor]`
             action_batch=batch.next_available_actions,
             z=z,
