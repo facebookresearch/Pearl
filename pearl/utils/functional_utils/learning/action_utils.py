@@ -118,7 +118,7 @@ def concatenate_actions_to_state(
         action_dim = action_representation_module.representation_dim
     else:
         action_dim = action_space.action_dim
-    action_count = action_space.n
+    action_count = int(action_space.n)
 
     # Expand to (batch_size, action_count, state_dim) and return if `state_features_only`
     expanded_state = subjective_state.unsqueeze(1).repeat(1, action_count, 1)

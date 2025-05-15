@@ -99,7 +99,7 @@ class DiscreteActionSpace(DiscreteSpace, ActionSpace):
             A `DiscreteActionSpace` with the same number of actions as `gym_space`.
         """
         assert isinstance(gym_space, Discrete)
-        start, n = gym_space.start, gym_space.n
+        start, n = int(gym_space.start), int(gym_space.n)
         return DiscreteActionSpace(
             actions=list(torch.arange(start=start, end=start + n).view(-1, 1)),
             seed=gym_space._np_random,

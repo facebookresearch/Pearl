@@ -73,7 +73,7 @@ class UCBExploration(ScoreExplorationBase):
             return shape(action_count)
         """
         assert isinstance(action_space, DiscreteActionSpace)
-        action_count = action_space.n
+        action_count = int(action_space.n)
         values = values.view(-1, action_count)  # (batch_size, action_count)
         sigma = self.sigma(
             subjective_state=subjective_state,
