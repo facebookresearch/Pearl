@@ -69,7 +69,7 @@ class DiscreteSpace(Space):
     @property
     def n(self) -> int:
         """Returns the number of elements in this space."""
-        return self._gym_space.n
+        return int(self._gym_space.n)
 
     @property
     def is_continuous(self) -> bool:
