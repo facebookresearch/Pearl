@@ -160,7 +160,12 @@ class NeuralBandit(ContextualBanditBase):
         self,
         subjective_state: SubjectiveState,
         action_space_to_score: DiscreteActionSpace,
+        exploit: bool = False,
     ) -> torch.Tensor:
+        assert (
+            not exploit
+        ), "exploit=True is not yet implemented for NeuralBandit.get_scores"
+
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
             action_space=action_space_to_score,

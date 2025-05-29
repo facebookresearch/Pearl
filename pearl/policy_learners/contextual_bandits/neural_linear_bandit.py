@@ -260,7 +260,12 @@ class NeuralLinearBandit(ContextualBanditBase):
         self,
         subjective_state: SubjectiveState,
         action_space_to_score: DiscreteActionSpace,
+        exploit: bool = False,
     ) -> torch.Tensor:
+        assert (
+            not exploit
+        ), "exploit=True is not yet implemented for NeuralLinearBandit.get_scores"
+
         # TODO generalize for all kinds of exploration module
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,

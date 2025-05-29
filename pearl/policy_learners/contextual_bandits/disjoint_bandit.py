@@ -203,12 +203,17 @@ class DisjointBanditContainer(ContextualBanditBase):
         self,
         subjective_state: SubjectiveState,
         action_space_to_score: DiscreteActionSpace,
+        exploit: bool = False,
     ) -> torch.Tensor:
         """
         Returns:
             UCB scores when exploration module is UCB
             Shape is (batch, num_arms) or (num_arms,)
         """
+        assert (
+            not exploit
+        ), "exploit=True is not yet implemented for DisjointBandit.get_scores"
+
         exploration_module = self.exploration_module
         assert isinstance(exploration_module, ScoreExplorationBase)
 

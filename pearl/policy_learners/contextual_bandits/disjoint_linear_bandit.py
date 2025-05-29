@@ -146,8 +146,11 @@ class DisjointLinearBandit(ContextualBanditBase):
         self,
         subjective_state: SubjectiveState,
         action_space_to_score: DiscreteActionSpace,
+        exploit: bool = False,
     ) -> torch.Tensor:
-        raise NotImplementedError("Implement when necessary")
+        raise NotImplementedError(
+            "DisjointLinearBandit.get_scores is not yet implemented"
+        )
 
     def set_history_summarization_module(
         self, value: HistorySummarizationModule

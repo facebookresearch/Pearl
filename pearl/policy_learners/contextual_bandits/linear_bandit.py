@@ -198,24 +198,23 @@ class LinearBandit(ContextualBanditBase):
         self,
         subjective_state: SubjectiveState,
         action_space_to_score: DiscreteActionSpace,
+        exploit: bool = False,
     ) -> torch.Tensor:
-        """
-        Returns:
-            UCB scores when exploration module is UCB
-            Shape is (batch)
-        """
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
             action_space=action_space_to_score,
             action_representation_module=self.action_representation_module,
         )
-        assert isinstance(self.exploration_module, ScoreExplorationBase)
-        return self.exploration_module.get_scores(
-            subjective_state=feature,
-            values=self.model(feature),
-            action_space=action_space_to_score,
-            representation=self.model,
-        ).squeeze(-1)
+        if exploit:
+            return self.model(feature).squeeze(-1)
+        else:
+            assert isinstance(self.exploration_module, ScoreExplorationBase)
+            return self.exploration_module.get_scores(
+                subjective_state=feature,
+                values=self.model(feature),
+                action_space=action_space_to_score,
+                representation=self.model,
+            ).squeeze(-1)
 
     def set_history_summarization_module(
         self, value: HistorySummarizationModule
