@@ -77,7 +77,7 @@ class TestLinearBandits(unittest.TestCase):
 
         ucb_scores = self.policy_learner.get_scores(
             subjective_state=batch.state,
-            action_space=DiscreteActionSpace(actions=list(batch.action)),
+            action_space_to_score=DiscreteActionSpace(actions=list(batch.action)),
         )
         self.assertEqual(
             ucb_scores.shape, (batch.state.shape[0], batch.action.shape[0])

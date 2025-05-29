@@ -61,8 +61,8 @@ class ThompsonSamplingExplorationLinear(ScoreExplorationBase):
         else:
             thompson_sampling_coefs = (
                 torch.distributions.multivariate_normal.MultivariateNormal(
-                    loc=representation.coefs,
-                    precision_matrix=representation.A,
+                    loc=representation.coefs,  # pyre-ignore[6]
+                    precision_matrix=representation.A,  # pyre-ignore[6]
                 ).sample()
             )
             scores = torch.matmul(

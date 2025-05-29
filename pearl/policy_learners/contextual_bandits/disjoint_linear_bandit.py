@@ -145,6 +145,7 @@ class DisjointLinearBandit(ContextualBanditBase):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
+        action_space_to_score: DiscreteActionSpace,
     ) -> torch.Tensor:
         raise NotImplementedError("Implement when necessary")
 

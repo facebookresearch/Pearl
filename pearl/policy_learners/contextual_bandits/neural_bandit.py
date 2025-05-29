@@ -159,19 +159,11 @@ class NeuralBandit(ContextualBanditBase):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
-        action_space: DiscreteActionSpace,
+        action_space_to_score: DiscreteActionSpace,
     ) -> torch.Tensor:
-        """
-        Args:
-            subjective_state: tensor for state
-            action_space: basically a list of action features, when it is none, view
-                subjective_state as feature
-        Return:
-            return mlp value with shape (batch_size, action_count)
-        """
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
-            action_space=action_space,
+            action_space=action_space_to_score,
             state_features_only=self._state_features_only,
             action_representation_module=self.action_representation_module,
         )

@@ -202,7 +202,7 @@ class DisjointBanditContainer(ContextualBanditBase):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
-        action_space: DiscreteActionSpace,
+        action_space_to_score: DiscreteActionSpace,
     ) -> torch.Tensor:
         """
         Returns:
@@ -214,7 +214,7 @@ class DisjointBanditContainer(ContextualBanditBase):
 
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
-            action_space=action_space,
+            action_space=action_space_to_score,
             state_features_only=self._state_features_only,
             action_representation_module=self.action_representation_module,
         )
@@ -223,7 +223,7 @@ class DisjointBanditContainer(ContextualBanditBase):
         return exploration_module.get_scores(
             subjective_state=feature,
             values=ensemble_forward(self.models, feature, use_for_loop=True),
-            action_space=action_space,
+            action_space=action_space_to_score,
             representation=self.models,  # pyre-fixme[6]: unexpected type
         )
 

@@ -389,7 +389,7 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
 
         # get scores
         scores = policy_learner.get_scores(
-            subjective_state=self.batch.state, action_space=self.action_space
+            subjective_state=self.batch.state, action_space_to_score=self.action_space
         )
         self.assertEqual(scores.shape, torch.Size([batch_size, self.action_space.n]))
 

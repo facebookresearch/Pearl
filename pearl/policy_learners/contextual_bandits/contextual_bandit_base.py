@@ -75,8 +75,13 @@ class ContextualBanditBase(PolicyLearner):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
+        action_space_to_score: DiscreteActionSpace,
     ) -> Value:
         """
+        Get scores for each action in the action space.
+        Args:
+            subjective_state: Subjective state of the agent.
+            action_space_to_score: Action space to score.
         Returns:
             Return scores trained by this contextual bandit algorithm
         """

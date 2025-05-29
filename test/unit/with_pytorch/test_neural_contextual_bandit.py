@@ -47,7 +47,7 @@ class TestNeuralContextualBandit(unittest.TestCase):
 
         scores = policy_learner.get_scores(
             subjective_state=batch.state,
-            action_space=DiscreteActionSpace(actions=list(batch.action)),
+            action_space_to_score=DiscreteActionSpace(actions=list(batch.action)),
         )
         # shape should be batch_size, action_count
         self.assertEqual(scores.shape, (batch.state.shape[0], batch.action.shape[0]))

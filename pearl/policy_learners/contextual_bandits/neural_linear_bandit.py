@@ -259,12 +259,12 @@ class NeuralLinearBandit(ContextualBanditBase):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
-        action_space: DiscreteActionSpace,
+        action_space_to_score: DiscreteActionSpace,
     ) -> torch.Tensor:
         # TODO generalize for all kinds of exploration module
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
-            action_space=action_space,
+            action_space=action_space_to_score,
             state_features_only=self._state_features_only,
             action_representation_module=self.action_representation_module,
         )
@@ -287,7 +287,7 @@ class NeuralLinearBandit(ContextualBanditBase):
                 values=model_ret[
                     "pred_label_pre_activation"
                 ],  # using pre-activation values here because activation will be applied afterwards
-                action_space=action_space,
+                action_space=action_space_to_score,
                 representation=self.model._linear_regression_layer,
             )
             # dim: [batch_size, num_arms] or [batch_size]
@@ -300,7 +300,7 @@ class NeuralLinearBandit(ContextualBanditBase):
             scores = self.exploration_module.get_scores(
                 subjective_state=model_ret["nn_output"],
                 values=model_ret["pred_label"],  # post-activation values
-                action_space=action_space,
+                action_space=action_space_to_score,
                 representation=self.model._linear_regression_layer,
             )
         return scores.reshape(batch_size, -1).squeeze(-1)

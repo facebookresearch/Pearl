@@ -197,7 +197,7 @@ class LinearBandit(ContextualBanditBase):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
-        action_space: DiscreteActionSpace,
+        action_space_to_score: DiscreteActionSpace,
     ) -> torch.Tensor:
         """
         Returns:
@@ -206,14 +206,14 @@ class LinearBandit(ContextualBanditBase):
         """
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
-            action_space=action_space,
+            action_space=action_space_to_score,
             action_representation_module=self.action_representation_module,
         )
         assert isinstance(self.exploration_module, ScoreExplorationBase)
         return self.exploration_module.get_scores(
             subjective_state=feature,
             values=self.model(feature),
-            action_space=action_space,
+            action_space=action_space_to_score,
             representation=self.model,
         ).squeeze(-1)
 
