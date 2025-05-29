@@ -2,7 +2,7 @@
 
 # pyre-strict
 
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol
 
 from pearl.replay_buffers.transition import TransitionBatch
 
@@ -12,10 +12,9 @@ class LearningLogger(Protocol):
     A learning logger is a callable that takes in a dictionary of results and a step number.
     It can be used to log the results of a learning process to a database or a file.
     Args:
-        results: A dictionary of results.
-        step: The current step of the learning process.
-        batch: The batch of data used for the current step.
-        prefix: A prefix to add to the logged results.
+        results (dict[str, Any]): A dictionary of results for the batch.
+        batch_index (int): has value (i - 1) after the i-th batch is processed.
+        batch (TransitionBatch): The batch from which results were processed.
     """
 
     def __init__(self) -> None:
@@ -24,18 +23,16 @@ class LearningLogger(Protocol):
     def __call__(
         self,
         results: dict[str, Any],
-        step: int,
-        batch: Optional[TransitionBatch] = None,
-        prefix: str = "",
+        batch_index: int,
+        batch: TransitionBatch,
     ) -> None:
         pass
 
 
 def null_learning_logger(
     results: dict[str, Any],
-    step: int,
-    batch: Optional[TransitionBatch] = None,
-    prefix: str = "",
+    batch_index: int,
+    batch: TransitionBatch,
 ) -> None:
     """
     A learning logger that does nothing.

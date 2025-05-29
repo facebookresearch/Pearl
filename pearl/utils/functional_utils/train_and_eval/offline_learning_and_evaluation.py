@@ -8,6 +8,7 @@
 # pyre-strict
 
 import io
+import logging
 import math
 import os
 import time
@@ -31,7 +32,7 @@ from pearl.utils.functional_utils.train_and_eval.online_learning import run_epis
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
-TRAINING_TAG = "training"
+logger = logging.Logger(__name__)
 
 
 def is_file_readable(file_path: str) -> bool:
@@ -149,18 +150,37 @@ def offline_learning(
 ) -> None:
     """
     Trains the offline agent using transition tuples from offline data (provided in
-    the data_buffer). Must provide a replay buffer with transition tuples.
-    You may want to use get_offline_data_in_buffer to create an offline data buffer.
+    `data_buffer`). Must provide a replay buffer with transition tuples.
+    You may choose to use `get_offline_data_in_buffer` to create an offline data buffer.
+
+    The method calls `offline_agent.learn_batch` on `number_of_batches` batches of
+    data from the replay buffer.
+    If `number_of_batches` is not provided, then`training_epochs`
+    is used to determine the number of batches to sample,
+    with `len(data_buffer) / offline_agent.policy_learner.batch_size` batches sampled per epoch.
+
+    Fractional numbers of epochs *are* allowed.
+    If the number of batches computed from fractional epochs is also fractions, it is rounded up.
+
+    If neither `number_of_batches` and `training_epochs` are provided,
+    1 training epoch is used.
+    If both `number_of_batches` and `training_epochs` are provided,
+    an error is raise.
+
+    The learning logger is invoked with parameters (loss, batch_index, batch)
+    after each call to `offline_agent.learn_batch`,
+    where `batch_index` is (i - 1) when `learn_batch` is called on the i-th sampled batch.
 
     Args:
-        offline agent (PearAgent): a Pearl agent (typically conservative one such as CQL or IQL).
+        offline agent (PearAgent): a Pearl agent (typically a conservative one such as CQL or IQL).
         data_buffer (ReplayBuffer): a replay buffer to sample a batch of transition data.
-        number_of_batches (Optional[int], default 1000): number of batches to sample
-                                         from the replay buffer.
-                                         Mutually exclusive with training_epochs.
         training_epochs (Optional[float], default 1): number of passes over training data.
                         Fractional values result in a rounded up number of samples batches.
                         Mutually exclusive with number_of_batches.
+        number_of_batches (Optional[int], default 1000): number of batches
+                                         (of size `offline_agent.policy_learner.batch_size`)
+                                         to sample from the replay buffer.
+                                         Mutually exclusive with training_epochs.
         logger (LearningLogger, optional): a LearningLogger to log the training loss
                                            (default is no-op logger).
         seed (int, optional): random seed (default is `int(time.time())`).
@@ -181,6 +201,12 @@ def offline_learning(
             + "training_epochs, but got both."
         )
 
+    # show training epochs, batch size, and number of batches
+    logger.info(
+        f"Training offline agent for {training_epochs} epochs, batch size "
+        + f"{offline_agent.policy_learner.batch_size}, and {number_of_batches} batches."
+    )
+
     # move replay buffer to device of the offline agent
     data_buffer.device_for_batches = offline_agent.device
 
@@ -189,8 +215,7 @@ def offline_learning(
         batch = data_buffer.sample(offline_agent.policy_learner.batch_size)
         assert isinstance(batch, TransitionBatch)
         loss = offline_agent.learn_batch(batch=batch)
-        if i % 1000 == 0:
-            learning_logger(loss, i, batch, TRAINING_TAG)
+        learning_logger(loss, i, batch)
 
 
 def offline_evaluation(
