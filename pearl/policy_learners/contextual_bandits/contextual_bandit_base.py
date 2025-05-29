@@ -29,8 +29,6 @@ from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
-DEFAULT_ACTION_SPACE = DiscreteActionSpace([torch.tensor([0])])
-
 
 class ContextualBanditBase(PolicyLearner):
     """

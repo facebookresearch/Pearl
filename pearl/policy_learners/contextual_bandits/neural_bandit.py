@@ -25,7 +25,6 @@ from pearl.neural_networks.common.utils import LOSS_TYPES
 from pearl.neural_networks.common.value_networks import VanillaValueNetwork
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
-    DEFAULT_ACTION_SPACE,
 )
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
@@ -160,7 +159,7 @@ class NeuralBandit(ContextualBanditBase):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
-        action_space: DiscreteActionSpace = DEFAULT_ACTION_SPACE,
+        action_space: DiscreteActionSpace,
     ) -> torch.Tensor:
         """
         Args:

@@ -21,7 +21,6 @@ from pearl.history_summarization_modules.history_summarization_module import (
 from pearl.neural_networks.contextual_bandit.linear_regression import LinearRegression
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
-    DEFAULT_ACTION_SPACE,
 )
 from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
     ScoreExplorationBase,
@@ -198,7 +197,7 @@ class LinearBandit(ContextualBanditBase):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
-        action_space: DiscreteActionSpace = DEFAULT_ACTION_SPACE,
+        action_space: DiscreteActionSpace,
     ) -> torch.Tensor:
         """
         Returns:

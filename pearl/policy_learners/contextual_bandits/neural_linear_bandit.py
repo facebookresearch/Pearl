@@ -27,7 +27,6 @@ from pearl.neural_networks.contextual_bandit.neural_linear_regression import (
 )
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
-    DEFAULT_ACTION_SPACE,
 )
 from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
     ScoreExplorationBase,
@@ -156,9 +155,6 @@ class NeuralLinearBandit(ContextualBanditBase):
         self._history_summarization_module = value
 
     def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
-        # get scores for logging purpose
-        ucb_scores = self.get_scores(batch.state).mean()
-
         if self._state_features_only:
             input_features = batch.state
         else:
@@ -223,7 +219,6 @@ class NeuralLinearBandit(ContextualBanditBase):
             "prediction": predicted_values,
             "weight": batch_weight,
             "loss": loss.detach(),
-            "ucb_scores": ucb_scores,
             "mu_scores": predicted_values.mean(),
         }
 
@@ -264,7 +259,7 @@ class NeuralLinearBandit(ContextualBanditBase):
     def get_scores(
         self,
         subjective_state: SubjectiveState,
-        action_space: DiscreteActionSpace = DEFAULT_ACTION_SPACE,
+        action_space: DiscreteActionSpace,
     ) -> torch.Tensor:
         # TODO generalize for all kinds of exploration module
         feature = concatenate_actions_to_state(
