@@ -104,6 +104,11 @@ class BoxSpace(Space):
         """Returns the shape of an element of the space."""
         return self.low.shape
 
+    @property
+    def gym_space(self) -> gym.Space:
+        """Returns the underlying Gymnasium space."""
+        return self._gym_space
+
     @staticmethod
     def from_gym(gym_space: gym.Space) -> BoxSpace:
         """Constructs a `BoxSpace` given a Gymnasium `Box` space.

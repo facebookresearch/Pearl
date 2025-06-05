@@ -100,9 +100,8 @@ class GymEnvironment(Environment):
     def reset(self, seed: int | None = None) -> tuple[Observation, ActionSpace]:
         """Resets the environment and returns the initial observation and
         initial action space."""
-        # pyre-fixme: ActionSpace does not have _gym_space
-        # FIXME: private attribute _gym_space should not be accessed
-        self._action_space._gym_space.seed(seed)
+        
+        self._action_space.gym_space.seed(seed)
         self.env.action_space.seed(seed)
         reset_result = self.env.reset()
         if isinstance(reset_result, Iterable) and isinstance(reset_result[1], dict):
