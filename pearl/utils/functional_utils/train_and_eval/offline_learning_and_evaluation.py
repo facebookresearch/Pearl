@@ -189,11 +189,19 @@ def offline_learning(
         seed = int(time.time())
     set_seed(seed=seed)
 
+    assert (
+        len(data_buffer) > 0
+    ), "offline_learning: data_buffer must have at least one transition tuple"
+
+    effective_batch_size = min(
+        offline_agent.policy_learner.batch_size, len(data_buffer)
+    )
+
     if number_of_batches is None:
         if training_epochs is None:
             training_epochs = 1
         number_of_batches = math.ceil(
-            training_epochs * len(data_buffer) / offline_agent.policy_learner.batch_size
+            training_epochs * len(data_buffer) / effective_batch_size
         )
     elif training_epochs is not None:
         raise ValueError(
@@ -201,10 +209,11 @@ def offline_learning(
             + "training_epochs, but got both."
         )
 
-    # show training epochs, batch size, and number of batches
     logger.info(
-        f"Training offline agent for {training_epochs} epochs, batch size "
-        + f"{offline_agent.policy_learner.batch_size}, and {number_of_batches} batches."
+        f"Training offline agent for {training_epochs} epochs, "
+        f"policy learner batch size {offline_agent.policy_learner.batch_size}, "
+        f"replay buffer size {len(data_buffer)}, "
+        f"effective batch size {effective_batch_size}, and {number_of_batches} batches."
     )
 
     # move replay buffer to device of the offline agent
@@ -212,7 +221,7 @@ def offline_learning(
 
     # training loop
     for i in range(number_of_batches):
-        batch = data_buffer.sample(offline_agent.policy_learner.batch_size)
+        batch = data_buffer.sample(effective_batch_size)
         assert isinstance(batch, TransitionBatch)
         loss = offline_agent.learn_batch(batch=batch)
         learning_logger(loss, i, batch)
