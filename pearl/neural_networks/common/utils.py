@@ -17,6 +17,18 @@ from pearl.neural_networks.common.residual_wrapper import ResidualWrapper
 
 from torch.func import stack_module_state
 
+
+class NormalizedSoftplus(nn.Module):
+    def __init__(self, dim: int = -1) -> None:
+        super(NormalizedSoftplus, self).__init__()
+        self.dim: int = dim
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return nn.Softplus()(x) / torch.sum(
+            nn.Softplus()(x), dim=self.dim, keepdim=True
+        )
+
+
 # Activations and loss functions
 # TODO: Make these into Enums
 ACTIVATION_MAP = {
@@ -27,6 +39,7 @@ ACTIVATION_MAP = {
     "sigmoid": nn.Sigmoid,
     "softplus": nn.Softplus,
     "softmax": nn.Softmax,
+    "normalized_softplus": NormalizedSoftplus,
 }
 
 LOSS_TYPES = {
