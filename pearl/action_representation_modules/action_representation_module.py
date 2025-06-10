@@ -19,6 +19,16 @@ class ActionRepresentationModule(ABC, nn.Module):
     An abstract interface for action representation module.
     """
 
+    @property
+    @abstractmethod
+    def max_number_actions(self) -> int | None:
+        pass
+
+    @property
+    @abstractmethod
+    def representation_dim(self) -> int | None:
+        pass
+
     @abstractmethod
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         pass
