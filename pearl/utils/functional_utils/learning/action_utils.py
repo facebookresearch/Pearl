@@ -97,49 +97,72 @@ def concatenate_actions_to_state(
     action_representation_module: ActionRepresentationModule,
     state_features_only: bool = False,
 ) -> Tensor:
-    """A helper function for concatenating all actions from a `DiscreteActionSpace`
+    """
+    A helper function for concatenating all actions from a `DiscreteActionSpace`
     to a state or batch of states. The actions must be Tensors.
+
+    This function uses the TorchScriptable version internally.
 
     Args:
         subjective_state: A Tensor of shape (batch_size, state_dim) or (state_dim).
         action_space: A `DiscreteActionSpace` object where each action is a Tensor.
+        action_representation_module: Module to transform actions before concatenation.
         state_features_only: If True, only expand the state dimension without
             concatenating the actions.
     Returns:
-        A Tensor of shape (batch_size, action_count, state_dim + action_dim).
+        A Tensor of shape (batch_size, number_of_actions, state_dim + action_dim).
+    """
+    # Stack actions and apply action transformation
+    raw_actions = torch.stack(action_space.actions).to(subjective_state.device)
+    action_representations = action_representation_module(raw_actions)
+
+    return concatenate_actions_to_state_scriptable(
+        subjective_state=subjective_state,
+        number_of_actions=action_space.n,
+        action_representations=action_representations,
+        state_features_only=state_features_only,
+    )
+
+
+def concatenate_actions_to_state_scriptable(
+    subjective_state: Tensor,
+    number_of_actions: int,
+    action_representations: Tensor,
+    state_features_only: bool = False,
+) -> Tensor:
+    """
+    A TorchScriptable helper function for concatenating action representations
+    to a state or batch of states.
+
+    Args:
+        subjective_state: A Tensor of shape (batch_size, state_dim) or (state_dim).
+        number_of_actions: The number of actions (number_of_actions).
+        action_representations: A Tensor of shape (number_of_actions, action_dim) containing
+            all action representations.
+        state_features_only: If True, only expand the state dimension without
+            concatenating the action representations.
+    Returns:
+        A Tensor of shape (batch_size, number_of_actions, state_dim + action_dim).
     """
     state_dim = subjective_state.shape[-1]
     # Reshape to (batch_size, state_dim)
     subjective_state = subjective_state.view(-1, state_dim)
     batch_size = subjective_state.shape[0]
+    action_dim = action_representations.shape[-1]
 
-    # action dim is the dimension of the output of action representation if set
-    if action_representation_module.representation_dim is not None:
-        action_dim = action_representation_module.representation_dim
-    else:
-        action_dim = action_space.action_dim
-    action_count = int(action_space.n)
-
-    # Expand to (batch_size, action_count, state_dim) and return if `state_features_only`
-    expanded_state = subjective_state.unsqueeze(1).repeat(1, action_count, 1)
+    # Expand to (batch_size, number_of_actions, state_dim) and return if `state_features_only`
+    expanded_state = subjective_state.unsqueeze(1).repeat(1, number_of_actions, 1)
     if state_features_only:
         return expanded_state
 
-    # Stack actions and expand to (batch_size, action_count, action_dim)
-    actions = torch.stack(action_space.actions).to(subjective_state.device)
-    # Apply action transformation (default is the identity transformation)
-    actions = action_representation_module(actions)
-    expanded_action = actions.unsqueeze(0).repeat(batch_size, 1, 1)
+    # Expand action representations to (batch_size, number_of_actions, action_dim)
+    expanded_action_reps = action_representations.unsqueeze(0).repeat(batch_size, 1, 1)
 
-    # (batch_size, action_count, state_dim + action_dim)
-    new_feature = torch.cat([expanded_state, expanded_action], dim=2)
+    # (batch_size, number_of_actions, state_dim + action_dim)
+    new_feature = torch.cat([expanded_state, expanded_action_reps], dim=2)
     torch._assert(
-        # pyre-fixme[58]: `+` is not supported for operand types `int` and
-        #  `Union[int, Tensor, Module]`.
-        new_feature.shape == (batch_size, action_count, state_dim + action_dim),
+        new_feature.shape == (batch_size, number_of_actions, state_dim + action_dim),
         "The shape of the concatenated feature is wrong. Expected "
-        # pyre-fixme[58]: `+` is not supported for operand types `int` and
-        #  `Union[int, Tensor, Module]`.
-        f"{(batch_size, action_count, state_dim + action_dim)}, got {new_feature.shape}",
+        f"{(batch_size, number_of_actions, state_dim + action_dim)}, got {new_feature.shape}",
     )
     return new_feature.to(subjective_state.device)
