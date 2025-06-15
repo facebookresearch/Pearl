@@ -81,6 +81,11 @@ class DiscreteSpace(Space):
         """Returns the shape of an element of the space."""
         return self.elements[0].shape
 
+    @property
+    def gym_space(self) -> gym.Space:
+        """Returns the underlying Gymnasium space."""
+        return self._gym_space
+
     def sample(self, mask: Tensor | None = None) -> Tensor:
         """Sample an element uniformly at random from this space.
 
