@@ -84,8 +84,8 @@ def noise_scaling(action_space: ActionSpace, input_noise: torch.Tensor) -> torch
     """
     assert isinstance(action_space, BoxActionSpace)
     device = input_noise.device
-    low = torch.tensor(action_space.low).to(device)
-    high = torch.tensor(action_space.high).to(device)
+    low = action_space.low.detach().clone().to(device)
+    high = action_space.high.detach().clone().to(device)
     scaled_noise = ((high - low) / 2) * input_noise
     return scaled_noise
 
