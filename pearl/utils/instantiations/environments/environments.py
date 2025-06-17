@@ -13,7 +13,7 @@ from typing import Optional, Tuple
 from pearl.api.observation import Observation
 from pearl.api.space import Space
 from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
-
+from pearl.utils.instantiations.spaces.box import BoxSpace
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 try:
@@ -214,7 +214,6 @@ class FlattenDictObservations(ObservationTransformationEnvironmentAdapterBase):
             flat = FlattenDictObservations._flatten_value(example_obs)
             low = torch.full_like(flat, float("-inf"))
             high = torch.full_like(flat, float("inf"))
-        from pearl.utils.instantiations.spaces.box import BoxSpace
 
         return BoxSpace(low=low, high=high)
 
