@@ -15,6 +15,7 @@ from .environments import (
     FixedNumberOfStepsEnvironment,
     ObservationTransformationEnvironmentAdapterBase,
     OneHotObservationsFromDiscrete,
+    FlattenDictObservations,
 )
 from .gym_environment import GymEnvironment
 from .reward_is_equal_to_ten_times_action_multi_arm_bandit_environment import (
@@ -36,6 +37,7 @@ __all__ = [
     "FixedNumberOfStepsEnvironment",
     "GymEnvironment",
     "OneHotObservationsFromDiscrete",
+    "FlattenDictObservations",
     "RewardIsEqualToTenTimesActionMultiArmBanditEnvironment",
     "SLCBEnvironment",
     "SparseRewardEnvironment",
