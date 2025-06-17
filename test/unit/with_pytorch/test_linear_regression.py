@@ -131,22 +131,30 @@ class TestLinearRegression(unittest.TestCase):
         This test verifies that the zero-coefficient property holds after each
         learn_batch operation, not just at the end of training.
         """
-        # Set up ground truth
-        feature_dim = 10
+        # Set up ground truth based on a Linear Bandit application
+        # where feature is concatenation of state and one-hot action encoding.
+        # Only a small number of actions is observed
+        state_dim = 78
+        number_of_actions = 24
+        number_of_observed_actions = 5
+        number_of_observed_features = state_dim + number_of_observed_actions
+
+        feature_dim = state_dim + number_of_actions
+        zero_feature_indices = list(range(number_of_observed_features, feature_dim))
 
         # Create ground truth coefficients where some are non-zero and others are zero
         # We'll make features at indices 2, 5, and 8 have zero coefficients
-        zero_feature_indices = [2, 5, 8]
         true_coefs = torch.zeros(feature_dim + 1)  # +1 for intercept
 
         # Set non-zero coefficients
-        intercept = 3.0
+        intercept = feature_dim * 0.5
         true_coefs[0] = intercept  # intercept
-        for i in range(1, feature_dim + 1):
+        for i in range(1, number_of_observed_features + 1):
             if (
                 i - 1 not in zero_feature_indices
             ):  # -1 because true_coefs[0] is the intercept
-                true_coefs[i] = 0.5 * i
+                # sample a float from -1 to 1
+                true_coefs[i] = (torch.rand(1) * 2 - 1).item() * 0.5
 
         # Create a "ground truth" model initialized with the true coefficients
         ground_truth_model = LinearRegression(
@@ -163,8 +171,8 @@ class TestLinearRegression(unittest.TestCase):
         # Define the tolerance for zero coefficients
         # Start with a larger tolerance and decrease it as training progresses
         # This accounts for the fact that early in training, coefficients may not be exactly zero
-        initial_delta = 0.2
-        final_delta = 0.05
+        initial_delta = 0.01
+        final_delta = 0.005
 
         for batch_idx in range(num_batches):
             # Generate random features
@@ -193,6 +201,7 @@ class TestLinearRegression(unittest.TestCase):
             )
 
             # After each batch, verify that coefficients for zero features remain zero
+            print(f"During training: {model.coefs=}")
             for idx in zero_feature_indices:
                 # +1 because learned_coefs[0] is the intercept
                 coef_value = model.coefs[idx + 1].item()
@@ -213,6 +222,7 @@ class TestLinearRegression(unittest.TestCase):
         tt.assert_close(learned_coefs, true_coefs, rtol=0.1, atol=0.1)
 
         # Specifically check that the final coefficients for zero features are very close to zero
+        print(f"After training: {model.coefs=}")
         for idx in zero_feature_indices:
             # +1 because learned_coefs[0] is the intercept
             self.assertAlmostEqual(
