@@ -197,7 +197,7 @@ class FlattenDictObservations(ObservationTransformationEnvironmentAdapterBase):
         if hasattr(obs_space, "spaces"):
             lows = []
             highs = []
-            for subspace in obs_space.spaces.values():  # pyre-ignore[16]
+            for key, subspace in sorted(obs_space.spaces.items()):  # pyre-ignore[16]
                 name = subspace.__class__.__name__
                 if name == "Box":
                     lows.append(torch.tensor(subspace.low).flatten())
