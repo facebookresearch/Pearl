@@ -65,7 +65,8 @@ class OneHotActionTensorRepresentationModule(ActionRepresentationModule):
         else:
             if self.max_number_actions != other.max_number_actions:
                 differences.append(
-                    f"max_number_actions is different: {self.max_number_actions} vs {other.max_number_actions}"
+                    f"max_number_actions is different: {self.max_number_actions} vs "
+                    f"{other.max_number_actions}"
                 )
 
         return "\n".join(differences)

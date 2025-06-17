@@ -25,6 +25,7 @@ class LinearRegression(MuSigmaCBModel):
         l2_reg_lambda: float = 1.0,
         gamma: float = 1.0,
         force_pinv: bool = False,
+        initial_coefs: torch.Tensor | None = None,
     ) -> None:
         """
         A linear regression model which can estimate both point prediction and uncertainty
@@ -44,22 +45,7 @@ class LinearRegression(MuSigmaCBModel):
 
         It furthermore allows for _discounting_. This provides the model with the ability
         to "forget" old data and adjust to a new data distribution in a non-stationary
-        environment. The discounting is applied periodically and consists of multiplying
-        the underlying linear system matrices A and b (the model's weights) by gamma
-        (the discounting multiplier). The discounting period is controlled by
-        apply_discounting_interval, which consists of the number of inputs to be
-        processed between different rounds of discounting. Note that, because inputs
-        are weighted,  apply_discounting_interval is more precisely described as
-        the sum of weights of inputs that need to be processed before
-        discounting takes place again. This is expressed in pseudo-code as
-        ```
-        if apply_discounting_interval > 0 and (
-                sum_weights - sum_weights_when_last_discounted
-                >= apply_discounting_interval:
-            A *= discount factor
-            b *= discount factor
-        ```
-        To disable discounting, simply set gamma to 1.
+        environment. To disable discounting, simply set gamma to 1.
 
         feature_dim: number of features
         l2_reg_lambda: L2 regularization parameter
@@ -69,6 +55,9 @@ class LinearRegression(MuSigmaCBModel):
         force_pinv: If True, we will always use pseudo inverse to invert the `A` matrix. If False,
             we will first try to use regular matrix inversion. If it fails, we will fallback to
             pseudo inverse.
+        initial_coefs: Optional initial coefficients for the model. If provided, must be a tensor
+            of shape (feature_dim + 1,) where the first element is the intercept term and the
+            remaining elements are the coefficients for each feature.
         """
         super().__init__(feature_dim=feature_dim)
         self.gamma = gamma
@@ -87,7 +76,13 @@ class LinearRegression(MuSigmaCBModel):
             "_inv_A",
             torch.zeros(feature_dim + 1, feature_dim + 1),
         )
-        self.register_buffer("_coefs", torch.zeros(feature_dim + 1))
+        if initial_coefs is not None:
+            assert initial_coefs.shape == (
+                feature_dim + 1,
+            ), f"initial_coefs shape {initial_coefs.shape} != {(feature_dim + 1,)}"
+            self.register_buffer("_coefs", initial_coefs.clone())
+        else:
+            self.register_buffer("_coefs", torch.zeros(feature_dim + 1))
         self.distribution_enabled: bool = is_distribution_enabled()
 
     @property
@@ -99,6 +94,15 @@ class LinearRegression(MuSigmaCBModel):
 
     @property
     def coefs(self) -> torch.Tensor:
+        """
+        Returns the coefficient vector of the linear regression model.
+
+        The first element (index 0) is the intercept term, and the remaining elements
+        are the coefficients for each feature.
+
+        Returns:
+            torch.Tensor: Coefficient vector of shape (feature_dim + 1,)
+        """
         return self._coefs
 
     @staticmethod

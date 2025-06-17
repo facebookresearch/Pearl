@@ -79,6 +79,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             exploration_module=exploration_module,
             on_policy=on_policy,
             is_action_continuous=False,
+            action_space=action_space,
             action_representation_module=action_representation_module,
             optimizer=optimizer,
         )
@@ -94,9 +95,15 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
 
         def make_specified_network() -> QuantileQValueNetwork:
             assert hidden_dims is not None
+            action_dim = self.action_representation_module.representation_dim
+            assert isinstance(action_dim, int), (
+                f"{self.__class__.__name__} requires action representation "
+                "module to have representation_dim"
+            )
+
             return network_type(
                 state_dim=state_dim,
-                action_dim=action_space.n,  # pyre-ignore[16]
+                action_dim=action_dim,
                 hidden_dims=hidden_dims,
                 num_quantiles=num_quantiles,
             )

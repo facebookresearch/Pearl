@@ -51,8 +51,8 @@ class NormalDistributionExploration(ExplorationModule):
         assert exploit_action is not None
         device = exploit_action.device
         # checks that the exploit action is feasible in the available action space
-        low = torch.tensor(action_space.low).to(device)
-        high = torch.tensor(action_space.high).to(device)
+        low = action_space.low.detach().clone().to(device)
+        high = action_space.high.detach().clone().to(device)
         assert torch.all(exploit_action >= low) and torch.all(exploit_action <= high)
 
         action_dim = exploit_action.size()  # dimension of the action space

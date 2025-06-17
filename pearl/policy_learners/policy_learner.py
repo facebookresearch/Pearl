@@ -91,9 +91,8 @@ class PolicyLearner(torch.nn.Module, ABC):
                 # TODO: add action representation module for bandit learning applications.
                 action_representation_module = IdentityActionRepresentationModule()
         else:
-            # User needs to at least specify action dimensions if no action_space is provided.
+            # action representation module has to have representation_dim
             assert action_representation_module.representation_dim is not None
-            action_representation_module = action_representation_module
 
         self.action_representation_module = action_representation_module
 
@@ -315,6 +314,7 @@ class DistributionalPolicyLearner(PolicyLearner):
         self,
         on_policy: bool,
         is_action_continuous: bool,
+        action_space: ActionSpace | None = None,
         training_rounds: int = 100,
         batch_size: int = 1,
         action_representation_module: ActionRepresentationModule | None = None,
@@ -323,6 +323,7 @@ class DistributionalPolicyLearner(PolicyLearner):
         super().__init__(
             on_policy=on_policy,
             is_action_continuous=is_action_continuous,
+            action_space=action_space,
             training_rounds=training_rounds,
             batch_size=batch_size,
             action_representation_module=action_representation_module,

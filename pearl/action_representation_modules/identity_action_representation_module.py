@@ -32,10 +32,6 @@ class IdentityActionRepresentationModule(ActionRepresentationModule):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x
 
-    # TODO: the properties below need to be at the ActionRepresentationModule level.
-    # Several classes access them at that level, including PearlAgent.
-    # Not sure why this is not generating Pyre errors.
-
     @property
     def max_number_actions(self) -> int | None:
         return self._max_number_actions

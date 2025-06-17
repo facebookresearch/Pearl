@@ -17,6 +17,7 @@ from pearl.policy_learners.sequential_decision_making.ppo import (
     ProximalPolicyOptimization,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
+from torch import testing as tt
 
 
 class TestPPO(unittest.TestCase):
@@ -113,4 +114,4 @@ class TestPPO(unittest.TestCase):
 
             lam_return = transition.lam_return
             assert lam_return is not None
-            self.assertEqual(true_lambda_returns[i], lam_return.detach())
+            tt.assert_close(true_lambda_returns[i], lam_return.detach())
