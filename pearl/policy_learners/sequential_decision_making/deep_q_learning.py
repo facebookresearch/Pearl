@@ -139,28 +139,31 @@ class DeepQLearning(DeepTDLearning):
 
         Args:
             batch (TransitionBatch): Batch of transitions. For Q learning, any transtion must have
-                the 'next_state', 'next_available_actions' and the 'next_unavailable_actions_mask'
-                fields set. The 'next_available_actions' and 'next_unavailable_actions_mask' fields
-                implement dynamic actions spaces in Pearl.
+                the 'next_state' field set. The 'next_available_actions' and
+                'next_unavailable_actions_mask' fields implement dynamic actions spaces in Pearl.
+                If these are not provided, default values will be used where all actions are available.
             batch_size (int): Size of the batch.
 
         Returns:
             torch.Tensor: Maximum Q-value over all available actions in the next state.
         """
 
-        assert batch.next_state is not None
-        assert batch.next_available_actions is not None
-        assert batch.next_unavailable_actions_mask is not None
+        assert (next_state := batch.next_state) is not None
         assert isinstance(self._action_space, DiscreteActionSpace)
+
+        # Get next available actions and unavailable actions mask
+        next_available_actions, next_unavailable_actions_mask = (
+            self._get_next_actions_and_mask(batch, batch_size)
+        )
 
         # Get Q values for each (state, action), where action \in {available_actions}
         next_state_action_values = self._Q_target.get_q_values(
-            batch.next_state,  # (batch_size x state_dim)
-            batch.next_available_actions,  # (batch_size x action_space_size x action_dim)
+            next_state,  # (batch_size x state_dim)
+            next_available_actions,  # (batch_size x action_space_size x action_dim)
         )  # (batch_size x action_space_size)
 
         # Make sure that unavailable actions' Q values are assigned to -inf
-        next_state_action_values[batch.next_unavailable_actions_mask] = -float("inf")
+        next_state_action_values[next_unavailable_actions_mask] = -float("inf")
 
         # Torch.max(1) returns value, indices
         return next_state_action_values.max(1)[0]  # (batch_size)

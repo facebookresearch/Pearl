@@ -9,6 +9,7 @@
 
 import copy
 from abc import abstractmethod
+from functools import cached_property
 from typing import Any, List, Optional
 
 import torch
@@ -327,6 +328,62 @@ class DeepTDLearning(PolicyLearner):
             .mean()
             .item()
         }
+
+    @cached_property
+    def _all_actions_available(self) -> torch.Tensor:
+        """
+        Returns a default value for next_available_actions where all actions are available.
+        This is used when batch.next_available_actions is None.
+        """
+        assert isinstance(self._action_space, DiscreteActionSpace)
+        # Create a tensor of shape (1, action_space_size, action_dim)
+        # where each action is represented by its feature vector
+        return self.action_representation_module(
+            self._action_space.actions_batch
+        ).unsqueeze(0)
+
+    @cached_property
+    def _no_unavailable_actions_mask(self) -> torch.Tensor:
+        """
+        Returns a default value for next_unavailable_actions_mask where no actions are unavailable.
+        This is used when batch.next_unavailable_actions_mask is None.
+        """
+        assert isinstance(self._action_space, DiscreteActionSpace)
+        # Create a tensor of shape (1, action_space_size) with all False values
+        # indicating that no actions are unavailable
+        return torch.zeros((1, self._action_space.n), dtype=torch.bool)
+
+    def _get_next_actions_and_mask(
+        self, batch: TransitionBatch, batch_size: int
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """
+        Gets the next available actions and unavailable actions mask from the batch,
+        using default values if they are not provided.
+
+        Args:
+            batch (TransitionBatch): Batch of transitions
+            batch_size (int): Size of the batch
+
+        Returns:
+            tuple[torch.Tensor, torch.Tensor]: A tuple containing:
+                - next_available_actions: Tensor of shape (batch_size, action_space_size, action_dim)
+                - next_unavailable_actions_mask: Tensor of shape (batch_size, action_space_size)
+        """
+        # Use provided next_available_actions or default to all actions available
+        next_available_actions = batch.next_available_actions
+        if next_available_actions is None:
+            next_available_actions = self._all_actions_available.expand(
+                batch_size, -1, -1
+            )
+
+        # Use provided next_unavailable_actions_mask or default to no actions unavailable
+        next_unavailable_actions_mask = batch.next_unavailable_actions_mask
+        if next_unavailable_actions_mask is None:
+            next_unavailable_actions_mask = self._no_unavailable_actions_mask.expand(
+                batch_size, -1
+            ).to(next_available_actions.device)
+
+        return next_available_actions, next_unavailable_actions_mask
 
     def compare(self, other: PolicyLearner) -> str:
         """

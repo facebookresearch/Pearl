@@ -31,31 +31,29 @@ class DoubleDQN(DeepQLearning):
     def get_next_state_values(
         self, batch: TransitionBatch, batch_size: int
     ) -> torch.Tensor:
-        assert batch.next_state is not None
-
-        assert batch.next_available_actions is not None
-        assert batch.next_unavailable_actions_mask is not None
-
+        assert (next_state := batch.next_state) is not None
         assert isinstance(self._action_space, DiscreteActionSpace)
 
+        # Get next available actions and unavailable actions mask
+        next_available_actions, next_unavailable_actions_mask = (
+            self._get_next_actions_and_mask(batch, batch_size)
+        )
+
         next_state_action_values = self._Q.get_q_values(
-            batch.next_state,  # (batch_size x state_dim)
-            batch.next_available_actions,  # (batch_size x action_space_size x action_dim)
+            next_state,  # (batch_size x state_dim)
+            next_available_actions,  # (batch_size x action_space_size x action_dim)
         )  # (batch_size x action_space_size)
         # Make sure that unavailable actions' Q values are assigned to -inf
-        next_state_action_values[batch.next_unavailable_actions_mask] = -float("inf")
+        next_state_action_values[next_unavailable_actions_mask] = -float("inf")
 
         # Torch.max(1) returns value, indices
         next_action_indices = next_state_action_values.max(1)[1]  # (batch_size)
-        # pyre-fixme[16]: Optional type has no attribute `__getitem__`.
-        next_action_batch = batch.next_available_actions[
-            # pyre-fixme[16]: Optional type has no attribute `size`.
-            torch.arange(batch.next_available_actions.size(0)),
+        next_action_batch = next_available_actions[
+            torch.arange(next_available_actions.size(0)),
             next_action_indices.squeeze(),
         ]  # (batch_size x action_dim)
         return self._Q_target.get_q_values(
-            # pyre-fixme[6]: expected `Tensor` but got `Optional[Tensor]`
-            batch.next_state,
+            next_state,
             next_action_batch,
         )  # (batch_size)
 

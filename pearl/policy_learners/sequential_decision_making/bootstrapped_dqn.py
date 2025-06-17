@@ -192,32 +192,31 @@ class BootstrappedDQN(DeepQLearning):
     def _get_next_state_values(
         self, batch: TransitionBatch, batch_size: int, z: Tensor
     ) -> torch.Tensor:
-        assert batch.next_state is not None
+        assert (next_state := batch.next_state) is not None
         assert isinstance(self._action_space, DiscreteActionSpace)
-        assert batch.next_available_actions is not None
-        assert batch.next_unavailable_actions_mask is not None
+
+        # Get next available actions and unavailable actions mask
+        next_available_actions, next_unavailable_actions_mask = (
+            self._get_next_actions_and_mask(batch, batch_size)
+        )
 
         # for dueling, this does a forward pass; since the batch of next available
         # actions is already input
         next_state_action_values = self._Q.get_q_values(
-            state_batch=batch.next_state,  # (batch_size x state_dim)
+            state_batch=next_state,  # (batch_size x state_dim)
             # (batch_size x action_space_size x action_dim)
-            action_batch=batch.next_available_actions,
+            action_batch=next_available_actions,
             z=z,
         )  # (batch_size x action_space_size)
 
         target_next_state_action_values = self._Q_target.get_q_values(
-            # pyre-fixme[6]: In call `EnsembleQValueNetwork.get_q_values`,
-            # for argument `state_batch`, expected `Tensor` but got `Optional[Tensor]`
-            state_batch=batch.next_state,
-            # pyre-fixme[6]: In call `EnsembleQValueNetwork.get_q_values`,
-            # for argument `action_batch`, expected `Tensor` but got `Optional[Tensor]`
-            action_batch=batch.next_available_actions,
+            state_batch=next_state,
+            action_batch=next_available_actions,
             z=z,
         )
 
         # Make sure that unavailable actions' Q values are assigned to -inf
-        next_state_action_values[batch.next_unavailable_actions_mask] = -float("inf")
+        next_state_action_values[next_unavailable_actions_mask] = -float("inf")
 
         # Get argmax actions indices
         argmax_actions = next_state_action_values.max(1)[1]  # (batch_size)
