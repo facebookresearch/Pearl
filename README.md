@@ -103,15 +103,15 @@ Users can replace the environment with any real-world problems.
 
 We provide a few tutorial Jupyter notebooks (and are currently working on more!):
 
-1. [A single item recommender system](https://nbviewer.org/github/facebookresearch/Pearl/blob/main/tutorials/single_item_recommender_system_example/single_item_recommender_system.ipynb). We derived a small contrived recommender system environment using the MIND dataset (Wu et al. 2020).
+1. [A single item recommender system](https://github.com/facebookresearch/Pearl/blob/main/tutorials/single_item_recommender_system_example/single_item_recommender_system.ipynb). We derived a small contrived recommender system environment using the MIND dataset (Wu et al. 2020).
 
-2. [Contextual bandits](https://nbviewer.org/github/facebookresearch/Pearl/blob/main/tutorials/contextual_bandits/contextual_bandits_tutorial.ipynb). Demonstrates contextual bandit algorithms and their implementation using Pearl using a contextual bandit environment for providing data from UCI datasets, and tested the performance of neural implementations of SquareCB, LinUCB, and LinTS.
+2. [Contextual bandits](https://github.com/facebookresearch/Pearl/blob/main/tutorials/contextual_bandits/contextual_bandits_tutorial.ipynb). Demonstrates contextual bandit algorithms and their implementation using Pearl using a contextual bandit environment for providing data from UCI datasets, and tested the performance of neural implementations of SquareCB, LinUCB, and LinTS.
 
-3. [Frozen Lake](https://nbviewer.org/github/facebookresearch/Pearl/blob/main/tutorials/frozen_lake/frozen_lake.ipynb). A simple example showing how to use a one-hot observation wrapper to learn the classic problem with DQN.
+3. [Frozen Lake](https://github.com/facebookresearch/Pearl/blob/main/tutorials/frozen_lake/frozen_lake.ipynb). A simple example showing how to use a one-hot observation wrapper to learn the classic problem with DQN.
 
-4. [Deep Q-Learning (DQN) and Double DQN](https://nbviewer.org/github/facebookresearch/Pearl/blob/main/tutorials/sequential_decision_making/DQN_and_DoubleDQN_example.ipynb). Demonstrates how to run DQN and Double DQN on the Cart-Pole environment.
+4. [Deep Q-Learning (DQN) and Double DQN](https://github.com/facebookresearch/Pearl/blob/main/tutorials/sequential_decision_making/DQN_and_DoubleDQN_example.ipynb). Demonstrates how to run DQN and Double DQN on the Cart-Pole environment.
 
-5. [Actor-critic algorithms with safety constraints](https://nbviewer.org/github/facebookresearch/Pearl/blob/main/tutorials/actor_critic_and_rc_safety_module/actor_critic_and_safe_actor_critic.ipynb). Demonstrates how to run Actor Critic methods, including a version with safe constraints.
+5. [Actor-critic algorithms with safety constraints](https://github.com/facebookresearch/Pearl/blob/main/tutorials/actor_critic_and_rc_safety_module/actor_critic_and_safe_actor_critic.ipynb). Demonstrates how to run Actor Critic methods, including a version with safe constraints.
 
 
 ## Design and Features
