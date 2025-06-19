@@ -94,6 +94,7 @@ def online_learning(
         Defaults to False.
         learn_every_k_steps (int, optional): number of environment steps
         between two calls of agent.learn().
+        seed (int, optional): the seed for the environment. Defaults to None.
         record_period int: number of episodes/steps between two records. Defaults to 1.
         If number_of_episodes is used, report every record_period episodes.
         If number_of_steps is used, report every record_period steps
@@ -174,6 +175,7 @@ def target_return_is_reached(
     learn_every_k_steps: int = 1,
     required_target_returns_in_a_row: int = 1,
     check_moving_average: bool = False,
+    seed: int = 42,
 ) -> bool:
     """
     Learns until obtaining target return (a certain number of times in a row, default 1)
@@ -192,6 +194,8 @@ def target_return_is_reached(
         to succeed.
         check_moving_average: if this is enabled, we check the if latest moving average value
                               reaches goal
+        seed (int, optional): the seed for the environment. Defaults to 42 (arbitrary number).
+        This is intended to help with reproducibility for integration tests.
     Returns
         bool: whether target_return has been obtained required_target_returns_in_a_row times
               in a row.
@@ -210,6 +214,7 @@ def target_return_is_reached(
             learn_every_k_steps=learn_every_k_steps,
             exploit=exploit,
             total_steps=total_steps,
+            seed=seed,
         )
         total_steps += episode_total_steps
         returns.append(episode_info["return"])

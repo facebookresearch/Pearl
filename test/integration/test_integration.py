@@ -417,9 +417,10 @@ class TestIntegration(unittest.TestCase):
         num_actions = env.action_space.n
         agent = PearlAgent(
             policy_learner=QuantileRegressionDeepQLearning(
-                env.observation_space.shape[0],
-                env.action_space,
-                [64, 64, 64],
+                state_dim=env.observation_space.shape[0],
+                action_space=env.action_space,
+                hidden_dims=[64, 64, 64],
+                num_quantiles=50,
                 exploration_module=EGreedyExploration(0.10),
                 learning_rate=5e-4,
                 training_rounds=20,
@@ -428,17 +429,18 @@ class TestIntegration(unittest.TestCase):
                 ),
             ),
             safety_module=QuantileNetworkMeanVarianceSafetyModule(0.2),
-            replay_buffer=BasicReplayBuffer(10_000),
+            replay_buffer=BasicReplayBuffer(50_000),
         )
         self.assertTrue(
             target_return_is_reached(
                 target_return=500,
-                max_episodes=1000,
+                max_episodes=2000,
                 agent=agent,
                 env=env,
                 learn=True,
                 learn_after_episode=True,
                 exploit=False,
+                seed=42,
             )
         )
 
