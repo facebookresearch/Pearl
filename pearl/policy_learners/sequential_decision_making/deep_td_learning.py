@@ -227,13 +227,15 @@ class DeepTDLearning(PolicyLearner):
         # TODO: Assumes gym action space.
         # Fix the available action space.
         assert isinstance(available_action_space, DiscreteActionSpace)
+        if subjective_state.ndim == 1:
+            subjective_state = subjective_state.unsqueeze(0)  # (1 x state_dim)
         with torch.no_grad():
             batched_actions_representation = self.action_representation_module(
                 available_action_space.actions_batch.to(subjective_state)
             ).unsqueeze(0)  # (1 x number of actions x action_dim)
 
             q_values = self._Q.get_q_values(
-                subjective_state.unsqueeze(0),  # (1 x state_dim)
+                subjective_state,
                 batched_actions_representation,
             )  # (1 x number of actions)
             # this does a forward pass since all avaialble
