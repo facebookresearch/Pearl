@@ -22,13 +22,32 @@ T = TypeVar("T", bound="Transition")
 class Transition:
     """
     Transition is designed for one single set of data
+
+    Args:
+        state (torch.Tensor): Tensor of shape (state_dim) representing the current state.
+        action (torch.Tensor): Tensor of shape (action_dim) representing the action taken.
+        reward (torch.Tensor): Tensor of shape (1) representing the reward received.
+        terminated (boolean torch.Tensor): Tensor of shape (1), default True is useful for bandits.
+          which can be seen as a sequence being immediately terminated.
+        truncated (boolean torch.Tensor): Tensor of shape (1), default False is useful for bandits.
+          which can be seen as a sequence being immediately terminated (and thus not truncated).
+        next_state (torch.Tensor | None): Tensor of shape (state_dim).
+        next_action (torch.Tensor | None): Tensor of shape (action_dim).
+        curr_available_actions (torch.Tensor | None): shape (action_space_size x action_dim)
+        curr_unavailable_actions_mask (torch.Tensor | None): Tensor of shape (action_space_size)
+        next_available_actions (torch.Tensor | None): shape (action_space_size x action_dim)
+            representing next available actions.
+        next_unavailable_actions_mask (torch.Tensor | None): Tensor of shape (action_space_size)
+            representing mask for next unavailable actions.
+        weight (torch.Tensor | None): Tensor of shape (1) representing the weight of the transition.
+        cost (torch.Tensor | None): Tensor of shape (1); the cost associated with the transition.
     """
 
     state: torch.Tensor
     action: torch.Tensor
     reward: torch.Tensor
-    terminated: torch.Tensor = torch.tensor(True)  # default True is useful for bandits
-    truncated: torch.Tensor = torch.tensor(True)  # default True is useful for bandits
+    terminated: torch.Tensor = torch.tensor(True)
+    truncated: torch.Tensor = torch.tensor(False)
     next_state: torch.Tensor | None = None
     next_action: torch.Tensor | None = None
     curr_available_actions: torch.Tensor | None = None
@@ -60,13 +79,34 @@ TB = TypeVar("TB", bound="TransitionBatch")
 class TransitionBatch:
     """
     TransitionBatch is designed for data batch
+
+    Args:
+        state (torch.Tensor): Tensor of shape (batch_size x state_dim)
+        action (torch.Tensor): Tensor of shape (batch_size x action_dim)
+        reward (torch.Tensor): Tensor of shape (batch_size)
+        terminated (torch.Tensor): Tensor, default True is useful for bandits
+          which can be seen as a sequence being immediately terminated.
+        truncated (torch.Tensor): Tensor, default False is useful for bandits
+          which can be seen as a sequence being immediately terminated (not truncated)
+        next_state (torch.Tensor | None): Tensor of shape (batch_size x state_dim)
+        next_action (torch.Tensor | None): Tensor
+        curr_available_actions (torch.Tensor | None): Tensor of shape
+            (batch_size x action_space_size x action_dim)
+        curr_unavailable_actions_mask (torch.Tensor | None): Tensor
+        next_available_actions (torch.Tensor | None): Tensor of shape
+            (batch_size x action_space_size x action_dim)
+        next_unavailable_actions_mask (torch.Tensor | None): Tensor of shape
+            (batch_size x action_space_size)
+        weight (torch.Tensor | None): Tensor
+        time_diff (torch.Tensor | None): Tensor
+        cost (torch.Tensor | None): Tensor
     """
 
     state: torch.Tensor
     action: torch.Tensor
     reward: torch.Tensor
-    terminated: torch.Tensor = torch.tensor(True)  # default True is useful for bandits
-    truncated: torch.Tensor = torch.tensor(True)  # default True is useful for bandits
+    terminated: torch.Tensor = torch.tensor(True)
+    truncated: torch.Tensor = torch.tensor(False)
     next_state: torch.Tensor | None = None
     next_action: torch.Tensor | None = None
     curr_available_actions: torch.Tensor | None = None
