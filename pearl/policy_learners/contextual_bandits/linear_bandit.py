@@ -86,6 +86,9 @@ class LinearBandit(ContextualBanditBase):
         batch_size (int, default 128): size of the batches used during training.
         action_representation_module (Optional[ActionRepresentationModule], default identity):
                                      module for representing actions.
+        initial_coefs: Optional initial coefficients for the model. If provided, must be a tensor
+            of shape (feature_dim + 1,) where the first element is the intercept term and the
+            remaining elements are the coefficients for each feature.
     """
 
     def __init__(
@@ -99,6 +102,7 @@ class LinearBandit(ContextualBanditBase):
         training_rounds: int = 100,
         batch_size: int = 128,
         action_representation_module: ActionRepresentationModule | None = None,
+        initial_coefs: torch.Tensor | None = None,
     ) -> None:
         super().__init__(
             feature_dim=feature_dim,
@@ -112,6 +116,7 @@ class LinearBandit(ContextualBanditBase):
             l2_reg_lambda=l2_reg_lambda,
             gamma=gamma,
             force_pinv=force_pinv,
+            initial_coefs=initial_coefs,
         )
         self.apply_discounting_interval = apply_discounting_interval
         self.last_sum_weight_when_discounted = 0.0

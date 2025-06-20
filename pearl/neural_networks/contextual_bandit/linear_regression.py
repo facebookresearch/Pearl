@@ -85,6 +85,8 @@ class LinearRegression(MuSigmaCBModel):
             self.register_buffer("_coefs", torch.zeros(feature_dim + 1))
         self.distribution_enabled: bool = is_distribution_enabled()
 
+        self.pinv_warning_counter: int = 0
+
     @property
     def A(self) -> torch.Tensor:
         # return A with L2 regularization applied
@@ -156,11 +158,12 @@ class LinearRegression(MuSigmaCBModel):
         # pyre-ignore[16]: Module `_C` has no attribute `_LinAlgError`.
         # pyre-fixme[66]: Exception handler type annotation `unknown` must extend
         #  BaseException.
-        except torch._C._LinAlgError as e:
-            logger.warning(
-                "Exception raised during A inversion, falling back to pseudo-inverse",
-                e,
-            )
+        except torch._C._LinAlgError:
+            if self.pinv_warning_counter < 10 or self.pinv_warning_counter % 50 == 0:
+                self.pinv_warning_counter += 1
+                logger.warning(
+                    "Exception raised during A inversion, falling back to pseudo-inverse",
+                )
             # switch from `inv` to `pinv`
             return self.pinv(A)
 
