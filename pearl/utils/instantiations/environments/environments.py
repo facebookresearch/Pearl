@@ -8,12 +8,11 @@
 # pyre-strict
 
 from abc import ABC, abstractmethod
-from typing import Optional, Tuple
 
 from pearl.api.observation import Observation
 from pearl.api.space import Space
+from pearl.utils.instantiations.spaces.box import BoxSpace
 from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
-
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 try:
@@ -165,3 +164,61 @@ class OneHotObservationsFromDiscrete(ObservationTransformationEnvironmentAdapter
     @property
     def short_description(self) -> str:
         return f"One-hot observations on {self.base_environment}"
+
+
+class FlattenDictObservations(ObservationTransformationEnvironmentAdapterBase):
+    """Wraps an environment with dictionary observations and flattens them.
+
+    This adapter converts dictionary observations (for example Gymnasium's
+    ``Dict`` space) into a single 1-D tensor by concatenating the flattened
+    values of each dictionary entry.  It is useful when the rest of the agent
+    expects tensor observations.
+    """
+
+    def __init__(self, base_environment: Environment) -> None:
+        super().__init__(base_environment)
+
+    @staticmethod
+    def _flatten_value(value: object) -> torch.Tensor:
+        if isinstance(value, dict):
+            parts = [
+                FlattenDictObservations._flatten_value(v)
+                for k, v in sorted(value.items())
+            ]
+            return torch.cat(parts)
+        tensor_value = torch.as_tensor(value, dtype=torch.float32)
+        return tensor_value.flatten()
+
+    def compute_tensor_observation(self, observation: Observation) -> torch.Tensor:
+        assert isinstance(observation, dict), "Observation must be a dictionary"
+        return FlattenDictObservations._flatten_value(observation)
+
+    @staticmethod
+    def make_observation_space(base_environment: Environment) -> Space:
+        obs_space = base_environment.observation_space
+        if hasattr(obs_space, "spaces"):
+            lows = []
+            highs = []
+            for _, subspace in sorted(obs_space.spaces.items()):  # pyre-ignore[16]
+                name = subspace.__class__.__name__
+                if name == "Box":
+                    lows.append(torch.tensor(subspace.low).flatten())
+                    highs.append(torch.tensor(subspace.high).flatten())
+                elif name == "Discrete":
+                    lows.append(torch.zeros(1))
+                    highs.append(torch.tensor([float(subspace.n - 1)]))
+                else:
+                    raise NotImplementedError(f"Unsupported subspace type: {name}")
+            low = torch.cat(lows).float()
+            high = torch.cat(highs).float()
+        else:
+            example_obs, _ = base_environment.reset()
+            flat = FlattenDictObservations._flatten_value(example_obs)
+            low = torch.full_like(flat, float("-inf"))
+            high = torch.full_like(flat, float("inf"))
+
+        return BoxSpace(low=low, high=high)
+
+    @property
+    def short_description(self) -> str:
+        return f"Flattened dict observations from {self.base_environment}"
