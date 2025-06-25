@@ -234,9 +234,11 @@ class DeepTDLearning(PolicyLearner):
                 available_action_space.actions_batch.to(subjective_state)
             ).unsqueeze(0)  # (1 x number of actions x action_dim)
 
+            # For act method, we need to call _Q.get_q_values directly since we don't have a complete batch
             q_values = self._Q.get_q_values(
-                subjective_state,
-                batched_actions_representation,
+                state_batch=subjective_state,
+                action_batch=batched_actions_representation,
+                curr_available_actions_batch=None,
             )  # (1 x number of actions)
             # this does a forward pass since all avaialble
             # actions are already stacked together
@@ -268,6 +270,70 @@ class DeepTDLearning(PolicyLearner):
         """
         pass
 
+    def forward(
+        self,
+        batch: TransitionBatch,
+    ) -> torch.Tensor:
+        """
+        Computes Q-values for the given batch of transitions.
+
+        Args:
+            batch (TransitionBatch): Batch of transitions
+
+        Returns:
+            torch.Tensor: Q-values for the state-action pairs in the batch
+        """
+        # Target network update
+        if (self._training_steps + 1) % self._target_update_freq == 0:
+            update_target_network(self._Q_target, self._Q, self._soft_update_tau)
+
+        return self._Q.get_q_values(
+            state_batch=batch.state,
+            action_batch=batch.action,
+            curr_available_actions_batch=batch.curr_available_actions,
+        )
+
+    def loss(
+        self, batch: TransitionBatch, predictions: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """
+        Computes the loss for a batch of transitions.
+
+        Args:
+            batch (TransitionBatch): batch of transitions
+            predictions (torch.Tensor): predicted Q-values for the current state-action pairs
+
+        Returns:
+            tuple[torch.Tensor, torch.Tensor]: A tuple containing (loss, expected_state_action_values)
+        """
+        reward_batch = batch.reward  # (batch_size)
+        terminated_batch = batch.terminated  # (batch_size)
+        batch_size = reward_batch.shape[0]
+        # sanity check they have same batch_size
+        assert reward_batch.shape[0] == batch_size
+        assert terminated_batch.shape[0] == batch_size
+
+        # Compute the Bellman Target
+        expected_state_action_values = (
+            self.get_next_state_values(batch, batch_size)
+            * self._discount_factor
+            * (1 - terminated_batch.float())
+        ) + reward_batch  # (batch_size), r + gamma * V(s)
+
+        criterion = torch.nn.MSELoss()
+        bellman_loss = criterion(predictions, expected_state_action_values)
+
+        # Conservative TD updates for offline learning.
+        if self._is_conservative:
+            cql_loss = compute_cql_loss(self._Q, batch, batch_size)
+            # pyre-fixme[58]: `*` is not supported for operand types
+            #  `Optional[float]` and `Tensor`.
+            loss = self._conservative_alpha * cql_loss + bellman_loss
+        else:
+            loss = bellman_loss
+
+        return loss, expected_state_action_values
+
     def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         """
         Batch learning with TD(0) style updates. Different implementations of the
@@ -279,57 +345,23 @@ class DeepTDLearning(PolicyLearner):
         Returns:
             Dict[str, Any]: dictionary with loss as the mean bellman error (across the batch).
         """
-        state_batch = batch.state  # (batch_size x state_dim)
-        action_batch = batch.action  # (batch_size x action_dim)
-        reward_batch = batch.reward  # (batch_size)
-        terminated_batch = batch.terminated  # (batch_size)
-
-        batch_size = state_batch.shape[0]
-        # sanity check they have same batch_size
-        assert reward_batch.shape[0] == batch_size
-        assert terminated_batch.shape[0] == batch_size
-
-        state_action_values = self._Q.get_q_values(
-            state_batch=state_batch,
-            action_batch=action_batch,
-            curr_available_actions_batch=batch.curr_available_actions,
-        )  # (batch_size)
+        state_action_values = self.forward(batch)  # (batch_size)
         # for duelling dqn, specifying the `curr_available_actions_batch` field takes care of
         # the mean subtraction for advantage estimation
 
-        # Compute the Bellman Target
-        expected_state_action_values = (
-            self.get_next_state_values(batch, batch_size)
-            * self._discount_factor
-            * (1 - terminated_batch.float())
-        ) + reward_batch  # (batch_size), r + gamma * V(s)
-
-        criterion = torch.nn.MSELoss()
-        bellman_loss = criterion(state_action_values, expected_state_action_values)
-
-        # Conservative TD updates for offline learning.
-        if self._is_conservative:
-            cql_loss = compute_cql_loss(self._Q, batch, batch_size)
-            # pyre-fixme[58]: `*` is not supported for operand types
-            #  `Optional[float]` and `Tensor`.
-            loss = self._conservative_alpha * cql_loss + bellman_loss
-        else:
-            loss = bellman_loss
+        # Compute the loss using the loss function
+        loss_result = self.loss(batch, state_action_values)
+        loss_tensor, expected_state_action_values = loss_result
 
         # Optimize the model
         self._optimizer.zero_grad()
-        loss.backward()
+        loss_tensor.backward()
         self._optimizer.step()
 
-        # Target network update
-        if (self._training_steps + 1) % self._target_update_freq == 0:
-            update_target_network(self._Q_target, self._Q, self._soft_update_tau)
-
-        return {
-            "loss": torch.abs(state_action_values - expected_state_action_values)
-            .mean()
-            .item()
-        }
+        # Calculate the mean absolute error between predicted and expected values
+        abs_diff = torch.abs(state_action_values - expected_state_action_values)
+        mean_error = abs_diff.mean().item()
+        return {"loss": mean_error}
 
     @cached_property
     def _all_actions_available(self) -> torch.Tensor:
