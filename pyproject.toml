@@ -39,3 +39,6 @@ repository = "http://github.com/facebookresearch/Pearl"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["pearl*"]
+
+[tool.setuptools.package-dir]
+"pearl.test" = "test"

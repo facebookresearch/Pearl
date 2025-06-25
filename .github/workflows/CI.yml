@@ -69,7 +69,7 @@ jobs:
         overwrite: true
     - name: Generate coverage report
       run: |
-        pytest --import-mode=prepend --cov=./ --cov-report=xml
+        pytest --cov=./ --cov-report=xml
     - name: Upload coverage to Codecov
       if: success() || failure()
       uses: codecov/codecov-action@v4
