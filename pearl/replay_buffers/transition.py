@@ -8,8 +8,8 @@
 # pyre-strict
 
 import dataclasses
-from dataclasses import dataclass
-from typing import TypeVar
+from dataclasses import dataclass, field
+from typing import cast, Final, TypeVar
 
 import torch
 from torch import Tensor
@@ -74,6 +74,17 @@ class Transition:
 
 TB = TypeVar("TB", bound="TransitionBatch")
 
+# In dataclasses, the __init__ arguments and the corresponding attributes
+# have the same type. If we make the type of the argument Tensor | None,
+# the attribute will also have that type, even though at runtime they
+# will never be None (because they receive default values).
+# So this would require users to constantly write batch.terminated is
+# not None before use to avoid Pyre complaints.
+# The way this is written now, we use _UNSET as a sentinel cast to
+# a Tensor, so both the argument and the attribute are type Tensor,
+# making usage simpler.
+_UNSET: Final = object()
+
 
 @dataclass(frozen=False)
 class TransitionBatch:
@@ -105,8 +116,9 @@ class TransitionBatch:
     state: torch.Tensor
     action: torch.Tensor
     reward: torch.Tensor
-    terminated: torch.Tensor = torch.tensor(True)
-    truncated: torch.Tensor = torch.tensor(False)
+    # See comment for _UNSET above
+    terminated: torch.Tensor = field(default=cast(torch.Tensor, _UNSET))
+    truncated: torch.Tensor = field(default=cast(torch.Tensor, _UNSET))
     next_state: torch.Tensor | None = None
     next_action: torch.Tensor | None = None
     curr_available_actions: torch.Tensor | None = None
@@ -116,6 +128,82 @@ class TransitionBatch:
     weight: torch.Tensor | None = None
     time_diff: torch.Tensor | None = None
     cost: torch.Tensor | None = None
+
+    def __post_init__(self) -> None:
+        """
+        Post-initialization validation checks.
+        It also sets the default values for terminated and truncated if needed.
+
+        This method performs the following checks:
+
+        - The state has at least 2 dimensions (batch_size, ...).
+        - The action has shape (batch_size,) or (batch_size, ...).
+        - The reward has shape (batch_size,) or (batch_size, 1).
+        - The state and reward have the same batch_size dimension.
+        - The terminated and truncated tensors have shape (batch_size,) or (batch_size, 1).
+        - The next_state and next_action tensors have at least 2 dimensions (batch_size, ...).
+        """
+        assert self.state.ndim >= 2, (
+            f"state has shape {self.state.shape}, "
+            f"but must have at least 2 dimensions (batch_size, ...)"
+        )
+
+        # Allow action to have shape (batch_size,) or (batch_size, ...)
+        assert (
+            self.action.ndim >= 1
+        ), f"action has shape {self.action.shape}, but must be (batch_size,) or (batch_size, ...)"
+
+        # Allow reward to have shape (batch_size,) or (batch_size, 1)
+        is_1d = self.reward.ndim == 1
+        is_2d_with_1_col = self.reward.ndim == 2 and self.reward.shape[1] == 1
+        valid_reward_shape = is_1d or is_2d_with_1_col
+        assert valid_reward_shape, (
+            f"reward has shape {self.reward.shape}, "
+            f"but must be (batch_size,) or (batch_size, 1)"
+        )
+
+        assert self.state.shape[0] == self.reward.shape[0], (
+            f"state has shape {self.state.shape}, "
+            f"but reward has shape {self.reward.shape}, "
+            f"and they must have the same batch_size dimension"
+        )
+
+        batch_size = self.reward.shape[0]
+
+        if self.terminated is not _UNSET:
+            assert (
+                self.terminated.ndim == 1 and self.terminated.shape[0] == batch_size
+            ) or (
+                self.terminated.ndim == 2 and self.terminated.shape == (batch_size, 1)
+            ), f"terminated has shape {self.terminated.shape} != (batch_size)"
+        else:
+            # Always create terminated with shape (batch_size,) regardless of reward shape
+            self.terminated = torch.ones(
+                batch_size, dtype=torch.bool, device=self.reward.device
+            )
+
+        if self.truncated is not _UNSET:
+            assert (
+                self.truncated.ndim == 1 and self.truncated.shape[0] == batch_size
+            ) or (
+                self.truncated.ndim == 2 and self.truncated.shape == (batch_size, 1)
+            ), f"truncated has shape {self.truncated.shape} != (batch_size)"
+        else:
+            # Always create truncated with shape (batch_size,) regardless of reward shape
+            self.truncated = torch.zeros(
+                batch_size, dtype=torch.bool, device=self.reward.device
+            )
+
+        if self.next_state is not None:
+            assert self.next_state.ndim >= 2, (
+                f"next_state has shape {self.next_state.shape}, "
+                f"but must have at least 2 dimensions (batch_size, ...)"
+            )
+        if self.next_action is not None:
+            # Allow next_action to have shape (batch_size,) or (batch_size, ...)
+            assert (
+                self.next_action.ndim >= 1
+            ), f"next_action has shape {self.next_action.shape}, but must be (batch_size,) or (batch_size, ...)"
 
     def to(self: TB, device: torch.device) -> TB:
         # iterate over all fields
