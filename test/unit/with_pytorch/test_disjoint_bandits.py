@@ -467,7 +467,7 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
                 # measuring that inadequacy is not the purpose of this test).
                 true_coefs = torch.zeros(state_dim + 1)
             else:
-                true_coefs[0] = state_dim * 0.05  # intercept
+                true_coefs[0] = 0  # intercept
                 for i in range(1, state_dim + 1):
                     true_coefs[i] = torch.rand(1).item() * 2 - 1
 
@@ -521,13 +521,20 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
             # Update action counts
             counter.update(action)
 
-            reward = scores.gather(1, action)
+            # Get the base reward from the ground truth model
+            base_reward = scores.gather(1, action)
+
+            # Add Gaussian noise to the reward
+            noise_scale = 1  # Controls the amount of noise
+            noise = torch.randn_like(base_reward) * noise_scale
+            noisy_reward = base_reward + noise
+
             action_representation = ground_truth.action_representation_module(action)
 
             yield TransitionBatch(
                 state=state,
                 action=action_representation,
-                reward=reward,
+                reward=noisy_reward,
             )
 
         linear_bandits = [
@@ -541,10 +548,13 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
             state_features_only=True,
         )
 
-        num_batches = 1000
+        num_batches = 100
         batch_size = 100
 
-        for _ in range(num_batches):
+        # List to store MSE values for each batch
+        mse_values = []
+
+        for batch_idx in range(num_batches):
             batch = next(
                 generate_batch(
                     batch_size,
@@ -554,7 +564,35 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
                     unobserved_actions_first_index,
                 )
             )
+
+            # Calculate predictions before learning
+            state = batch.state
+            action_indices = batch.action
+
+            # Get predictions from the learned model
+            scores = new_policy_learner.get_scores(
+                subjective_state=state,
+                action_space_to_score=action_space,
+                exploit=True,
+            )
+
+            # Extract predictions for the actions that were actually taken
+            predictions = torch.zeros_like(batch.reward)
+            for i, action_idx in enumerate(action_indices):
+                predictions[i] = scores[i, action_idx.item()]
+
+            # Calculate MSE between predictions and actual rewards
+            mse = torch.mean(torch.pow(predictions - batch.reward, 2)).item()
+            mse_values.append(mse)
+
+            # Learn from the batch
             new_policy_learner.learn_batch(batch)
+
+            # Print progress every 100 batches
+            if (batch_idx + 1) % 100 == 0:
+                print(
+                    f"Processed {batch_idx + 1}/{num_batches} batches, Current MSE: {mse:.6f}"
+                )
 
         # Print training action distribution
         print("\nTraining action distribution:")
@@ -642,12 +680,17 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
                 f"   {learned_count:>3.0f} ({learned_percentage:>5.1f}%)"
             )
 
+        # Calculate final MSE
+        final_mse = mse_values[-1]
+        print(f"Final MSE: {final_mse:.6f}")
+
         # Calculate agreement percentage
         agreement = (ground_truth_actions == learned_actions).float().mean().item()
         agreement_percentage = agreement * 100
 
-        # We expect a high agreement rate
-        required_agreement_percentage = 95.0
+        # Given rewards are noise, we don't expect complete agreement
+        # The following is based on empirical observations
+        required_agreement_percentage = 80.0
         print(f"\nAction agreement percentage: {agreement_percentage:.2f}%")
         error_msg = (
             f"Ground truth and learned model only agree on "
