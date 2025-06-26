@@ -56,6 +56,67 @@ def argmax_random_tie_breaks(
     return argmax_indices
 
 
+def argmax_random_tie_break_per_row(
+    scores: Tensor, mask: Tensor | None = None, epsilon: float = 1e-6
+) -> torch.Tensor:
+    """
+    Given a 2D tensor of scores, return the indices of the max score for each row.
+    If there are ties inside a row, uniformly randomize among the ties.
+    IMPORTANT IMPLEMENTATION DETAILS:
+        1. Randomization is implemented independently for each row, unlike argmax_random_tie_breaks
+           which uses the same permutation for all rows.
+        2. Therefore this function is slower than argmax_random_tie_breaks
+
+    Args:
+        scores: A 2D tensor of scores of shape (batch_size, num_actions)
+        mask [Optional]: A 2D score presence mask.
+                         If missing, assuming that all scores are unmasked.
+        epsilon: Threshold for considering scores as tied
+
+    Returns:
+        A 1D tensor of shape (batch_size,) containing the indices of the selected actions
+    """
+    # This function only works for 2D tensor
+    assert scores.ndim == 2
+
+    batch_size = scores.shape[0]
+
+    # Find the maximum score in each row
+    if mask is None:
+        max_scores, _ = torch.max(scores, dim=1, keepdim=True)
+        # Find actions that are within epsilon of the maximum score
+        tied_actions = scores >= max_scores - epsilon
+    else:
+        # For masked case, we'll create a version of scores with -inf for masked values
+        masked_scores = scores.clone()
+        masked_scores[~mask.bool()] = float("-inf")
+
+        # Now we can safely use torch.max
+        max_scores, _ = torch.max(masked_scores, dim=1, keepdim=True)
+
+        # Find actions that are within epsilon of the maximum score and are valid according to mask
+        tied_actions = torch.logical_and(scores >= max_scores - epsilon, mask.bool())
+
+    # For each example in the batch, randomly select one of the tied actions
+    selected_actions = torch.zeros(batch_size, dtype=torch.long, device=scores.device)
+
+    for i in range(batch_size):
+        tied_indices = torch.nonzero(tied_actions[i]).squeeze()
+
+        # If there's only one max action
+        # tensor([[max_action_index]]).squeeze() becames scalar.
+        if tied_indices.dim() == 0:
+            selected_actions[i] = tied_indices.item()
+        else:
+            # Randomly select one of the tied actions
+            random_idx = torch.randint(
+                0, tied_indices.size(0), (1,), device=scores.device
+            )
+            selected_actions[i] = tied_indices[random_idx].item()
+
+    return selected_actions  # Shape: (batch_size,)
+
+
 def get_model_action_index_batch(
     scores: Tensor,
     mask: Tensor | None = None,

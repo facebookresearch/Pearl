@@ -14,6 +14,7 @@ from pearl.action_representation_modules.identity_action_representation_module i
     IdentityActionRepresentationModule,
 )
 from pearl.utils.functional_utils.learning.action_utils import (
+    argmax_random_tie_break_per_row,
     argmax_random_tie_breaks,
     concatenate_actions_to_state,
     concatenate_actions_to_state_scriptable,
@@ -178,6 +179,97 @@ class TestConcatenateActionsToState(unittest.TestCase):
         self.assertTrue(
             torch.allclose(result_original_state_only, result_scriptable_state_only)
         )
+
+
+class TestArgmaxRandomTieBreakPerRow(unittest.TestCase):
+    def test_argmax_random_tie_break_per_row_no_mask(self) -> None:
+        scores = torch.tensor(
+            [[1, 20, 20], [4, 4, 3], [15, 10, 15], [100, float("inf"), float("inf")]]
+        )
+        argmax_values_returned = {0: set(), 1: set(), 2: set(), 3: set()}
+        for _ in range(1000):
+            # repeat many times since the function is stochastic
+            argmax = argmax_random_tie_break_per_row(scores)
+            # make sure argmax returns one of the max element indices
+            argmax_values_returned[0].add(argmax[0].item())
+            argmax_values_returned[1].add(argmax[1].item())
+            argmax_values_returned[2].add(argmax[2].item())
+            argmax_values_returned[3].add(argmax[3].item())
+        self.assertSetEqual(argmax_values_returned[0], {1, 2})
+        self.assertSetEqual(argmax_values_returned[1], {0, 1})
+        self.assertSetEqual(argmax_values_returned[2], {0, 2})
+        self.assertSetEqual(argmax_values_returned[3], {1, 2})
+
+    def test_argmax_random_tie_break_per_row_mask(self) -> None:
+        scores = torch.tensor(
+            [[1, 20, 20], [4, 4, 3], [15, 10, 15], [100, float("inf"), float("inf")]]
+        )
+        mask = torch.tensor([[1, 1, 0], [0, 0, 1], [1, 0, 1], [1, 0, 1]])
+        argmax_values_returned = {0: set(), 1: set(), 2: set(), 3: set()}
+        for _ in range(1000):
+            # repeat many times since the function is stochastic
+            argmax = argmax_random_tie_break_per_row(scores, mask)
+            # make sure argmax returns one of the max element indices
+            argmax_values_returned[0].add(argmax[0].item())
+            argmax_values_returned[1].add(argmax[1].item())
+            argmax_values_returned[2].add(argmax[2].item())
+            argmax_values_returned[3].add(argmax[3].item())
+        self.assertSetEqual(
+            argmax_values_returned[0],
+            {
+                1,
+            },
+        )
+        self.assertSetEqual(
+            argmax_values_returned[1],
+            {
+                2,
+            },
+        )
+        self.assertSetEqual(argmax_values_returned[2], {0, 2})
+        self.assertSetEqual(
+            argmax_values_returned[3],
+            {
+                2,
+            },
+        )
+
+    def test_independent_randomization(self) -> None:
+        """Test that randomization is independent for each row."""
+        # Create a tensor with identical rows, each having multiple tied maximum values
+        scores = torch.tensor(
+            [
+                [1, 10, 10, 10],
+                [1, 10, 10, 10],
+                [1, 10, 10, 10],
+                [1, 10, 10, 10],
+            ]
+        )
+
+        # Run the function many times and count how often each row selects the same index
+        num_trials = 1000
+        same_selection_count = 0
+
+        for _ in range(num_trials):
+            argmax = argmax_random_tie_break_per_row(scores)
+
+            # Check if all rows selected the same index
+            if torch.all(argmax == argmax[0]):
+                same_selection_count += 1
+
+        # Calculate the probability of all rows selecting the same index
+        same_selection_probability = same_selection_count / num_trials
+
+        # With independent randomization, the probability of all 4 rows selecting
+        # the same index should be approximately (1/3)^3 ≈ 0.037
+        # (since each row has 3 tied maximum values)
+        # We allow some margin for random variation
+        expected_probability = (1 / 3) ** 3
+        self.assertLess(abs(same_selection_probability - expected_probability), 0.05)
+
+        # For comparison, with the original argmax_random_tie_breaks function,
+        # this probability would be close to 1.0 since it uses the same permutation
+        # for all rows
 
 
 class TestGetAction(unittest.TestCase):
