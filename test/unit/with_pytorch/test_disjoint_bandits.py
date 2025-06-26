@@ -9,6 +9,7 @@
 
 import copy
 import unittest
+from typing import Iterator
 
 import torch
 import torch.testing as tt
@@ -429,3 +430,180 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
 
         # learn batch, make sure this doesn't throw an error
         policy_learner.learn_batch(batch)
+
+
+class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
+    def test_learning_from_ground_truth(self) -> None:
+        """
+        Simulates an application with 78 features and 24 actions,
+        with a randomly generated ground truth model,
+        and checks whether a learned disjoint linear bandit model
+        agrees with the ground truth model.
+        """
+        state_dim = 78
+        number_of_actions = 24
+        action_space: DiscreteActionSpace = DiscreteActionSpace(
+            [torch.tensor([i]) for i in range(number_of_actions)]
+        )
+
+        ground_truth_linear_bandits = []
+        for _ in range(number_of_actions):
+            true_coefs = torch.zeros(state_dim + 1)  # +1 for intercept
+
+            # set non-zero coefficients
+            intercept = state_dim * 0.05
+            true_coefs[0] = intercept  # intercept
+            for i in range(1, state_dim + 1):
+                true_coefs[i] = torch.rand(1).item() * 2 - 1
+
+            ground_truth_linear_bandit = LinearBandit(
+                feature_dim=state_dim,
+                initial_coefs=true_coefs,
+            )
+            ground_truth_linear_bandits.append(ground_truth_linear_bandit)
+
+        ground_truth = DisjointBanditContainer(
+            feature_dim=state_dim,
+            arm_bandits=ground_truth_linear_bandits,
+            exploration_module=DisjointUCBExploration(alpha=0),
+            state_features_only=True,
+        )
+
+        # Create a class to hold the action counts to avoid nonlocal issues
+        class ActionCounter:
+            def __init__(self, num_actions: int):
+                self.counts = torch.zeros(num_actions)
+
+            def update(self, actions: torch.Tensor) -> None:
+                for a in actions:
+                    self.counts[a.item()] += 1
+
+        # Initialize counters for action occurrences during training
+        training_counter = ActionCounter(number_of_actions)
+
+        # Generator of TransitionBatch from ground truth
+        def generate_batch(
+            number_of_samples: int,
+            state_dim: int,
+            number_of_actions: int,
+            ground_truth: DisjointBanditContainer,
+            counter: ActionCounter,
+        ) -> Iterator[TransitionBatch]:
+            # generate random state
+            state = torch.rand(number_of_samples, state_dim)
+
+            scores = ground_truth.get_scores(
+                subjective_state=state,
+                action_space_to_score=action_space,
+                exploit=True,
+            )
+            # action = torch.argmax(scores, dim=1).unsqueeze(-1)
+            # Sample one random action per state
+            action = torch.randint(
+                low=0, high=number_of_actions, size=(number_of_samples, 1)
+            )
+
+            # Update action counts
+            counter.update(action)
+
+            reward = scores.gather(1, action)
+            action_representation = ground_truth.action_representation_module(action)
+
+            yield TransitionBatch(
+                state=state,
+                action=action_representation,
+                reward=reward,
+            )
+
+        linear_bandits = [
+            LinearBandit(feature_dim=state_dim) for _ in range(number_of_actions)
+        ]
+
+        new_policy_learner = DisjointBanditContainer(
+            feature_dim=state_dim,
+            arm_bandits=linear_bandits,  # pyre-ignore
+            exploration_module=DisjointUCBExploration(alpha=0),
+            state_features_only=True,
+        )
+
+        num_batches = 1000
+        batch_size = 100
+
+        for _ in range(num_batches):
+            batch = next(
+                generate_batch(
+                    batch_size,
+                    state_dim,
+                    number_of_actions,
+                    ground_truth,
+                    training_counter,
+                )
+            )
+            new_policy_learner.learn_batch(batch)
+
+        # Print training action distribution
+        print("\nTraining action distribution:")
+        for action_idx in range(number_of_actions):
+            count = training_counter.counts[action_idx].item()
+            percentage = (count / (num_batches * batch_size)) * 100
+            print(f"Action {action_idx}: {count:.0f} occurrences ({percentage:.2f}%)")
+
+        # Now check if ground truth and learned model agree on exploit actions
+        # for a set of random states
+        num_test_states = 1000
+        test_states = torch.rand(num_test_states, state_dim)
+
+        # Get exploit actions from ground truth model
+        ground_truth_scores = ground_truth.get_scores(
+            subjective_state=test_states,
+            action_space_to_score=action_space,
+            exploit=True,
+        )
+        ground_truth_actions = torch.argmax(ground_truth_scores, dim=1)
+
+        # Get exploit actions from learned model
+        learned_scores = new_policy_learner.get_scores(
+            subjective_state=test_states,
+            action_space_to_score=action_space,
+            exploit=True,
+        )
+        learned_actions = torch.argmax(learned_scores, dim=1)
+
+        # Count occurrences of each action in evaluation
+        gt_eval_action_counts = torch.zeros(number_of_actions)
+        learned_eval_action_counts = torch.zeros(number_of_actions)
+
+        for a in ground_truth_actions:
+            gt_eval_action_counts[a.item()] += 1
+
+        for a in learned_actions:
+            learned_eval_action_counts[a.item()] += 1
+
+        # Print evaluation action distributions
+        print("\nEvaluation action distribution:")
+        print("Action | Ground Truth | Learned Model")
+        print("-----------------------------------")
+        for action_idx in range(number_of_actions):
+            gt_count = gt_eval_action_counts[action_idx].item()
+            learned_count = learned_eval_action_counts[action_idx].item()
+            gt_percentage = (gt_count / num_test_states) * 100
+            learned_percentage = (learned_count / num_test_states) * 100
+            print(
+                f"  {action_idx:<2}  |    {gt_count:>3.0f} ({gt_percentage:>5.1f}%) | "
+                f"   {learned_count:>3.0f} ({learned_percentage:>5.1f}%)"
+            )
+
+        # Calculate agreement percentage
+        agreement = (ground_truth_actions == learned_actions).float().mean().item()
+        agreement_percentage = agreement * 100
+
+        # We expect a high agreement rate
+        required_agreement_percentage = 95.0
+        print(f"\nAction agreement percentage: {agreement_percentage:.2f}%")
+        error_msg = (
+            f"Ground truth and learned model only agree on "
+            f"{agreement_percentage:.2f}% of actions"
+        )
+        self.assertGreaterEqual(
+            agreement_percentage, required_agreement_percentage, error_msg
+        )

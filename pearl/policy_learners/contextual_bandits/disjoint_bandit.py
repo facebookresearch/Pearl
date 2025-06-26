@@ -110,7 +110,7 @@ class DisjointBanditContainer(ContextualBanditBase):
                         weight=(
                             batch.weight[mask]
                             if batch.weight is not None
-                            else torch.ones_like(mask, dtype=torch.float)
+                            else torch.ones((sum(mask), 1), dtype=torch.float)
                         ),
                         # empty action features since disjoint model used
                         # action as index of per-arm model
@@ -156,6 +156,7 @@ class DisjointBanditContainer(ContextualBanditBase):
         for i, (arm_bandit, arm_batch) in enumerate(
             zip(self._arm_bandits, arm_batches)
         ):
+            assert isinstance(arm_bandit, ContextualBanditBase)
             returns.update(
                 {
                     f"arm_{i}_{k}": v
@@ -169,6 +170,7 @@ class DisjointBanditContainer(ContextualBanditBase):
         """
         Get a list of models of each bandit
         """
+        # pyre-ignore
         return [bandit.model for bandit in self._arm_bandits]
 
     def act(
@@ -210,13 +212,6 @@ class DisjointBanditContainer(ContextualBanditBase):
             UCB scores when exploration module is UCB
             Shape is (batch, num_arms) or (num_arms,)
         """
-        assert (
-            not exploit
-        ), "exploit=True is not yet implemented for DisjointBandit.get_scores"
-
-        exploration_module = self.exploration_module
-        assert isinstance(exploration_module, ScoreExplorationBase)
-
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
             action_space=action_space_to_score,
@@ -225,12 +220,18 @@ class DisjointBanditContainer(ContextualBanditBase):
         )
         # (batch_size, action_count, feature_size)
 
-        return exploration_module.get_scores(
-            subjective_state=feature,
-            values=ensemble_forward(self.models, feature, use_for_loop=True),
-            action_space=action_space_to_score,
-            representation=self.models,  # pyre-fixme[6]: unexpected type
-        )
+        if exploit:
+            return ensemble_forward(self.models, feature, use_for_loop=True)
+        else:
+            exploration_module = self.exploration_module
+            assert isinstance(exploration_module, ScoreExplorationBase)
+
+            return exploration_module.get_scores(
+                subjective_state=feature,
+                values=ensemble_forward(self.models, feature, use_for_loop=True),
+                action_space=action_space_to_score,
+                representation=self.models,  # pyre-fixme[6]: unexpected type
+            )
 
     @property
     def optimizer(self) -> torch.optim.Optimizer:
@@ -278,6 +279,8 @@ class DisjointBanditContainer(ContextualBanditBase):
             for i, (arm_bandit1, arm_bandit2) in enumerate(
                 zip(self._arm_bandits, other._arm_bandits)
             ):
+                assert isinstance(arm_bandit1, ContextualBanditBase)
+                assert isinstance(arm_bandit2, ContextualBanditBase)
                 if (reason := arm_bandit1.compare(arm_bandit2)) != "":
                     differences.append(f"Arm bandit {i} is different: {reason}")
 

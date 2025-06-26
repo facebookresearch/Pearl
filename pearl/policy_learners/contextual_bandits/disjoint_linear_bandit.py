@@ -107,6 +107,8 @@ class DisjointLinearBandit(ContextualBanditBase):
                 )
             else:
                 weight = torch.ones(reward.shape, device=batch.device)
+
+            assert isinstance(linear_regression, LinearRegression)
             linear_regression.learn_batch(
                 x=context,
                 y=reward,
