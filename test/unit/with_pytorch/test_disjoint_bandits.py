@@ -433,28 +433,43 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
 
 
 class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
-    def test_learning_from_ground_truth(self) -> None:
+    def test_learning_from_ground_truth_with_some_unobserved_actions(self) -> None:
         """
         Simulates an application with 78 features and 24 actions,
         with a randomly generated ground truth model,
         and checks whether a learned disjoint linear bandit model
         agrees with the ground truth model.
+
+        Also tests that actions with indices greater than or equal to
+        unobserved_actions_first_index have large thresholds and are never selected,
+        and that their scores are identical across all evaluation examples.
         """
         state_dim = 78
         number_of_actions = 24
+        unobserved_actions_first_index = (
+            16  # Actions >= this index should never be selected
+        )
         action_space: DiscreteActionSpace = DiscreteActionSpace(
             [torch.tensor([i]) for i in range(number_of_actions)]
         )
 
         ground_truth_linear_bandits = []
-        for _ in range(number_of_actions):
+        for action_idx in range(number_of_actions):
             true_coefs = torch.zeros(state_dim + 1)  # +1 for intercept
 
-            # set non-zero coefficients
-            intercept = state_dim * 0.05
-            true_coefs[0] = intercept  # intercept
-            for i in range(1, state_dim + 1):
-                true_coefs[i] = torch.rand(1).item() * 2 - 1
+            if action_idx >= unobserved_actions_first_index:
+                # Unobserved actions lead the corresponding linear bandits
+                # to have thresholds and weights with values 0
+                # (their initial values, since they are never updated).
+                # We set the ground truth in the same way so that
+                # we don't penalize that assumption during this test.
+                # (while that assumption may be incorrect in different applications,
+                # measuring that inadequacy is not the purpose of this test).
+                true_coefs = torch.zeros(state_dim + 1)
+            else:
+                true_coefs[0] = state_dim * 0.05  # intercept
+                for i in range(1, state_dim + 1):
+                    true_coefs[i] = torch.rand(1).item() * 2 - 1
 
             ground_truth_linear_bandit = LinearBandit(
                 feature_dim=state_dim,
@@ -485,9 +500,9 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
         def generate_batch(
             number_of_samples: int,
             state_dim: int,
-            number_of_actions: int,
             ground_truth: DisjointBanditContainer,
             counter: ActionCounter,
+            unobserved_actions_first_index: int,
         ) -> Iterator[TransitionBatch]:
             # generate random state
             state = torch.rand(number_of_samples, state_dim)
@@ -498,9 +513,9 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
                 exploit=True,
             )
             # action = torch.argmax(scores, dim=1).unsqueeze(-1)
-            # Sample one random action per state
+            # Sample one random action per state from observed actions only
             action = torch.randint(
-                low=0, high=number_of_actions, size=(number_of_samples, 1)
+                low=0, high=unobserved_actions_first_index, size=(number_of_samples, 1)
             )
 
             # Update action counts
@@ -534,9 +549,9 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
                 generate_batch(
                     batch_size,
                     state_dim,
-                    number_of_actions,
                     ground_truth,
                     training_counter,
+                    unobserved_actions_first_index,
                 )
             )
             new_policy_learner.learn_batch(batch)
@@ -547,6 +562,16 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
             count = training_counter.counts[action_idx].item()
             percentage = (count / (num_batches * batch_size)) * 100
             print(f"Action {action_idx}: {count:.0f} occurrences ({percentage:.2f}%)")
+
+        # Assert that no training data was generated with any of the unobserved actions
+        for action_idx in range(unobserved_actions_first_index, number_of_actions):
+            self.assertEqual(
+                training_counter.counts[action_idx].item(),
+                0,
+                f"Action {action_idx} should never be selected during training, "
+                f"but was selected "
+                f"{training_counter.counts[action_idx].item()} times",
+            )
 
         # Now check if ground truth and learned model agree on exploit actions
         # for a set of random states
@@ -569,6 +594,20 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
         )
         learned_actions = torch.argmax(learned_scores, dim=1)
 
+        # Check that learned scores for unobserved actions are identical across all test examples
+        for action_idx in range(unobserved_actions_first_index, number_of_actions):
+            unobserved_action_scores = learned_scores[:, action_idx]
+            # All scores for this action should be identical (or very close)
+            self.assertTrue(
+                torch.allclose(
+                    unobserved_action_scores,
+                    unobserved_action_scores[0].expand_as(unobserved_action_scores),
+                    atol=1e-5,
+                ),
+                f"Learned scores for action {action_idx} should be "
+                f"identical for all evaluation examples",
+            )
+
         # Count occurrences of each action in evaluation
         gt_eval_action_counts = torch.zeros(number_of_actions)
         learned_eval_action_counts = torch.zeros(number_of_actions)
@@ -578,6 +617,16 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
 
         for a in learned_actions:
             learned_eval_action_counts[a.item()] += 1
+
+        # Assert that none of the unobserved actions are selected in evaluation
+        for action_idx in range(unobserved_actions_first_index, number_of_actions):
+            self.assertEqual(
+                gt_eval_action_counts[action_idx].item(),
+                0,
+                f"Action {action_idx} should never be selected in ground truth evaluation, "
+                f"but was selected "
+                f"{gt_eval_action_counts[action_idx].item()} times",
+            )
 
         # Print evaluation action distributions
         print("\nEvaluation action distribution:")
