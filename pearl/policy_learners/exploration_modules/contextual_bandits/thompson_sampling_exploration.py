@@ -31,8 +31,9 @@ class ThompsonSamplingExplorationLinear(ScoreExplorationBase):
     def __init__(
         self,
         enable_efficient_sampling: bool = False,
+        randomized_tiebreaking: bool = False,
     ) -> None:
-        super().__init__()
+        super().__init__(randomized_tiebreaking=randomized_tiebreaking)
         self._enable_efficient_sampling = enable_efficient_sampling
 
     def get_scores(

@@ -27,8 +27,8 @@ class UCBExploration(ScoreExplorationBase):
     UCB exploration module.
     """
 
-    def __init__(self, alpha: float) -> None:
-        super().__init__()
+    def __init__(self, alpha: float, randomized_tiebreaking: bool = False) -> None:
+        super().__init__(randomized_tiebreaking=randomized_tiebreaking)
         self._alpha = alpha
 
     def sigma(
@@ -118,6 +118,9 @@ class DisjointUCBExploration(UCBExploration):
     Same as UCBExploration, but with a separate bandit model for each action
     """
 
+    def __init__(self, alpha: float, randomized_tiebreaking: bool = False) -> None:
+        super().__init__(alpha, randomized_tiebreaking)
+
     # pyre-fixme[14]: `sigma` overrides method defined in `UCBExploration`
     #  inconsistently.
     def sigma(
@@ -173,8 +176,8 @@ class VanillaUCBExploration(UCBExploration):
     Vanilla UCB exploration module with counter.
     """
 
-    def __init__(self) -> None:
-        super().__init__(alpha=1)
+    def __init__(self, randomized_tiebreaking: bool = False) -> None:
+        super().__init__(alpha=1, randomized_tiebreaking=randomized_tiebreaking)
         # pyre-fixme[4]: Attribute must be annotated.
         self.action_execution_count = {}
         # pyre-fixme[4]: Attribute must be annotated.

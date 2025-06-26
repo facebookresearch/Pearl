@@ -31,6 +31,9 @@ class NoExploration(ScoreExplorationBase):
     and simply returns the values for each action.
     """
 
+    def __init__(self, randomized_tiebreaking: bool = False) -> None:
+        super().__init__(randomized_tiebreaking=randomized_tiebreaking)
+
     def get_scores(
         self,
         subjective_state: SubjectiveState,

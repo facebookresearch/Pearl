@@ -30,12 +30,14 @@ class ScoreExplorationBase(ExplorationModule):
     """
     Value exploration base module.
     Specific exploration module subclasses need to implement `get_scores`.
-    Actions with highest scores will be chosen.
+    Actions with highest scores will be chosen, with a random tie-breaking
+    if that option is selected.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, randomized_tiebreaking: bool = False) -> None:
         super().__init__()
         self.exploration_type: ExplorationType = ExplorationType.VALUE
+        self.randomized_tiebreaking = randomized_tiebreaking
 
     def act(
         self,
@@ -69,7 +71,9 @@ class ScoreExplorationBase(ExplorationModule):
         )  # shape: (batch_size, action_count)
         scores = assert_is_tensor_like(scores)
         action_index_batch = get_model_action_index_batch(
-            scores, action_availability_mask
+            scores,
+            action_availability_mask,
+            self.randomized_tiebreaking,
         )
         return action_index_batch.squeeze(-1)
         # FIXME: the squeeze(-1) is a hack.
@@ -113,10 +117,10 @@ class ScoreExplorationBase(ExplorationModule):
 
     def compare(self, other: ExplorationModule) -> str:
         """
-        Compares two UniformExplorationBase instances for equality.
+        Compares two ScoreExplorationBase instances for equality.
 
-        Since this module has no attributes or buffers to compare,
-        it only checks if the `other` object is an instance of the same class.
+        Checks if the other object is an instance of the same class and compares
+        the exploration_type and randomized_tiebreaking attributes.
 
         Args:
           other: The other ExplorationModule to compare with.
@@ -133,6 +137,12 @@ class ScoreExplorationBase(ExplorationModule):
                 differences.append(
                     f"exploration_type is different: {self.exploration_type} "
                     + f"vs {other.exploration_type}"
+                )
+
+            if self.randomized_tiebreaking != other.randomized_tiebreaking:
+                differences.append(
+                    f"randomized_tiebreaking is different: {self.randomized_tiebreaking} "
+                    + f"vs {other.randomized_tiebreaking}"
                 )
 
         return "\n".join(differences)

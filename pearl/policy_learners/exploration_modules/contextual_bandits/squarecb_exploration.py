@@ -46,8 +46,9 @@ class SquareCBExploration(ScoreExplorationBase):
         reward_lb: float = 0.0,
         reward_ub: float = 1.0,
         clamp_values: bool = False,
+        randomized_tiebreaking: bool = False,
     ) -> None:
-        super().__init__()
+        super().__init__(randomized_tiebreaking=randomized_tiebreaking)
         self._gamma = gamma
         self.reward_lb = reward_lb
         self.reward_ub = reward_ub
