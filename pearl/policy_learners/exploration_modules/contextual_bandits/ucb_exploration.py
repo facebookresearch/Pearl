@@ -18,6 +18,9 @@ from pearl.policy_learners.exploration_modules import ExplorationModule
 from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
     ScoreExplorationBase,
 )
+from pearl.policy_learners.exploration_modules.common.tiebreaking_strategy import (
+    TiebreakingStrategy,
+)
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
@@ -27,7 +30,11 @@ class UCBExploration(ScoreExplorationBase):
     UCB exploration module.
     """
 
-    def __init__(self, alpha: float, randomized_tiebreaking: bool = False) -> None:
+    def __init__(
+        self,
+        alpha: float,
+        randomized_tiebreaking: TiebreakingStrategy = TiebreakingStrategy.NO_TIEBREAKING,
+    ) -> None:
         super().__init__(randomized_tiebreaking=randomized_tiebreaking)
         self._alpha = alpha
 
@@ -118,7 +125,11 @@ class DisjointUCBExploration(UCBExploration):
     Same as UCBExploration, but with a separate bandit model for each action
     """
 
-    def __init__(self, alpha: float, randomized_tiebreaking: bool = False) -> None:
+    def __init__(
+        self,
+        alpha: float,
+        randomized_tiebreaking: TiebreakingStrategy = TiebreakingStrategy.NO_TIEBREAKING,
+    ) -> None:
         super().__init__(alpha, randomized_tiebreaking)
 
     # pyre-fixme[14]: `sigma` overrides method defined in `UCBExploration`
@@ -176,7 +187,10 @@ class VanillaUCBExploration(UCBExploration):
     Vanilla UCB exploration module with counter.
     """
 
-    def __init__(self, randomized_tiebreaking: bool = False) -> None:
+    def __init__(
+        self,
+        randomized_tiebreaking: TiebreakingStrategy = TiebreakingStrategy.NO_TIEBREAKING,
+    ) -> None:
         super().__init__(alpha=1, randomized_tiebreaking=randomized_tiebreaking)
         # pyre-fixme[4]: Attribute must be annotated.
         self.action_execution_count = {}

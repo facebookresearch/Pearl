@@ -5,11 +5,12 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-# pyre-strict
-
 import torch
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
+)
+from pearl.policy_learners.exploration_modules.common.tiebreaking_strategy import (
+    TiebreakingStrategy,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import Tensor
@@ -120,25 +121,30 @@ def argmax_random_tie_break_per_row(
 def get_model_action_index_batch(
     scores: Tensor,
     mask: Tensor | None = None,
-    randomize_ties: bool = False,
+    tiebreaking_strategy: TiebreakingStrategy = TiebreakingStrategy.NO_TIEBREAKING,
 ) -> torch.Tensor:
     """
     Given a tensor of scores, get the indices of chosen actions.
     Chosen actions are the score argmax (within each row), subject to optional mask.
-    if `randomize_ties`=True, we will also randomize the order of tied actions with
-        maximum values. This has computational cost compared to not randomizing (use 1st index)
+    The tiebreaking_strategy determines how to handle ties:
+    - NO_TIEBREAKING: Always select the first maximum value (fastest)
+    - BATCH_TIEBREAKING: Use the same random permutation for all rows (fast)
+    - PER_ROW_TIEBREAKING: Use independent randomization for each row (most random)
 
     Args:
         scores: A 2D tensor of scores
         mask [Optional]: A 2D score presence mask.
                          If missing, assuming that all scores are unmasked.
+        tiebreaking_strategy: Strategy to use for breaking ties
 
     Returns:
         1D tensor of size (batch_size,)
     """
-    if randomize_ties:
+    if tiebreaking_strategy == TiebreakingStrategy.BATCH_TIEBREAKING:
         model_actions = argmax_random_tie_breaks(scores, mask)
-    else:
+    elif tiebreaking_strategy == TiebreakingStrategy.PER_ROW_TIEBREAKING:
+        model_actions = argmax_random_tie_break_per_row(scores, mask)
+    else:  # NO_TIEBREAKING
         if mask is None:
             # vanilla argmax - no masking or randomization
             model_actions = torch.argmax(scores, dim=1)

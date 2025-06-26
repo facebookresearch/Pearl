@@ -16,6 +16,9 @@ import torch
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
+from pearl.policy_learners.exploration_modules.common.tiebreaking_strategy import (
+    TiebreakingStrategy,
+)
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
     ExplorationType,
@@ -34,7 +37,10 @@ class ScoreExplorationBase(ExplorationModule):
     if that option is selected.
     """
 
-    def __init__(self, randomized_tiebreaking: bool = False) -> None:
+    def __init__(
+        self,
+        randomized_tiebreaking: TiebreakingStrategy = TiebreakingStrategy.NO_TIEBREAKING,
+    ) -> None:
         super().__init__()
         self.exploration_type: ExplorationType = ExplorationType.VALUE
         self.randomized_tiebreaking = randomized_tiebreaking

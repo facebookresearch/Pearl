@@ -13,6 +13,9 @@ import torch
 from pearl.action_representation_modules.identity_action_representation_module import (
     IdentityActionRepresentationModule,
 )
+from pearl.policy_learners.exploration_modules.common.tiebreaking_strategy import (
+    TiebreakingStrategy,
+)
 from pearl.utils.functional_utils.learning.action_utils import (
     argmax_random_tie_break_per_row,
     argmax_random_tie_breaks,
@@ -333,7 +336,9 @@ class TestGetAction(unittest.TestCase):
         argmax_values_returned = {0: set(), 1: set(), 2: set(), 3: set()}
         for _ in range(1000):
             # repeat many times since the function is stochastic
-            argmax = get_model_action_index_batch(scores, mask, randomize_ties=True)
+            argmax = get_model_action_index_batch(
+                scores, mask, tiebreaking_strategy=TiebreakingStrategy.BATCH_TIEBREAKING
+            )
             # make sure argmax returns one of the max element indices
             argmax_values_returned[0].add(argmax[0].item())
             argmax_values_returned[1].add(argmax[1].item())
@@ -367,7 +372,9 @@ class TestGetAction(unittest.TestCase):
         argmax_values_returned = {0: set(), 1: set(), 2: set(), 3: set()}
         for _ in range(1000):
             # repeat many times since the function is stochastic
-            argmax = get_model_action_index_batch(scores, mask, randomize_ties=False)
+            argmax = get_model_action_index_batch(
+                scores, mask, tiebreaking_strategy=TiebreakingStrategy.NO_TIEBREAKING
+            )
             # make sure argmax returns one of the max element indices
             argmax_values_returned[0].add(argmax[0].item())
             argmax_values_returned[1].add(argmax[1].item())
@@ -397,3 +404,90 @@ class TestGetAction(unittest.TestCase):
                 2,
             },
         )
+
+    def test_get_model_actions_per_row_randomize(self) -> None:
+        """Test that PER_ROW_TIEBREAKING randomizes ties independently for each row."""
+        scores = torch.tensor(
+            [[1, 20, 20], [4, 4, 3], [15, 10, 15], [100, float("inf"), float("inf")]]
+        )
+        mask = torch.tensor([[1, 1, 0], [0, 0, 1], [1, 0, 1], [1, 0, 1]])
+        argmax_values_returned = {0: set(), 1: set(), 2: set(), 3: set()}
+        for _ in range(1000):
+            # repeat many times since the function is stochastic
+            argmax = get_model_action_index_batch(
+                scores,
+                mask,
+                tiebreaking_strategy=TiebreakingStrategy.PER_ROW_TIEBREAKING,
+            )
+            # make sure argmax returns one of the max element indices
+            argmax_values_returned[0].add(argmax[0].item())
+            argmax_values_returned[1].add(argmax[1].item())
+            argmax_values_returned[2].add(argmax[2].item())
+            argmax_values_returned[3].add(argmax[3].item())
+        self.assertSetEqual(
+            argmax_values_returned[0],
+            {
+                1,
+            },
+        )
+        self.assertSetEqual(
+            argmax_values_returned[1],
+            {
+                2,
+            },
+        )
+        self.assertSetEqual(argmax_values_returned[2], {0, 2})
+        self.assertSetEqual(
+            argmax_values_returned[3],
+            {
+                2,
+            },
+        )
+
+    def test_tiebreaking_strategies_comparison(self) -> None:
+        """Test and compare the behavior of different tiebreaking strategies."""
+        # Create a tensor with identical rows, each having multiple tied maximum values
+        scores = torch.tensor(
+            [
+                [1, 10, 10, 10],
+                [1, 10, 10, 10],
+                [1, 10, 10, 10],
+                [1, 10, 10, 10],
+            ]
+        )
+
+        # Test NO_TIEBREAKING
+        argmax_no_tiebreaking = get_model_action_index_batch(
+            scores, tiebreaking_strategy=TiebreakingStrategy.NO_TIEBREAKING
+        )
+        # With NO_TIEBREAKING, all rows should select the first maximum value (index 1)
+        self.assertTrue(torch.all(argmax_no_tiebreaking == 1))
+
+        # Test BATCH_TIEBREAKING vs PER_ROW_TIEBREAKING
+        num_trials = 1000
+        batch_same_selection_count = 0
+        per_row_same_selection_count = 0
+
+        for _ in range(num_trials):
+            # BATCH_TIEBREAKING
+            argmax_batch = get_model_action_index_batch(
+                scores, tiebreaking_strategy=TiebreakingStrategy.BATCH_TIEBREAKING
+            )
+            if torch.all(argmax_batch == argmax_batch[0]):
+                batch_same_selection_count += 1
+
+            # PER_ROW_TIEBREAKING
+            argmax_per_row = get_model_action_index_batch(
+                scores, tiebreaking_strategy=TiebreakingStrategy.PER_ROW_TIEBREAKING
+            )
+            if torch.all(argmax_per_row == argmax_per_row[0]):
+                per_row_same_selection_count += 1
+
+        # With BATCH_TIEBREAKING, all rows should always select the same index
+        self.assertAlmostEqual(batch_same_selection_count / num_trials, 1.0, delta=0.01)
+
+        # With PER_ROW_TIEBREAKING, the probability of all rows selecting the same index
+        # should be approximately (1/3)^3 ≈ 0.037 (since each row has 3 tied maximum values)
+        expected_probability = (1 / 3) ** 3
+        per_row_probability = per_row_same_selection_count / num_trials
+        self.assertLess(abs(per_row_probability - expected_probability), 0.05)

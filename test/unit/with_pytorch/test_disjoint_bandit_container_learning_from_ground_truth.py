@@ -15,14 +15,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import torch
+
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
 )
-
 from pearl.policy_learners.contextual_bandits.disjoint_bandit import (
     DisjointBanditContainer,
 )
 from pearl.policy_learners.contextual_bandits.linear_bandit import LinearBandit
+from pearl.policy_learners.exploration_modules.common.tiebreaking_strategy import (
+    TiebreakingStrategy,
+)
 from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploration import (
     DisjointUCBExploration,
 )
@@ -73,7 +76,9 @@ def create_ground_truth_model(
     ground_truth = DisjointBanditContainer(
         feature_dim=state_dim,
         arm_bandits=ground_truth_linear_bandits,
-        exploration_module=DisjointUCBExploration(alpha=0),
+        exploration_module=DisjointUCBExploration(
+            alpha=0, randomized_tiebreaking=TiebreakingStrategy.NO_TIEBREAKING
+        ),
         state_features_only=True,
     )
 
@@ -159,7 +164,9 @@ def create_model(state_dim: int, number_of_actions: int) -> DisjointBanditContai
     return DisjointBanditContainer(
         feature_dim=state_dim,
         arm_bandits=linear_bandits,
-        exploration_module=DisjointUCBExploration(alpha=0),
+        exploration_module=DisjointUCBExploration(
+            alpha=0, randomized_tiebreaking=TiebreakingStrategy.NO_TIEBREAKING
+        ),
         state_features_only=True,
     )
 

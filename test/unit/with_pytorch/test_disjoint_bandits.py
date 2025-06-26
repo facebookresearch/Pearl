@@ -13,7 +13,6 @@ import unittest
 import torch
 import torch.testing as tt
 from parameterized import parameterized_class
-
 from pearl.policy_learners.contextual_bandits.disjoint_bandit import (
     DisjointBanditContainer,
 )
@@ -24,6 +23,7 @@ from pearl.policy_learners.contextual_bandits.linear_bandit import LinearBandit
 from pearl.policy_learners.contextual_bandits.neural_linear_bandit import (
     NeuralLinearBandit,
 )
+
 from pearl.policy_learners.exploration_modules.contextual_bandits.thompson_sampling_exploration import (
     ThompsonSamplingExplorationLinearDisjoint,
 )
