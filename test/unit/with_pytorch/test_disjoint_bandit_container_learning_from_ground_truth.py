@@ -7,8 +7,12 @@
 
 # pyre-strict
 
+import os
 import unittest
 from typing import List, Tuple
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 import torch
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
@@ -322,6 +326,48 @@ def evaluate_model(
     )
 
 
+def plot_mse(mse_values: List[float], window_size: int = 5) -> str:
+    """
+    Plot MSE values and save to a file.
+
+    Args:
+        mse_values: List of MSE values
+        window_size: Window size for moving average
+
+    Returns:
+        Path to the saved plot
+    """
+    num_batches = len(mse_values)
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, num_batches + 1), mse_values, "b-")
+    plt.title("MSE between Batch Rewards and Predictions vs. Batch Number")
+    plt.xlabel("Batch Number")
+    plt.ylabel("Mean Squared Error")
+    plt.grid(True)
+
+    # Add a smoothed curve using moving average
+    if num_batches >= window_size:
+        smoothed_mse = np.convolve(
+            mse_values, np.ones(window_size) / window_size, mode="valid"
+        )
+        plt.plot(
+            range(window_size, num_batches + 1),
+            smoothed_mse,
+            "r-",
+            label=f"Moving Average (window={window_size})",
+        )
+        plt.legend()
+
+    # Save the plot
+    output_dir = os.path.dirname(os.path.abspath(__file__))
+    plot_path = os.path.join(output_dir, "disjoint_bandit_mse.png")
+    plt.savefig(plot_path)
+    plt.close()
+
+    return plot_path
+
+
 def print_action_distribution(
     counter: ActionCounter, total_samples: int, title: str = "Action distribution:"
 ) -> None:
@@ -460,6 +506,10 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
         print_evaluation_comparison(
             ground_truth_eval_action_counts, learned_eval_action_counts, num_test_states
         )
+
+        # Plot MSE values
+        plot_path = plot_mse(mse_values, window_size=5)
+        print(f"\nMSE plot saved to: {plot_path}")
 
         # Calculate final MSE
         final_mse = mse_values[-1]
