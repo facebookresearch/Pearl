@@ -24,6 +24,9 @@ from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
+from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
+    ScoreExplorationBase,
+)
 from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.action_utils import (
@@ -150,8 +153,27 @@ class DisjointLinearBandit(ContextualBanditBase):
         action_space_to_score: DiscreteActionSpace,
         exploit: bool = False,
     ) -> torch.Tensor:
-        raise NotImplementedError(
-            "DisjointLinearBandit.get_scores is not yet implemented"
+        feature = concatenate_actions_to_state(
+            subjective_state=subjective_state,
+            action_space=action_space_to_score,
+            state_features_only=self._state_features_only,
+            action_representation_module=self.action_representation_module,
+        )
+
+        values = ensemble_forward(
+            self._linear_regressions_list, feature, use_for_loop=True
+        )
+        if exploit:
+            return values
+
+        exploration_module = self.exploration_module
+        assert isinstance(exploration_module, ScoreExplorationBase)
+
+        return exploration_module.get_scores(
+            subjective_state=feature,
+            values=values,
+            action_space=action_space_to_score,
+            representation=self._linear_regressions_list,
         )
 
     def set_history_summarization_module(
