@@ -7,6 +7,7 @@
 
 # pyre-strict
 
+from __future__ import annotations
 from abc import abstractmethod
 from typing import List
 from warnings import warn
@@ -27,10 +28,18 @@ from pearl.utils.tensor_like import assert_is_tensor_like
 
 
 class ScoreExplorationBase(ExplorationModule):
-    """
-    Value exploration base module.
-    Specific exploration module subclasses need to implement `get_scores`.
-    Actions with highest scores will be chosen.
+    """Base class for value-based exploration modules.
+
+    Sub-classes implement :meth:`get_scores`, returning a preference score for
+    each action in the provided :class:`ActionSpace`. Higher scores correspond
+    to more preferred actions.
+
+    Notes
+    -----
+    * ``get_scores`` must return a tensor with shape ``(batch_size, action_count)``.
+    * For a single transition without a leading batch dimension, sub-classes
+      should still return scores with shape ``(1, action_count)``; this method
+      will then return a scalar action index.
     """
 
     def __init__(self) -> None:
@@ -56,39 +65,30 @@ class ScoreExplorationBase(ExplorationModule):
         """
         if exploit_action is not None:
             warn(
-                "exploit_action shouldn't be used. use `values` instead",
+                "exploit_action is deprecated. use `values` instead",
                 DeprecationWarning,
             )
             return exploit_action
-        assert values is not None
+        
+        if values is None:  # pragma: no cover - sanity check
+            raise ValueError("`values` must be supplied for value-based exploration.")
+
         scores = self.get_scores(
             subjective_state=subjective_state,
             action_space=action_space,
             values=values,
             representation=representation,
-        )  # shape: (batch_size, action_count)
-        scores = assert_is_tensor_like(scores)
-        action_index_batch = get_model_action_index_batch(
-            scores, action_availability_mask
         )
-        return action_index_batch.squeeze(-1)
-        # FIXME: the squeeze(-1) is a hack.
-        # It is used to get rid of the batch dimension if the batch has a
-        # single element. For example, if action_index_batch is
-        # torch.tensor([0]), then the result will be the batch-less index 0.
-        # The rationale is that if the batch has a single element, then
-        # subject_state was batchless and self.get_score introduced a batch
-        # dimension (for uniformity and convenience of operations, which can
-        # then all assume batch form), so the batch dimension should be removed.
-        # The problem with this approach is that it is heuristic and not
-        # correct in all cases. For example, if subject_state is *not* batchless
-        # but has a single element, then the returned value should be a
-        # single-element batch containing one index, but in this case
-        # squeeze will incorrectly remove the batch dimension.
-        # The correct approach should be that all functions manipulate tensors
-        # in the same way PyTorch modules do, namely accepting input that
-        # may have a batch dimension or not, and have all following tensors
-        # mirroring that.
+        scores = assert_is_tensor_like(scores)
+
+        action_index_batch = get_model_action_index_batch(scores, action_availability_mask)
+        action_index_batch = action_index_batch.squeeze(-1)
+
+        # If caller provided a single transition without a batch dimension, return a scalar rather than a size-1 tensor.
+        if subjective_state.dim() == scores.dim() - 1:
+            return action_index_batch.squeeze(0)
+
+        return action_index_batch
 
     @abstractmethod
     def get_scores(
@@ -96,20 +96,25 @@ class ScoreExplorationBase(ExplorationModule):
         subjective_state: SubjectiveState,
         action_space: ActionSpace,
         values: torch.Tensor,
-        exploit_action: Action | None = None,
+        *,
         representation: torch.nn.Module | None = None,
-    ) -> Action:
+    ) -> torch.Tensor:
         """
         Get the scores for each action.
 
         Args:
-            subjective_state is in shape of (batch_size, feature_size) or (feature_size)
-            for a single transition
-            values is in shape of (batch_size, action_count) or (action_count)
+            subjective_state : torch.Tensor
+                Shape ``(batch_size, feature_dim)`` or ``(feature_dim,)``.
+            action_space : ActionSpace
+                The discrete action space.
+            values : torch.Tensor
+                Value estimates with shape ``(batch_size, action_count)`` or ``(action_count,)``.
+            representation : torch.nn.Module, optional
+                A state representation network.
         Returns:
             return shape(batch_size, action_count)
         """
-        pass
+        raise NotImplementedError
 
     def compare(self, other: ExplorationModule) -> str:
         """
