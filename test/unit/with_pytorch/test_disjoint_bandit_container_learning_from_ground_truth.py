@@ -32,19 +32,8 @@ from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpac
 # Helper functions for disjoint bandit testing
 
 
-class ActionCounter:
-    """Class to hold action counts to avoid nonlocal issues."""
-
-    def __init__(self, num_actions: int) -> None:
-        self.counts: torch.Tensor = torch.zeros(num_actions)
-
-    def update(self, actions: torch.Tensor) -> None:
-        for a in actions:
-            self.counts[a.item()] += 1
-
-
 def create_ground_truth_model(
-    state_dim: int, number_of_actions: int, unobserved_actions_first_index: int
+    state_dim: int, number_of_actions: int, zeroed_actions_first_index: int = -1
 ) -> Tuple[DisjointBanditContainer, DiscreteActionSpace]:
     """
     Create a ground truth model with linear bandits for each action.
@@ -52,11 +41,15 @@ def create_ground_truth_model(
     Args:
         state_dim: Dimension of the state space
         number_of_actions: Number of actions in the action space
-        unobserved_actions_first_index: Actions >= this index should never be selected
+        zeroed_actions_first_index: Actions >= this index will have zeroed coefficients
+                                    Defaults to number_of_actions, meaning no actions are zeroed
 
     Returns:
         Tuple of (ground_truth_model, action_space)
     """
+    if zeroed_actions_first_index < 0:
+        zeroed_actions_first_index = number_of_actions
+
     action_space: DiscreteActionSpace = DiscreteActionSpace(
         [torch.tensor([i]) for i in range(number_of_actions)]
     )
@@ -65,17 +58,11 @@ def create_ground_truth_model(
     for action_idx in range(number_of_actions):
         true_coefs = torch.zeros(state_dim + 1)  # +1 for intercept
 
-        if action_idx >= unobserved_actions_first_index:
-            # Unobserved actions lead the corresponding linear bandits
-            # to have thresholds and weights with values 0
-            # (their initial values, since they are never updated).
-            # We set the ground truth in the same way so that
-            # we don't penalize that assumption during this test.
+        if action_idx >= zeroed_actions_first_index:
             true_coefs = torch.zeros(state_dim + 1)
         else:
             true_coefs[0] = 0  # intercept
-            for i in range(1, state_dim + 1):
-                true_coefs[i] = torch.rand(1).item() * 2 - 1
+            true_coefs[1:] = torch.rand(state_dim) * 2 - 1
 
         ground_truth_linear_bandit = LinearBandit(
             feature_dim=state_dim,
@@ -97,11 +84,10 @@ def generate_batch(
     number_of_samples: int,
     state_dim: int,
     ground_truth: DisjointBanditContainer,
-    counter: ActionCounter,
     unobserved_actions_first_index: int,
     action_space: DiscreteActionSpace,
     noise_scale: float = 0.1,
-) -> TransitionBatch:
+) -> Tuple[TransitionBatch, torch.Tensor]:
     """
     Generate a batch of transitions using the ground truth model.
 
@@ -131,8 +117,10 @@ def generate_batch(
         low=0, high=unobserved_actions_first_index, size=(number_of_samples, 1)
     )
 
-    # Update action counts
-    counter.update(action)
+    # Count actions
+    action_counts = torch.zeros(action_space.n)
+    for a in action:
+        action_counts[a.item()] += 1
 
     # Get the base reward from the ground truth model
     base_reward = scores.gather(1, action)
@@ -143,16 +131,17 @@ def generate_batch(
 
     action_representation = ground_truth.action_representation_module(action)
 
-    return TransitionBatch(
-        state=state,
-        action=action_representation,
-        reward=noisy_reward,
+    return (
+        TransitionBatch(
+            state=state,
+            action=action_representation,
+            reward=noisy_reward,
+        ),
+        action_counts,
     )
 
 
-def create_policy_learner(
-    state_dim: int, number_of_actions: int
-) -> DisjointBanditContainer:
+def create_model(state_dim: int, number_of_actions: int) -> DisjointBanditContainer:
     """
     Create a new policy learner with linear bandits for each action.
 
@@ -176,21 +165,20 @@ def create_policy_learner(
 
 
 def train_model(
-    policy_learner: DisjointBanditContainer,
+    model: DisjointBanditContainer,
     ground_truth: DisjointBanditContainer,
     state_dim: int,
     action_space: DiscreteActionSpace,
-    training_counter: ActionCounter,
     unobserved_actions_first_index: int,
     num_batches: int,
     batch_size: int,
     noise_scale: float = 0.1,
-) -> List[float]:
+) -> Tuple[List[float], torch.Tensor]:
     """
     Train the policy learner on batches generated from the ground truth model.
 
     Args:
-        policy_learner: Policy learner to train
+        model: Policy learner to train
         ground_truth: Ground truth model
         state_dim: Dimension of the state space
         action_space: Action space
@@ -203,26 +191,29 @@ def train_model(
     Returns:
         List of MSE values for each batch
     """
-    # List to store MSE values for each batch
+    # List to store MSE values for each batch and initialize action counts
     mse_values = []
+    training_action_counts = torch.zeros(action_space.n)
 
     for batch_idx in range(num_batches):
-        batch = generate_batch(
+        batch, batch_action_counts = generate_batch(
             batch_size,
             state_dim,
             ground_truth,
-            training_counter,
             unobserved_actions_first_index,
             action_space,
             noise_scale,
         )
+
+        # Update action counts
+        training_action_counts += batch_action_counts
 
         # Calculate predictions before learning
         state = batch.state
         action_indices = batch.action
 
         # Get predictions from the learned model
-        scores = policy_learner.get_scores(
+        scores = model.get_scores(
             subjective_state=state,
             action_space_to_score=action_space,
             exploit=True,
@@ -238,7 +229,7 @@ def train_model(
         mse_values.append(mse)
 
         # Learn from the batch
-        policy_learner.learn_batch(batch)
+        model.learn_batch(batch)
 
         # Print progress every 10 batches
         if (batch_idx + 1) % 10 == 0:
@@ -246,23 +237,58 @@ def train_model(
                 f"Processed {batch_idx + 1}/{num_batches} batches, Current MSE: {mse:.6f}"
             )
 
-    return mse_values
+    return mse_values, training_action_counts
+
+
+def tiebreaker_argmax(scores: torch.Tensor, epsilon: float = 1e-6) -> torch.Tensor:
+    """
+    Select actions using a tiebreaker when scores are within epsilon of the maximum.
+
+    Args:
+        scores: Tensor of shape (batch_size, num_actions) containing scores for each action
+        epsilon: Threshold for considering scores as tied
+
+    Returns:
+        Tensor of shape (batch_size,) containing selected action indices
+    """
+    max_scores, _ = torch.max(scores, dim=1, keepdim=True)
+
+    # Find actions that are within epsilon of the maximum score
+    tied_actions = scores >= max_scores - epsilon
+
+    # For each example in the batch, randomly select one of the tied actions
+    selected_actions = torch.zeros(scores.shape[0], dtype=torch.long)
+
+    for i in range(scores.shape[0]):
+        tied_indices = torch.nonzero(tied_actions[i]).squeeze()
+
+        # If there's only one max action, use it
+        if tied_indices.dim() == 0:
+            selected_actions[i] = tied_indices.item()
+        else:
+            # Randomly select one of the tied actions
+            random_idx = torch.randint(0, tied_indices.size(0), (1,))
+            selected_actions[i] = tied_indices[random_idx].item()
+
+    return selected_actions
 
 
 def evaluate_model(
-    policy_learner: DisjointBanditContainer,
+    model: DisjointBanditContainer,
+    use_tiebreaker: bool,
     ground_truth: DisjointBanditContainer,
     state_dim: int,
     action_space: DiscreteActionSpace,
     number_of_actions: int,
     unobserved_actions_first_index: int,
     num_test_states: int = 1000,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, float]:
+) -> Tuple[torch.Tensor, torch.Tensor, float]:
     """
     Evaluate the policy learner against the ground truth model.
 
     Args:
-        policy_learner: Policy learner to evaluate
+        model: Policy learner to evaluate
+        use_tiebreaker: whether to tie-break identical scores
         ground_truth: Ground truth model
         state_dim: Dimension of the state space
         action_space: Action space
@@ -271,7 +297,7 @@ def evaluate_model(
         num_test_states: Number of test states to evaluate on
 
     Returns:
-        Tuple of (ground_truth_actions, learned_actions, ground_truth_eval_action_counts,
+        Tuple of (ground_truth_eval_action_counts,
                  learned_eval_action_counts, agreement_percentage)
     """
     # Generate test states
@@ -283,15 +309,19 @@ def evaluate_model(
         action_space_to_score=action_space,
         exploit=True,
     )
-    ground_truth_actions = torch.argmax(ground_truth_scores, dim=1)
+    if use_tiebreaker:
+        ground_truth_actions = tiebreaker_argmax(ground_truth_scores)
+    else:
+        ground_truth_actions = torch.argmax(ground_truth_scores, dim=1)
 
     # Get exploit actions from learned model
-    learned_scores = policy_learner.get_scores(
+    learned_scores = model.get_scores(
         subjective_state=test_states,
         action_space_to_score=action_space,
         exploit=True,
     )
-    learned_actions = torch.argmax(learned_scores, dim=1)
+    # Use tiebreaker selection instead of argmax
+    learned_actions = tiebreaker_argmax(learned_scores)
 
     # Check that learned scores for unobserved actions are identical across all test examples
     for action_idx in range(unobserved_actions_first_index, number_of_actions):
@@ -318,8 +348,6 @@ def evaluate_model(
     agreement_percentage = agreement * 100
 
     return (
-        ground_truth_actions,
-        learned_actions,
         ground_truth_eval_action_counts,
         learned_eval_action_counts,
         agreement_percentage,
@@ -369,18 +397,18 @@ def plot_mse(mse_values: List[float], window_size: int = 5) -> str:
 
 
 def print_action_distribution(
-    counter: ActionCounter, total_samples: int, title: str = "Action distribution:"
+    action_counts: torch.Tensor, total_samples: int, title: str = "Action distribution:"
 ) -> None:
     """
     Print the distribution of actions.
 
     Args:
-        counter: Counter with action counts
+        action_counts: Tensor with action counts
         total_samples: Total number of samples
         title: Title for the distribution printout
     """
     print(f"\n{title}")
-    for action_idx, count in enumerate(counter.counts):
+    for action_idx, count in enumerate(action_counts):
         count_val = count.item()
         percentage = (count_val / total_samples) * 100
         print(f"Action {action_idx}: {count_val:.0f} occurrences ({percentage:.2f}%)")
@@ -390,6 +418,7 @@ def print_evaluation_comparison(
     ground_truth_eval_action_counts: torch.Tensor,
     learned_eval_action_counts: torch.Tensor,
     num_test_states: int,
+    unobserved_actions_first_index: int,
 ) -> None:
     """
     Print a comparison of ground truth and learned model action distributions.
@@ -398,6 +427,7 @@ def print_evaluation_comparison(
         ground_truth_eval_action_counts: Counts of actions selected by ground truth model
         learned_eval_action_counts: Counts of actions selected by learned model
         num_test_states: Number of test states
+        unobserved_actions_first_index: Actions >= this index should never be selected
     """
     print("\nEvaluation action distribution:")
     print("Action | Ground Truth | Learned Model")
@@ -409,8 +439,13 @@ def print_evaluation_comparison(
         learned_percentage = (learned_count / num_test_states) * 100
         print(
             f"  {action_idx:<2}  |    {gt_count:>3.0f} ({gt_percentage:>5.1f}%) | "
-            f"   {learned_count:>3.0f} ({learned_percentage:>5.1f}%)"
+            f"   {learned_count:>3.0f} ({learned_percentage:>5.1f}%)",
+            end="",
         )
+        if action_idx == unobserved_actions_first_index:
+            print(" (first action not observed during training)")
+        else:
+            print()
 
 
 class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
@@ -426,34 +461,47 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
         and that their scores are identical across all evaluation examples.
         """
         # Setup parameters
-        state_dim = 78
-        number_of_actions = 24
-        unobserved_actions_first_index = (
-            16  # Actions >= this index should never be selected
-        )
-        num_batches = 100
-        batch_size = 100
-        num_test_states = 1000
-        noise_scale = 1.0
+        use_tiebreaker = True
+        mini = False
+        if mini:
+            state_dim = 6
+            number_of_actions = 5
+            unobserved_actions_first_index = 3  # Actions >= this are not in data
+            num_batches = 100
+            batch_size = 2
+            num_test_states = 1_000
+            noise_scale = 0.1
+            required_agreement_percentage = 40.0  # empirical
+        else:
+            state_dim = 78
+            number_of_actions = 24
+            unobserved_actions_first_index = 5  # Actions >= this are not in data
+            num_batches = 100
+            batch_size = 100
+            num_test_states = 10_000
+            noise_scale = 1.0
+            required_agreement_percentage = 80.0  # empirical
 
         # Create ground truth model and action space
+        # We zero out the coefficients for actions >= unobserved_actions_first_index
+        # to match the learned model, which will always be zero and never updated
+        # because their actions are never selected during training.
+        # We do this so the agreement test down below makes sense.
         ground_truth, action_space = create_ground_truth_model(
-            state_dim, number_of_actions, unobserved_actions_first_index
+            state_dim,
+            number_of_actions,
+            zeroed_actions_first_index=unobserved_actions_first_index,
         )
 
-        # Initialize counter for action occurrences during training
-        training_counter = ActionCounter(number_of_actions)
-
         # Create policy learner
-        policy_learner = create_policy_learner(state_dim, number_of_actions)
+        model = create_model(state_dim, number_of_actions)
 
-        # Train the model and collect MSE values
-        mse_values = train_model(
-            policy_learner=policy_learner,
+        # Train the model and collect MSE values and action counts
+        mse_values, training_action_counts = train_model(
+            model=model,
             ground_truth=ground_truth,
             state_dim=state_dim,
             action_space=action_space,
-            training_counter=training_counter,
             unobserved_actions_first_index=unobserved_actions_first_index,
             num_batches=num_batches,
             batch_size=batch_size,
@@ -462,28 +510,29 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
 
         # Print training action distribution
         print_action_distribution(
-            training_counter, num_batches * batch_size, "Training action distribution:"
+            training_action_counts,
+            num_batches * batch_size,
+            "Training action distribution:",
         )
 
         # Assert that no training data was generated with any of the unobserved actions
         for action_idx in range(unobserved_actions_first_index, number_of_actions):
             self.assertEqual(
-                training_counter.counts[action_idx].item(),
+                training_action_counts[action_idx].item(),
                 0,
                 f"Action {action_idx} should never be selected during training, "
                 f"but was selected "
-                f"{training_counter.counts[action_idx].item()} times",
+                f"{training_action_counts[action_idx].item()} times",
             )
 
         # Evaluate the model
         (
-            ground_truth_actions,
-            learned_actions,
             ground_truth_eval_action_counts,
             learned_eval_action_counts,
             agreement_percentage,
         ) = evaluate_model(
-            policy_learner=policy_learner,
+            model=model,
+            use_tiebreaker=use_tiebreaker,
             ground_truth=ground_truth,
             state_dim=state_dim,
             action_space=action_space,
@@ -492,19 +541,12 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
             num_test_states=num_test_states,
         )
 
-        # Assert that none of the unobserved actions are selected in evaluation
-        for action_idx in range(unobserved_actions_first_index, number_of_actions):
-            self.assertEqual(
-                ground_truth_eval_action_counts[action_idx].item(),
-                0,
-                f"Action {action_idx} should never be selected in ground truth evaluation, "
-                f"but was selected "
-                f"{ground_truth_eval_action_counts[action_idx].item()} times",
-            )
-
         # Print evaluation comparison
         print_evaluation_comparison(
-            ground_truth_eval_action_counts, learned_eval_action_counts, num_test_states
+            ground_truth_eval_action_counts,
+            learned_eval_action_counts,
+            num_test_states,
+            unobserved_actions_first_index,
         )
 
         # Plot MSE values
@@ -517,12 +559,10 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
 
         # Given rewards are noise, we don't expect complete agreement
         # The following is based on empirical observations
-        required_agreement_percentage = 80.0
         print(f"\nAction agreement percentage: {agreement_percentage:.2f}%")
-        error_msg = (
-            f"Ground truth and learned model only agree on "
-            f"{agreement_percentage:.2f}% of actions"
-        )
         self.assertGreaterEqual(
-            agreement_percentage, required_agreement_percentage, error_msg
+            agreement_percentage,
+            required_agreement_percentage,
+            f"Ground truth and learned model only agree on "
+            f"{agreement_percentage:.2f}% of actions",
         )
