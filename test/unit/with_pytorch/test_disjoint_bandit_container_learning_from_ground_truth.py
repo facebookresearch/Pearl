@@ -77,7 +77,7 @@ def create_ground_truth_model(
         feature_dim=state_dim,
         arm_bandits=ground_truth_linear_bandits,
         exploration_module=DisjointUCBExploration(
-            alpha=0, randomized_tiebreaking=TiebreakingStrategy.NO_TIEBREAKING
+            alpha=0, randomized_tiebreaking=TiebreakingStrategy.PER_ROW_TIEBREAKING
         ),
         state_features_only=True,
     )
@@ -165,7 +165,7 @@ def create_model(state_dim: int, number_of_actions: int) -> DisjointBanditContai
         feature_dim=state_dim,
         arm_bandits=linear_bandits,
         exploration_module=DisjointUCBExploration(
-            alpha=0, randomized_tiebreaking=TiebreakingStrategy.NO_TIEBREAKING
+            alpha=0, randomized_tiebreaking=TiebreakingStrategy.BATCH_TIEBREAKING
         ),
         state_features_only=True,
     )
@@ -500,7 +500,7 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
             zeroed_actions_first_index=unobserved_actions_first_index,
         )
 
-        # Create policy learner
+        # Create model
         model = create_model(state_dim, number_of_actions)
 
         # Train the model and collect MSE values and action counts
