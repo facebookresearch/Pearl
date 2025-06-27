@@ -53,7 +53,6 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
             feature_dim=feature_dim,
             arm_bandits=[self.bandit_class(**bandit_kwargs) for _ in range(num_arms)],
             exploration_module=DisjointUCBExploration(alpha=0),
-            state_features_only=True,
         )
         # y0 = x1  + x2
         # y1 = 2x1 + x2
@@ -193,9 +192,9 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
             [torch.tensor([i]) for i in range(action_count)]
         )
         bandit_kwargs = copy.deepcopy(self.bandit_kwargs)
-        bandit_kwargs["feature_dim"] = state_dim + action_dim
+        bandit_kwargs["feature_dim"] = state_dim
         policy_learner = DisjointBanditContainer(
-            feature_dim=state_dim + action_dim,
+            feature_dim=state_dim,
             arm_bandits=[
                 self.bandit_class(**bandit_kwargs) for _ in range(action_count)
             ],

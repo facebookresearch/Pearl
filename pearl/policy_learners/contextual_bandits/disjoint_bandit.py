@@ -51,7 +51,6 @@ class DisjointBanditContainer(ContextualBanditBase):
         exploration_module: ExplorationModule,
         training_rounds: int = 100,
         batch_size: int = 128,
-        state_features_only: bool = False,
     ) -> None:
         super().__init__(
             feature_dim=feature_dim,
@@ -62,7 +61,6 @@ class DisjointBanditContainer(ContextualBanditBase):
         # Currently our disjoint LinUCB usecase only use LinearRegression
         self._arm_bandits: torch.nn.ModuleList = torch.nn.ModuleList(arm_bandits)
         self._n_arms: int = len(arm_bandits)
-        self._state_features_only = state_features_only
         self._null_batch: TransitionBatch | None = None
 
     @property
@@ -185,7 +183,7 @@ class DisjointBanditContainer(ContextualBanditBase):
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
             action_space=available_action_space,
-            state_features_only=self._state_features_only,
+            state_features_only=True,
             action_representation_module=self.action_representation_module,
         )
         # (batch_size, action_count, feature_size)
@@ -218,13 +216,12 @@ class DisjointBanditContainer(ContextualBanditBase):
         # The following is commented out because it prevents tracing
         # torch.fx.proxy.TraceError: symbolically traced variables cannot be used
         # as inputs to control flow
-        # if self._state_features_only:
-        #     assert self.feature_dim == subjective_state.shape[-1]
+        # assert self.feature_dim == subjective_state.shape[-1]
 
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
             action_space=action_space_to_score,
-            state_features_only=self._state_features_only,
+            state_features_only=True,
             action_representation_module=self.action_representation_module,
         )
         # (batch_size, action_count, feature_size)
@@ -279,11 +276,6 @@ class DisjointBanditContainer(ContextualBanditBase):
             if self._n_arms != other._n_arms:
                 differences.append(
                     f"_n_arms is different: {self._n_arms} vs {other._n_arms}"
-                )
-            if self._state_features_only != other._state_features_only:
-                differences.append(
-                    f"_state_features_only is different: {self._state_features_only} "
-                    + f"vs {other._state_features_only}"
                 )
 
             # Compare arm bandits

@@ -643,12 +643,6 @@ class TestCompare(TestCase):
         # Compare module1 with module2 (should have no differences initially)
         self.assertEqual(module1.compare(module2), "")
 
-        # Modify an attribute of module2 to create a difference
-        module2._state_features_only = not module2._state_features_only
-
-        # Now the comparison should show a difference
-        self.assertNotEqual(module1.compare(module2), "")
-
         # Modify an arm bandit in module2
         assert isinstance((ab0 := arm_bandits2[0]), LinearBandit)
         ab0.model.gamma = 0.9

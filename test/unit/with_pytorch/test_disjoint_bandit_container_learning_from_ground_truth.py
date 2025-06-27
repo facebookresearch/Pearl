@@ -79,7 +79,6 @@ def create_ground_truth_model(
         exploration_module=DisjointUCBExploration(
             alpha=0, randomized_tiebreaking=TiebreakingStrategy.PER_ROW_TIEBREAKING
         ),
-        state_features_only=True,
     )
 
     return ground_truth, action_space
@@ -175,7 +174,6 @@ def create_model(state_dim: int, number_of_actions: int) -> DisjointBanditContai
         exploration_module=DisjointUCBExploration(
             alpha=1, randomized_tiebreaking=TiebreakingStrategy.PER_ROW_TIEBREAKING
         ),
-        state_features_only=True,
     )
 
 
