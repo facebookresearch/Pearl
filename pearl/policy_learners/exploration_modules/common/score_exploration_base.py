@@ -26,6 +26,7 @@ from pearl.policy_learners.exploration_modules.exploration_module import (
 from pearl.utils.functional_utils.learning.action_utils import (
     get_model_action_index_batch,
 )
+from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from pearl.utils.tensor_like import assert_is_tensor_like
 
 
@@ -56,8 +57,8 @@ class ScoreExplorationBase(ExplorationModule):
     ) -> Action:
         """
         Args:
-            subjective_state is in shape of (batch_size, feature_size) or (feature_size)
-            for a single transition
+            subjective_state is in shape of (batch_size, action_count, feature_size)
+            or (action_count, feature_size) for a single transition
             values is in shape of (batch_size, action_count) or (action_count)
         Returns:
             return shape(batch_size,)
@@ -68,7 +69,19 @@ class ScoreExplorationBase(ExplorationModule):
                 DeprecationWarning,
             )
             return exploit_action
+
+        assert isinstance(action_space, DiscreteActionSpace)
+        assert subjective_state.ndim in {2, 3}
+
+        # TODO: commenting out assertion becase NeuralLinearBandit
+        # seems to violate it in this line:
+        # subjective_state=model_ret["nn_output"]. Fix this.
+        # assert subjective_state.shape[-2] == action_space.n
+
         assert values is not None
+        assert values.ndim in {1, 2}
+        assert values.shape[-1] == action_space.n
+
         scores = self.get_scores(
             subjective_state=subjective_state,
             action_space=action_space,
@@ -81,24 +94,11 @@ class ScoreExplorationBase(ExplorationModule):
             action_availability_mask,
             self.randomized_tiebreaking,
         )
-        return action_index_batch.squeeze(-1)
-        # FIXME: the squeeze(-1) is a hack.
-        # It is used to get rid of the batch dimension if the batch has a
-        # single element. For example, if action_index_batch is
-        # torch.tensor([0]), then the result will be the batch-less index 0.
-        # The rationale is that if the batch has a single element, then
-        # subject_state was batchless and self.get_score introduced a batch
-        # dimension (for uniformity and convenience of operations, which can
-        # then all assume batch form), so the batch dimension should be removed.
-        # The problem with this approach is that it is heuristic and not
-        # correct in all cases. For example, if subject_state is *not* batchless
-        # but has a single element, then the returned value should be a
-        # single-element batch containing one index, but in this case
-        # squeeze will incorrectly remove the batch dimension.
-        # The correct approach should be that all functions manipulate tensors
-        # in the same way PyTorch modules do, namely accepting input that
-        # may have a batch dimension or not, and have all following tensors
-        # mirroring that.
+
+        actions = torch.nn.functional.embedding(
+            action_index_batch, action_space.actions_batch
+        )
+        return actions
 
     @abstractmethod
     def get_scores(

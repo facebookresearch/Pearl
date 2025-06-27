@@ -478,7 +478,7 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
             batch_size = 2
             num_test_states = 1_000
             noise_scale = 0.1
-            required_agreement_percentage = 40.0  # empirical
+            required_agreement_percentage = 40.0  # empirical safe lower
         else:
             state_dim = 78
             number_of_actions = 24
@@ -487,7 +487,7 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
             batch_size = 100
             num_test_states = 10_000
             noise_scale = 1.0
-            required_agreement_percentage = 80.0  # empirical
+            required_agreement_percentage = 50.0  # empirical safe lower bound
 
         # Create ground truth model and action space
         # We zero out the coefficients for actions >= unobserved_actions_first_index

@@ -96,11 +96,16 @@ class TestLinearBandits(unittest.TestCase):
         )  # deep copy as we are going to change exploration module
         batch = self.batch
         action_space = DiscreteActionSpace(actions=list(batch.action))
+        action_dim = 2
         # action 2 has feature vector as 3, 2, has highest sum
-        self.assertEqual(policy_learner.act(batch.state[0], action_space), 2)
+        action = policy_learner.act(batch.state[0], action_space)
+        # TODO: act has a batch dimension even when input does not,
+        # against PyTorch convention. Fix this.
+        action = action[0]  # nip batch dimension
+        self.assertTrue(torch.equal(action, action_space.actions[2]))
         # test with batch state
         actions = policy_learner.act(batch.state, action_space)
-        self.assertEqual(actions.shape, (batch.reward.shape[0],))
+        self.assertEqual(actions.shape, (batch.reward.shape[0], action_dim))
 
         policy_learner.exploration_module = UCBExploration(alpha=1)
 
@@ -188,9 +193,8 @@ class TestLinearBandits(unittest.TestCase):
         # self.assertEqual(actions.shape, batch.reward.shape)
         self.assertTrue(selected_actions.shape[0] == batch.state.shape[0])
 
-        self.assertTrue(
-            all(a in range(0, action_space.n) for a in selected_actions.tolist())
-        )
+        for a in selected_actions:
+            self.assertIn(a, action_space.actions_batch)
 
     def test_linear_efficient_thompson_sampling_act(self) -> None:
         """
@@ -211,9 +215,8 @@ class TestLinearBandits(unittest.TestCase):
         # self.assertEqual(actions.shape, batch.reward.shape)
         self.assertTrue(selected_actions.shape[0] == batch.state.shape[0])
 
-        self.assertTrue(
-            all(a in range(0, action_space.n) for a in selected_actions.tolist())
-        )
+        for a in selected_actions:
+            self.assertIn(a, action_space.actions_batch)
 
     def test_discounting(self) -> None:
         """

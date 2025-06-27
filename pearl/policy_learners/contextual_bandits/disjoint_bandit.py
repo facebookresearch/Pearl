@@ -190,6 +190,9 @@ class DisjointBanditContainer(ContextualBanditBase):
         )
         # (batch_size, action_count, feature_size)
 
+        # TODO: concatenate_action_to_state currently adds a batch dimension
+        # if there isn't one, which is against PyTorch convention.
+
         values = ensemble_forward(self.models, feature, use_for_loop=True)
         return self.exploration_module.act(
             subjective_state=feature,

@@ -157,6 +157,7 @@ class TestNeuralLinearBandits(unittest.TestCase):
             reward=reward,
             weight=torch.ones(batch_size, 1),
         )
+        action_dim = batch.action.shape[-1]
         losses = []
         for i in range(epochs):
             if i == 1:
@@ -199,7 +200,7 @@ class TestNeuralLinearBandits(unittest.TestCase):
         action = policy_learner.act(
             subjective_state=state, available_action_space=action_space
         )
-        self.assertEqual(action.shape, (batch_size,))
+        self.assertEqual(action.shape, (batch_size, action_dim))
 
     def test_discounting(self) -> None:
         """

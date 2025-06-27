@@ -154,9 +154,8 @@ class TestDisjointLinearBandits(unittest.TestCase):
         )
         self.assertTrue(selected_actions.shape[0] == batch.state.shape[0])
 
-        self.assertTrue(
-            all(a in range(0, action_space.n) for a in selected_actions.tolist())
-        )
+        for a in selected_actions:
+            self.assertIn(a, action_space.actions_batch)
 
     def test_ucb_action_vector(self) -> None:
         """
@@ -185,11 +184,14 @@ class TestDisjointLinearBandits(unittest.TestCase):
         action = policy_learner.act(
             subjective_state=batch.state[0], action_space=action_space
         )
-        self.assertEqual(action.shape, ())
+        # TODO: currently, act returns actions with a batch dimension
+        # even if state did not have a batch dimension. This is not
+        # consistent with PyTorch conventions.
+        self.assertEqual(action.shape, (1, action_dim))
         action = policy_learner.act(
             subjective_state=batch.state, action_space=action_space
         )
-        self.assertEqual(action.shape, torch.Size([batch_size]))
+        self.assertEqual(action.shape, (batch_size, action_dim))
 
 
 @parameterized_class(
@@ -373,11 +375,14 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
         action = policy_learner.act(
             subjective_state=batch.state[0], available_action_space=action_space
         )
-        self.assertEqual(action.shape, ())
+        # TODO: currently, act returns actions with a batch dimension
+        # even if state did not have a batch dimension. This is not
+        # consistent with PyTorch conventions.
+        self.assertEqual(action.shape, (1, action_dim))
         action = policy_learner.act(
             subjective_state=batch.state, available_action_space=action_space
         )
-        self.assertEqual(action.shape, torch.Size([batch_size]))
+        self.assertEqual(action.shape, torch.Size([batch_size, action_dim]))
 
     def test_get_scores(self) -> None:
         # deep copy as we are going to change exploration module

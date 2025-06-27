@@ -21,6 +21,7 @@ from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpac
 class TestNeuralContextualBandit(unittest.TestCase):
     def test_basic(self) -> None:
         feature_dim = 15
+        action_dim = feature_dim - 3
         batch_size = feature_dim * 4  # it is important to have enough data for training
         policy_learner = NeuralBandit(
             feature_dim=feature_dim,
@@ -29,7 +30,7 @@ class TestNeuralContextualBandit(unittest.TestCase):
             exploration_module=NoExploration(),
         )
         state = torch.randn(batch_size, 3)
-        action = torch.randn(batch_size, feature_dim - 3)
+        action = torch.randn(batch_size, action_dim)
         batch = TransitionBatch(
             state=state,
             action=action,
@@ -37,6 +38,7 @@ class TestNeuralContextualBandit(unittest.TestCase):
             reward=state.sum(-1) + action.sum(-1),
             weight=torch.randn(batch_size),
         )
+        action_space = DiscreteActionSpace(actions=list(batch.action))
 
         # TEST LEARN
         losses = []
@@ -47,14 +49,13 @@ class TestNeuralContextualBandit(unittest.TestCase):
 
         scores = policy_learner.get_scores(
             subjective_state=batch.state,
-            action_space_to_score=DiscreteActionSpace(actions=list(batch.action)),
+            action_space_to_score=action_space,
         )
         # shape should be batch_size, action_count
         self.assertEqual(scores.shape, (batch.state.shape[0], batch.action.shape[0]))
 
         # TEST ACT
-        action_space = DiscreteActionSpace(actions=list(batch.action))
         actions = policy_learner.act(
             subjective_state=batch.state, available_action_space=action_space
         )
-        self.assertEqual(actions.shape, batch.reward.shape)
+        self.assertEqual(actions.shape, (len(batch), action_dim))
