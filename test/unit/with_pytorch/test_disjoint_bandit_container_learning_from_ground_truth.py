@@ -165,7 +165,7 @@ def create_model(state_dim: int, number_of_actions: int) -> DisjointBanditContai
         feature_dim=state_dim,
         arm_bandits=linear_bandits,
         exploration_module=DisjointUCBExploration(
-            alpha=0, randomized_tiebreaking=TiebreakingStrategy.BATCH_TIEBREAKING
+            alpha=0, randomized_tiebreaking=TiebreakingStrategy.PER_ROW_TIEBREAKING
         ),
         state_features_only=True,
     )
@@ -282,7 +282,6 @@ def tiebreaker_argmax(scores: torch.Tensor, epsilon: float = 1e-6) -> torch.Tens
 
 def evaluate_model(
     model: DisjointBanditContainer,
-    use_tiebreaker: bool,
     ground_truth: DisjointBanditContainer,
     state_dim: int,
     action_space: DiscreteActionSpace,
@@ -295,7 +294,6 @@ def evaluate_model(
 
     Args:
         model: Policy learner to evaluate
-        use_tiebreaker: whether to tie-break identical scores
         ground_truth: Ground truth model
         state_dim: Dimension of the state space
         action_space: Action space
@@ -311,26 +309,19 @@ def evaluate_model(
     test_states = torch.rand(num_test_states, state_dim)
 
     # Get exploit actions from ground truth model
-    ground_truth_scores = ground_truth.get_scores(
+    ground_truth_actions = ground_truth.act(
         subjective_state=test_states,
-        action_space_to_score=action_space,
+        available_action_space=action_space,
         exploit=True,
     )
-    if use_tiebreaker:
-        ground_truth_actions = tiebreaker_argmax(ground_truth_scores)
-    else:
-        ground_truth_actions = torch.argmax(ground_truth_scores, dim=1)
 
-    # Get exploit actions from learned model
+    # Check that learned exploit scores for unobserved actions
+    # are identical across all test examples
     learned_scores = model.get_scores(
         subjective_state=test_states,
         action_space_to_score=action_space,
         exploit=True,
     )
-    # Use tiebreaker selection instead of argmax
-    learned_actions = tiebreaker_argmax(learned_scores)
-
-    # Check that learned scores for unobserved actions are identical across all test examples
     for action_idx in range(unobserved_actions_first_index, number_of_actions):
         unobserved_action_scores = learned_scores[:, action_idx]
         # All scores for this action should be identical (or very close)
@@ -339,6 +330,12 @@ def evaluate_model(
             unobserved_action_scores[0].expand_as(unobserved_action_scores),
             atol=1e-5,
         ), f"Learned scores for action {action_idx} should be identical for all evaluation examples"
+
+    learned_actions = model.act(
+        subjective_state=test_states,
+        available_action_space=action_space,
+        exploit=True,
+    )
 
     # Count occurrences of each action in evaluation
     ground_truth_eval_action_counts = torch.zeros(number_of_actions)
@@ -468,7 +465,6 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
         and that their scores are identical across all evaluation examples.
         """
         # Setup parameters
-        use_tiebreaker = True
         mini = False
         if mini:
             state_dim = 6
@@ -539,7 +535,6 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
             agreement_percentage,
         ) = evaluate_model(
             model=model,
-            use_tiebreaker=use_tiebreaker,
             ground_truth=ground_truth,
             state_dim=state_dim,
             action_space=action_space,
