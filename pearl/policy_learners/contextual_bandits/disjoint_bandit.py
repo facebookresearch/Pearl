@@ -225,6 +225,8 @@ class DisjointBanditContainer(ContextualBanditBase):
 
         if exploit:
             return ensemble_forward(self.models, feature, use_for_loop=True)
+            # TODO: this won't work if action_space_to_score is not the same as
+            # the original action space.
         else:
             exploration_module = self.exploration_module
             assert isinstance(exploration_module, ScoreExplorationBase)

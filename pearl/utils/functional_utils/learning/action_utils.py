@@ -16,7 +16,7 @@ from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpac
 from torch import Tensor
 
 
-def argmax_random_tie_breaks(
+def argmax_random_tie_breaks_batch(
     scores: Tensor, mask: Tensor | None = None
 ) -> torch.Tensor:
     """
@@ -64,9 +64,9 @@ def argmax_random_tie_break_per_row(
     Given a 2D tensor of scores, return the indices of the max score for each row.
     If there are ties inside a row, uniformly randomize among the ties.
     IMPORTANT IMPLEMENTATION DETAILS:
-        1. Randomization is implemented independently for each row, unlike argmax_random_tie_breaks
+        1. Randomization is implemented independently for each row, unlike argmax_random_tie_breaks_batch
            which uses the same permutation for all rows.
-        2. Therefore this function is slower than argmax_random_tie_breaks
+        2. Therefore this function is slower than argmax_random_tie_breaks_batch
 
     Args:
         scores: A 2D tensor of scores of shape (batch_size, num_actions)
@@ -141,7 +141,7 @@ def get_model_action_index_batch(
         1D tensor of size (batch_size,)
     """
     if tiebreaking_strategy == TiebreakingStrategy.BATCH_TIEBREAKING:
-        model_actions = argmax_random_tie_breaks(scores, mask)
+        model_actions = argmax_random_tie_breaks_batch(scores, mask)
     elif tiebreaking_strategy == TiebreakingStrategy.PER_ROW_TIEBREAKING:
         model_actions = argmax_random_tie_break_per_row(scores, mask)
     else:  # NO_TIEBREAKING

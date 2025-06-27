@@ -18,7 +18,7 @@ from pearl.policy_learners.exploration_modules.common.tiebreaking_strategy impor
 )
 from pearl.utils.functional_utils.learning.action_utils import (
     argmax_random_tie_break_per_row,
-    argmax_random_tie_breaks,
+    argmax_random_tie_breaks_batch,
     concatenate_actions_to_state,
     concatenate_actions_to_state_scriptable,
     get_model_action_index_batch,
@@ -270,20 +270,20 @@ class TestArgmaxRandomTieBreakPerRow(unittest.TestCase):
         expected_probability = (1 / 3) ** 3
         self.assertLess(abs(same_selection_probability - expected_probability), 0.05)
 
-        # For comparison, with the original argmax_random_tie_breaks function,
+        # For comparison, with the original argmax_random_tie_breaks_batch function,
         # this probability would be close to 1.0 since it uses the same permutation
         # for all rows
 
 
 class TestGetAction(unittest.TestCase):
-    def test_argmax_random_tie_breaks_no_mask(self) -> None:
+    def test_argmax_random_tie_breaks_batch_no_mask(self) -> None:
         scores = torch.tensor(
             [[1, 20, 20], [4, 4, 3], [15, 10, 15], [100, float("inf"), float("inf")]]
         )
         argmax_values_returned = {0: set(), 1: set(), 2: set(), 3: set()}
         for _ in range(1000):
             # repeat many times since the function is stochastic
-            argmax = argmax_random_tie_breaks(scores)
+            argmax = argmax_random_tie_breaks_batch(scores)
             # make sure argmax returns one of the max element indices
             argmax_values_returned[0].add(argmax[0].item())
             argmax_values_returned[1].add(argmax[1].item())
@@ -294,7 +294,7 @@ class TestGetAction(unittest.TestCase):
         self.assertSetEqual(argmax_values_returned[2], {0, 2})
         self.assertSetEqual(argmax_values_returned[3], {1, 2})
 
-    def test_argmax_random_tie_breaks_mask(self) -> None:
+    def test_argmax_random_tie_breaks_batch_mask(self) -> None:
         scores = torch.tensor(
             [[1, 20, 20], [4, 4, 3], [15, 10, 15], [100, float("inf"), float("inf")]]
         )
@@ -302,7 +302,7 @@ class TestGetAction(unittest.TestCase):
         argmax_values_returned = {0: set(), 1: set(), 2: set(), 3: set()}
         for _ in range(1000):
             # repeat many times since the function is stochastic
-            argmax = argmax_random_tie_breaks(scores, mask)
+            argmax = argmax_random_tie_breaks_batch(scores, mask)
             # make sure argmax returns one of the max element indices
             argmax_values_returned[0].add(argmax[0].item())
             argmax_values_returned[1].add(argmax[1].item())
