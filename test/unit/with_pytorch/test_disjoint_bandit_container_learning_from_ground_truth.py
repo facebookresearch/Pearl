@@ -86,6 +86,7 @@ def create_ground_truth_model(
 
 
 def generate_batch(
+    model: DisjointBanditContainer,
     number_of_samples: int,
     state_dim: int,
     ground_truth: DisjointBanditContainer,
@@ -204,6 +205,7 @@ def train_model(
 
     for batch_idx in range(num_batches):
         batch, batch_action_counts = generate_batch(
+            model,
             batch_size,
             state_dim,
             ground_truth,
@@ -419,6 +421,8 @@ def print_action_distribution(
 
 
 def print_evaluation_comparison(
+    round: int,
+    number_of_rounds: int,
     ground_truth_eval_action_counts: torch.Tensor,
     learned_eval_action_counts: torch.Tensor,
     num_test_states: int,
@@ -433,9 +437,12 @@ def print_evaluation_comparison(
         num_test_states: Number of test states
         unobserved_actions_first_index: Actions >= this index should never be selected
     """
-    print("\nEvaluation action distribution:")
+    print(
+        f"\nEvaluation action distribution after round "
+        f"{round + 1}/{number_of_rounds}:"
+    )
     print("Action | Ground Truth | Learned Model")
-    print("-----------------------------------")
+    print("-------------------------------------")
     for action_idx in range(len(ground_truth_eval_action_counts)):
         gt_count = ground_truth_eval_action_counts[action_idx].item()
         learned_count = learned_eval_action_counts[action_idx].item()
@@ -464,6 +471,7 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
         unobserved_actions_first_index have large thresholds and are never selected,
         and that their scores are identical across all evaluation examples.
         """
+        number_of_rounds = 5
         # Setup parameters
         mini = False
         if mini:
@@ -499,72 +507,78 @@ class TestDisjointBanditContainerLearningFromGroundTruth(unittest.TestCase):
         # Create model
         model = create_model(state_dim, number_of_actions)
 
-        # Train the model and collect MSE values and action counts
-        mse_values, training_action_counts = train_model(
-            model=model,
-            ground_truth=ground_truth,
-            state_dim=state_dim,
-            action_space=action_space,
-            unobserved_actions_first_index=unobserved_actions_first_index,
-            num_batches=num_batches,
-            batch_size=batch_size,
-            noise_scale=noise_scale,
-        )
+        for round in range(number_of_rounds):
+            print(f"\nRound {round + 1}/{number_of_rounds}:")
 
-        # Print training action distribution
-        print_action_distribution(
-            training_action_counts,
-            num_batches * batch_size,
-            "Training action distribution:",
-        )
-
-        # Assert that no training data was generated with any of the unobserved actions
-        for action_idx in range(unobserved_actions_first_index, number_of_actions):
-            self.assertEqual(
-                training_action_counts[action_idx].item(),
-                0,
-                f"Action {action_idx} should never be selected during training, "
-                f"but was selected "
-                f"{training_action_counts[action_idx].item()} times",
+            # Train the model and collect MSE values and action counts
+            mse_values, training_action_counts = train_model(
+                model=model,
+                ground_truth=ground_truth,
+                state_dim=state_dim,
+                action_space=action_space,
+                unobserved_actions_first_index=unobserved_actions_first_index,
+                num_batches=num_batches,
+                batch_size=batch_size,
+                noise_scale=noise_scale,
             )
 
-        # Evaluate the model
-        (
-            ground_truth_eval_action_counts,
-            learned_eval_action_counts,
-            agreement_percentage,
-        ) = evaluate_model(
-            model=model,
-            ground_truth=ground_truth,
-            state_dim=state_dim,
-            action_space=action_space,
-            number_of_actions=number_of_actions,
-            unobserved_actions_first_index=unobserved_actions_first_index,
-            num_test_states=num_test_states,
-        )
+            # Print training action distribution
+            print_action_distribution(
+                training_action_counts,
+                num_batches * batch_size,
+                "Training action distribution after "
+                + f"round {round + 1}/{number_of_rounds}:",
+            )
 
-        # Print evaluation comparison
-        print_evaluation_comparison(
-            ground_truth_eval_action_counts,
-            learned_eval_action_counts,
-            num_test_states,
-            unobserved_actions_first_index,
-        )
+            # Assert that no training data was generated with any of the unobserved actions
+            for action_idx in range(unobserved_actions_first_index, number_of_actions):
+                self.assertEqual(
+                    training_action_counts[action_idx].item(),
+                    0,
+                    f"Action {action_idx} should never be selected during training, "
+                    f"but was selected "
+                    f"{training_action_counts[action_idx].item()} times",
+                )
 
-        # Plot MSE values
-        plot_path = plot_mse(mse_values, window_size=5)
-        print(f"\nMSE plot saved to: {plot_path}")
+            # Evaluate the model
+            (
+                ground_truth_eval_action_counts,
+                learned_eval_action_counts,
+                agreement_percentage,
+            ) = evaluate_model(
+                model=model,
+                ground_truth=ground_truth,
+                state_dim=state_dim,
+                action_space=action_space,
+                number_of_actions=number_of_actions,
+                unobserved_actions_first_index=unobserved_actions_first_index,
+                num_test_states=num_test_states,
+            )
 
-        # Calculate final MSE
-        final_mse = mse_values[-1]
-        print(f"Final MSE: {final_mse:.6f}")
+            # Print evaluation comparison
+            print_evaluation_comparison(
+                round,
+                number_of_rounds,
+                ground_truth_eval_action_counts,
+                learned_eval_action_counts,
+                num_test_states,
+                unobserved_actions_first_index,
+            )
 
-        # Given rewards are noise, we don't expect complete agreement
-        # The following is based on empirical observations
-        print(f"\nAction agreement percentage: {agreement_percentage:.2f}%")
-        self.assertGreaterEqual(
-            agreement_percentage,
-            required_agreement_percentage,
-            f"Ground truth and learned model only agree on "
-            f"{agreement_percentage:.2f}% of actions",
-        )
+            # Plot MSE values
+            plot_path = plot_mse(mse_values, window_size=5)
+            print(f"\nMSE plot saved to: {plot_path}")
+
+            # Calculate final MSE
+            final_mse = mse_values[-1]
+            print(f"Final MSE: {final_mse:.6f}")
+
+            # Given rewards are noise, we don't expect complete agreement
+            # The following is based on empirical observations
+            print(f"\nAction agreement percentage: {agreement_percentage:.2f}%")
+            self.assertGreaterEqual(
+                agreement_percentage,
+                required_agreement_percentage,
+                f"Ground truth and learned model only agree on "
+                f"{agreement_percentage:.2f}% of actions",
+            )
