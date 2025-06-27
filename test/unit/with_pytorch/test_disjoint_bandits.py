@@ -11,6 +11,7 @@ import copy
 import unittest
 
 import torch
+import torch.jit
 import torch.testing as tt
 from parameterized import parameterized_class
 from pearl.policy_learners.contextual_bandits.disjoint_bandit import (
@@ -436,5 +437,71 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
         # learn batch, make sure this doesn't throw an error
         policy_learner.learn_batch(batch)
 
+    def test_traced_disjoint_bandit_container(self) -> None:
+        """
+        Test that a traced policy learner produces the same results as the normal model
+        for both individual states and state batches.
+        """
+        # Train the policy learner first
+        policy_learner = copy.deepcopy(self.policy_learner)
+        for _ in range(1000):
+            policy_learner.learn_batch(self.batch)
 
-# TestDisjointBanditContainerLearningFromGroundTruth has been moved to test_disjoint_bandit_container_learning_from_ground_truth.py
+        # Create example inputs for tracing
+        single_state = torch.tensor([2.0, 3.0])
+        batch_states = torch.tensor(
+            [
+                [2.0, 3.0],
+                [1.0, 1.0],
+                [3.0, 4.0],
+            ]
+        )
+
+        # Define a wrapper function for tracing that handles the act method
+        class PolicyLearnerWrapper(torch.nn.Module):
+            def __init__(self, policy_learner, action_space):
+                super().__init__()
+                self.policy_learner = policy_learner
+                self.action_space = action_space
+
+            def forward(self, state):
+                return self.policy_learner.act(
+                    subjective_state=state, available_action_space=self.action_space
+                )
+
+        # Create the wrapper
+        wrapper = PolicyLearnerWrapper(policy_learner, self.action_space)
+
+        # Trace the model with a single state
+        traced_single = torch.jit.trace(wrapper, single_state, check_trace=True)
+
+        # Trace the model with a batch of states
+        traced_batch = torch.jit.trace(wrapper, batch_states, check_trace=True)
+
+        # Test with a single state
+        original_result_single = wrapper(single_state)
+        traced_result_single = traced_single(single_state)
+        self.assertEqual(original_result_single, traced_result_single)
+
+        # Test with a batch of states
+        original_result_batch = wrapper(batch_states)
+        traced_result_batch = traced_batch(batch_states)
+        tt.assert_close(original_result_batch, traced_result_batch)
+
+        # Test with a different single state
+        different_state = torch.tensor([1.5, 2.5])
+        original_result_diff = wrapper(different_state)
+        traced_result_diff = traced_single(different_state)
+        self.assertEqual(original_result_diff, traced_result_diff)
+
+        # Test with a different batch of states
+        different_batch = torch.tensor(
+            [
+                [1.5, 2.5],
+                [0.5, 1.5],
+                [2.5, 3.5],
+            ]
+        )
+        original_result_diff_batch = wrapper(different_batch)
+        traced_result_diff_batch = traced_batch(different_batch)
+        tt.assert_close(original_result_diff_batch, traced_result_diff_batch)
