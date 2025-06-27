@@ -197,8 +197,6 @@ class PearlAgent(Agent):
             ),  # next_available_actions
             terminated=action_result.terminated,
             truncated=action_result.truncated,
-            # pyre-fixme[6]: For 8th argument expected `Optional[int]` but got
-            #  `Union[None, Tensor, Module]`.
             max_number_actions=(
                 self.policy_learner.action_representation_module.max_number_actions
                 if not self.policy_learner._is_action_continuous

@@ -215,6 +215,12 @@ class DisjointBanditContainer(ContextualBanditBase):
             UCB scores when exploration module is UCB
             Shape is (batch, num_arms) or (num_arms,)
         """
+        # The following is commented out because it prevents tracing
+        # torch.fx.proxy.TraceError: symbolically traced variables cannot be used
+        # as inputs to control flow
+        # if self._state_features_only:
+        #     assert self.feature_dim == subjective_state.shape[-1]
+
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
             action_space=action_space_to_score,

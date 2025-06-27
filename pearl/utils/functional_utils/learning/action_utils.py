@@ -64,7 +64,8 @@ def argmax_random_tie_break_per_row(
     Given a 2D tensor of scores, return the indices of the max score for each row.
     If there are ties inside a row, uniformly randomize among the ties.
     IMPORTANT IMPLEMENTATION DETAILS:
-        1. Randomization is implemented independently for each row, unlike argmax_random_tie_breaks_batch
+        1. Randomization is implemented independently for each row, unlike
+           argmax_random_tie_breaks_batch
            which uses the same permutation for all rows.
         2. Therefore this function is slower than argmax_random_tie_breaks_batch
 
