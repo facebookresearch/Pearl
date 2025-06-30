@@ -8,7 +8,6 @@
 # pyre-strict
 
 from collections.abc import Iterable
-from typing import cast
 
 import torch
 import torch.nn as nn
@@ -75,8 +74,7 @@ def make_critic(
 
         # cast network_type to get around static Pyre type checking; the runtime check with
         # `issubclass` ensures the network type is a sublcass of QValueNetwork
-        # pyre-fixme[22]: The cast is redundant.
-        network_type = cast(type[QValueNetwork], network_type)
+        network_type = network_type
 
         return TwinCritic(
             state_dim=state_dim,
