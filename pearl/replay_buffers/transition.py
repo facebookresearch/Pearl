@@ -153,14 +153,10 @@ class TransitionBatch:
             self.action.ndim >= 1
         ), f"action has shape {self.action.shape}, but must be (batch_size,) or (batch_size, ...)"
 
-        # Allow reward to have shape (batch_size,) or (batch_size, 1)
-        is_1d = self.reward.ndim == 1
-        is_2d_with_1_col = self.reward.ndim == 2 and self.reward.shape[1] == 1
-        valid_reward_shape = is_1d or is_2d_with_1_col
-        assert valid_reward_shape, (
-            f"reward has shape {self.reward.shape}, "
-            f"but must be (batch_size,) or (batch_size, 1)"
-        )
+        # Allow reward to have shape (batch_size,) or (batch_size, ...)
+        assert (
+            self.reward.ndim >= 1
+        ), f"reward has shape {self.reward.shape}, but must be (batch_size,) or (batch_size, ...)"
 
         assert self.state.shape[0] == self.reward.shape[0], (
             f"state has shape {self.state.shape}, "
