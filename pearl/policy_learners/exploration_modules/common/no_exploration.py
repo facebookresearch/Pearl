@@ -32,6 +32,7 @@ class NoExploration(ScoreExplorationBase):
     """
 
     def __init__(self, randomized_tiebreaking: bool = False) -> None:
+        # pyre-fixme[6]: For 1st argument expected `TiebreakingStrategy` but got `bool`.
         super().__init__(randomized_tiebreaking=randomized_tiebreaking)
 
     def get_scores(

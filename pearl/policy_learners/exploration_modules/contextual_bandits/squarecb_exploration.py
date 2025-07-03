@@ -48,6 +48,7 @@ class SquareCBExploration(ScoreExplorationBase):
         clamp_values: bool = False,
         randomized_tiebreaking: bool = False,
     ) -> None:
+        # pyre-fixme[6]: For 1st argument expected `TiebreakingStrategy` but got `bool`.
         super().__init__(randomized_tiebreaking=randomized_tiebreaking)
         self._gamma = gamma
         self.reward_lb = reward_lb

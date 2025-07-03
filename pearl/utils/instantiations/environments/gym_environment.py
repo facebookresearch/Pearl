@@ -101,6 +101,7 @@ class GymEnvironment(Environment):
         """Resets the environment and returns the initial observation and
         initial action space."""
 
+        # pyre-fixme[16]: `ActionSpace` has no attribute `gym_space`.
         self._action_space.gym_space.seed(seed)
         self.env.action_space.seed(seed)
         reset_result = self.env.reset()

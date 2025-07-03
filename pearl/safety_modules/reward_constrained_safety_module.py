@@ -215,6 +215,8 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
     ) -> ActionSpace:
         return action_space
 
+    # pyre-fixme[14]: `learn_batch` overrides method defined in `SafetyModule`
+    #  inconsistently.
     def learn_batch(
         self, batch: TransitionBatch, policy_learner: PolicyLearner
     ) -> None:

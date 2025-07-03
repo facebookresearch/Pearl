@@ -670,6 +670,8 @@ class EnsembleQValueNetwork(QValueNetwork):
     def forward(self, x: Tensor, z: Tensor, persistent: bool = False) -> Tensor:
         return self._model(x, z=z, persistent=persistent)
 
+    # pyre-fixme[14]: `get_q_values` overrides method defined in `QValueNetwork`
+    #  inconsistently.
     def get_q_values(
         self,
         state_batch: Tensor,  # (batch_size, state_dim)

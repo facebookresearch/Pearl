@@ -33,6 +33,7 @@ class ThompsonSamplingExplorationLinear(ScoreExplorationBase):
         enable_efficient_sampling: bool = False,
         randomized_tiebreaking: bool = False,
     ) -> None:
+        # pyre-fixme[6]: For 1st argument expected `TiebreakingStrategy` but got `bool`.
         super().__init__(randomized_tiebreaking=randomized_tiebreaking)
         self._enable_efficient_sampling = enable_efficient_sampling
 

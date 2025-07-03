@@ -84,6 +84,7 @@ class DiscreteSpace(Space):
     @property
     def gym_space(self) -> gym.Space:
         """Returns the underlying Gymnasium space."""
+        # pyre-fixme[7]: Expected `Space[Any]` but got `Discrete`.
         return self._gym_space
 
     def sample(self, mask: Tensor | None = None) -> Tensor:

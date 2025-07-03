@@ -107,6 +107,7 @@ class BoxSpace(Space):
     @property
     def gym_space(self) -> gym.Space:
         """Returns the underlying Gymnasium space."""
+        # pyre-fixme[7]: Expected `Space[Any]` but got `Box`.
         return self._gym_space
 
     @staticmethod
