@@ -28,6 +28,7 @@ dependencies = [
     "torch",
     "torchvision",
     "torchaudio",
+    "later"
 ]
 
 [project.urls]

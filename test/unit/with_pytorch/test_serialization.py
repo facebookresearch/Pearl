@@ -6,8 +6,9 @@ import io
 
 import torch
 from later.unittest import TestCase
-from pearl.test.unit.with_pytorch.test_agent import TestAgentWithPyTorch
 from torch import nn
+
+from .test_agent import TestAgentWithPyTorch
 
 
 def save_and_load_state_dict(origin: nn.Module, destination: nn.Module) -> None:
