@@ -171,7 +171,10 @@ class TransitionBatch:
                 self.terminated.ndim == 1 and self.terminated.shape[0] == batch_size
             ) or (
                 self.terminated.ndim == 2 and self.terminated.shape == (batch_size, 1)
-            ), f"terminated has shape {self.terminated.shape} != (batch_size)"
+            ), (
+                f"terminated has shape {self.terminated.shape} but it should be equal to "
+                f"either ({batch_size},) or ({batch_size}, 1) (since batch_size is {batch_size})"
+            )
         else:
             # Always create terminated with shape (batch_size,) regardless of reward shape
             self.terminated = torch.ones(
@@ -183,7 +186,10 @@ class TransitionBatch:
                 self.truncated.ndim == 1 and self.truncated.shape[0] == batch_size
             ) or (
                 self.truncated.ndim == 2 and self.truncated.shape == (batch_size, 1)
-            ), f"truncated has shape {self.truncated.shape} != (batch_size)"
+            ), (
+                f"truncated has shape {self.truncated.shape} but it should be equal to "
+                f"either ({batch_size},) or ({batch_size}, 1) (since batch_size is {batch_size})"
+            )
         else:
             # Always create truncated with shape (batch_size,) regardless of reward shape
             self.truncated = torch.zeros(
@@ -193,13 +199,16 @@ class TransitionBatch:
         if self.next_state is not None:
             assert self.next_state.ndim >= 2, (
                 f"next_state has shape {self.next_state.shape}, "
-                f"but must have at least 2 dimensions (batch_size, ...)"
+                f"but must have at least 2 dimensions ({batch_size}, ...) "
+                f"(since batch_size is {batch_size})"
             )
         if self.next_action is not None:
             # Allow next_action to have shape (batch_size,) or (batch_size, ...)
-            assert (
-                self.next_action.ndim >= 1
-            ), f"next_action has shape {self.next_action.shape}, but must be (batch_size,) or (batch_size, ...)"
+            assert self.next_action.ndim >= 1, (
+                f"next_action has shape {self.next_action.shape}, "
+                f"but must be ({batch_size},) or ({batch_size}, ...) "
+                f"(since batch_size is {batch_size})"
+            )
 
     def to(self: TB, device: torch.device) -> TB:
         # iterate over all fields
