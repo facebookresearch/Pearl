@@ -151,9 +151,8 @@ class ContinuousSparseRewardEnvironment(SparseRewardEnvironment):
         Perform one environment step.
 
         Args:
-            action : torch.Tensor | numpy.ndarray
-                A 2-D displacement (dx, dy).  Accepts anything convertible to a
-                length-2 float tensor.
+            action : torch.Tensor
+                A 2-D displacement (dx, dy) represented as a float tensor of shape ``(2,)``.
 
         Returns:
             ActionResult
