@@ -13,7 +13,7 @@ Also contains history summarization module that needs to be used together
 when defining PearlAgent
 
 Set up is following:
-2d box environment, where the agent gets initialized in a center of a square arena,
+2d box environment, where the agent gets initialized in a center of an arena,
 and there is a target - 2d point, randomly generated in the arena.
 The agent gets reward 0 only when it gets close enough to the target, otherwise the reward is -1.
 
@@ -198,11 +198,22 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
         self,
         width: float,
         height: float,
-        action_count: int = 4,
+        action_count: int,
         reward_distance: float | None = None,
         step_size: float = 0.01,
         max_episode_duration: int = 500,
     ) -> None:
+        """Initialize environment.
+
+        Args:
+            width: Width of the square arena.
+            height: Height of the square arena.
+            action_count: Number of discrete actions.
+            reward_distance: Distance threshold for a zero reward. If ``None``,
+                ``step_size`` will be used.
+            step_size: Magnitude of each movement step.
+            max_episode_duration: Maximum number of steps per episode.
+        """
         super().__init__(
             width=width,
             height=height,
@@ -257,5 +268,5 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
         Each action is a scalar tensor holding its own index (0, 1, ... N-1).
         """
         return DiscreteActionSpace(
-            actions=[torch.tensor([i], dtype=torch.int) for i in range(self._action_count)]
+            actions=[torch.tensor([i], dtype=torch.long) for i in range(self._action_count)]
         )
