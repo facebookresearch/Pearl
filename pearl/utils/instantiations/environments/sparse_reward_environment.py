@@ -79,7 +79,10 @@ class SparseRewardEnvironment(Environment):
         the interval ``[0, width]`` for ``x`` and ``[0, height]`` for ``y``.
         """
         low = torch.tensor([0.0, 0.0, 0.0, 0.0], dtype=torch.float32)
-        high = torch.tensor([self._length, self._height, self._length, self._height], dtype=torch.float32)
+        high = torch.tensor(
+            [self._width, self._height, self._width, self._height],
+            dtype=torch.float32,
+        )
         return BoxSpace(low=low, high=high)
 
     def reset(self, seed: int | None = None) -> tuple[torch.Tensor, ActionSpace]:
@@ -258,7 +261,7 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
             raise ValueError(
                 f"Action index {idx} out of range; must be 0 <= idx < {self._action_count}"
             )
-        continuous_action = self._actions[ind]
+        continuous_action = self._actions[idx]
         return super().step(continuous_action)
 
     @property
