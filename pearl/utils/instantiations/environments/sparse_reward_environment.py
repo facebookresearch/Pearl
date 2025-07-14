@@ -61,8 +61,8 @@ class SparseRewardEnvironment(Environment):
         self._reward_distance = reward_distance
 
         # reset will initialize the agent position, goal and step count
-        self._agent_position: tuple[float, float] | None = None
-        self._goal: tuple[float, float] | None = None
+        self._agent_position: Optional[Tuple[float, float]] = None
+        self._goal: Optional[Tuple[float, float]] = None
         self._step_count = 0
 
     @abstractmethod
@@ -84,7 +84,7 @@ class SparseRewardEnvironment(Environment):
         )
         return BoxSpace(low=low, high=high)
 
-    def reset(self, seed: int | None = None) -> tuple[torch.Tensor, ActionSpace]:
+    def reset(self, seed: Optional[int] = None) -> Tuple[torch.Tensor, ActionSpace]:
         """Resets the environment and returns the initial observation and initial action space."""
         if seed is not None:
             random.seed(seed)
@@ -111,7 +111,7 @@ class SparseRewardEnvironment(Environment):
             self.action_space,
         )
 
-    def _update_position(self, delta: tuple[float, float]) -> None:
+    def _update_position(self, delta: Tuple[float, float]) -> None:
         """
         Update the agent position, say (x, y) --> (x', y') where:
         x' = x + delta_x
@@ -197,14 +197,15 @@ class ContinuousSparseRewardEnvironment(SparseRewardEnvironment):
 class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
     """
     Action space has `action_count` discrete moves uniformly distributed in 360 degrees.
-    For action index n (0 <= n < N), the agent moves by `step_size` in the direction of angle (2pi * n / N).
+    For action index n (0 <= n < N), the agent moves by `step_size` in the direction
+    of angle (2pi * n / N).
     """
     def __init__(
         self,
         width: float,
         height: float,
         action_count: int,
-        reward_distance: float | None = None,
+        reward_distance: Optional[float] = None,
         step_size: float = 0.01,
         max_episode_duration: int = 500,
     ) -> None:
@@ -223,7 +224,8 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
             width=width,
             height=height,
             max_episode_duration=max_episode_duration,
-            # If no specific reward_distance is given, use step_size as the threshold (so one step reach counts as success)
+            # If no specific reward_distance is given, use step_size as the
+            # threshold (so one step reach counts as success)
             reward_distance=(
                 reward_distance if reward_distance is not None else step_size
             ),
@@ -232,13 +234,11 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
             raise ValueError("action_count must be a positive integer")
         self._step_size = step_size
         self._action_count = action_count
-        # Pre-compute discrete action deltas (as continuous vectors) for each action index
         self._actions: List[torch.Tensor] = []
         for i in range(action_count):
             angle = 2.0 * math.pi * i / action_count
             dx = math.cos(angle) * self._step_size
             dy = math.sin(angle) * self._step_size
-            # Each action vector is a 2D tensor (dx, dy)
             self._actions.append(torch.tensor([dx, dy], dtype=torch.float32))
 
     def step(self, action: Action) -> ActionResult:
