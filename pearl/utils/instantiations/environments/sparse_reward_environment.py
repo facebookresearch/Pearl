@@ -39,7 +39,6 @@ from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 
-
 class SparseRewardEnvironment(Environment):
     def __init__(
         self,
@@ -158,8 +157,12 @@ class ContinuousSparseRewardEnvironment(SparseRewardEnvironment):
             ActionResult
                 Observation (4-D), reward (float), and termination flags.
         """
-        assert isinstance(action, torch.Tensor), "Action must be a torch.Tensor for continuous environment"
-        assert action.shape == (2,), f"Continuous action should be shape (2,), got {action.shape}"
+        assert isinstance(action, torch.Tensor), (
+            "Action must be a torch.Tensor for continuous environment"
+        )
+        assert action.shape == (2,), (
+            f"Continuous action should be shape (2,), got {action.shape}"
+        )
         dx, dy = float(action[0].item()), float(action[1].item())
         self._update_position((dx, dy))
 
@@ -221,7 +224,9 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
             height=height,
             max_episode_duration=max_episode_duration,
             # If no specific reward_distance is given, use step_size as the threshold (so one step reach counts as success)
-            reward_distance=reward_distance if reward_distance is not None else step_size,
+            reward_distance=(
+                reward_distance if reward_distance is not None else step_size
+            ),
         )
         if action_count <= 0:
             raise ValueError("action_count must be a positive integer")
