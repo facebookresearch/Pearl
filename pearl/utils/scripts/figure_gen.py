@@ -7,17 +7,8 @@
 
 # pyre-strict
 
-"""
-To RUN: (assume under fbcode/)
-    first time:
-    buck2 run pearl/scripts:figure_gen <num_episodes>
-    second time, something like:
-    ../buck-out/v2/gen/fbcode/e97a0788aa35bdc8/pearl/scripts/__figure_gen__/figure_gen.par
-"""
-
 import logging
 import sys
-from typing import List
 
 import matplotlib.pyplot as plt
 from pearl.api.reward import Value
@@ -41,8 +32,7 @@ def moving_average(data: list[Value]) -> Value:
     return [
         (
             # pyre-fixme[6]: For 1st argument expected `Iterable[Union[Literal[-20], ...
-            sum(data[int(i - MA_WINDOW_SIZE + 1) : i + 1])
-            / MA_WINDOW_SIZE  # pyre-ignore
+            sum(data[int(i - MA_WINDOW_SIZE + 1) : i + 1]) / MA_WINDOW_SIZE
             if i >= MA_WINDOW_SIZE
             # pyre-fixme[6]: For 1st argument expected `Iterable[Union[typing_extensi...
             else sum(data[: i + 1]) * 1.0 / (i + 1)
@@ -67,18 +57,20 @@ def main() -> None:
             hidden_dims=[64, 64],
             training_rounds=20,
         ),
-        replay_buffer=BasicReplayBuffer(10000),
+        replay_buffer=BasicReplayBuffer(1000),
     )
     info = online_learning(
         agent,
         env,
         number_of_episodes=num_episodes,
         learn_after_episode=True,
+        print_every_x_episodes=int(num_episodes / 25),
     )
-    plt.plot(info["return"], label="vanilla dqn")
-    plt.plot(moving_average(info["return"]), label="dqn_ma")
+    plt.plot(info["return"], label="DQN")
+    plt.plot(moving_average(info["return"]), label="DQN moving average")
     plt.xlabel("Episode")
     plt.ylabel("Return")
+
     agent = PearlAgent(
         policy_learner=DeepSARSA(
             env.observation_space.shape[0],
@@ -86,16 +78,18 @@ def main() -> None:
             hidden_dims=[64, 64],
             training_rounds=20,
         ),
-        replay_buffer=SARSAReplayBuffer(10000),
+        replay_buffer=SARSAReplayBuffer(1000),
     )
     info = online_learning(
         agent,
         env,
         number_of_episodes=num_episodes,
         learn_after_episode=True,
+        print_every_x_episodes=int(num_episodes / 25),
     )
-    plt.plot(info["return"], label="sarsa")
-    plt.plot(moving_average(info["return"]), label="sarsa_ma")
+    plt.plot(info["return"], label="SARSA")
+    plt.plot(moving_average(info["return"]), label="SARSA moving average")
+
     plt.legend()
     plt.savefig("figure_gen.png")
 
