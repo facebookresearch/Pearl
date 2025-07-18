@@ -9,6 +9,7 @@
 
 import logging
 from typing import Any
+from enum import Enum
 
 import torch
 import torch.nn as nn
@@ -24,29 +25,54 @@ class NormalizedSoftplus(nn.Module):
         self.dim: int = dim
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return nn.Softplus()(x) / torch.sum(
-            nn.Softplus()(x), dim=self.dim, keepdim=True
-        )
+        values = nn.functional.softplus(x)
+        return values / torch.sum(values, dim=self.dim, keepdim=True)
 
 
 # Activations and loss functions
-# TODO: Make these into Enums
-ACTIVATION_MAP = {
-    "tanh": nn.Tanh,
-    "relu": nn.ReLU,
-    "leaky_relu": nn.LeakyReLU,
-    "linear": nn.Identity,
-    "sigmoid": nn.Sigmoid,
-    "softplus": nn.Softplus,
-    "softmax": nn.Softmax,
-    "normalized_softplus": NormalizedSoftplus,
-}
+class ActivationType(Enum):
+    TANH = "tanh"
+    RELU = "relu"
+    LEAKY_RELU = "leaky_relu"
+    LINEAR = "linear"
+    SIGMOID = "sigmoid"
+    SOFTPLUS = "softplus"
+    SOFTMAX = "softmax"
+    NORMALIZED_SOFTPLUS = "normalized_softplus"
 
-LOSS_TYPES = {
-    "mse": nn.functional.mse_loss,
-    "mae": nn.functional.l1_loss,
-    "cross_entropy": nn.functional.binary_cross_entropy,
-}
+    def module(self) -> nn.Module:
+        if self is ActivationType.TANH:
+            return nn.Tanh()
+        if self is ActivationType.RELU:
+            return nn.ReLU()
+        if self is ActivationType.LEAKY_RELU:
+            return nn.LeakyReLU()
+        if self is ActivationType.LINEAR:
+            return nn.Identity()
+        if self is ActivationType.SIGMOID:
+            return nn.Sigmoid()
+        if self is ActivationType.SOFTPLUS:
+            return nn.Softplus()
+        if self is ActivationType.SOFTMAX:
+            return nn.Softmax(dim=-1)
+        if self is ActivationType.NORMALIZED_SOFTPLUS:
+            return NormalizedSoftplus()
+        raise ValueError(f"Unhandled activation type {self}")
+
+
+class LossType(Enum):
+    MSE = "mse"
+    MAE = "mae"
+    CROSS_ENTROPY = "cross_entropy"
+
+    def function(self) -> Any:
+        if self is LossType.MSE:
+            return nn.functional.mse_loss
+        if self is LossType.MAE:
+            return nn.functional.l1_loss
+        if self is LossType.CROSS_ENTROPY:
+            return nn.functional.binary_cross_entropy
+        raise ValueError(f"Unhandled loss type {self}")
 
 
 def mlp_block(
@@ -90,7 +116,7 @@ def mlp_block(
             single_layers.append(nn.LayerNorm(output_dim_current_layer))
         if dropout_ratio > 0:
             single_layers.append(nn.Dropout(p=dropout_ratio))
-        single_layers.append(ACTIVATION_MAP[hidden_activation]())
+        single_layers.append(ActivationType(hidden_activation).module())
         if use_batch_norm:
             single_layers.append(nn.BatchNorm1d(output_dim_current_layer))
         single_layer_model = nn.Sequential(*single_layers)
@@ -109,7 +135,7 @@ def mlp_block(
     last_layer = []
     last_layer.append(nn.Linear(dims[-2], dims[-1]))
     if last_activation is not None:
-        last_layer.append(ACTIVATION_MAP[last_activation]())
+        last_layer.append(ActivationType(last_activation).module())
     last_layer_model = nn.Sequential(*last_layer)
     if use_skip_connections:
         if dims[-2] == dims[-1]:
@@ -158,10 +184,9 @@ def conv_block(
             padding=padding,
         )
         layers.append(conv_layer)
-        if use_batch_norm and input_channels_count > 1:
-            layers.append(
-                nn.BatchNorm2d(input_channels_count)
-            )  # input to Batchnorm 2d is the number of input channels
+        if use_batch_norm:
+            # batch norm should normalize the output of the convolutional layer
+            layers.append(nn.BatchNorm2d(out_channels))
         layers.append(nn.ReLU())
         # number of input channels to next layer is number of output channels of previous layer:
         input_channels_count = out_channels
@@ -169,8 +194,8 @@ def conv_block(
     return nn.Sequential(*layers)
 
 
-# TODO: the name of this function needs to be revised to xavier_init_weights
-def init_weights(m: nn.Module) -> None:
+def xavier_init_weights(m: nn.Module) -> None:
+    """Initialize Linear layer weights with Xavier uniform initializer."""
     if isinstance(m, nn.Linear):
         nn.init.xavier_uniform_(m.weight)
         m.bias.data.fill_(0.01)
@@ -267,10 +292,19 @@ def update_target_networks(
 
 
 def compute_output_dim_model_cnn(
-    input_channels: int, input_width: int, input_height: int, model_cnn: nn.Module
+    input_channels: int,
+    input_width: int,
+    input_height: int,
+    model_cnn: nn.Module,
 ) -> int:
-    dummy_input = torch.zeros(1, input_channels, input_width, input_height)
-    dummy_output_flattened = torch.flatten(
-        model_cnn(dummy_input), start_dim=1, end_dim=-1
-    )
+    """Return flattened output dimension of a CNN block.
+
+    Parameters correspond to the input tensor layout
+    ``(batch_size, input_channels, input_height, input_width)``.
+    """
+    dummy_input = torch.zeros(1, input_channels, input_height, input_width)
+    with torch.no_grad():
+        dummy_output_flattened = torch.flatten(
+            model_cnn(dummy_input), start_dim=1, end_dim=-1
+        )
     return dummy_output_flattened.shape[1]

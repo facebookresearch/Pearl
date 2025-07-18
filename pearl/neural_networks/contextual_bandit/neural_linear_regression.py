@@ -12,7 +12,7 @@ from typing import List
 
 import torch
 import torch.nn as nn
-from pearl.neural_networks.common.utils import ACTIVATION_MAP
+from pearl.neural_networks.common.utils import ActivationType
 from pearl.neural_networks.common.value_networks import VanillaValueNetwork
 from pearl.neural_networks.contextual_bandit.base_cb_model import MuSigmaCBModel
 from pearl.neural_networks.contextual_bandit.linear_regression import LinearRegression
@@ -51,7 +51,7 @@ class NeuralLinearRegression(MuSigmaCBModel):
             force_pinv: If True, we will always use pseudo inverse to invert the `A` matrix. If
                 False, we will first try to use regular matrix inversion. If it fails, we will
                 fallback to pseudo inverse.
-            output_activation_name: output activation function name (see ACTIVATION_MAP)
+            output_activation_name: output activation function name (see ActivationType)
             use_batch_norm: whether to use batch normalization
             use_layer_norm: whether to use layer normalization
             hidden_activation: activation function for hidden layers
@@ -80,7 +80,7 @@ class NeuralLinearRegression(MuSigmaCBModel):
             gamma=gamma,
             force_pinv=force_pinv,
         )
-        self.output_activation: nn.Module = ACTIVATION_MAP[output_activation_name]()
+        self.output_activation: nn.Module = ActivationType(output_activation_name).module()
         self.linear_layer_e2e = nn.Linear(
             in_features=hidden_dims[-1], out_features=1, bias=False
         )  # used only if nn_e2e is True

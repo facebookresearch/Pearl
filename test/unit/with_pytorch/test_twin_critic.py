@@ -10,7 +10,7 @@
 import unittest
 
 import torch
-from pearl.neural_networks.common.utils import init_weights
+from pearl.neural_networks.common.utils import xavier_init_weights
 from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.utils.functional_utils.learning.critic_utils import (
     twin_critic_action_value_loss,
@@ -28,7 +28,7 @@ class TestTwinCritic(unittest.TestCase):
             state_dim=self.state_dim,
             action_dim=self.action_dim,
             hidden_dims=[10, 10],
-            init_fn=init_weights,
+            init_fn=xavier_init_weights,
         )
         state_batch = torch.randn(self.batch_size, self.state_dim)
         action_batch = torch.randn(self.batch_size, self.action_dim)

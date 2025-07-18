@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 
 from pearl.neural_networks.common.utils import (
-    init_weights,
+    xavier_init_weights,
     update_target_network,
     update_target_networks,
 )
@@ -81,7 +81,7 @@ def make_critic(
             action_dim=action_dim,
             hidden_dims=hidden_dims,
             network_type=network_type,
-            init_fn=init_weights,
+            init_fn=xavier_init_weights,
         )
     else:
         if network_type == VanillaQValueNetwork:
