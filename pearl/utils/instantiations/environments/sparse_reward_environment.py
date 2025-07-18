@@ -25,7 +25,7 @@ There are 2 versions in this file:
 import math
 import random
 from abc import abstractmethod
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import torch
 
@@ -61,8 +61,8 @@ class SparseRewardEnvironment(Environment):
         self._reward_distance = reward_distance
 
         # reset will initialize the agent position, goal and step count
-        self._agent_position: Optional[Tuple[float, float]] = None
-        self._goal: Optional[Tuple[float, float]] = None
+        self._agent_position: Tuple[float, float] | None = None
+        self._goal: Tuple[float, float] | None = None
         self._step_count = 0
 
     @abstractmethod
@@ -84,7 +84,7 @@ class SparseRewardEnvironment(Environment):
         )
         return BoxSpace(low=low, high=high)
 
-    def reset(self, seed: Optional[int] = None) -> Tuple[torch.Tensor, ActionSpace]:
+    def reset(self, seed: int | None = None) -> Tuple[torch.Tensor, ActionSpace]:
         """Resets the environment and returns the initial observation and initial action space."""
         if seed is not None:
             random.seed(seed)
@@ -205,7 +205,7 @@ class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
         width: float,
         height: float,
         action_count: int,
-        reward_distance: Optional[float] = None,
+        reward_distance: float | None = None,
         step_size: float = 0.01,
         max_episode_duration: int = 500,
     ) -> None:
