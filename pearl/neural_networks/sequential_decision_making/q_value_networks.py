@@ -912,7 +912,7 @@ class CNNQValueMultiHeadNetwork(QValueNetwork):
             q_values,  # (batch_size x num actions x 1)
         )  # (batch_size x number_of_actions_to_query x 1)
         q_values = q_values.squeeze(-1)  # (batch_size x number_of_actions_to_query)
-        return q_values if len(action_batch) == 3 else q_values.squeeze(-1)
+        return q_values if len(action_batch.shape) == 3 else q_values.squeeze(-1)
 
     @property
     def state_dim(self) -> int:
