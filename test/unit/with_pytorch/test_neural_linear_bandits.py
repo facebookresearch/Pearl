@@ -12,7 +12,7 @@ import unittest
 import torch
 import torch.testing as tt
 from pearl.neural_networks.common.residual_wrapper import ResidualWrapper
-from pearl.policy_learners.contextual_bandits.neural_bandit import LOSS_TYPES
+from pearl.neural_networks.common.utils import LossType
 from pearl.policy_learners.contextual_bandits.neural_linear_bandit import (
     NeuralLinearBandit,
 )
@@ -103,8 +103,8 @@ class TestNeuralLinearBandits(unittest.TestCase):
     # currently test support mse, mae, cross_entropy
     # separate loss_types into inddividual test cases to make it easier to debug.
     def test_neural_linucb_mse_loss(self) -> None:
-        for loss_type in list(LOSS_TYPES.keys()):
-            if loss_type == "mse":
+        for loss_type in list(LossType):
+            if loss_type is LossType.MSE:
                 self.neural_linucb(
                     loss_type=loss_type,
                     epochs=NUM_EPOCHS,
@@ -112,8 +112,8 @@ class TestNeuralLinearBandits(unittest.TestCase):
                 )
 
     def test_neural_linucb_mae_loss(self) -> None:
-        for loss_type in list(LOSS_TYPES.keys()):
-            if loss_type == "mae":
+        for loss_type in list(LossType):
+            if loss_type is LossType.MAE:
                 self.neural_linucb(
                     loss_type=loss_type,
                     epochs=NUM_EPOCHS,
@@ -121,8 +121,8 @@ class TestNeuralLinearBandits(unittest.TestCase):
                 )
 
     def test_neural_linucb_cross_entropy_loss(self) -> None:
-        for loss_type in list(LOSS_TYPES.keys()):
-            if loss_type == "cross_entropy":
+        for loss_type in list(LossType):
+            if loss_type is LossType.CROSS_ENTROPY:
                 self.neural_linucb(
                     loss_type=loss_type,
                     epochs=NUM_EPOCHS,
@@ -130,7 +130,7 @@ class TestNeuralLinearBandits(unittest.TestCase):
                 )
 
     def neural_linucb(
-        self, loss_type: str, epochs: int, output_activation_name: str
+        self, loss_type: LossType, epochs: int, output_activation_name: str
     ) -> None:
         feature_dim = 15  # It is important to keep this different from hidden_dims
         batch_size = feature_dim * 4  # It is important to have enough data for training
@@ -172,11 +172,11 @@ class TestNeuralLinearBandits(unittest.TestCase):
 
         if epochs >= NUM_EPOCHS:
             self.assertTrue(all(not torch.isnan(x) for x in losses))
-            if loss_type == "mse":
+            if loss_type is LossType.MSE:
                 self.assertGreater(1e-1, losses[-1])
-            elif loss_type == "mae":
+            elif loss_type is LossType.MAE:
                 self.assertGreater(1e-1, losses[-1] ** 2)  # turn mae into mse
-            elif loss_type == "cross_entropy":
+            elif loss_type is LossType.CROSS_ENTROPY:
                 # cross_entropy (BCE) does not guarantee train loss to 0+ when labels are not 0/1
                 self.assertTrue(
                     losses[-1] < losses[0], "training loss should be decreasing"

@@ -14,7 +14,7 @@ import torch
 from pearl.action_representation_modules.one_hot_action_representation_module import (
     OneHotActionTensorRepresentationModule,
 )
-from pearl.neural_networks.common.utils import init_weights
+from pearl.neural_networks.common.utils import xavier_init_weights
 from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
     EGreedyExploration,
 )
@@ -78,8 +78,8 @@ class TestDeepTDLearning(unittest.TestCase):
             # 10 should be large enough to see difference.
             batch1 = double_dqn.preprocess_batch(copy.deepcopy(self.batch))
             batch2 = dqn.preprocess_batch(copy.deepcopy(self.batch))
-            double_dqn._Q.apply(init_weights)
-            double_dqn._Q_target.apply(init_weights)
+            double_dqn._Q.apply(xavier_init_weights)
+            double_dqn._Q_target.apply(xavier_init_weights)
             double_value = double_dqn.get_next_state_values(batch1, self.batch_size)
 
             dqn._Q.load_state_dict(double_dqn._Q.state_dict())

@@ -21,7 +21,7 @@ from pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
     SubjectiveState,
 )
-from pearl.neural_networks.common.utils import LOSS_TYPES
+from pearl.neural_networks.common.utils import LossType
 from pearl.neural_networks.contextual_bandit.neural_linear_regression import (
     NeuralLinearRegression,
 )
@@ -80,7 +80,7 @@ class NeuralLinearBandit(ContextualBanditBase):
         apply_discounting_interval: float = 0.0,  # set to 0 to disable
         force_pinv: bool = False,  # If True, use pseudo inverse instead of regular inverse for `A`
         state_features_only: bool = True,
-        loss_type: str = "mse",  # one of the LOSS_TYPES names: [mse, mae, cross_entropy]
+        loss_type: LossType | str = LossType.MSE,  # one of the LossType names: [MSE, MAE, CROSS_ENTROPY]
         output_activation_name: str = "linear",
         use_batch_norm: bool = False,
         use_layer_norm: bool = False,
@@ -120,7 +120,7 @@ class NeuralLinearBandit(ContextualBanditBase):
             self.model.parameters(), lr=learning_rate, amsgrad=True
         )
         self._state_features_only = state_features_only
-        self.loss_type = loss_type
+        self.loss_type = LossType(loss_type) if isinstance(loss_type, str) else loss_type
         self.apply_discounting_interval = apply_discounting_interval
         self.last_sum_weight_when_discounted = 0.0
         self.separate_uncertainty = separate_uncertainty
@@ -177,8 +177,8 @@ class NeuralLinearBandit(ContextualBanditBase):
         else:
             # criterion = mae, mse, Xentropy
             # Xentropy loss apply Sigmoid, MSE or MAE apply Identiy
-            criterion = LOSS_TYPES[self.loss_type]
-            if self.loss_type == "cross_entropy":
+            criterion = self.loss_type.function()
+            if self.loss_type is LossType.CROSS_ENTROPY:
                 assert torch.all(expected_values >= 0) and torch.all(
                     expected_values <= 1
                 )

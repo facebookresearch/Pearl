@@ -23,7 +23,7 @@ from pearl.api.environment import Environment
 from pearl.history_summarization_modules.lstm_history_summarization_module import (
     LSTMHistorySummarizationModule,
 )
-from pearl.neural_networks.common.utils import init_weights
+from pearl.neural_networks.common.utils import xavier_init_weights
 from pearl.neural_networks.common.value_networks import VanillaValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
     GaussianActorNetwork,
@@ -696,7 +696,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
             action_dim=action_representation_module.max_number_actions,
             hidden_dims=[64, 64, 64],
             network_type=VanillaQValueNetwork,
-            init_fn=init_weights,
+            init_fn=xavier_init_weights,
         )
 
         agent = PearlAgent(
@@ -777,7 +777,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
             action_dim=env.action_space.action_dim,
             hidden_dims=[64, 64],
             network_type=VanillaQValueNetwork,
-            init_fn=init_weights,
+            init_fn=xavier_init_weights,
         )
 
         agent = PearlAgent(
@@ -977,7 +977,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
             action_dim=env.action_space.action_dim,
             hidden_dims=[400, 300],
             network_type=VanillaQValueNetwork,
-            init_fn=init_weights,
+            init_fn=xavier_init_weights,
         )
 
         agent = PearlAgent(
