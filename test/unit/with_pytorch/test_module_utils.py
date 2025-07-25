@@ -2,9 +2,10 @@
 
 # pyre-strict
 
+import unittest
+
 import torch
 import torch.nn as nn
-from later import unittest
 from pearl.utils.module_utils import modules_have_similar_state_dict
 
 

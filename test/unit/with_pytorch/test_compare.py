@@ -3,9 +3,9 @@
 # pyre-strict
 
 from typing import List
+from unittest import TestCase
 
 import torch
-from later.unittest import TestCase
 from pearl.action_representation_modules.binary_action_representation_module import (
     BinaryActionTensorRepresentationModule,
 )
