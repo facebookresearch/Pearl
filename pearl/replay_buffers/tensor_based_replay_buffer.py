@@ -161,9 +161,12 @@ class TensorBasedReplayBuffer(ReplayBuffer):
 
     def _process_single_action(self, action: Action) -> torch.Tensor:
         if isinstance(action, torch.Tensor):
-            return action.to(get_default_device()).clone().detach().unsqueeze(0)
+            tensor = action.to(get_default_device()).clone().detach()
         else:
-            return torch.tensor(action).unsqueeze(0)
+            tensor = torch.tensor(action)
+        if tensor.ndim == 0:
+            tensor = tensor.unsqueeze(0)
+        return tensor
 
     def _process_single_reward(self, reward: Reward) -> torch.Tensor:
         return torch.tensor([reward])
