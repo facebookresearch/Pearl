@@ -132,12 +132,12 @@ class NeuralBandit(ContextualBanditBase):
         """
         Args:
             subjective_state: state will be applied to different action vectors in action_space
-            action_space: contains a list of action vector, currenly only support static space
+            action_space: contains a list of action vector, currently only support static space
         Return:
             action index chosen given state and action vectors
         """
         assert isinstance(available_action_space, DiscreteActionSpace)
-        # It doesnt make sense to call act if we are not working with action vector
+        # It doesn't make sense to call act if we are not working with action vector
         action_count = available_action_space.n
         new_feature = concatenate_actions_to_state(
             subjective_state=subjective_state,
@@ -145,7 +145,14 @@ class NeuralBandit(ContextualBanditBase):
             state_features_only=self._state_features_only,
             action_representation_module=self.action_representation_module,
         )
-        values = self.model(new_feature).squeeze(-1)
+        batch_size = new_feature.shape[0]
+        feature_dim = new_feature.shape[-1]
+        # Flatten the action dimension before model evaluation
+        values = (
+            self.model(new_feature.reshape(-1, feature_dim))
+            .reshape(batch_size, -1)
+            .squeeze(-1)
+        )
         # batch_size * action_count
         assert values.numel() == new_feature.shape[0] * action_count
         return self.exploration_module.act(
