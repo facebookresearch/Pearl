@@ -6,7 +6,7 @@ import io
 from unittest import TestCase
 
 import torch
-from pearl.test.unit.with_pytorch.test_agent import TestAgentWithPyTorch
+from test.unit.with_pytorch.test_agent import TestAgentWithPyTorch
 from torch import nn
 
 
