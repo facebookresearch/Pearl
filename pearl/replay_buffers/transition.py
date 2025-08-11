@@ -13,6 +13,7 @@ from typing import cast, Final, TypeVar
 
 import torch
 from torch import Tensor
+from torch.fx._symbolic_trace import is_fx_tracing
 
 
 T = TypeVar("T", bound="Transition")
@@ -143,6 +144,12 @@ class TransitionBatch:
         - The terminated and truncated tensors have shape (batch_size,) or (batch_size, 1).
         - The next_state and next_action tensors have at least 2 dimensions (batch_size, ...).
         """
+
+        # Bypass meaningless post init during fx tracing as symbolically traced variables
+        # cannot be used as inputs to control flow
+        if is_fx_tracing():
+            return
+
         assert self.state.ndim >= 2, (
             f"state has shape {self.state.shape}, "
             f"but must have at least 2 dimensions (batch_size, ...)"
