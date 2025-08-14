@@ -24,6 +24,7 @@ from pearl.history_summarization_modules.lstm_history_summarization_module impor
 from pearl.history_summarization_modules.stacking_history_summarization_module import (
     StackingHistorySummarizationModule,
 )
+from pearl.neural_networks.common.utils import LossType
 from pearl.neural_networks.contextual_bandit.linear_regression import LinearRegression
 from pearl.neural_networks.contextual_bandit.neural_linear_regression import (
     NeuralLinearRegression,
@@ -478,7 +479,7 @@ class TestCompare(TestCase):
             feature_dim=10,
             hidden_dims=[32, 16],
             exploration_module=exploration_module1,
-            loss_type="mse",
+            loss_type=LossType.MSE,
             apply_discounting_interval=100,
         )
         torch.manual_seed(0)  # Reset the seed for the second module
@@ -486,7 +487,7 @@ class TestCompare(TestCase):
             feature_dim=10,
             hidden_dims=[32, 16],
             exploration_module=exploration_module2,
-            loss_type="mse",
+            loss_type=LossType.MSE,
             apply_discounting_interval=100,
         )
 
@@ -497,7 +498,7 @@ class TestCompare(TestCase):
         self.assertEqual(module1.compare(module2), "")
 
         # Modify an attribute of module2 to create a difference
-        module2.loss_type = "mae"
+        module2.loss_type = LossType.MAE
 
         # Now the comparison should show a difference
         self.assertNotEqual(module1.compare(module2), "")
@@ -699,13 +700,13 @@ class TestCompare(TestCase):
             feature_dim=10,
             hidden_dims=[32, 16],
             exploration_module=exploration_module1,
-            loss_type="mse",
+            loss_type=LossType.MSE,
         )
         module2 = NeuralBandit(
             feature_dim=10,
             hidden_dims=[32, 16],
             exploration_module=exploration_module2,
-            loss_type="mse",
+            loss_type=LossType.MSE,
         )
 
         # Compare module1 with itself
@@ -724,7 +725,7 @@ class TestCompare(TestCase):
         self.assertEqual(module1.compare(module2), "")
 
         # Modify an attribute of module2 to create a difference
-        module2.loss_type = "mae"
+        module2.loss_type = LossType.MAE
 
         # Now the comparison should show a difference
         self.assertNotEqual(module1.compare(module2), "")

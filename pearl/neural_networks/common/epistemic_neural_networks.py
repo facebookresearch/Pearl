@@ -17,7 +17,7 @@ from typing import Any
 
 import torch
 import torch.nn as nn
-from pearl.neural_networks.common.utils import init_weights, mlp_block
+from pearl.neural_networks.common.utils import mlp_block, xavier_init_weights
 from torch import Tensor
 
 
@@ -155,12 +155,12 @@ class Priornet(nn.Module):
         for _ in range(self.index_dim):
             model = mlp_block(self.input_dim, self.hidden_dims, self.output_dim)
             # Xavier uniform initalization
-            model.apply(init_weights)
+            model.apply(xavier_init_weights)
             models.append(model)
         self.base_model: nn.Module = mlp_block(
             self.input_dim, self.hidden_dims, self.output_dim
         )
-        self.base_model.apply(init_weights)
+        self.base_model.apply(xavier_init_weights)
         self.base_model = self.base_model.to("meta")
         self.models: nn.ModuleList = nn.ModuleList(models)
 
@@ -228,7 +228,7 @@ class Epinet(EpistemicNeuralNetwork):
         self.epinet: nn.Module = mlp_block(
             epinet_input_dim, self.epi_hiddens, self.index_dim * self.output_dim
         )
-        self.epinet.apply(init_weights)
+        self.epinet.apply(xavier_init_weights)
         # Priornet
         self.priornet = Priornet(
             self.input_dim, self.prior_hiddens, self.output_dim, self.index_dim

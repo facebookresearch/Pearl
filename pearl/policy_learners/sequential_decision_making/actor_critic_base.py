@@ -24,7 +24,10 @@ from pearl.api.state import SubjectiveState
 from pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
 )
-from pearl.neural_networks.common.utils import init_weights, update_target_network
+from pearl.neural_networks.common.utils import (
+    update_target_network,
+    xavier_init_weights,
+)
 from pearl.neural_networks.common.value_networks import ValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetwork,
@@ -154,7 +157,7 @@ class ActorCriticBase(PolicyLearner):
                 ),
                 action_space=action_space,
             )
-        self._actor.apply(init_weights)
+        self._actor.apply(xavier_init_weights)
         if actor_optimizer is not None:
             self._actor_optimizer: optim.Optimizer = actor_optimizer
         else:

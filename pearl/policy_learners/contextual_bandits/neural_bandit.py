@@ -21,7 +21,7 @@ from pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
     SubjectiveState,
 )
-from pearl.neural_networks.common.utils import LOSS_TYPES
+from pearl.neural_networks.common.utils import LossType
 from pearl.neural_networks.common.value_networks import VanillaValueNetwork
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
@@ -58,7 +58,8 @@ class NeuralBandit(ContextualBanditBase):
         batch_size: int = 128,
         learning_rate: float = 0.001,
         state_features_only: bool = False,
-        loss_type: str = "mse",  # one of the LOSS_TYPES names, e.g., mse, mae, xentropy
+        loss_type: LossType
+        | str = LossType.MSE,  # one of the LossType names, e.g., MSE, MAE, CROSS_ENTROPY
         action_representation_module: ActionRepresentationModule | None = None,
     ) -> None:
         super().__init__(
@@ -77,7 +78,9 @@ class NeuralBandit(ContextualBanditBase):
             self.model.parameters(), lr=learning_rate, amsgrad=True
         )
         self._state_features_only = state_features_only
-        self.loss_type = loss_type
+        self.loss_type: LossType = (
+            LossType(loss_type) if isinstance(loss_type, str) else loss_type
+        )
 
     def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
         expected_values = batch.reward
@@ -94,7 +97,7 @@ class NeuralBandit(ContextualBanditBase):
         # forward pass
         predicted_values = self.model(input_features)
 
-        criterion = LOSS_TYPES[self.loss_type]
+        criterion = self.loss_type.function()
 
         # don't reduce the loss, so that we can calculate weighted loss
         loss = criterion(
