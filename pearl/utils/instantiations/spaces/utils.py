@@ -11,13 +11,16 @@ from torch import Tensor
 
 
 def reshape_to_1d_tensor(x: Tensor) -> Tensor:
-    """Reshapes a Tensor that is either scalar or `1 x d` -> `d`."""
+    """
+    Reshapes ``x`` to a 1-D tensor.
+
+    Scalars are expanded and ``(1, d)`` tensors are squeezed. For tensors with
+    more than one dimension, the elements are flattened.
+    """
     if x.ndim == 1:
         return x
     if x.ndim == 0:  # scalar -> `d`
-        x = x.unsqueeze(dim=0)  # `1 x d` -> `d`
-    elif x.ndim == 2 and x.shape[0] == 1:
-        x = x.squeeze(dim=0)
-    else:
-        raise ValueError(f"Tensor of shape {x.shape} is not supported.")
-    return x
+        return x.unsqueeze(dim=0)  # `1 x d` -> `d`
+    if x.ndim == 2 and x.shape[0] == 1:
+        return x.squeeze(dim=0)
+    return x.flatten()

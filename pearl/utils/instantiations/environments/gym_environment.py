@@ -23,6 +23,7 @@ from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import Tensor
+import torch
 
 try:
     import gymnasium as gym
@@ -198,11 +199,35 @@ def _get_gym_action(
     return pearl_to_gym_action_transform(pearl_action)
 
 
+def _tuple_to_box_space(gym_space: gym.Space) -> BoxSpace:
+    """Converts a Gymnasium ``Tuple`` space into a ``BoxSpace`` by concatenating
+    the bounds of each subspace."""
+    assert gym_space.__class__.__name__ == "Tuple"
+    lows = []
+    highs = []
+    for subspace in gym_space.spaces:  # pyre-ignore[16]
+        name = subspace.__class__.__name__
+        if name == "Box":
+            lows.append(torch.tensor(subspace.low).flatten())
+            highs.append(torch.tensor(subspace.high).flatten())
+        elif name == "Discrete":
+            start = getattr(subspace, "start", 0)
+            lows.append(torch.tensor([float(start)]))
+            highs.append(torch.tensor([float(start + subspace.n - 1)]))
+        else:
+            raise NotImplementedError(f"Unsupported subspace type: {name}")
+    low = torch.cat(lows).float()
+    high = torch.cat(highs).float()
+    return BoxSpace(low=low, high=high)
+
+
 def _get_pearl_space(
     gym_space: gym.Space, gym_to_pearl_map: dict[str, Any]
 ) -> ActionSpace:
     """Returns the Pearl action space for this environment."""
     gym_space_name = gym_space.__class__.__name__
+    if gym_space_name == "Tuple":
+        return _tuple_to_box_space(gym_space)
     try:
         pearl_action_space_cls = gym_to_pearl_map[gym_space_name]
     except KeyError:
