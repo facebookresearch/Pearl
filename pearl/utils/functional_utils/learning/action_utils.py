@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+# pyre-unsafe
+
 import torch
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
