@@ -14,6 +14,8 @@ import torch
 import torch.jit
 import torch.testing as tt
 from parameterized import parameterized_class
+from pearl.api.action import Action
+from pearl.api.action_space import ActionSpace
 from pearl.policy_learners.contextual_bandits.disjoint_bandit import (
     DisjointBanditContainer,
 )
@@ -294,12 +296,14 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
 
         # Define a wrapper function for tracing that handles the act method
         class PolicyLearnerWrapper(torch.nn.Module):
-            def __init__(self, policy_learner, action_space):
+            def __init__(
+                self, policy_learner: DisjointBanditContainer, action_space: ActionSpace
+            ) -> None:
                 super().__init__()
                 self.policy_learner = policy_learner
                 self.action_space = action_space
 
-            def forward(self, state):
+            def forward(self, state: torch.Tensor) -> Action:
                 return self.policy_learner.act(
                     subjective_state=state, available_action_space=self.action_space
                 )
