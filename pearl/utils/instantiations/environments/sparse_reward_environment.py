@@ -13,7 +13,7 @@ Also contains history summarization module that needs to be used together
 when defining PearlAgent
 
 Set up is following:
-2d box environment, where the agent gets initialized in a center of a square arena,
+2d box environment, where the agent gets initialized in a center of an arena,
 and there is a target - 2d point, randomly generated in the arena.
 The agent gets reward 0 only when it gets close enough to the target, otherwise the reward is -1.
 
@@ -25,7 +25,7 @@ There are 2 versions in this file:
 import math
 import random
 from abc import abstractmethod
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import torch
 
@@ -35,9 +35,8 @@ from pearl.api.action_space import ActionSpace
 
 from pearl.api.environment import Environment
 from pearl.utils.instantiations.spaces.box import BoxSpace
+from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
-
-# FIXME by @Jalaj: this file needs thorough fixing.
 
 
 class SparseRewardEnvironment(Environment):
@@ -46,38 +45,54 @@ class SparseRewardEnvironment(Environment):
         width: float,
         height: float,
         max_episode_duration: int = 500,
-        reward_distance: float = 1,
+        reward_distance: float = 1.0,
     ) -> None:
+        """Initialize a sparse-reward environment.
+
+        Args:
+            width: Arena width (x-dimension).
+            height: Arena height (y-dimension).
+            max_episode_duration: Step limit per episode.
+            reward_distance: Distance threshold for reaching the goal.
+        """
         self._width = width
         self._height = height
         self._max_episode_duration = max_episode_duration
         self._reward_distance = reward_distance
 
         # reset will initialize the agent position, goal and step count
-        self._agent_position: tuple[float, float] | None = None
-        self._goal: tuple[float, float] | None = None
+        self._agent_position: Tuple[float, float] | None = None
+        self._goal: Tuple[float, float] | None = None
         self._step_count = 0
 
     @abstractmethod
     def step(self, action: Action) -> ActionResult:
-        pass
+        """Take one step in the environment"""
+        raise NotImplementedError
 
     @property
     def observation_space(self) -> BoxSpace:
         """
-        The observation space is a 2d box space, with the range in the x-coordinate
-        being [0, width] and the range in the y-coordinate being [0, height].
+        Observations consist of the agent position ``(x, y)`` concatenated with
+        the goal position ``(goal_x, goal_y)``.  Each coordinate is bounded in
+        the interval ``[0, width]`` for ``x`` and ``[0, height]`` for ``y``.
         """
-        observation_space = BoxSpace(
-            low=torch.tensor([0, 0]), high=torch.tensor([self._width, self._height])
+        low = torch.tensor([0.0, 0.0, 0.0, 0.0], dtype=torch.float32)
+        high = torch.tensor(
+            [self._width, self._height, self._width, self._height],
+            dtype=torch.float32,
         )
-        return observation_space
+        return BoxSpace(low=low, high=high)
 
-    def reset(self, seed: int | None = None) -> tuple[torch.Tensor, ActionSpace]:
+    def reset(self, seed: int | None = None) -> Tuple[torch.Tensor, ActionSpace]:
+        """Resets the environment and returns the initial observation and initial action space."""
+        if seed is not None:
+            random.seed(seed)
+            torch.manual_seed(seed)
         # reset (x, y) for agent position
         self._agent_position = (
-            self._width / 2,
-            self._height / 2,
+            self._width / 2.0,
+            self._height / 2.0,
         )
 
         # reset (x, y) for goal
@@ -90,11 +105,13 @@ class SparseRewardEnvironment(Environment):
         assert self._agent_position is not None
         assert (goal := self._goal) is not None
         return (
-            torch.tensor(list(self._agent_position) + list(goal)),
+            torch.tensor(
+                list(self._agent_position) + list(goal), dtype=torch.float32
+            ),
             self.action_space,
         )
 
-    def _update_position(self, delta: tuple[float, float]) -> None:
+    def _update_position(self, delta: Tuple[float, float]) -> None:
         """
         Update the agent position, say (x, y) --> (x', y') where:
         x' = x + delta_x
@@ -106,8 +123,8 @@ class SparseRewardEnvironment(Environment):
         assert self._agent_position is not None
         x, y = self._agent_position
         self._agent_position = (
-            max(min(x + delta_x, self._width), 0),
-            max(min(y + delta_y, self._height), 0),
+            max(min(x + delta_x, self._width), 0.0),
+            max(min(y + delta_y, self._height), 0.0),
         )
 
     def _check_win(self) -> bool:
@@ -124,77 +141,139 @@ class SparseRewardEnvironment(Environment):
 
 class ContinuousSparseRewardEnvironment(SparseRewardEnvironment):
     """
-    Given action vector (x, y)
-    agent position is updated accordingly
+    Action is a 2D tensor (dx, dy) indicating movement in the x and y directions.
+    The agent's position is updated by this delta each step.
     """
 
     def step(self, action: Action) -> ActionResult:
-        assert isinstance(action, torch.Tensor)
-        self._update_position((action[0].item(), action[1].item()))
+        """
+        Perform one environment step.
+
+        Args:
+            action : torch.Tensor
+                A 2-D displacement (dx, dy) represented as a float tensor of shape ``(2,)``.
+
+        Returns:
+            ActionResult
+                Observation (4-D), reward (float), and termination flags.
+        """
+        assert isinstance(action, torch.Tensor), (
+            "Action must be a torch.Tensor for continuous environment"
+        )
+        assert action.shape == (2,), (
+            f"Continuous action should be shape (2,), got {action.shape}"
+        )
+        dx, dy = float(action[0].item()), float(action[1].item())
+        self._update_position((dx, dy))
 
         has_win = self._check_win()
         self._step_count += 1
         terminated = has_win
-        truncated = self._step_count >= self._max_episode_duration
+        truncated = (not has_win) and self._step_count >= self._max_episode_duration
         assert self._agent_position is not None
         assert (goal := self._goal) is not None
         return ActionResult(
-            observation=torch.tensor(list(self._agent_position) + list(goal)),
-            reward=0 if has_win else -1,
+            observation=torch.tensor(
+                list(self._agent_position) + list(goal), dtype=torch.float32
+            ),
+            reward=0.0 if has_win else -1.0,
             terminated=terminated,
             truncated=truncated,
         )
 
     @property
     def action_space(self) -> ActionSpace:
-        # pyre-fixme[7]: Expected `ActionSpace` but got `None`.
-        # FIXME: does this really do not have an action space?
-        return None
+        """
+        Continuous 2-D `BoxActionSpace` for (dx, dy).
+
+        Boundaries are set to [-1, 1] in each direction; agents are free
+        to scale internally if they prefer a different magnitude.
+        """
+        low = torch.tensor([-1.0, -1.0], dtype=torch.float32)
+        high = torch.tensor([1.0, 1.0], dtype=torch.float32)
+        return BoxActionSpace(low=low, high=high)
 
 
 class DiscreteSparseRewardEnvironment(ContinuousSparseRewardEnvironment):
     """
-    Given action count N, action index will be 0, ..., N-1
-    For action n, position will be changed by:
-    x +=  cos(360/N * n) * step_size
-    y +=  sin(360/N * n) * step_size
+    Action space has `action_count` discrete moves uniformly distributed in 360 degrees.
+    For action index n (0 <= n < N), the agent moves by `step_size` in the direction
+    of angle (2pi * n / N).
     """
-
-    # FIXME: This environment mixes the concepts of action index and action feature.
     def __init__(
         self,
         width: float,
         height: float,
         action_count: int,
-        reward_distance: float,
+        reward_distance: float | None = None,
         step_size: float = 0.01,
         max_episode_duration: int = 500,
     ) -> None:
+        """Initialize environment.
+
+        Args:
+            width: Width of the square arena.
+            height: Height of the square arena.
+            action_count: Number of discrete actions.
+            reward_distance: Distance threshold for a zero reward. If ``None``,
+                ``step_size`` will be used.
+            step_size: Magnitude of each movement step.
+            max_episode_duration: Maximum number of steps per episode.
+        """
         super().__init__(
             width=width,
             height=height,
             max_episode_duration=max_episode_duration,
-            reward_distance=reward_distance,
+            # If no specific reward_distance is given, use step_size as the
+            # threshold (so one step reach counts as success)
+            reward_distance=(
+                reward_distance if reward_distance is not None else step_size
+            ),
         )
+        if action_count <= 0:
+            raise ValueError("action_count must be a positive integer")
         self._step_size = step_size
         self._action_count = action_count
-        self._actions: list[torch.Tensor] = [
-            torch.tensor(
-                [
-                    math.cos(2 * math.pi / self._action_count * i),
-                    math.sin(2 * math.pi / self._action_count * i),
-                ]
-            )
-            * self._step_size
-            for i in range(action_count)
-        ]
+        self._actions: List[torch.Tensor] = []
+        for i in range(action_count):
+            angle = 2.0 * math.pi * i / action_count
+            dx = math.cos(angle) * self._step_size
+            dy = math.sin(angle) * self._step_size
+            self._actions.append(torch.tensor([dx, dy], dtype=torch.float32))
 
     def step(self, action: Action) -> ActionResult:
-        assert action < self._action_count and action >= 0
-        return super().step(self._actions[int(action.item())])
+        """
+        Performs a single discrete action.
+
+        Args:
+            action : int | torch.Tensor
+                Either a Python int or a 0-D / 1-D tensor holding the index.
+
+        Returns:
+            ActionResult
+                Observation, reward, and termination flags after the move.
+        """
+        if isinstance(action, torch.Tensor):
+            if action.ndim > 1:
+                raise ValueError(
+                    f"Discrete action tensor must be scalar or 1-D of length 1, got shape {list(action.shape)}"
+                )
+            idx = int(action.item())
+        else:
+            idx = int(action)
+        if not (0 <= idx < self._action_count):
+            raise ValueError(
+                f"Action index {idx} out of range; must be 0 <= idx < {self._action_count}"
+            )
+        continuous_action = self._actions[idx]
+        return super().step(continuous_action)
 
     @property
     def action_space(self) -> DiscreteActionSpace:
+        """
+        Returns a `DiscreteActionSpace` containing `action_count` actions.
+        Each action is a scalar tensor holding its own index (0, 1, ... N-1).
+        """
         return DiscreteActionSpace(
-            actions=[torch.tensor([i]) for i in range(self._action_count)]
+            actions=[torch.tensor([i], dtype=torch.long) for i in range(self._action_count)]
         )
