@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-# pyre-unsafe
+# pyre-strict
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -50,7 +50,8 @@ def argmax_random_tie_breaks_batch(
     max_indices_in_permuted_data = torch.argmax(permuted_scores, dim=1)
 
     if mask is not None:
-        # pyre-fixme[16]: `Tensor` has no attribute `get_data`.
+        # Extract data from masked tensor and convert to long
+        # pyre-ignore[16]: MaskedTensor has get_data method but pyre doesn't recognize it
         max_indices_in_permuted_data = max_indices_in_permuted_data.get_data().long()
 
     # Use the random permutation to get the original indices of the maximum elements
@@ -154,10 +155,8 @@ def get_model_action_index_batch(
         else:
             # mask out non-present arms
             scores_masked = torch.masked.as_masked_tensor(scores, mask.bool())
-            model_actions = (
-                # pyre-fixme[16]: `Tensor` has no attribute `get_data`.
-                torch.argmax(scores_masked, dim=1).get_data()
-            )
+            # pyre-ignore[16]: MaskedTensor has get_data method but pyre doesn't recognize it
+            model_actions = torch.argmax(scores_masked, dim=1).get_data()
     return model_actions
 
 
