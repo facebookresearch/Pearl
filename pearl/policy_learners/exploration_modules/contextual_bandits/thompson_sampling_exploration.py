@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, List
+from typing import Any, cast, List
 
 import torch
 
@@ -63,8 +63,8 @@ class ThompsonSamplingExplorationLinear(ScoreExplorationBase):
         else:
             thompson_sampling_coefs = (
                 torch.distributions.multivariate_normal.MultivariateNormal(
-                    loc=representation.coefs,  # pyre-ignore[6]
-                    precision_matrix=representation.A,  # pyre-ignore[6]
+                    loc=cast(torch.Tensor, representation.coefs),
+                    precision_matrix=cast(torch.Tensor, representation.A),
                 ).sample()
             )
             scores = torch.matmul(
