@@ -37,22 +37,31 @@ class PartialObservableWrapper(gym.Wrapper):
 
 
 class CartPolePartialObservableWrapper(PartialObservableWrapper):
-    r"""Observation wrapper that make CartPole environment partial observable."""
+    r"""Observation wrapper that makes CartPole environment partially observable."""
 
     def __init__(self, env, time_between_two_valid_obs=1):
         super().__init__(env, time_between_two_valid_obs)
+        base = self.env.unwrapped
         high = np.array(
-            [self.x_threshold * 2, self.theta_threshold_radians * 2, 1.0],
+            [
+                base.x_threshold * 2,  # cart position
+                base.theta_threshold_radians * 2,  # pole angle
+                1.0,
+            ],  # dummy
             dtype=np.float32,
         )
 
-        self.observation_space = gym.spaces.Box(-high, high, dtype=np.float32)
+        low = -high
+        self.observation_space = gym.spaces.Box(low, high, dtype=np.float32)
 
     def observation(self, observation):
         if self.env.number_of_steps % self.time_between_two_valid_obs != 0:
             return np.zeros(3, dtype=np.float32)
         else:
-            return np.array([observation[0], observation[2], 1.0], dtype=np.float32)
+            return np.array(
+                [observation[0], observation[2], 1.0],
+                dtype=np.float32,
+            )
 
 
 class AcrobotPartialObservableWrapper(PartialObservableWrapper):
