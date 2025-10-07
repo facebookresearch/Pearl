@@ -7,6 +7,7 @@
 
 # pyre-strict
 
+import os
 import pickle
 from collections import deque
 
@@ -108,7 +109,15 @@ def create_offline_data(
         epi += 1
 
     # save offline transition tuples in a .pt file
-    torch.save(raw_transitions_buffer, save_path + file_name)
+    full_file_path = save_path + file_name
+    try:
+        torch.save(raw_transitions_buffer, full_file_path)
+        # Ensure the file exists
+        if not os.path.exists(full_file_path):
+            raise RuntimeError(f"Failed to save offline data file to {full_file_path}")
+    except Exception as e:
+        print(f"Error saving offline data: {e}")
+        raise
 
     # save training returns of the data collection agent
     with open(
@@ -172,7 +181,7 @@ def get_data_collection_agent_returns(
         returns_file_path: path to the file containing returns of the data collection agent.
     """
 
-    print("getting returns of the data collection agent agent")
+    print("getting returns of the data collection agent")
     if returns_file_path is None:
         print(
             f"using offline training data in {data_path} to stitch trajectories and compute returns"
