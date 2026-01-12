@@ -10,11 +10,9 @@
 import unittest
 
 import numpy as np
-
 import torch
 import torchvision
 from pearl.neural_networks.common.value_networks import CNNValueNetwork
-
 from torch import optim
 from torch.utils.data import DataLoader, Subset
 from torchvision import transforms

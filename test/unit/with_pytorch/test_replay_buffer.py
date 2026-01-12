@@ -9,13 +9,10 @@
 import unittest
 
 import torch
-
 from pearl.policy_learners.sequential_decision_making.ppo import PPOReplayBuffer
-
 from pearl.policy_learners.sequential_decision_making.reinforce import (
     REINFORCEReplayBuffer,
 )
-
 from pearl.replay_buffers import BasicReplayBuffer
 from pearl.replay_buffers.sequential_decision_making.bootstrap_replay_buffer import (
     BootstrapReplayBuffer,

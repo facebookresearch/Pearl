@@ -11,7 +11,6 @@ import gymnasium as gym
 from pearl.action_representation_modules.one_hot_action_representation_module import (
     OneHotActionTensorRepresentationModule,
 )
-
 from pearl.history_summarization_modules.lstm_history_summarization_module import (
     LSTMHistorySummarizationModule,
 )
@@ -57,7 +56,6 @@ from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
 )
 from pearl.policy_learners.sequential_decision_making.deep_sarsa import DeepSARSA
 from pearl.policy_learners.sequential_decision_making.double_dqn import DoubleDQN
-
 from pearl.policy_learners.sequential_decision_making.implicit_q_learning import (
     ImplicitQLearning,
 )
@@ -92,7 +90,6 @@ from pearl.safety_modules.reward_constrained_safety_module import (
 from pearl.safety_modules.risk_sensitive_safety_modules import (
     QuantileNetworkMeanVarianceSafetyModule,
 )
-
 from pearl.user_envs.wrappers import (
     AcrobotPartialObservableWrapper,
     AcrobotSparseRewardWrapper,

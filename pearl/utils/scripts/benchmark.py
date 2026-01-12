@@ -36,7 +36,6 @@ from pearl.neural_networks.sequential_decision_making.q_value_networks import (
 from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCritic
 from pearl.pearl_agent import PearlAgent
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
-
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 from pearl.utils.scripts.benchmark_config import (  # noqa: F401
     benchmark_acrobot_v1_part_1,

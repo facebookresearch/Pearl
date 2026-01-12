@@ -18,21 +18,17 @@ from pearl.action_representation_modules.action_representation_module import (
 from pearl.action_representation_modules.binary_action_representation_module import (
     BinaryActionTensorRepresentationModule,
 )
-
 from pearl.pearl_agent import PearlAgent
 from pearl.policy_learners.contextual_bandits.neural_bandit import NeuralBandit
 from pearl.policy_learners.exploration_modules.common.no_exploration import (
     NoExploration,
 )
 from pearl.policy_learners.policy_learner import PolicyLearner
-
 from pearl.replay_buffers import BasicReplayBuffer
 from pearl.utils.instantiations.environments.contextual_bandit_uci_environment import (
     SLCBEnvironment,
 )
-
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
-
 from pearl.utils.scripts.cb_benchmark.cb_benchmark_config import (
     letter_uci_dict,
     pendigits_uci_dict,

@@ -13,7 +13,6 @@ import sys
 import matplotlib.pyplot as plt
 from pearl.api.reward import Value
 from pearl.pearl_agent import PearlAgent
-
 from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,
 )

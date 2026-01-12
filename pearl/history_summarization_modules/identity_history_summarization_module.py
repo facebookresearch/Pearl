@@ -10,7 +10,6 @@
 from typing import List
 
 import torch
-
 from pearl.api.action import Action
 from pearl.api.history import History
 from pearl.api.observation import Observation

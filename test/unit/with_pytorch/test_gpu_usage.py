@@ -14,7 +14,6 @@ from pearl.action_representation_modules.one_hot_action_representation_module im
     OneHotActionTensorRepresentationModule,
 )
 from pearl.pearl_agent import PearlAgent
-
 from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,
 )
@@ -24,7 +23,6 @@ from pearl.policy_learners.sequential_decision_making.ppo import (
 )
 from pearl.replay_buffers import BasicReplayBuffer
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
-
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 

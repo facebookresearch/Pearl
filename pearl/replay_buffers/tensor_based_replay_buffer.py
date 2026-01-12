@@ -8,12 +8,10 @@
 # pyre-strict
 
 import random
-
 from collections import deque
 from typing import Deque
 
 import torch
-
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.reward import Reward

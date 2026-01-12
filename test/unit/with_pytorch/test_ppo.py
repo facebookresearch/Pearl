@@ -10,7 +10,6 @@
 import unittest
 
 import torch
-
 from pearl.policy_learners.sequential_decision_making.ppo import (
     PPOReplayBuffer,
     PPOTransition,

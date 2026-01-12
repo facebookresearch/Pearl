@@ -10,7 +10,6 @@
 from typing import Any, List
 
 import torch
-
 from pearl.api.action import Action
 from pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,

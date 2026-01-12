@@ -13,7 +13,6 @@ import logging
 
 import numpy as np
 import torch
-
 from pearl.api.space import Space
 from pearl.utils.instantiations.spaces.utils import reshape_to_1d_tensor
 from torch import Tensor

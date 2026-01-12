@@ -11,7 +11,6 @@ from collections.abc import Iterable
 
 import torch
 import torch.nn as nn
-
 from pearl.neural_networks.common.utils import (
     update_target_network,
     update_target_networks,
@@ -21,7 +20,6 @@ from pearl.neural_networks.common.value_networks import (
     ValueNetwork,
     VanillaValueNetwork,
 )
-
 from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     QValueNetwork,
     VanillaQValueNetwork,
@@ -68,9 +66,9 @@ def make_critic(
     if use_twin_critic:
         assert action_dim is not None
         assert hidden_dims is not None
-        assert issubclass(
-            network_type, QValueNetwork
-        ), "network_type must be a subclass of QValueNetwork when use_twin_critic is True"
+        assert issubclass(network_type, QValueNetwork), (
+            "network_type must be a subclass of QValueNetwork when use_twin_critic is True"
+        )
 
         # cast network_type to get around static Pyre type checking; the runtime check with
         # `issubclass` ensures the network type is a sublcass of QValueNetwork

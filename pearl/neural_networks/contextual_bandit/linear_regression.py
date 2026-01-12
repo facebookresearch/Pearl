@@ -63,9 +63,9 @@ class LinearRegression(MuSigmaCBModel):
         self.gamma = gamma
         self.l2_reg_lambda = l2_reg_lambda
         self.force_pinv = force_pinv
-        assert (
-            gamma > 0 and gamma <= 1
-        ), f"gamma should be in (0, 1]. Got gamma={gamma} instead"
+        assert gamma > 0 and gamma <= 1, (
+            f"gamma should be in (0, 1]. Got gamma={gamma} instead"
+        )
         self.register_buffer(
             "_A",
             torch.zeros(feature_dim + 1, feature_dim + 1),  # +1 for intercept
@@ -77,9 +77,9 @@ class LinearRegression(MuSigmaCBModel):
             torch.zeros(feature_dim + 1, feature_dim + 1),
         )
         if initial_coefs is not None:
-            assert initial_coefs.shape == (
-                feature_dim + 1,
-            ), f"initial_coefs shape {initial_coefs.shape} != {(feature_dim + 1,)}"
+            assert initial_coefs.shape == (feature_dim + 1,), (
+                f"initial_coefs shape {initial_coefs.shape} != {(feature_dim + 1,)}"
+            )
             self.register_buffer("_coefs", initial_coefs.clone())
         else:
             self.register_buffer("_coefs", torch.zeros(feature_dim + 1))

@@ -12,7 +12,6 @@ import unittest
 import torch
 import torch.testing as tt
 from pearl.replay_buffers import BasicReplayBuffer
-
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 

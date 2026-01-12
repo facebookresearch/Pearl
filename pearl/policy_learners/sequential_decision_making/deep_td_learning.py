@@ -16,7 +16,6 @@ import torch
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
-
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
@@ -31,13 +30,11 @@ from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     VanillaQValueMultiHeadNetwork,
     VanillaQValueNetwork,
 )
-
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
 from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.transition import TransitionBatch
-
 from pearl.utils.functional_utils.learning.loss_fn_utils import compute_cql_loss
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from pearl.utils.module_utils import modules_have_similar_state_dict

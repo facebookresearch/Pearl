@@ -222,9 +222,9 @@ class TransformerHistorySummarizationModule(HistorySummarizationModule):
         x: [B, T, input_dim] — batch of sequences of (action, observation) pairs.
         Returns: [B, d_model] — representation of the last token for each sequence.
         """
-        assert (
-            x.dim() == 3 and x.size(-1) == self.input_dim
-        ), f"Expected [B, T, {self.input_dim}], got {tuple(x.shape)}"
+        assert x.dim() == 3 and x.size(-1) == self.input_dim, (
+            f"Expected [B, T, {self.input_dim}], got {tuple(x.shape)}"
+        )
 
         return self._encode_last_token(x)
 

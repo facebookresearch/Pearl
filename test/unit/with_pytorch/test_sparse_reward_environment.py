@@ -10,7 +10,6 @@
 import unittest
 
 import torch
-
 from pearl.utils.instantiations.environments.sparse_reward_environment import (
     DiscreteSparseRewardEnvironment,
 )

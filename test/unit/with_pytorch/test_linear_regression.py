@@ -11,7 +11,6 @@ import unittest
 
 import torch
 import torch.testing as tt
-
 from pearl.neural_networks.contextual_bandit.linear_regression import LinearRegression
 
 

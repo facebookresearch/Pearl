@@ -11,7 +11,6 @@ from abc import ABC, abstractmethod
 
 import torch
 import torch.nn as nn
-
 from pearl.api.action import Action
 from pearl.api.history import History
 from pearl.api.observation import Observation

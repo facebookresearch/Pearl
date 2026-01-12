@@ -29,11 +29,9 @@ except ModuleNotFoundError:
 import unittest
 
 from gym.envs.toy_text.frozen_lake import generate_random_map
-
 from pearl.action_representation_modules.one_hot_action_representation_module import (
     OneHotActionTensorRepresentationModule,
 )
-
 from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     DuelingQValueNetwork,
 )
@@ -50,7 +48,6 @@ from pearl.policy_learners.exploration_modules.common.normal_distribution_explor
 from pearl.policy_learners.sequential_decision_making.ddpg import (
     DeepDeterministicPolicyGradient,
 )
-
 from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,
 )
@@ -93,11 +90,9 @@ from pearl.utils.functional_utils.train_and_eval.offline_learning_and_evaluation
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
     target_return_is_reached,
 )
-
 from pearl.utils.instantiations.environments.environments import (
     OneHotObservationsFromDiscrete,
 )
-
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 

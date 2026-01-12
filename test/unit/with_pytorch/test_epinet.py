@@ -11,7 +11,6 @@ import copy
 import unittest
 
 import torch
-
 import torch.testing as tt
 from pearl.neural_networks.common.epistemic_neural_networks import Epinet
 from torch import optim

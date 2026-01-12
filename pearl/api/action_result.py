@@ -11,9 +11,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from pearl.api.action_space import ActionSpace
-
 from pearl.api.observation import Observation
-
 from pearl.api.reward import Reward
 
 

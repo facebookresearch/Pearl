@@ -16,7 +16,6 @@ from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
 )
 from pearl.policy_learners.sequential_decision_making.double_dqn import DoubleDQN
 from pearl.replay_buffers import BasicReplayBuffer
-
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
 from pearl.utils.instantiations.environments.gym_environment import GymEnvironment

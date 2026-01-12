@@ -15,7 +15,6 @@ from typing import List
 
 import torch
 import torch.nn as nn
-
 from pearl.api.action_space import ActionSpace
 from pearl.neural_networks.common.utils import (
     compute_output_dim_model_cnn,
@@ -23,9 +22,7 @@ from pearl.neural_networks.common.utils import (
     mlp_block,
 )
 from pearl.utils.functional_utils.learning.is_one_hot_tensor import is_one_hot_tensor
-
 from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
-
 from torch import Tensor
 from torch.distributions import Normal
 

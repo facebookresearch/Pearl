@@ -10,7 +10,6 @@
 import unittest
 
 import torch
-
 import torch.testing as tt
 from pearl.neural_networks.common.epistemic_neural_networks import Ensemble
 from pearl.neural_networks.common.utils import ensemble_forward

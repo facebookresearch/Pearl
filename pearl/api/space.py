@@ -12,7 +12,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 import torch
-
 from pearl.api.action import Action
 from torch import Tensor
 

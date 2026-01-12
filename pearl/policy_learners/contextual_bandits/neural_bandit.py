@@ -13,10 +13,8 @@ import torch
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
-
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
-
 from pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
     SubjectiveState,
@@ -165,9 +163,9 @@ class NeuralBandit(ContextualBanditBase):
         action_space_to_score: DiscreteActionSpace,
         exploit: bool = False,
     ) -> torch.Tensor:
-        assert (
-            not exploit
-        ), "exploit=True is not yet implemented for NeuralBandit.get_scores"
+        assert not exploit, (
+            "exploit=True is not yet implemented for NeuralBandit.get_scores"
+        )
 
         feature = concatenate_actions_to_state(
             subjective_state=subjective_state,

@@ -12,11 +12,9 @@ import logging
 import math
 import os
 import time
-
 from typing import Optional
 
 import torch
-
 from pearl.api.environment import Environment
 from pearl.pearl_agent import PearlAgent
 from pearl.replay_buffers import BasicReplayBuffer
@@ -189,9 +187,9 @@ def offline_learning(
         seed = int(time.time())
     set_seed(seed=seed)
 
-    assert (
-        len(data_buffer) > 0
-    ), "offline_learning: data_buffer must have at least one transition tuple"
+    assert len(data_buffer) > 0, (
+        "offline_learning: data_buffer must have at least one transition tuple"
+    )
 
     effective_batch_size = min(
         offline_agent.policy_learner.batch_size, len(data_buffer)

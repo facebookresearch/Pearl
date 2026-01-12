@@ -18,7 +18,6 @@ from pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetwork,
     VanillaActorNetwork,
 )
-
 from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     QValueNetwork,
     VanillaQValueNetwork,
@@ -27,7 +26,6 @@ from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCri
 from pearl.policy_learners.exploration_modules.common.propensity_exploration import (
     PropensityExploration,
 )
-
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
@@ -40,7 +38,6 @@ from pearl.utils.functional_utils.learning.critic_utils import (
     twin_critic_action_value_loss,
 )
 from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
-
 from torch import nn, optim
 
 

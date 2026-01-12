@@ -8,7 +8,6 @@ import random
 import unittest
 
 import numpy as np
-
 import torch
 import torch.nn as nn
 from pearl.action_representation_modules.identity_action_representation_module import (

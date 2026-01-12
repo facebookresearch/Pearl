@@ -16,7 +16,6 @@ from typing import Any
 
 import torch
 import torch.nn as nn
-
 from pearl.neural_networks.common.utils import (
     compute_output_dim_model_cnn,
     conv_block,

@@ -16,7 +16,6 @@ import torch.testing as tt
 from pearl.policy_learners.contextual_bandits.disjoint_linear_bandit import (
     DisjointLinearBandit,
 )
-
 from pearl.policy_learners.exploration_modules.contextual_bandits.thompson_sampling_exploration import (
     ThompsonSamplingExplorationLinearDisjoint,
 )

@@ -18,7 +18,6 @@ from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,
 )
 from pearl.replay_buffers import BasicReplayBuffer
-
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 
 

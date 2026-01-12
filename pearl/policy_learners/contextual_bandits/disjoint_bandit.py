@@ -10,7 +10,6 @@
 from typing import Any, List
 
 import torch
-
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.history_summarization_modules.history_summarization_module import (
@@ -18,7 +17,6 @@ from pearl.history_summarization_modules.history_summarization_module import (
     SubjectiveState,
 )
 from pearl.neural_networks.common.utils import ensemble_forward
-
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
 )
@@ -68,13 +66,13 @@ class DisjointBanditContainer(ContextualBanditBase):
         return self._n_arms
 
     def _validate_batch(self, batch: TransitionBatch) -> None:
-        assert (
-            batch.action.dtype == torch.long
-        ), "action must be torch.long type (index of arm)"
+        assert batch.action.dtype == torch.long, (
+            "action must be torch.long type (index of arm)"
+        )
         assert batch.action.min().item() >= 0, "action must be >= 0"
-        assert (
-            batch.action.max().item() < self._n_arms
-        ), "action must be < number of arms"
+        assert batch.action.max().item() < self._n_arms, (
+            "action must be < number of arms"
+        )
 
     def _partition_batch_by_arm(self, batch: TransitionBatch) -> list[TransitionBatch]:
         """
@@ -96,9 +94,9 @@ class DisjointBanditContainer(ContextualBanditBase):
                 elif batch.state.ndim == 3:
                     # shape: (batch_size, num_arms, feature_size)
                     # different features for each arm
-                    assert (
-                        batch.state.shape[1] == self.n_arms
-                    ), "For 3D state, 2nd dimension must be equal to number of arms"
+                    assert batch.state.shape[1] == self.n_arms, (
+                        "For 3D state, 2nd dimension must be equal to number of arms"
+                    )
                     state = batch.state[:, arm, :]
                 batches.append(
                     TransitionBatch(

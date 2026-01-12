@@ -13,9 +13,7 @@ from typing import Any
 
 import torch
 import torch.nn as nn
-
 from pearl.neural_networks.common.residual_wrapper import ResidualWrapper
-
 from torch.func import stack_module_state
 
 

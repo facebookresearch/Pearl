@@ -13,10 +13,8 @@ import torch
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
-
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
-
 from pearl.history_summarization_modules.history_summarization_module import (
     HistorySummarizationModule,
     SubjectiveState,
@@ -92,9 +90,9 @@ class NeuralLinearBandit(ContextualBanditBase):
         nn_e2e: bool = True,
         separate_uncertainty: bool = False,
     ) -> None:
-        assert (
-            len(hidden_dims) >= 1
-        ), "hidden_dims should have at least one value to specify feature dim for linear regression"
+        assert len(hidden_dims) >= 1, (
+            "hidden_dims should have at least one value to specify feature dim for linear regression"
+        )
         super().__init__(
             feature_dim=feature_dim,
             training_rounds=training_rounds,
@@ -265,9 +263,9 @@ class NeuralLinearBandit(ContextualBanditBase):
         action_space_to_score: DiscreteActionSpace,
         exploit: bool = False,
     ) -> torch.Tensor:
-        assert (
-            not exploit
-        ), "exploit=True is not yet implemented for NeuralLinearBandit.get_scores"
+        assert not exploit, (
+            "exploit=True is not yet implemented for NeuralLinearBandit.get_scores"
+        )
 
         # TODO generalize for all kinds of exploration module
         feature = concatenate_actions_to_state(

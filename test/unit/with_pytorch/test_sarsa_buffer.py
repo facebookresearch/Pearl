@@ -11,7 +11,6 @@ import unittest
 
 import torch
 import torch.testing as tt
-
 from pearl.replay_buffers.sequential_decision_making.sarsa_replay_buffer import (
     SARSAReplayBuffer,
 )

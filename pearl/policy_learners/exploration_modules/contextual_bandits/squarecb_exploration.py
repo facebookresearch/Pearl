@@ -10,11 +10,9 @@
 from typing import List
 
 import torch
-
 from pearl.api.action import Action
 from pearl.api.state import SubjectiveState
 from pearl.policy_learners.exploration_modules import ExplorationModule
-
 from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
     ScoreExplorationBase,
 )

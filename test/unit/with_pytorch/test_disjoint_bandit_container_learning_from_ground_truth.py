@@ -13,9 +13,7 @@ from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 import torch
-
 from pearl.policy_learners.contextual_bandits.contextual_bandit_base import (
     ContextualBanditBase,
 )

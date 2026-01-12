@@ -13,14 +13,12 @@ import torch
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
-
 from pearl.api.action_space import ActionSpace
 from pearl.neural_networks.common.utils import update_target_networks
 from pearl.neural_networks.common.value_networks import (
     ValueNetwork,
     VanillaValueNetwork,
 )
-
 from pearl.neural_networks.sequential_decision_making.actor_networks import (
     ActorNetwork,
     VanillaActorNetwork,
@@ -34,7 +32,6 @@ from pearl.neural_networks.sequential_decision_making.twin_critic import TwinCri
 from pearl.policy_learners.exploration_modules.common.no_exploration import (
     NoExploration,
 )
-
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
@@ -42,7 +39,6 @@ from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
     ActorCriticBase,
 )
-
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.utils.functional_utils.learning.critic_utils import (
     twin_critic_action_value_loss,
@@ -283,9 +279,9 @@ class ImplicitQLearning(ActorCriticBase):
                 * (1 - batch.terminated.float())
             ) + batch.reward  # shape: (batch_size)
 
-        assert isinstance(
-            self._critic, TwinCritic
-        ), "Critic in ImplicitQLearning should be TwinCritic"
+        assert isinstance(self._critic, TwinCritic), (
+            "Critic in ImplicitQLearning should be TwinCritic"
+        )
 
         # update twin critics towards target
         loss, _, _ = twin_critic_action_value_loss(

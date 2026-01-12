@@ -180,9 +180,9 @@ class LinearBandit(ContextualBanditBase):
             action index chosen given state and action vectors
         """
         # It doesnt make sense to call act if we are not working with action vector
-        assert (
-            self.exploration_module is not None
-        ), "exploration module must be set to call act()"
+        assert self.exploration_module is not None, (
+            "exploration module must be set to call act()"
+        )
         action_count = available_action_space.n
         new_feature = concatenate_actions_to_state(
             subjective_state=subjective_state,

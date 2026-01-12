@@ -12,7 +12,6 @@ from abc import ABC, abstractmethod
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
-
 from pearl.api.environment import Environment
 from pearl.api.reward import Reward
 from pearl.api.space import Space

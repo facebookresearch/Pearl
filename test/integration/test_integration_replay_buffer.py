@@ -15,16 +15,13 @@ from pearl.action_representation_modules.one_hot_action_representation_module im
 )
 from pearl.api.action import Action
 from pearl.api.state import SubjectiveState
-
 from pearl.pearl_agent import PearlAgent
 from pearl.policy_learners.sequential_decision_making.deep_q_learning import (
     DeepQLearning,
 )
-
 from pearl.replay_buffers.sequential_decision_making.hindsight_experience_replay_buffer import (
     HindsightExperienceReplayBuffer,
 )
-
 from pearl.utils.functional_utils.train_and_eval.online_learning import (
     run_episode,
     target_return_is_reached,

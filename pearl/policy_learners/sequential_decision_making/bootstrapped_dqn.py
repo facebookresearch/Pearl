@@ -18,7 +18,6 @@ from pearl.action_representation_modules.identity_action_representation_module i
     IdentityActionRepresentationModule,
 )
 from pearl.api.action import Action
-
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
 from pearl.neural_networks.common.utils import update_target_network

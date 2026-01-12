@@ -14,7 +14,6 @@ import torch
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
-
 from pearl.api.action_space import ActionSpace
 from pearl.neural_networks.common.value_networks import (
     ValueNetwork,
@@ -37,7 +36,6 @@ from pearl.policy_learners.sequential_decision_making.actor_critic_base import (
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
 from pearl.replay_buffers.transition import Transition, TransitionBatch
-
 from pearl.utils.functional_utils.learning.critic_utils import (
     single_critic_state_value_loss,
 )

@@ -13,9 +13,7 @@ from typing import Any, List, Optional
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
-
 from pearl.neural_networks.common.value_networks import ValueNetwork
-
 from pearl.neural_networks.sequential_decision_making.actor_networks import ActorNetwork
 from pearl.policy_learners.policy_learner import PolicyLearner
 from pearl.replay_buffers.tensor_based_replay_buffer import TensorBasedReplayBuffer
@@ -30,7 +28,6 @@ try:
 except ModuleNotFoundError:
     import gym  # noqa
 import torch
-
 from pearl.api.action_space import ActionSpace
 from pearl.neural_networks.common.value_networks import VanillaValueNetwork
 from pearl.neural_networks.sequential_decision_making.actor_networks import (

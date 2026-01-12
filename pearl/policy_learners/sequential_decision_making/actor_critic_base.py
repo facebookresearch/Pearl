@@ -12,13 +12,10 @@ from abc import abstractmethod
 from typing import Any, List, Optional
 
 import torch
-
 from pearl.action_representation_modules.action_representation_module import (
     ActionRepresentationModule,
 )
-
 from pearl.api.action import Action
-
 from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
 from pearl.history_summarization_modules.history_summarization_module import (
@@ -38,7 +35,6 @@ from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     QValueNetwork,
     VanillaQValueNetwork,
 )
-
 from pearl.policy_learners.exploration_modules.exploration_module import (
     ExplorationModule,
 )
@@ -48,7 +44,6 @@ from pearl.utils.functional_utils.learning.critic_utils import (
     make_critic,
     update_critic_target_network,
 )
-
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from pearl.utils.module_utils import (
     modules_have_similar_state_dict,
@@ -125,14 +120,14 @@ class ActorCriticBase(PolicyLearner):
         if actor_network_instance is not None:
             self._actor: nn.Module = actor_network_instance
         else:
-            assert (
-                state_dim is not None
-            ), f"{self.__class__.__name__} requires parameter state_dim if a parameter \
+            assert state_dim is not None, (
+                f"{self.__class__.__name__} requires parameter state_dim if a parameter \
             action_network_instance has not been provided."
-            assert (
-                actor_hidden_dims is not None
-            ), f"{self.__class__.__name__} requires parameter actor_hidden_dims if a parameter \
+            )
+            assert actor_hidden_dims is not None, (
+                f"{self.__class__.__name__} requires parameter actor_hidden_dims if a parameter \
             action_network_instance has not been provided."
+            )
 
             # actor network takes state as input and outputs an action vector
             self._actor: nn.Module = actor_network_type(
@@ -182,14 +177,14 @@ class ActorCriticBase(PolicyLearner):
             if critic_network_instance is not None:
                 self._critic: nn.Module = critic_network_instance
             else:
-                assert (
-                    state_dim is not None
-                ), f"{self.__class__.__name__} requires parameter state_dim if a parameter \
+                assert state_dim is not None, (
+                    f"{self.__class__.__name__} requires parameter state_dim if a parameter \
                 critic_network_instance has not been provided."
-                assert (
-                    critic_hidden_dims is not None
-                ), f"{self.__class__.__name__} requires parameter critic_hidden_dims if a \
+                )
+                assert critic_hidden_dims is not None, (
+                    f"{self.__class__.__name__} requires parameter critic_hidden_dims if a \
                 parameter critic_network_instance has not been provided."
+                )
 
                 self._critic: nn.Module = make_critic(
                     # pyre-fixme[6]: For 1st argument expected `int` but got

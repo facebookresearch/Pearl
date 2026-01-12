@@ -2,7 +2,6 @@
 
 # pyre-strict
 import torch
-
 from pearl.api.action import Action
 from pearl.api.reward import Reward
 from pearl.api.state import SubjectiveState

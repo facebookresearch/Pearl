@@ -10,14 +10,12 @@
 import unittest
 
 import numpy as np
-
 import torch
 import torchvision
 from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     CNNQValueMultiHeadNetwork,
     CNNQValueNetwork,
 )
-
 from torch.utils.data import DataLoader, Subset
 from torchvision import transforms
 

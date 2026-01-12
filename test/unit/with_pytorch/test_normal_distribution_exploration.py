@@ -11,7 +11,6 @@ import unittest
 
 import torch
 from gym.spaces import Box  # noqa
-
 from pearl.policy_learners.exploration_modules.common.normal_distribution_exploration import (
     NormalDistributionExploration,
 )

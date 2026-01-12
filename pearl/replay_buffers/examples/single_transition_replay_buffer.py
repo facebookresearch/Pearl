@@ -14,7 +14,6 @@ from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
 from pearl.api.reward import Reward
 from pearl.api.state import SubjectiveState
-
 from pearl.replay_buffers.replay_buffer import ReplayBuffer
 from pearl.utils.device import get_default_device
 
@@ -83,9 +82,9 @@ class SingleTransitionReplayBuffer(ReplayBuffer):
 
     def sample(self, batch_size: int) -> list[SingleTransition]:
         assert batch_size == 1, "Only batch size 1 is supported"
-        assert (
-            self._transition is not None
-        ), "No transition in SingleTransitionReplayBuffer"
+        assert self._transition is not None, (
+            "No transition in SingleTransitionReplayBuffer"
+        )
         return [self._transition]
 
     def clear(self) -> None:

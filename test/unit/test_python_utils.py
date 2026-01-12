@@ -3,7 +3,6 @@
 # pyre-strict
 
 import unittest
-
 from dataclasses import dataclass
 
 from pearl.utils.python_utils import get_subdataclass_specific_attributes
