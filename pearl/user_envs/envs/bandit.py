@@ -31,6 +31,7 @@ class MeanVarBanditEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
         self._rng = np.random.RandomState(seed)
         high = np.array([1.0] * self._size, dtype=np.float32)
         self.action_space = gym.spaces.Discrete(2)
+        # pyre-fixme[6]: gym stubs don't recognize np.float32 as valid dtype
         self.observation_space = gym.spaces.Box(-high, high, dtype=np.float32)
         self.idx: int | None = None
 

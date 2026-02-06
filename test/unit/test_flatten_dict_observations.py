@@ -30,6 +30,7 @@ class DummyDictEnv(Environment):
         self._action_space = DiscreteActionSpace([torch.tensor(0), torch.tensor(1)])
         self._observation_space = gym.spaces.Dict(
             {
+                # pyre-fixme[6]: gym stubs don't recognize np.float32 as valid dtype
                 "x": gym.spaces.Box(low=0, high=1, shape=(2,), dtype=np.float32),
                 "y": gym.spaces.Discrete(3),
             }
