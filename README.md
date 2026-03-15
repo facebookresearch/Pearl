@@ -7,7 +7,6 @@
   - Highlighted by AI at Meta official handle on Twitter and LinkedIn: [Twitter Post](https://x.com/AIatMeta/status/1734633932975407202?s=20), [LinkedIn Post](https://www.linkedin.com/posts/aiatmeta_neurips2023-activity-7140398603868549120-5T7E?utm_source=share&utm_medium=member_desktop).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Support Ukraine](https://img.shields.io/badge/Support-Ukraine-FFD500?style=flat&labelColor=005BBB)](https://opensource.fb.com/support-ukraine)
 [![codecov](https://codecov.io/gh/facebookresearch/Pearl/graph/badge.svg?token=CARFOP3E30)](https://codecov.io/gh/facebookresearch/Pearl)
 
 More details of the library at our [official website](https://pearlagent.github.io).
