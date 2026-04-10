@@ -18,7 +18,7 @@ To run the code, enter the pearl directory, then run
 import os
 import warnings
 
-import ale_py
+import ale_py  # noqa: F401
 import matplotlib.pyplot as plt
 import numpy as np
 import torch.multiprocessing as mp
