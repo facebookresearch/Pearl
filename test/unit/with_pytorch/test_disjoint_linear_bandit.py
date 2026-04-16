@@ -205,12 +205,16 @@ class TestDisjointLinearBandits(unittest.TestCase):
 
         # Define a wrapper function for tracing that handles the act method
         class PolicyLearnerWrapper(torch.nn.Module):
-            def __init__(self, policy_learner, action_space):
+            def __init__(
+                self,
+                policy_learner: DisjointLinearBandit,
+                action_space: DiscreteActionSpace,
+            ) -> None:
                 super().__init__()
                 self.policy_learner = policy_learner
                 self.action_space = action_space
 
-            def forward(self, state):
+            def forward(self, state: torch.Tensor) -> torch.Tensor:
                 return self.policy_learner.act(
                     subjective_state=state, action_space=self.action_space
                 )
