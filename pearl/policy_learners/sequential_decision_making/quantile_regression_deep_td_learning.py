@@ -35,6 +35,7 @@ from pearl.policy_learners.policy_learner import (
 from pearl.replay_buffers.transition import TransitionBatch
 from pearl.safety_modules.risk_sensitive_safety_modules import (  # noqa
     RiskNeutralSafetyModule,  # noqa
+    RiskSensitiveSafetyModule,
 )
 from pearl.utils.functional_utils.learning.loss_fn_utils import (
     compute_elementwise_huber_loss,
@@ -153,9 +154,9 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
 
             # instead of using the 'get_q_values' method of the QuantileQValueNetwork,
             # we invoke a method from the risk sensitive safety module
-            # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute
-            #  `get_q_values_under_risk_metric`.
-            q_values = self.safety_module.get_q_values_under_risk_metric(
+            safety_module = self.safety_module
+            assert isinstance(safety_module, RiskSensitiveSafetyModule)
+            q_values = safety_module.get_q_values_under_risk_metric(
                 subjective_state.unsqueeze(0), batched_actions_representation, self._Q
             )  # (1, action_space_size)
             exploit_action_index = torch.argmax(q_values)
