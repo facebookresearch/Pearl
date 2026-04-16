@@ -6,6 +6,8 @@
 #
 # pyre-ignore-all-errors
 
+from typing import Any
+
 try:
     import gymnasium as gym
 except ModuleNotFoundError:
@@ -17,11 +19,11 @@ class PuckWorldSafetyWrapper(gym.Wrapper):
     Small positive reward with high variance when x > width/2
     """
 
-    def __init__(self, env, sigma=0.1):
+    def __init__(self, env: gym.Env, sigma: float = 0.1) -> None:
         super().__init__(env)
         self.sigma = sigma
 
-    def step(self, action):
+    def step(self, action: Any) -> tuple[Any, Any, bool, bool, dict[str, Any]]:
         obs, reward, terminated, truncated, info = self.env.step(action)
         x = obs[0]
         safety_reward = 0
