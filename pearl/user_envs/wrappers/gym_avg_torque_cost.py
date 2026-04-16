@@ -6,6 +6,8 @@
 #
 # pyre-ignore-all-errors
 
+from typing import Any
+
 try:
     import gymnasium as gym
 except ModuleNotFoundError:
@@ -15,10 +17,10 @@ except ModuleNotFoundError:
 class GymAvgTorqueWrapper(gym.Wrapper):
     r"""Sparse Reward wrapper for the Pendulum environment."""
 
-    def __init__(self, env):
+    def __init__(self, env: gym.Env) -> None:
         super().__init__(env)
 
-    def step(self, action):
+    def step(self, action: Any) -> tuple[Any, float, bool, bool, dict[str, Any]]:
         obs, reward, terminated, truncated, info = self.env.step(action)
         # assumes action is tensor
         cost = (action**2).mean()
