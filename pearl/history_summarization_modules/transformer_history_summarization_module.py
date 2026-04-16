@@ -16,7 +16,9 @@ class SinusoidalPositionalEncoding(nn.Module):
     Standard transformer sinusoidal positional encoding.
     """
 
-    def __init__(self, d_model: int, max_len: int = 10_000, dropout: float = 0.0):
+    def __init__(
+        self, d_model: int, max_len: int = 10_000, dropout: float = 0.0
+    ) -> None:
         super().__init__()
         self.dropout = nn.Dropout(p=dropout)
 
@@ -46,7 +48,9 @@ class LearnedPositionalEncoding(nn.Module):
     Learnable (absolute) positional encoding
     """
 
-    def __init__(self, d_model: int, max_len: int = 10_000, dropout: float = 0.0):
+    def __init__(
+        self, d_model: int, max_len: int = 10_000, dropout: float = 0.0
+    ) -> None:
         super().__init__()
         self.dropout = nn.Dropout(p=dropout)
         self.pos_embed = nn.Parameter(torch.zeros(max_len, d_model))
