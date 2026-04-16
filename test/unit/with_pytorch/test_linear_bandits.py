@@ -300,7 +300,7 @@ class TestLinearBandits(unittest.TestCase):
 
         # Create a class to hold the action counts to avoid nonlocal issues
         class ActionCounter:
-            def __init__(self, num_actions: int):
+            def __init__(self, num_actions: int) -> None:
                 self.counts = torch.zeros(num_actions)
 
             def update(self, actions: torch.Tensor) -> None:

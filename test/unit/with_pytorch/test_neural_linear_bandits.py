@@ -39,8 +39,7 @@ class TestNeuralLinearBandits(unittest.TestCase):
         for child in policy_learner.model._nn_layers._model.children():
             self.assertIsInstance(child, ResidualWrapper)
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def test_state_dict(self):
+    def test_state_dict(self) -> None:
         # There has been discussions and debating on how to support state dict of policy learner
         # This unittest is to ensure regardless of solution, this functionality needs to be there
         # init a policy learn and learn once to get some random value
