@@ -6,6 +6,8 @@
 #
 # pyre-ignore-all-errors
 
+from typing import Any
+
 import numpy as np
 
 try:
@@ -69,7 +71,7 @@ class MountainCarSparseRewardWrapper(gym.Wrapper):
         sparse_reward = self.sparse_reward()
         return obs, sparse_reward, terminated, truncated, info
 
-    def sparse_reward(self):
+    def sparse_reward(self) -> bool:
         position, velocity = self.env.state
         return bool(
             position >= self.env.goal_position and velocity >= self.env.goal_velocity
@@ -82,7 +84,7 @@ class PuckWorldSparseRewardWrapper(gym.Wrapper):
     def __init__(self, env):
         super().__init__(env)
 
-    def step(self, action):
+    def step(self, action: Any) -> tuple[Any, float, bool, bool, dict[str, Any]]:
         obs, reward, terminated, truncated, info = self.env.step(action)
         sparse_reward = self.sparse_reward()
         return obs, sparse_reward, terminated, truncated, info
