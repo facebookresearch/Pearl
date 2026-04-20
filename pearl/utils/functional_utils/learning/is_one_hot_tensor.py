@@ -1,8 +1,8 @@
-# pyre-unsafe
+# pyre-strict
 import torch
 
 
-def is_one_hot_tensor(tensor: torch.Tensor, dim: int = -1):
+def is_one_hot_tensor(tensor: torch.Tensor, dim: int = -1) -> bool | torch.Tensor:
     # Ensure tensor is binary (contains only 0s and 1s)
     is_binary = torch.all((tensor == 0) | (tensor == 1))
     if not is_binary:
