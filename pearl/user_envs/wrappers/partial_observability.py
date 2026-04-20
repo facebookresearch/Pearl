@@ -7,6 +7,7 @@
 # pyre-ignore-all-errors
 
 from abc import abstractmethod
+from typing import Any
 
 import numpy as np
 
@@ -26,7 +27,7 @@ class PartialObservableWrapper(gym.Wrapper):
         observation, info = self.env.reset(**kwargs)
         return self.observation(observation), info
 
-    def step(self, action):
+    def step(self, action: Any) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
         observation, reward, terminated, truncated, info = self.env.step(action)
         self.env.number_of_steps += 1
         return self.observation(observation), reward, terminated, truncated, info
@@ -100,7 +101,7 @@ class PendulumPartialObservableWrapper(PartialObservableWrapper):
 class MountainCarPartialObservableWrapper(PartialObservableWrapper):
     r"""Observation wrapper that make MountainCar environment partial observable."""
 
-    def __init__(self, env, time_between_two_valid_obs=1):
+    def __init__(self, env: gym.Env, time_between_two_valid_obs: int = 1) -> None:
         super().__init__(env, time_between_two_valid_obs)
         high = np.array([self.env.max_position, 1.0], dtype=np.float32)
         self.observation_space = gym.spaces.Box(low=-high, high=high, dtype=np.float32)
