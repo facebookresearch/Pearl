@@ -111,11 +111,15 @@ def mlp_block(
             nn.Linear(input_dim_current_layer, output_dim_current_layer)
         )
         if use_layer_norm:
+            # pyrefly: ignore [bad-argument-type]
             single_layers.append(nn.LayerNorm(output_dim_current_layer))
         if dropout_ratio > 0:
+            # pyrefly: ignore [bad-argument-type]
             single_layers.append(nn.Dropout(p=dropout_ratio))
+        # pyrefly: ignore [bad-argument-type]
         single_layers.append(ActivationType(hidden_activation).module())
         if use_batch_norm:
+            # pyrefly: ignore [bad-argument-type]
             single_layers.append(nn.BatchNorm1d(output_dim_current_layer))
         single_layer_model = nn.Sequential(*single_layers)
         if use_skip_connections:
@@ -133,6 +137,7 @@ def mlp_block(
     last_layer = []
     last_layer.append(nn.Linear(dims[-2], dims[-1]))
     if last_activation is not None:
+        # pyrefly: ignore [bad-argument-type]
         last_layer.append(ActivationType(last_activation).module())
     last_layer_model = nn.Sequential(*last_layer)
     if use_skip_connections:
@@ -184,7 +189,9 @@ def conv_block(
         layers.append(conv_layer)
         if use_batch_norm:
             # batch norm should normalize the output of the convolutional layer
+            # pyrefly: ignore [bad-argument-type]
             layers.append(nn.BatchNorm2d(out_channels))
+        # pyrefly: ignore [bad-argument-type]
         layers.append(nn.ReLU())
         # number of input channels to next layer is number of output channels of previous layer:
         input_channels_count = out_channels

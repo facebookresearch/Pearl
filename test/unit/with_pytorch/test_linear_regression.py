@@ -68,6 +68,7 @@ class TestLinearRegression(unittest.TestCase):
         self.assertEqual(states["_sum_weight"].shape, (1,))
         states["_b"] = torch.ones((feature_dim + 1,))
         model.load_state_dict(states)
+        # pyrefly: ignore [bad-index]
         self.assertEqual(model._b[3], 1)
 
     def test_coefficient_recovery(self) -> None:

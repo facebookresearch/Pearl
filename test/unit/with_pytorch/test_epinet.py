@@ -130,6 +130,7 @@ class TestEpinet(unittest.TestCase):
         losses = []
 
         init_priornet_weight = copy.deepcopy(
+            # pyrefly: ignore [bad-index]
             self.network.priornet.models[0][0][0].weight
         )
         # pyre-fixme[29]: `Union[Tensor, Module]` is not a function.
@@ -157,6 +158,7 @@ class TestEpinet(unittest.TestCase):
             sum(losses[1:10]) > sum(losses[-10:])
         )  # loss should decrease over learning steps
         final_priornet_weight = copy.deepcopy(
+            # pyrefly: ignore [bad-index]
             self.network.priornet.models[0][0][0].weight
         )
         # pyre-fixme[29]: `Union[Tensor, Module]` is not a function.

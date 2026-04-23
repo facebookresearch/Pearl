@@ -243,6 +243,7 @@ class TestLinearBandits(unittest.TestCase):
             num_reps * torch.sum(self.batch.weight).item(),
         )
         self.assertLess(
+            # pyrefly: ignore [bad-index]
             policy_learner.model._b[0].item(),
             # pyre-fixme[58]: `*` is not supported for operand types `int` and
             #  `Union[bool, float, int]`.

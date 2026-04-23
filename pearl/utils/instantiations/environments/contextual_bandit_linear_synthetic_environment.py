@@ -79,6 +79,7 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
         return self._action_space
 
     @property
+    # pyrefly: ignore [bad-override]
     def observation_space(self) -> Space | None:
         return self._observation_space
 

@@ -131,10 +131,12 @@ class LinearBandit(ContextualBanditBase):
         `self.model._sum_weight.item()` is the current data point counter
         """
         if (self.apply_discounting_interval > 0) and (
+            # pyrefly: ignore [not-callable]
             self.model._sum_weight.item() - self.last_sum_weight_when_discounted
             >= self.apply_discounting_interval
         ):
             self.model.apply_discounting()
+            # pyrefly: ignore [not-callable]
             self.last_sum_weight_when_discounted = self.model._sum_weight.item()
 
     def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:

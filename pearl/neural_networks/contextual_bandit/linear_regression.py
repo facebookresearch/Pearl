@@ -90,6 +90,7 @@ class LinearRegression(MuSigmaCBModel):
     @property
     def A(self) -> torch.Tensor:
         # return A with L2 regularization applied
+        # pyrefly: ignore [no-matching-overload]
         return self._A + self.l2_reg_lambda * torch.eye(
             self._feature_dim + 1, device=self._A.device
         )
@@ -209,8 +210,11 @@ class LinearRegression(MuSigmaCBModel):
             torch.distributed.all_reduce(delta_b)
             torch.distributed.all_reduce(delta_sum_weight)
 
+        # pyrefly: ignore [no-matching-overload]
         self._A += delta_A.to(self._A.device)
+        # pyrefly: ignore [no-matching-overload]
         self._b += delta_b.to(self._b.device)
+        # pyrefly: ignore [no-matching-overload]
         self._sum_weight += delta_sum_weight.to(self._sum_weight.device)
 
         self.calculate_coefs()  # update coefs after updating A and b
@@ -226,7 +230,9 @@ class LinearRegression(MuSigmaCBModel):
         """
         if self.gamma < 1:
             logger.info(f"Applying discounting at sum_weight={self._sum_weight}")
+            # pyrefly: ignore [bad-argument-type, unsupported-operation]
             self._A *= self.gamma
+            # pyrefly: ignore [bad-argument-type, unsupported-operation]
             self._b *= self.gamma
         # don't dicount sum_weight because it's used to determine when to apply discounting
 
@@ -250,6 +256,7 @@ class LinearRegression(MuSigmaCBModel):
         Save inverted A and coefficients in buffers.
         """
         self._inv_A = self.matrix_inv_fallback_pinv(self.A)
+        # pyrefly: ignore [bad-argument-type]
         self._coefs = torch.matmul(self._inv_A, self._b)
 
     def calculate_sigma(self, x: torch.Tensor) -> torch.Tensor:
@@ -300,10 +307,13 @@ class LinearRegression(MuSigmaCBModel):
                 f"distribution_enabled is different: {self.distribution_enabled} "
                 + f"vs {other.distribution_enabled}"
             )
+        # pyrefly: ignore [bad-argument-type]
         if not torch.allclose(self._A, other._A):
             differences.append(f"_A is different: {self._A} vs {other._A}")
+        # pyrefly: ignore [bad-argument-type]
         if not torch.allclose(self._b, other._b):
             differences.append(f"_b is different: {self._b} vs {other._b}")
+        # pyrefly: ignore [bad-argument-type]
         if not torch.allclose(self._sum_weight, other._sum_weight):
             differences.append(
                 f"_sum_weight is different: {self._sum_weight} vs {other._sum_weight}"

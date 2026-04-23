@@ -92,6 +92,7 @@ class TestCNNValueNetworks(unittest.TestCase):
 
                 accuracy_train += is_correct.sum()
 
+            # pyrefly: ignore [bad-argument-type]
             accuracy_train /= len(self.train_dl.dataset)
 
             if accuracy_train > 0.9:

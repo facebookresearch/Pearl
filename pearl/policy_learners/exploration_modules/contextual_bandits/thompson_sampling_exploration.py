@@ -36,6 +36,7 @@ class ThompsonSamplingExplorationLinear(ScoreExplorationBase):
         super().__init__(randomized_tiebreaking=randomized_tiebreaking)
         self._enable_efficient_sampling = enable_efficient_sampling
 
+    # pyrefly: ignore [bad-param-name-override]
     def get_scores(
         self,
         subjective_state: SubjectiveState,

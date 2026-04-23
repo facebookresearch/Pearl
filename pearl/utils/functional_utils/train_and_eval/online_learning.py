@@ -153,12 +153,14 @@ def online_learning(
             total_episodes % record_period == 0
         ):  # record average info value every report_period episodes
             for key in info_period:
+                # pyrefly: ignore [missing-attribute]
                 info.setdefault(key, []).append(np.mean(info_period[key]))
             info_period = {}
         if number_of_steps is not None and old_total_steps // record_period < (
             total_steps
         ) // (record_period):  # record average info value every record_period steps
             for key in info_period:
+                # pyrefly: ignore [missing-attribute]
                 info.setdefault(key, []).append(np.mean(info_period[key]))
             info_period = {}
     return info
@@ -223,6 +225,7 @@ def target_return_is_reached(
             if not check_moving_average
             else latest_moving_average(returns)
         )
+        # pyrefly: ignore [unsupported-operation]
         if value >= target_return:
             target_returns_in_a_row += 1
             if target_returns_in_a_row >= required_target_returns_in_a_row:

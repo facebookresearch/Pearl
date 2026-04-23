@@ -140,6 +140,7 @@ class SLCBEnvironment(ContextualBanditEnvironment):
             raise Exception("Invalid action_embeddings type")
 
     @property
+    # pyrefly: ignore [bad-override]
     def observation_space(self) -> Space | None:
         return self._observation_space
 

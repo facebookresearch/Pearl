@@ -101,12 +101,14 @@ class TabularQLearning(PolicyLearner):
             action_index: self.q_values.get((subjective_state, action_index), 0)
             for action_index in range(available_action_space.n)
         }
+        # pyrefly: ignore [no-matching-overload]
         max_q_value_for_state = max(action_q_values_for_state.values())
         exploit_action_index = first_item(
             action_index
             for action_index, q_value in action_q_values_for_state.items()
             if q_value == max_q_value_for_state
         )
+        # pyrefly: ignore [missing-attribute]
         exploit_action = available_action_space.actions[exploit_action_index]
 
         if exploit:

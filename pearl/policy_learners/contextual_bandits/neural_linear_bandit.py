@@ -136,12 +136,14 @@ class NeuralLinearBandit(ContextualBanditBase):
         `self.model._linear_regression_layer._sum_weight.item()` is the current data point counter
         """
         if (self.apply_discounting_interval > 0) and (
+            # pyrefly: ignore [not-callable]
             self.model._linear_regression_layer._sum_weight.item()
             - self.last_sum_weight_when_discounted
             >= self.apply_discounting_interval
         ):
             self.model._linear_regression_layer.apply_discounting()
             self.last_sum_weight_when_discounted = (
+                # pyrefly: ignore [not-callable]
                 self.model._linear_regression_layer._sum_weight.item()
             )
 

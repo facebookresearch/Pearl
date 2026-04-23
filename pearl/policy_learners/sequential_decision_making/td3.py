@@ -97,6 +97,7 @@ class TD3(DeepDeterministicPolicyGradient):
             critic_optimizer=critic_optimizer,
             history_summarization_optimizer=history_summarization_optimizer,
         )
+        # pyrefly: ignore [bad-override]
         self._action_space: BoxActionSpace = action_space
         self._actor_update_freq = actor_update_freq
         self._actor_update_noise = actor_update_noise

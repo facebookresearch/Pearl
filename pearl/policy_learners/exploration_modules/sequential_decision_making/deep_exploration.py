@@ -54,6 +54,7 @@ class DeepExploration(ExplorationModule):
         self.q_ensemble_network = q_ensemble_network
         self.action_representation_module = action_representation_module
 
+    # pyrefly: ignore [bad-param-name-override]
     def act(
         self,
         subjective_state: SubjectiveState,

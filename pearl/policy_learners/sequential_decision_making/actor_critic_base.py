@@ -142,6 +142,7 @@ class ActorCriticBase(PolicyLearner):
                 # pyre-fixme[6]: For 3rd argument expected `int` but got `Union[int,
                 #  Module, Tensor]`.
                 output_dim=(
+                    # pyrefly: ignore [bad-argument-type]
                     1
                     if issubclass(actor_network_type, DynamicActionActorNetwork)
                     else (

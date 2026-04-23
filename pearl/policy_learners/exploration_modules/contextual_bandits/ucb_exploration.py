@@ -57,6 +57,7 @@ class UCBExploration(ScoreExplorationBase):
         sigma = torch.where(nan_check, torch.zeros_like(sigma), sigma)
         return sigma
 
+    # pyrefly: ignore [bad-param-name-override]
     def get_scores(
         self,
         subjective_state: SubjectiveState,

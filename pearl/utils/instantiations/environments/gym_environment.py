@@ -78,12 +78,15 @@ class GymEnvironment(Environment):
             env = gym.make(env_or_env_name, *args, **kwargs)
         else:
             env = env_or_env_name
+        # pyrefly: ignore [bad-assignment]
         self.env: gym.Env = env
         self._action_space: ActionSpace = _get_pearl_space(
+            # pyrefly: ignore [bad-argument-type]
             gym_space=self.env.action_space,
             gym_to_pearl_map=GYM_TO_PEARL_ACTION_SPACE,
         )
         self._observation_space: Space = _get_pearl_space(
+            # pyrefly: ignore [bad-argument-type]
             gym_space=self.env.observation_space,
             gym_to_pearl_map=GYM_TO_PEARL_OBSERVATION_SPACE,
         )
@@ -103,10 +106,13 @@ class GymEnvironment(Environment):
 
         # pyre-fixme[16]: `ActionSpace` has no attribute `gym_space`.
         self._action_space.gym_space.seed(seed)
+        # pyrefly: ignore [missing-attribute]
         self.env.action_space.seed(seed)
         reset_result = self.env.reset()
+        # pyrefly: ignore [bad-index]
         if isinstance(reset_result, Iterable) and isinstance(reset_result[1], dict):
             # newer Gym versions return an info dict.
+            # pyrefly: ignore [unexpected-keyword]
             observation, info = self.env.reset(seed=seed)
         else:
             # TODO: Deprecate this part at some point and only support new
@@ -121,7 +127,10 @@ class GymEnvironment(Environment):
         `ActionResult` object containing the next observation, reward, and done flag."""
         # Convert action to the format expected by Gymnasium
         effective_action = _get_gym_action(
-            pearl_action=action, gym_space=self.env.action_space
+            # pyrefly: ignore [bad-argument-type]
+            pearl_action=action,
+            # pyrefly: ignore [bad-argument-type]
+            gym_space=self.env.action_space,
         )
         # Take a step in the environment and receive an action result
         gym_action_result = self.env.step(effective_action)

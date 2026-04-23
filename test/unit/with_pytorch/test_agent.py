@@ -1051,6 +1051,7 @@ class TestAgentWithPyTorch(unittest.TestCase):
             )
         )
         assert isinstance(env.action_space, DiscreteSpace)
+        # pyrefly: ignore [missing-attribute]
         state_dim = env.observation_space.n
         agent = PearlAgent(
             policy_learner=DeepQLearning(

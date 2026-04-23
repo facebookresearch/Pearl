@@ -60,6 +60,7 @@ class LSTMHistorySummarizationModule(HistorySummarizationModule):
             observation.clone().detach().float().view((1, self.observation_dim))
         )
         if action is None:
+            # pyrefly: ignore [bad-assignment]
             action = self.default_action
         assert isinstance(action, torch.Tensor)
         action = action.clone().detach().float().view((1, self.action_dim))
@@ -130,6 +131,7 @@ class LSTMHistorySummarizationModule(HistorySummarizationModule):
             differences.append(
                 f"action_dim is different: {self.action_dim} vs {other.action_dim}"
             )
+        # pyrefly: ignore [bad-argument-type]
         if not torch.allclose(self.default_action, other.default_action):
             differences.append(
                 f"default_action is different: {self.default_action} vs {other.default_action}"

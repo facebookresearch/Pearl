@@ -103,6 +103,7 @@ def make_replay_buffer_class_for_specific_transition_types(
                 for attr_name in attr_names
             }
 
+            # pyrefly: ignore [missing-attribute]
             transition_batch = TransitionBatchType.from_parent(
                 transition_batch, **new_columns
             )

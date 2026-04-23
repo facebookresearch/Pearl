@@ -184,6 +184,7 @@ class TestIntegration(unittest.TestCase):
             )
         )
         assert isinstance(environment.action_space, DiscreteSpace)
+        # pyrefly: ignore [missing-attribute]
         state_dim = environment.observation_space.n
         agent = PearlAgent(
             policy_learner=DeepQLearning(

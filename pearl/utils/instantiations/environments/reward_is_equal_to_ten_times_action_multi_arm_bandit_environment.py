@@ -37,6 +37,7 @@ class RewardIsEqualToTenTimesActionMultiArmBanditEnvironment(
         return self._action_space
 
     @property
+    # pyrefly: ignore [bad-override]
     def observation_space(self) -> Space | None:
         # For multi-arm bandit environments (where there are no 'observations'), we set the
         # observation space to be a DiscreteSpace with a single element, taken to be an empty

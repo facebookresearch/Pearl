@@ -294,6 +294,7 @@ class QuantileQValueNetwork(DistributionalQValueNetwork):
         )
         self.register_buffer(
             "_quantile_midpoints",
+            # pyrefly: ignore [bad-index]
             ((self._quantiles[1:] + self._quantiles[:-1]) / 2)
             .unsqueeze(0)
             .unsqueeze(0),
@@ -328,10 +329,12 @@ class QuantileQValueNetwork(DistributionalQValueNetwork):
 
     @property
     def quantiles(self) -> Tensor:
+        # pyrefly: ignore [bad-return]
         return self._quantiles
 
     @property
     def quantile_midpoints(self) -> Tensor:
+        # pyrefly: ignore [bad-return]
         return self._quantile_midpoints
 
     @property

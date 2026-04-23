@@ -218,6 +218,7 @@ def offline_learning(
     data_buffer.device_for_batches = offline_agent.device
 
     # training loop
+    # pyrefly: ignore [no-matching-overload]
     for i in range(number_of_batches):
         batch = data_buffer.sample(effective_batch_size)
         assert isinstance(batch, TransitionBatch)

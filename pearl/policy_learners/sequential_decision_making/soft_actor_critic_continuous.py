@@ -137,6 +137,7 @@ class ContinuousSoftActorCritic(ActorCriticBase):
                 # pyre-fixme[6]: For 1st argument expected `Tensor` but got
                 #  `Union[Module, Tensor]`.
                 -torch.exp(self._log_entropy)
+                # pyrefly: ignore [unsupported-operation]
                 * (self._action_batch_log_prob_cache + self._target_entropy).detach()
             ).mean()
 
@@ -260,6 +261,7 @@ class ContinuousSoftActorCritic(ActorCriticBase):
                 differences.append(
                     f"_entropy_coef is different: {self._entropy_coef} vs {other._entropy_coef}"
                 )
+            # pyrefly: ignore [bad-argument-type]
             if not torch.allclose(self._target_entropy, other._target_entropy):
                 differences.append(
                     f"_target_entropy is different: {self._target_entropy} "

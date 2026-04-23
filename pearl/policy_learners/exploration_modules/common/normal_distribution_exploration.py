@@ -37,6 +37,7 @@ class NormalDistributionExploration(ExplorationModule):
         self._mean = mean
         self._std_dev = std_dev
 
+    # pyrefly: ignore [bad-param-name-override]
     def act(
         self,
         action_space: ActionSpace,

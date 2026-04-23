@@ -60,6 +60,7 @@ class ContextualBanditBase(PolicyLearner):
         pass
 
     @abstractmethod
+    # pyrefly: ignore [bad-override]
     def act(
         self,
         subjective_state: SubjectiveState,

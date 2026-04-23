@@ -165,6 +165,7 @@ class Priornet(nn.Module):
         self.models: nn.ModuleList = nn.ModuleList(models)
 
         self.params: dict[str, Any]
+        # pyrefly: ignore [bad-override]
         self.buffers: dict[str, Any]
         self.generate_params_buffers()
 

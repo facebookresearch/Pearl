@@ -73,6 +73,7 @@ def create_ground_truth_model(
 
     ground_truth = DisjointBanditContainer(
         feature_dim=state_dim,
+        # pyrefly: ignore [bad-argument-type]
         arm_bandits=ground_truth_linear_bandits,
         exploration_module=DisjointUCBExploration(
             alpha=0, randomized_tiebreaking=TiebreakingStrategy.PER_ROW_TIEBREAKING

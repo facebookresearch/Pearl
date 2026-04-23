@@ -34,6 +34,7 @@ __all__ = [
     "DoubleDQN",
     "ImplicitQLearning",
     "ProximalPolicyOptimization",
+    # pyrefly: ignore [bad-dunder-all]
     "PPOReplayBuffer",
     "QuantileRegressionDeepQLearning",
     "QuantileRegressionDeepTDLearning",

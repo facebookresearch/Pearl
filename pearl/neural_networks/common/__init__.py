@@ -18,5 +18,6 @@ __all__ = [
     "ValueNetwork",
     "CNNValueNetwork",
     "VanillaValueNetwork",
+    # pyrefly: ignore [bad-dunder-all]
     "Epinet",
 ]

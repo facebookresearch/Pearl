@@ -118,11 +118,13 @@ class SequenceClassificationModel(nn.Module):
     def forward(self, x: torch.Tensor, action: torch.Tensor) -> torch.Tensor:
         batch_size = x.shape[0]
         h0 = (
+            # pyrefly: ignore [not-callable]
             self.default_hidden_representation.unsqueeze(1)
             .repeat(1, batch_size, 1)
             .detach()
         )
         c0 = (
+            # pyrefly: ignore [not-callable]
             self.default_cell_representation.unsqueeze(1)
             .repeat(1, batch_size, 1)
             .detach()

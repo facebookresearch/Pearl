@@ -29,6 +29,7 @@ class DummyDictEnv(Environment):
     def __init__(self) -> None:
         self._action_space = DiscreteActionSpace([torch.tensor(0), torch.tensor(1)])
         self._observation_space = gym.spaces.Dict(
+            # pyrefly: ignore [bad-argument-type]
             {
                 # pyre-fixme[6]: gym stubs don't recognize np.float32 as valid dtype
                 "x": gym.spaces.Box(low=0, high=1, shape=(2,), dtype=np.float32),
@@ -41,6 +42,7 @@ class DummyDictEnv(Environment):
         return self._action_space
 
     @property
+    # pyrefly: ignore [bad-override]
     def observation_space(self) -> gym.spaces.Dict:
         return self._observation_space
 

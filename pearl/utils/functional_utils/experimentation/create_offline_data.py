@@ -162,6 +162,7 @@ def create_offline_data(
         # @lint-ignore PYTHONPICKLEISBAD
         pickle.dump(evaluation_returns, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+    # pyrefly: ignore [bad-return]
     return epi_returns  # for plotting returns of the policy used to collect offine data
 
 
@@ -205,4 +206,5 @@ def get_data_collection_agent_returns(
             # @lint-ignore PYTHONPICKLEISBAD
             data_collection_agent_returns = pickle.load(file)
 
+    # pyrefly: ignore [bad-return]
     return data_collection_agent_returns

@@ -54,6 +54,7 @@ class BoxActionSpace(BoxSpace, ActionSpace):
         # pyre-fixme[9]: low has type `Union[float, Tensor]`; used as `ndarray[Any,
         #  Any]`.
         low = (
+            # pyrefly: ignore [bad-assignment]
             reshape_to_1d_tensor(low).numpy(force=True)
             if isinstance(low, Tensor)
             else np.array([low])
@@ -61,6 +62,7 @@ class BoxActionSpace(BoxSpace, ActionSpace):
         # pyre-fixme[9]: high has type `Union[float, Tensor]`; used as `ndarray[Any,
         #  Any]`.
         high = (
+            # pyrefly: ignore [bad-assignment]
             reshape_to_1d_tensor(high).numpy(force=True)
             if isinstance(high, Tensor)
             else np.array([high])

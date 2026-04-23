@@ -30,6 +30,7 @@ class UniformExplorationBase(ExplorationModule):
         self.exploration_type: ExplorationType = ExplorationType.UNIFORM
 
     @abstractmethod
+    # pyrefly: ignore [bad-param-name-override]
     def act(
         self,
         subjective_state: SubjectiveState,

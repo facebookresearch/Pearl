@@ -49,6 +49,7 @@ class EGreedyExploration(UniformExplorationBase):
         else:
             self.curr_epsilon = epsilon
 
+    # pyrefly: ignore [bad-override]
     def act(
         self,
         subjective_state: SubjectiveState,

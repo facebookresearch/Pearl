@@ -163,6 +163,7 @@ class REINFORCE(ActorCriticBase):
             assert return_batch is not None
             loss = torch.sum(negative_log_probs * (return_batch - v.detach()))
         else:
+            # pyrefly: ignore [unsupported-operation]
             loss = torch.sum(negative_log_probs * return_batch)
         return loss
 

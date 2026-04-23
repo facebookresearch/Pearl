@@ -61,7 +61,9 @@ def online_evaluation(
             agent.learn()
         regrets.append(regret)
         if i % 10 == 0:
+            # pyrefly: ignore [no-matching-overload]
             print("Step: ", i, " Avg Regret: ", sum(regrets) / len(regrets))
+    # pyrefly: ignore [bad-return]
     return regrets
 
 

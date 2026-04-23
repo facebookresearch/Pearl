@@ -89,6 +89,7 @@ class BootstrappedDQN(DeepQLearning):
         self._target_update_freq = target_update_freq
         self._soft_update_tau = soft_update_tau
         self._Q = q_ensemble_network
+        # pyrefly: ignore [bad-override]
         self._Q_target: EnsembleQValueNetwork = deepcopy(self._Q)
         if optimizer is not None:
             self._optimizer: optim.Optimizer = optimizer
@@ -99,6 +100,7 @@ class BootstrappedDQN(DeepQLearning):
 
     @property
     def ensemble_size(self) -> int:
+        # pyrefly: ignore [bad-return]
         return self._Q.ensemble_size
 
     def learn_batch(self, batch: TransitionBatch) -> dict[str, Any]:
@@ -121,6 +123,7 @@ class BootstrappedDQN(DeepQLearning):
                 state_batch=batch_filtered.state,
                 action_batch=batch_filtered.action,
                 curr_available_actions_batch=batch_filtered.curr_available_actions,
+                # pyrefly: ignore [unexpected-keyword]
                 z=z,
             )
 
@@ -168,6 +171,7 @@ class BootstrappedDQN(DeepQLearning):
             q_values = self._Q.get_q_values(
                 subjective_state.unsqueeze(0),  # (1 x state_dim)
                 batched_actions_representation,
+                # pyrefly: ignore [missing-attribute, unexpected-keyword]
                 z=self._Q._model.z,
             )  # (1 x action_space_size)
             # this does a forward pass since all avaialble
@@ -205,6 +209,7 @@ class BootstrappedDQN(DeepQLearning):
             state_batch=next_state,  # (batch_size x state_dim)
             # (batch_size x action_space_size x action_dim)
             action_batch=next_available_actions,
+            # pyrefly: ignore [unexpected-keyword]
             z=z,
         )  # (batch_size x action_space_size)
 

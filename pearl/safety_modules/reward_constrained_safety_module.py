@@ -182,6 +182,7 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
             # compute bellman target:
             # cost + gamma * (min{Qtarget_1(s', a from target actor network),
             #                  Qtarget_2(s', a from target actor network)})
+            # pyrefly: ignore [unsupported-operation]
             expected_state_action_values = (
                 next_q * self.cost_discount_factor * (1 - batch.terminated.float())
                 # pyre-fixme[58]: `+` is not supported for operand types `Tensor` and

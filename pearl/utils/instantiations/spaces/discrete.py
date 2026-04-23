@@ -102,6 +102,7 @@ class DiscreteSpace(Space):
         mask_np = mask.numpy().astype(int) if mask is not None else None
         # pyre-fixme[28]: Unexpected keyword argument `mask`.
         idx = self._gym_space.sample(mask=mask_np)
+        # pyrefly: ignore [bad-index]
         return self.elements[idx]
 
     def __iter__(self) -> Iterator[Tensor]:
@@ -125,6 +126,7 @@ class DiscreteSpace(Space):
             A `DiscreteSpace` with the same number of elements as `gym_space`.
         """
         assert isinstance(gym_space, Discrete)
+        # pyrefly: ignore [missing-attribute]
         start, n = gym_space.start, gym_space.n
         return DiscreteSpace(
             elements=list(torch.arange(start=start, end=start + n).view(-1, 1)),

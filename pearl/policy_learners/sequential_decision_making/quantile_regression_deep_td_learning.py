@@ -137,6 +137,7 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         self._history_summarization_module = value
 
     def reset(self, action_space: ActionSpace) -> None:
+        # pyrefly: ignore [bad-assignment]
         self._action_space = action_space
 
     def act(
