@@ -229,18 +229,18 @@ class TestNeuralLinearBandits(unittest.TestCase):
         for _ in range(num_reps):
             policy_learner.learn_batch(batch)
 
+        weight = batch.weight
+        assert weight is not None
         self.assertLess(
             policy_learner.model._linear_regression_layer.A[0, 0].item(),
             # pyre-fixme[58]: `*` is not supported for operand types `int` and
             #  `Union[bool, float, int]`.
-            # pyre-fixme[6]: For 1st argument expected `Tensor` but got
-            #  `Optional[Tensor]`.
-            num_reps * torch.sum(batch.weight).item(),
+            num_reps * torch.sum(weight).item(),
         )
         self.assertLess(
             # pyrefly: ignore [bad-index]
             policy_learner.model._linear_regression_layer._b[0].item(),
             # pyre-fixme[58]: `*` is not supported for operand types `int` and
             #  `Union[bool, float, int]`.
-            num_reps * torch.sum(batch.reward * batch.weight).item(),
+            num_reps * torch.sum(batch.reward * weight).item(),
         )
