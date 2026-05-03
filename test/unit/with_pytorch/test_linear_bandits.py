@@ -234,20 +234,16 @@ class TestLinearBandits(unittest.TestCase):
         for _ in range(num_reps):
             policy_learner.learn_batch(self.batch)
 
+        weight = self.batch.weight
+        assert weight is not None
         self.assertLess(
             policy_learner.model.A[0, 0].item(),
-            # pyre-fixme[58]: `*` is not supported for operand types `int` and
-            #  `Union[bool, float, int]`.
-            # pyre-fixme[6]: For 1st argument expected `Tensor` but got
-            #  `Optional[Tensor]`.
-            num_reps * torch.sum(self.batch.weight).item(),
+            num_reps * float(torch.sum(weight).item()),
         )
         self.assertLess(
             # pyrefly: ignore [bad-index]
             policy_learner.model._b[0].item(),
-            # pyre-fixme[58]: `*` is not supported for operand types `int` and
-            #  `Union[bool, float, int]`.
-            num_reps * torch.sum(self.batch.reward * self.batch.weight).item(),
+            num_reps * float(torch.sum(self.batch.reward * weight).item()),
         )
 
     def test_unobserved_actions(self) -> None:
