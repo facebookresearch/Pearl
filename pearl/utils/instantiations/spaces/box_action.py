@@ -51,23 +51,17 @@ class BoxActionSpace(BoxSpace, ActionSpace):
             seed: Random seed used to initialize the random number generator of the
                 underlying Gymnasium `Box` space.
         """
-        # pyre-fixme[9]: low has type `Union[float, Tensor]`; used as `ndarray[Any,
-        #  Any]`.
-        low = (
-            # pyrefly: ignore [bad-assignment]
+        low_np = (
             reshape_to_1d_tensor(low).numpy(force=True)
             if isinstance(low, Tensor)
             else np.array([low])
         )
-        # pyre-fixme[9]: high has type `Union[float, Tensor]`; used as `ndarray[Any,
-        #  Any]`.
-        high = (
-            # pyrefly: ignore [bad-assignment]
+        high_np = (
             reshape_to_1d_tensor(high).numpy(force=True)
             if isinstance(high, Tensor)
             else np.array([high])
         )
-        super().__init__(low=low, high=high, seed=seed)
+        super().__init__(low=low_np, high=high_np, seed=seed)
 
     @property
     def action_dim(self) -> int:
