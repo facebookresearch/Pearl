@@ -8,7 +8,7 @@
 # pyre-strict
 
 import os
-from typing import Any, Tuple
+from typing import Any
 
 import torch
 from pearl.action_representation_modules.binary_action_representation_module import (
