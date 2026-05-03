@@ -4,21 +4,21 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 #
-# pyre-ignore-all-errors
+# pyre-strict
 
 """
 The code from this file is copied from https://github.com/DLR-RM/stable-baselines3/blob/master/stable_baselines3/common/atari_wrappers.py
 """
 
-from typing import Any, Dict, SupportsFloat, Tuple
+from typing import Any, SupportsFloat
 
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 
 
-AtariResetReturn = Tuple[np.ndarray, Dict[str, Any]]
-AtariStepReturn = Tuple[np.ndarray, SupportsFloat, bool, bool, Dict[str, Any]]
+AtariResetReturn = tuple[np.ndarray, dict[str, Any]]
+AtariStepReturn = tuple[np.ndarray, SupportsFloat, bool, bool, dict[str, Any]]
 
 try:
     import cv2
@@ -40,11 +40,11 @@ class NoopResetEnv(gym.Wrapper[np.ndarray, int, np.ndarray, int]):
     def __init__(self, env: gym.Env, noop_max: int = 30) -> None:
         super().__init__(env)
         self.noop_max = noop_max
-        self.override_num_noops = None
+        self.override_num_noops: int | None = None
         self.noop_action = 0
         assert env.unwrapped.get_action_meanings()[0] == "NOOP"  # type: ignore[attr-defined]
 
-    def reset(self, **kwargs) -> AtariResetReturn:
+    def reset(self, **kwargs: Any) -> AtariResetReturn:
         self.env.reset(**kwargs)
         if self.override_num_noops is not None:
             noops = self.override_num_noops
@@ -52,7 +52,7 @@ class NoopResetEnv(gym.Wrapper[np.ndarray, int, np.ndarray, int]):
             noops = self.unwrapped.np_random.integers(1, self.noop_max + 1)
         assert noops > 0
         obs = np.zeros(0)
-        info: Dict = {}
+        info: dict[str, Any] = {}
         for _ in range(noops):
             obs, _, terminated, truncated, info = self.env.step(self.noop_action)
             if terminated or truncated:
@@ -72,7 +72,7 @@ class FireResetEnv(gym.Wrapper[np.ndarray, int, np.ndarray, int]):
         assert env.unwrapped.get_action_meanings()[1] == "FIRE"  # type: ignore[attr-defined]
         assert len(env.unwrapped.get_action_meanings()) >= 3  # type: ignore[attr-defined]
 
-    def reset(self, **kwargs) -> AtariResetReturn:
+    def reset(self, **kwargs: Any) -> AtariResetReturn:
         self.env.reset(**kwargs)
         obs, _, terminated, truncated, _ = self.env.step(1)
         if terminated or truncated:
@@ -110,7 +110,7 @@ class EpisodicLifeEnv(gym.Wrapper[np.ndarray, int, np.ndarray, int]):
         self.lives = lives
         return obs, reward, terminated, truncated, info
 
-    def reset(self, **kwargs) -> AtariResetReturn:
+    def reset(self, **kwargs: Any) -> AtariResetReturn:
         """
         Calls the Gym environment reset, only when lives are exhausted.
         This way all states are still reachable even though lives are episodic,
