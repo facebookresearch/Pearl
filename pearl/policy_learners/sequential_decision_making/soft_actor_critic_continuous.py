@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, List, Optional
+from typing import Any, cast, List, Optional
 
 import torch
 from pearl.action_representation_modules.action_representation_module import (
@@ -134,9 +134,7 @@ class ContinuousSoftActorCritic(ActorCriticBase):
 
         if self._entropy_autotune:
             entropy_optimizer_loss = (
-                # pyre-fixme[6]: For 1st argument expected `Tensor` but got
-                #  `Union[Module, Tensor]`.
-                -torch.exp(self._log_entropy)
+                -torch.exp(cast(torch.Tensor, self._log_entropy))
                 # pyrefly: ignore [unsupported-operation]
                 * (self._action_batch_log_prob_cache + self._target_entropy).detach()
             ).mean()
