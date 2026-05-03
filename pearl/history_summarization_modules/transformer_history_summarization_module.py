@@ -1,6 +1,5 @@
-# pyre-unsafe
+# pyre-strict
 import math
-from typing import List
 
 import torch
 import torch.nn as nn
@@ -249,7 +248,7 @@ class TransformerHistorySummarizationModule(HistorySummarizationModule):
         str: A string describing the differences, or an empty string if they are identical.
         """
 
-        differences: List[str] = []
+        differences: list[str] = []
 
         if not isinstance(other, TransformerHistorySummarizationModule):
             differences.append(
