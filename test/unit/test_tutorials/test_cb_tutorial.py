@@ -10,9 +10,6 @@ from pearl.action_representation_modules.one_hot_action_representation_module im
     OneHotActionTensorRepresentationModule,
 )
 from pearl.pearl_agent import PearlAgent
-from pearl.policy_learners.contextual_bandits.neural_linear_bandit import (
-    NeuralLinearBandit,
-)
 from pearl.policy_learners.exploration_modules.contextual_bandits.squarecb_exploration import (
     SquareCBExploration,
 )
