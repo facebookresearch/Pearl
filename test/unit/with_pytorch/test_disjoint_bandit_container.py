@@ -9,6 +9,7 @@
 
 import copy
 import unittest
+from typing import cast
 
 import torch
 import torch.jit
@@ -16,6 +17,7 @@ import torch.testing as tt
 from parameterized import parameterized_class
 from pearl.api.action import Action
 from pearl.api.action_space import ActionSpace
+from pearl.neural_networks.contextual_bandit.linear_regression import LinearRegression
 from pearl.policy_learners.contextual_bandits.disjoint_bandit import (
     DisjointBanditContainer,
 )
@@ -243,8 +245,7 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
         for i in range(self.action_space.n):
             model = policy_learner.models[i]  # model for arm i
             mus = model(features)
-            # pyre-fixme[29]: `Union[Tensor, Module]` is not a function.
-            sigmas = model.calculate_sigma(features)
+            sigmas = cast(LinearRegression, model).calculate_sigma(features)
             expected_scores.append(mus + alpha * sigmas)
         expected_scores = torch.cat(expected_scores, dim=1)
         tt.assert_close(scores, expected_scores, atol=1e-1, rtol=0.0)
