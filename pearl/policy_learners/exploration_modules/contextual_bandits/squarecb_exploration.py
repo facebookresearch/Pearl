@@ -11,6 +11,7 @@ from typing import List
 
 import torch
 from pearl.api.action import Action
+from pearl.api.action_space import ActionSpace
 from pearl.api.state import SubjectiveState
 from pearl.policy_learners.exploration_modules import ExplorationModule
 from pearl.policy_learners.exploration_modules.common.score_exploration_base import (
@@ -114,16 +115,15 @@ class SquareCBExploration(ScoreExplorationBase):
         """
         return torch.div(1.0, action_num + self._gamma * empirical_gaps)
 
-    # pyre-fixme[14]: `act` overrides method defined in `ScoreExplorationBase`
-    #  inconsistently.
     def get_scores(
         self,
         subjective_state: SubjectiveState,
-        action_space: DiscreteActionSpace,
+        action_space: ActionSpace,
         values: torch.Tensor,
         exploit_action: Action | None = None,
         representation: torch.nn.Module | None = None,
     ) -> Action:
+        assert isinstance(action_space, DiscreteActionSpace)
         return values.view(-1, action_space.n)
 
     def compare(self, other: ExplorationModule) -> str:
