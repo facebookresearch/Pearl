@@ -25,7 +25,6 @@ from pearl.policy_learners.exploration_modules.contextual_bandits.ucb_exploratio
 from pearl.replay_buffers import BasicReplayBuffer
 from pearl.utils.functional_utils.experimentation.set_seed import set_seed
 from pearl.utils.functional_utils.train_and_eval.online_learning import online_learning
-from pearl.utils.uci_data import download_uci_data
 
 set_seed(0)
 
