@@ -8,7 +8,6 @@ import unittest
 from pearl.action_representation_modules.one_hot_action_representation_module import (
     OneHotActionTensorRepresentationModule,
 )
-from pearl.pearl_agent import PearlAgent
 from pearl.policy_learners.exploration_modules.contextual_bandits.squarecb_exploration import (
     SquareCBExploration,
 )
