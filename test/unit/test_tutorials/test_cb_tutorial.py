@@ -3,7 +3,6 @@
 # pyre-strict
 
 
-import os
 import unittest
 
 from pearl.action_representation_modules.one_hot_action_representation_module import (
