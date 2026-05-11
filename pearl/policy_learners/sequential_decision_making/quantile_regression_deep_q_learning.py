@@ -30,6 +30,7 @@ from pearl.policy_learners.sequential_decision_making.quantile_regression_deep_t
     QuantileRegressionDeepTDLearning,
 )
 from pearl.replay_buffers.transition import TransitionBatch
+from pearl.safety_modules.risk_sensitive_safety_modules import RiskSensitiveSafetyModule
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
 from torch import optim
 
@@ -117,9 +118,9 @@ class QuantileRegressionDeepQLearning(QuantileRegressionDeepTDLearning):
         # get q values from a q value distribution under a risk metric
         # instead of using the 'get_q_values' method of the QuantileQValueNetwork,
         # we invoke a method from the risk sensitive safety module
-        # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no attribute
-        #  `get_q_values_under_risk_metric`.
-        next_state_action_values = self.safety_module.get_q_values_under_risk_metric(
+        safety_module = self.safety_module
+        assert isinstance(safety_module, RiskSensitiveSafetyModule)
+        next_state_action_values = safety_module.get_q_values_under_risk_metric(
             next_state_batch, next_available_actions_batch, self._Q_target
         )  # shape: (batch_size, action_space_size)
 
