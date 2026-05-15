@@ -357,32 +357,34 @@ class TensorBasedReplayBuffer(ReplayBuffer):
         terminated_batch = torch.cat(terminated_list)
         truncated_batch = torch.cat(truncated_list)
         if has_cost_available:
-            # pyrefly: ignore [no-matching-overload]
+            # pyrefly: ignore [bad-argument-type, no-matching-overload]
             cost_batch = torch.cat(cost_list)
         else:
             cost_batch = None
         next_state_batch, next_action_batch = None, None
         if has_next_state:
-            # pyrefly: ignore [no-matching-overload]
+            # pyrefly: ignore [bad-argument-type, no-matching-overload]
             next_state_batch = torch.cat(next_state_list).type(torch.float32)
         if has_next_action:
-            # pyrefly: ignore [no-matching-overload]
+            # pyrefly: ignore [bad-argument-type, no-matching-overload]
             next_action_batch = torch.cat(next_action_list)
         curr_available_actions_batch, curr_unavailable_actions_mask_batch = None, None
         if not is_action_continuous and has_curr_available_actions:
-            # pyrefly: ignore [no-matching-overload]
+            # pyrefly: ignore [bad-argument-type, no-matching-overload]
             curr_available_actions_batch = torch.cat(curr_available_actions_list)
             # pyrefly: ignore [no-matching-overload]
             curr_unavailable_actions_mask_batch = torch.cat(
+                # pyrefly: ignore [bad-argument-type]
                 curr_unavailable_actions_mask_list
             )
 
         next_available_actions_batch, next_unavailable_actions_mask_batch = None, None
         if not is_action_continuous and has_next_available_actions:
-            # pyrefly: ignore [no-matching-overload]
+            # pyrefly: ignore [bad-argument-type, no-matching-overload]
             next_available_actions_batch = torch.cat(next_available_actions_list)
             # pyrefly: ignore [no-matching-overload]
             next_unavailable_actions_mask_batch = torch.cat(
+                # pyrefly: ignore [bad-argument-type]
                 next_unavailable_actions_mask_list
             )
         return TransitionBatch(

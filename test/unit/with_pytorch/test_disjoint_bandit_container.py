@@ -89,6 +89,7 @@ class TestDisjointBanditContainerBandits(unittest.TestCase):
             action = action.item()
             # check if each arm model works
             tt.assert_close(
+                # pyrefly: ignore [not-callable]
                 policy_learner._arm_bandits[action].model(self.batch.state[i : i + 1]),
                 self.batch.reward[i : i + 1],
                 atol=1e-1,

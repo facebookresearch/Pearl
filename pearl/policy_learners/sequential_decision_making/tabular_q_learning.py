@@ -101,7 +101,7 @@ class TabularQLearning(PolicyLearner):
             action_index: self.q_values.get((subjective_state, action_index), 0)
             for action_index in range(available_action_space.n)
         }
-        # pyrefly: ignore [no-matching-overload]
+        # pyrefly: ignore [bad-specialization, no-matching-overload]
         max_q_value_for_state = max(action_q_values_for_state.values())
         exploit_action_index = first_item(
             action_index
@@ -159,6 +159,7 @@ class TabularQLearning(PolicyLearner):
             #  Union[SupportsDunderGT[typing.Any],
             #  SupportsDunderLT[typing.Any]])]]` but got `List[Number]`.
             max_next_q_value = max(next_q_values) if next_q_values else 0
+            # pyrefly: ignore [unsupported-operation]
             next_state_value = self.discount_factor * max_next_q_value
 
         # pyre-fixme[58]: `+` is not supported for operand types `Number` and
