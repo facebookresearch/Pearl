@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Any, List
+from typing import Any, cast, List
 
 import torch
 from pearl.api.action import Action
@@ -241,8 +241,7 @@ class DisjointBanditContainer(ContextualBanditBase):
 
     @property
     def optimizer(self) -> torch.optim.Optimizer:
-        # pyre-fixme[7]: Expected `Optimizer` but got `Union[Tensor, Module]`.
-        return self._optimizer
+        return cast(torch.optim.Optimizer, self._optimizer)
 
     def set_history_summarization_module(
         self, value: HistorySummarizationModule
