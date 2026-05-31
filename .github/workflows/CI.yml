@@ -1,5 +1,9 @@
 name: Workflow for CI and Codecov Action
 on: [push, pull_request]
+
+permissions:
+  contents: read
+
 jobs:
   run:
     runs-on: ${{ matrix.os }}
