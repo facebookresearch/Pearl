@@ -207,7 +207,7 @@ class TransformerHistorySummarizationModule(HistorySummarizationModule):
             act = action.clone().detach().float().view(1, self.action_dim)
 
         # Concatenate (action, observation) for current step
-        # pyrefly: ignore [no-matching-overload]
+        # pyrefly: ignore [bad-argument-type]
         pair = torch.cat((act, obs), dim=-1)  # [1, input_dim]
         assert pair.shape[-1] == self.history.shape[-1]
 
