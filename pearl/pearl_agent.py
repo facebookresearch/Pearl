@@ -269,13 +269,16 @@ class PearlAgent(Agent):
         items = []
         items.append(self.policy_learner)
         if type(self.safety_module) is not PearlAgent.default_safety_module_type:
+            # pyrefly: ignore [bad-argument-type]
             items.append(self.safety_module)
         if (
             type(self.history_summarization_module)
             is not PearlAgent.default_history_summarization_module_type
         ):
+            # pyrefly: ignore [bad-argument-type]
             items.append(self.history_summarization_module)
         if type(self.replay_buffer) is not PearlAgent.default_replay_buffer_type:
+            # pyrefly: ignore [bad-argument-type]
             items.append(self.replay_buffer)
         return "PearlAgent" + (
             " with " + ", ".join(str(item) for item in items) if items else ""
