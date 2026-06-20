@@ -79,8 +79,7 @@ class SquareCBExploration(ScoreExplorationBase):
         values = values.view(-1, action_space.n)  # (batch_size, action_space.n)
         values = self.clamp(values)
         max_val, max_indices = torch.max(values, dim=1)
-        max_val.repeat(1, action_space.n)
-        empirical_gaps = max_val - values
+        empirical_gaps = max_val.unsqueeze(1) - values
 
         # Construct probability distribution over actions and sample from it
         selected_actions = torch.zeros((values.size(dim=0),), dtype=torch.int)
@@ -88,7 +87,7 @@ class SquareCBExploration(ScoreExplorationBase):
         for batch_ind in range(values.size(dim=0)):
             # Get sum of all the probabilities besides the maximum
             prob_policy[batch_ind, max_indices[batch_ind]] = 0.0
-            complementary_sum = torch.sum(prob_policy)
+            complementary_sum = torch.sum(prob_policy[batch_ind, :])
             prob_policy[batch_ind, max_indices[batch_ind]] = 1.0 - complementary_sum
             # Sample from SquareCB update rule
             dist_policy = Categorical(prob_policy[batch_ind, :])
