@@ -83,14 +83,19 @@ class SquareCBExploration(ScoreExplorationBase):
 
         # Construct probability distribution over actions and sample from it
         selected_actions = torch.zeros((values.size(dim=0),), dtype=torch.int)
-        prob_policy = self.get_unnormalize_prob(empirical_gaps, max_val, action_space.n)
         for batch_ind in range(values.size(dim=0)):
+            # Build the unnormalized policy for this row. Passing the scalar row
+            # maximum keeps this compatible with subclasses such as
+            # FastCBExploration whose get_unnormalize_prob branches on max_val.
+            prob_policy = self.get_unnormalize_prob(
+                empirical_gaps[batch_ind, :], max_val[batch_ind], action_space.n
+            )
             # Get sum of all the probabilities besides the maximum
-            prob_policy[batch_ind, max_indices[batch_ind]] = 0.0
-            complementary_sum = torch.sum(prob_policy[batch_ind, :])
-            prob_policy[batch_ind, max_indices[batch_ind]] = 1.0 - complementary_sum
+            prob_policy[max_indices[batch_ind]] = 0.0
+            complementary_sum = torch.sum(prob_policy)
+            prob_policy[max_indices[batch_ind]] = 1.0 - complementary_sum
             # Sample from SquareCB update rule
-            dist_policy = Categorical(prob_policy[batch_ind, :])
+            dist_policy = Categorical(prob_policy)
             selected_actions[batch_ind] = dist_policy.sample()
 
         return selected_actions.squeeze(-1)

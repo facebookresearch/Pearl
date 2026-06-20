@@ -11,6 +11,7 @@ import unittest
 
 import torch
 from pearl.policy_learners.exploration_modules.contextual_bandits.squarecb_exploration import (
+    FastCBExploration,
     SquareCBExploration,
 )
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
@@ -45,17 +46,22 @@ class TestSquareCBExploration(unittest.TestCase):
         action_space = DiscreteActionSpace(
             actions=[torch.tensor([i]) for i in range(3)]
         )
-        gamma = 10.0
-        exploration = SquareCBExploration(gamma=gamma)
+        exploration = SquareCBExploration(gamma=10.0)
         values = torch.tensor([[0.10, 0.20, 0.90], [0.80, 0.30, 0.10]])
 
-        # Reconstruct the distribution act() builds (no randomness involved).
+        # Reconstruct, per row, the distribution act() builds via the module's
+        # own get_unnormalize_prob (no randomness involved).
         max_val, max_indices = torch.max(values, dim=1)
         empirical_gaps = max_val.unsqueeze(1) - values
-        prob = torch.div(1.0, action_space.n + gamma * empirical_gaps)
+        rows = []
         for b in range(values.size(0)):
-            prob[b, max_indices[b]] = 0.0
-            prob[b, max_indices[b]] = 1.0 - torch.sum(prob[b, :])
+            prob = exploration.get_unnormalize_prob(
+                empirical_gaps[b, :], max_val[b], action_space.n
+            )
+            prob[max_indices[b]] = 0.0
+            prob[max_indices[b]] = 1.0 - torch.sum(prob)
+            rows.append(prob)
+        prob = torch.stack(rows)
 
         self.assertTrue(torch.allclose(prob.sum(dim=1), torch.ones(2), atol=1e-6))
         # Greedy action (argmax of values) should be the most probable per row.
@@ -73,3 +79,22 @@ class TestSquareCBExploration(unittest.TestCase):
             values=torch.tensor([[0.10, 0.20, 0.90]]),
         )
         self.assertTrue(0 <= int(action) < action_space.n)
+
+    def test_fastcb_act_batched_states(self) -> None:
+        # FastCBExploration inherits act() and overrides get_unnormalize_prob
+        # with a branch on max_val; act() must therefore feed it a scalar row
+        # maximum so batched input does not raise on an ambiguous truth value.
+        action_space = DiscreteActionSpace(
+            actions=[torch.tensor([i]) for i in range(3)]
+        )
+        exploration = FastCBExploration(gamma=10.0)
+        values = torch.tensor([[0.10, 0.20, 0.90], [0.80, 0.30, 0.10]])
+        torch.manual_seed(0)
+        actions = exploration.act(
+            subjective_state=torch.zeros(2, 4),
+            action_space=action_space,
+            values=values,
+        )
+        self.assertEqual(actions.shape[0], 2)
+        self.assertTrue(int(actions.min()) >= 0)
+        self.assertTrue(int(actions.max()) < action_space.n)
