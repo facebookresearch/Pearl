@@ -9,6 +9,7 @@
 # pyre-strict
 
 
+import os
 import time
 import unittest
 from typing import Callable, Generator, Tuple
@@ -1195,11 +1196,21 @@ class TestAgentWithPyTorch(unittest.TestCase):
     """
 
     def test_construction_of_all_types(self) -> None:
+        # The offline agents (IQL and CQL) fetch their training datasets from an
+        # external URL, unreachable under network isolation (e.g. network_access=none).
+        # Detect isolation via the local-forkserver env var or the RE marker file,
+        # mirroring RemoteExecutionEnv::isInsideReNetworkIsolation().
+        network_isolated = os.environ.get(
+            "INSIDE_NETWORK_ISOLATION"
+        ) is not None or os.path.exists("/run/re_worker/net_isolation")
         for (
             agent_type,
             _new_agent_function,
             trained_agent_function,
         ) in self.get_agent_makers():
+            if network_isolated and "offline" in agent_type:
+                print(f"Skipping construction of {agent_type} (requires network)")
+                continue
             print(f"Testing construction of {agent_type}")
             start = time.time()
             trained_agent_function()
