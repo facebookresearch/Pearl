@@ -23,6 +23,10 @@ def save_and_load_state_dict(origin: nn.Module, destination: nn.Module) -> None:
 
 class TestSerialization(TestCase):
     def test_serialization(self) -> None:
+        # Concurrent stress-run copies each default to one compute thread per
+        # core, oversubscribing the host and timing out; the models are tiny.
+        torch.set_num_threads(1)
+
         test_agent = TestAgentWithPyTorch()
         for (
             agent_type,
