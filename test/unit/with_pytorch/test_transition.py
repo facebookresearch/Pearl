@@ -72,10 +72,6 @@ class TestTransitionBatch(unittest.TestCase):
         Test that to() method correctly moves terminated
         and truncated to the specified device.
         """
-        # Skip test if CUDA is not available
-        if not torch.cuda.is_available():
-            self.skipTest("CUDA not available")
-
         batch = TransitionBatch(
             state=self.state,
             action=self.action,
@@ -83,19 +79,26 @@ class TestTransitionBatch(unittest.TestCase):
             next_state=self.next_state,
         )
 
-        # Move batch to CUDA
-        cuda_batch = batch.to(torch.device("cuda"))
+        # The "meta" device is always available and exercises the same
+        # device-movement code path as an accelerator without requiring a GPU.
+        target_device = torch.device("meta")
+        moved_batch = batch.to(target_device)
 
-        # Check that terminated and truncated are moved to CUDA
-        self.assertEqual(cuda_batch.terminated.device.type, "cuda")
-        self.assertEqual(cuda_batch.truncated.device.type, "cuda")
+        # Check that terminated and truncated are moved to the target device
+        self.assertEqual(moved_batch.terminated.device.type, target_device.type)
+        self.assertEqual(moved_batch.truncated.device.type, target_device.type)
 
-        # Move batch back to CPU
-        cpu_batch = cuda_batch.to(torch.device("cpu"))
-
-        # Check that terminated and truncated are moved back to CPU
-        self.assertEqual(cpu_batch.terminated.device.type, "cpu")
-        self.assertEqual(cpu_batch.truncated.device.type, "cpu")
+        # Additionally test CUDA path when hardware is available
+        if torch.cuda.is_available():
+            cuda_batch = TransitionBatch(
+                state=self.state,
+                action=self.action,
+                reward=self.reward,
+                next_state=self.next_state,
+            )
+            cuda_batch = cuda_batch.to(torch.device("cuda"))
+            self.assertEqual(cuda_batch.terminated.device.type, "cuda")
+            self.assertEqual(cuda_batch.truncated.device.type, "cuda")
 
     def test_filter_batch_by_bootstrap_mask(self) -> None:
         """Test that filter_batch_by_bootstrap_mask correctly filters terminated and truncated."""
