@@ -130,5 +130,6 @@ class DiscreteSpace(Space):
         start, n = gym_space.start, gym_space.n
         return DiscreteSpace(
             elements=list(torch.arange(start=start, end=start + n).view(-1, 1)),
+            # pyrefly: ignore [bad-argument-type]
             seed=gym_space._np_random,
         )

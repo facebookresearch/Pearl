@@ -31,7 +31,9 @@ class DummyDictEnv(Environment):
         self._observation_space = gym.spaces.Dict(
             # pyrefly: ignore [bad-argument-type]
             {
+                # pyrefly: ignore [bad-assignment]
                 "x": gym.spaces.Box(low=0, high=1, shape=(2,)),
+                # pyrefly: ignore [bad-assignment]
                 "y": gym.spaces.Discrete(3),
             }
         )

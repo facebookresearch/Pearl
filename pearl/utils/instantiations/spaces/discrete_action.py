@@ -103,6 +103,7 @@ class DiscreteActionSpace(DiscreteSpace, ActionSpace):
         start, n = int(gym_space.start), int(gym_space.n)
         return DiscreteActionSpace(
             actions=list(torch.arange(start=start, end=start + n).view(-1, 1)),
+            # pyrefly: ignore [bad-argument-type]
             seed=gym_space._np_random,
         )
 
