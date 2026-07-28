@@ -12,6 +12,7 @@ from collections.abc import Iterable
 from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
+import torch
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
@@ -80,10 +81,12 @@ class GymEnvironment(Environment):
             env = env_or_env_name
         # pyrefly: ignore [bad-assignment]
         self.env: gym.Env = env
-        self._action_space: ActionSpace = _get_pearl_space(
+        self._flatten_tuple_observations = (
+            self.env.observation_space.__class__.__name__ == "Tuple"
+        )
+        self._action_space: ActionSpace = _get_pearl_action_space(
             # pyrefly: ignore [bad-argument-type]
             gym_space=self.env.action_space,
-            gym_to_pearl_map=GYM_TO_PEARL_ACTION_SPACE,
         )
         self._observation_space: Space = _get_pearl_space(
             # pyrefly: ignore [bad-argument-type]
@@ -118,9 +121,7 @@ class GymEnvironment(Environment):
             # TODO: Deprecate this part at some point and only support new
             # version of Gymnasium?
             observation = list(reset_result.values())[0]  # pyre-ignore
-        if isinstance(observation, np.ndarray) and observation.dtype == np.float64:
-            observation = observation.astype(np.float32)
-        return observation, self.action_space
+        return self._process_observation(observation), self.action_space
 
     def step(self, action: Action) -> ActionResult:
         """Takes one step in the environment given the agent's action. Returns an
@@ -160,8 +161,7 @@ class GymEnvironment(Environment):
         else:
             available_action_space = None
 
-        if isinstance(observation, np.ndarray) and observation.dtype == np.float64:
-            observation = observation.astype(np.float32)
+        observation = self._process_observation(observation)
         if isinstance(reward, np.float64):
             reward = reward.astype(np.float32)
         if isinstance(cost, np.float64):
@@ -182,6 +182,13 @@ class GymEnvironment(Environment):
 
     def close(self) -> None:
         self.env.close()
+
+    def _process_observation(self, observation: Observation) -> Observation:
+        if self._flatten_tuple_observations:
+            return _flatten_tuple_observation(observation)
+        if isinstance(observation, np.ndarray) and observation.dtype == np.float64:
+            return observation.astype(np.float32)
+        return observation
 
     def __str__(self) -> str:
         if self.env.spec is not None:
@@ -209,9 +216,14 @@ def _get_gym_action(
 
 def _get_pearl_space(
     gym_space: gym.Space, gym_to_pearl_map: dict[str, Any]
-) -> ActionSpace:
-    """Returns the Pearl action space for this environment."""
+) -> Space:
+    """Returns the Pearl space for this environment."""
     gym_space_name = gym_space.__class__.__name__
+    if (
+        gym_space_name == "Tuple"
+        and gym_to_pearl_map is GYM_TO_PEARL_OBSERVATION_SPACE
+    ):
+        return _tuple_observation_space_to_box_space(gym_space)
     try:
         pearl_action_space_cls = gym_to_pearl_map[gym_space_name]
     except KeyError:
@@ -219,3 +231,59 @@ def _get_pearl_space(
             f"The Gym space '{gym_space_name}' is not yet supported in Pearl."
         )
     return pearl_action_space_cls.from_gym(gym_space)
+
+
+def _get_pearl_action_space(gym_space: gym.Space) -> ActionSpace:
+    space = _get_pearl_space(
+        gym_space=gym_space,
+        gym_to_pearl_map=GYM_TO_PEARL_ACTION_SPACE,
+    )
+    assert isinstance(space, ActionSpace)
+    return space
+
+
+def _flatten_tuple_observation(observation: Observation) -> torch.Tensor:
+    assert isinstance(observation, tuple), "Observation must be a tuple"
+    return torch.cat([_flatten_observation_value(value) for value in observation])
+
+
+def _flatten_observation_value(value: object) -> torch.Tensor:
+    if isinstance(value, tuple):
+        return torch.cat([_flatten_observation_value(v) for v in value])
+    return torch.as_tensor(value, dtype=torch.float32).flatten()
+
+
+def _tuple_observation_space_to_box_space(gym_space: gym.Space) -> BoxSpace:
+    lows = []
+    highs = []
+    for subspace in gym_space.spaces:  # pyre-ignore[16]
+        low, high = _space_bounds(subspace)
+        lows.append(low)
+        highs.append(high)
+    return BoxSpace(low=torch.cat(lows).float(), high=torch.cat(highs).float())
+
+
+def _space_bounds(gym_space: gym.Space) -> tuple[torch.Tensor, torch.Tensor]:
+    gym_space_name = gym_space.__class__.__name__
+    if gym_space_name == "Box":
+        return (
+            torch.as_tensor(gym_space.low).flatten(),  # pyre-ignore[16]
+            torch.as_tensor(gym_space.high).flatten(),  # pyre-ignore[16]
+        )
+    if gym_space_name == "Discrete":
+        start = float(getattr(gym_space, "start", 0))
+        return (
+            torch.tensor([start]),
+            torch.tensor([start + float(gym_space.n) - 1]),  # pyre-ignore[16]
+        )
+    if gym_space_name == "Tuple":
+        lows = []
+        highs = []
+        for subspace in gym_space.spaces:  # pyre-ignore[16]
+            low, high = _space_bounds(subspace)
+            lows.append(low)
+            highs.append(high)
+        return torch.cat(lows), torch.cat(highs)
+    raise NotImplementedError(
+        f"Unsupported Tuple observation subspace type: {gym_space_name}"
+    )
