@@ -150,7 +150,7 @@ class LinearBandit(ContextualBanditBase):
             if batch.weight is not None
             else torch.ones_like(expected_values)
         )
-        x = torch.cat([batch.state, batch.action], dim=1)
+        x = torch.cat([batch.state, torch.squeeze(batch.action, dim=1)], dim=1)
         self.model.learn_batch(
             x=x,
             y=batch.reward,
