@@ -1196,6 +1196,10 @@ class TestAgentWithPyTorch(unittest.TestCase):
     """
 
     def test_construction_of_all_types(self) -> None:
+        # Concurrent stress-run copies each default to one compute thread per
+        # core, oversubscribing the host and timing out; the models are tiny.
+        torch.set_num_threads(1)
+
         # The offline agents (IQL and CQL) fetch their training datasets from an
         # external URL, unreachable under network isolation (e.g. network_access=none).
         # Detect isolation via the local-forkserver env var or the RE marker file,
