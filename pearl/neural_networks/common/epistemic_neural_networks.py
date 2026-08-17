@@ -5,7 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-# pyre-strict
 
 """
 This module defines epistemic neural networks that can model posterior distributions

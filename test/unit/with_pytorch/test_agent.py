@@ -6,9 +6,6 @@
 #
 
 
-# pyre-strict
-
-
 import os
 import time
 import unittest

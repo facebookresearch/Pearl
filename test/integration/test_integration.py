@@ -5,7 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-# pyre-strict
 
 from pearl.neural_networks.common.utils import xavier_init_weights
 from pearl.neural_networks.common.value_networks import VanillaValueNetwork

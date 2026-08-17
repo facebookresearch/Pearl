@@ -1,4 +1,3 @@
-# pyre-strict
 import math
 
 import torch

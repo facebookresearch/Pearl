@@ -5,8 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-# pyre-strict
-
 
 def fontsize_for(
     string: str,

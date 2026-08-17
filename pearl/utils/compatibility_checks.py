@@ -5,7 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-# pyre-strict
 
 from pearl.policy_learners.policy_learner import (
     DistributionalPolicyLearner,

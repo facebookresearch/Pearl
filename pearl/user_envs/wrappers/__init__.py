@@ -5,7 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-# pyre-strict
 
 from .atari_wrappers import EpisodicLifeEnv, FireResetEnv, MaxAndSkipEnv, NoopResetEnv
 from .dynamic_action_env import DynamicActionSpaceWrapper
