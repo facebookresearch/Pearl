@@ -51,7 +51,6 @@ class TwinCritic(torch.nn.Module):
             if inspect.isabstract(network_type):
                 raise ValueError("network_type must not be abstract")
 
-            # pyre-ignore[45]:
             # Pyre does not know that `network_type` is asserted to be concrete
             self._critic_1: QValueNetwork = network_type(
                 state_dim=state_dim,
@@ -60,7 +59,6 @@ class TwinCritic(torch.nn.Module):
                 output_dim=output_dim,
             )
 
-            # pyre-ignore[45]:
             # Pyre does not know that `network_type` is asserted to be concrete
             self._critic_2: QValueNetwork = network_type(
                 state_dim=state_dim,

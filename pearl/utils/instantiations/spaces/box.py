@@ -34,9 +34,7 @@ class BoxSpace(Space):
 
     def __init__(
         self,
-        # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
         low: float | np.ndarray | Tensor,
-        # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
         high: float | np.ndarray | Tensor,
         seed: int | np.random.Generator | None = None,
     ) -> None:
@@ -105,7 +103,6 @@ class BoxSpace(Space):
     @property
     def gym_space(self) -> gym.Space:
         """Returns the underlying Gymnasium space."""
-        # pyre-fixme[7]: Expected `Space[Any]` but got `Box`.
         return self._gym_space
 
     @staticmethod

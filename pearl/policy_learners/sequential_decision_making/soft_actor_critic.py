@@ -145,7 +145,6 @@ class SoftActorCritic(ActorCriticBase):
 
     # sac uses a learning rate scheduler specifically
     def reset(self, action_space: ActionSpace) -> None:
-        # pyre-fixme[16]: `SoftActorCritic` has no attribute `_action_space`.
         self._action_space = action_space
         self.scheduler.step()
 
@@ -154,7 +153,6 @@ class SoftActorCritic(ActorCriticBase):
 
         if self._entropy_autotune:
             entropy = (
-                # pyre-fixme[29]: `Union[BoundMethod[typing.Callable(torch._C.TensorBase.__mul__)
                 # [[Named(self, torch._C.TensorBase), Named(other, Union[bool, complex, float,
                 # int, torch._tensor.Tensor])], torch._tensor.Tensor], torch._tensor.Tensor],
                 # nn.modules.module.Module, torch._tensor.Tensor]` is not a function.

@@ -60,7 +60,6 @@ class BoltzmannExploration(ScoreExplorationBase):
             values.reshape(-1, action_space.n) / self.temperature, dim=-1
         )
 
-    # pyrefly: ignore [bad-param-name-override]
     def act(
         self,
         subjective_state: SubjectiveState,

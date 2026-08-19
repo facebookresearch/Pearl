@@ -191,9 +191,7 @@ class VanillaUCBExploration(UCBExploration):
         randomized_tiebreaking: TiebreakingStrategy = TiebreakingStrategy.NO_TIEBREAKING,
     ) -> None:
         super().__init__(alpha=1, randomized_tiebreaking=randomized_tiebreaking)
-        # pyre-fixme[4]: Attribute must be annotated.
         self.action_execution_count = {}
-        # pyre-fixme[4]: Attribute must be annotated.
         self.action_executed = torch.tensor(1)
 
     # pyre-fixme[14]: `sigma` overrides method defined in `UCBExploration`

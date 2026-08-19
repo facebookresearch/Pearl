@@ -139,7 +139,6 @@ class ContextualBanditLinearSyntheticEnvironment(ContextualBanditEnvironment):
             self._compute_reward_from_context(self._get_context_for_arm(i))
             for i in range(self._action_space.n)
         ]
-        # pyre-fixme[6]: For 1st argument expected
         #  `Iterable[Variable[SupportsRichComparisonT (bound to
         #  Union[SupportsDunderGT[typing.Any], SupportsDunderLT[typing.Any]])]]` but
         #  got `List[Tensor]`.

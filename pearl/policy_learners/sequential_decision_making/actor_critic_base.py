@@ -138,7 +138,6 @@ class ActorCriticBase(PolicyLearner):
                     else state_dim
                 ),
                 hidden_dims=actor_hidden_dims,
-                # pyre-fixme[6]: For 3rd argument expected `int` but got `Union[int,
                 #  Module, Tensor]`.
                 output_dim=(
                     # pyrefly: ignore [bad-argument-type]
@@ -190,7 +189,6 @@ class ActorCriticBase(PolicyLearner):
                     # pyre-fixme[6]: For 1st argument expected `int` but got
                     #  `Optional[int]`.
                     state_dim=self._state_dim,
-                    # pyre-fixme[6]: For 2nd argument expected `Optional[int]` but
                     #  got `Union[Module, Tensor]`.
                     action_dim=self.action_representation_module.representation_dim,
                     hidden_dims=critic_hidden_dims,

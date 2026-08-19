@@ -136,7 +136,6 @@ class TransformerHistorySummarizationModule(HistorySummarizationModule):
                 d_model=d_model, dropout=dropout
             )
         elif pos_encoding == "sinusoidal":
-            # pyrefly: ignore [bad-assignment]
             self.pos_encoding = SinusoidalPositionalEncoding(
                 d_model=d_model, dropout=dropout
             )

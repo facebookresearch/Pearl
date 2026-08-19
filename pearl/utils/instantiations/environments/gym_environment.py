@@ -37,7 +37,6 @@ def single_element_tensor_to_int(x: Tensor) -> int:
     return int(x)
 
 
-# pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
 def tensor_to_numpy(x: Tensor) -> np.ndarray:
     return x.numpy(force=True)
 
@@ -52,7 +51,6 @@ GYM_TO_PEARL_OBSERVATION_SPACE = {
     "Box": BoxSpace,
     # Add more here as needed
 }
-# pyre-fixme[5]: Global expression must be annotated.
 PEARL_TO_GYM_ACTION = {
     "Discrete": single_element_tensor_to_int,
     "Box": tensor_to_numpy,
@@ -126,7 +124,6 @@ class GymEnvironment(Environment):
         `ActionResult` object containing the next observation, reward, and done flag."""
         # Convert action to the format expected by Gymnasium
         effective_action = _get_gym_action(
-            # pyrefly: ignore [bad-argument-type]
             pearl_action=action,
             # pyrefly: ignore [bad-argument-type]
             gym_space=self.env.action_space,
@@ -135,7 +132,7 @@ class GymEnvironment(Environment):
         gym_action_result = self.env.step(effective_action)
         if len(gym_action_result) == 4:
             # Older Gym versions use 'done' as opposed to 'terminated' and 'truncated'
-            observation, reward, done, info = gym_action_result  # pyre-ignore
+            observation, reward, done, info = gym_action_result
             if done:
                 truncated = info["TimeLimit.truncated"]
                 terminated = not truncated
@@ -192,7 +189,6 @@ class GymEnvironment(Environment):
 def _get_gym_action(
     pearl_action: Action,
     gym_space: gym.Space,
-    # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
 ) -> int | np.ndarray:
     """A helper function to convert a Pearl `Action` to an action compatible with
     the Gym action space `gym_space`."""

@@ -82,7 +82,6 @@ def make_critic(
         )
     else:
         if network_type == VanillaQValueNetwork:
-            # pyre-ignore[45]:
             # Pyre does not know that `network_type` is asserted to be concrete
             return network_type(
                 state_dim=state_dim,
@@ -91,7 +90,6 @@ def make_critic(
                 output_dim=1,
             )
         elif network_type == VanillaValueNetwork:
-            # pyre-ignore[45]:
             # Pyre does not know that `network_type` is asserted to be concrete
             return network_type(
                 input_dim=state_dim, hidden_dims=hidden_dims, output_dim=1

@@ -31,7 +31,6 @@ def create_normal_pdf_training_data(
     y = torch.exp(
         -0.5 * ((x - mean) @ torch.inverse(sigma) * (x - mean)).sum(dim=1)
     ) / (
-        # pyre-ignore[58]: `**` is not supported for operand types `Tensor` and `int`.
         # PyTorch idiosyncrasy.
         torch.sqrt((2 * torch.tensor(3.14)) ** mean.shape[0] * torch.det(sigma))
     )  # corresponding pdf of mvn

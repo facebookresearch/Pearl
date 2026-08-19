@@ -205,5 +205,4 @@ def get_data_collection_agent_returns(
             # @lint-ignore PYTHONPICKLEISBAD
             data_collection_agent_returns = pickle.load(file)
 
-    # pyrefly: ignore [bad-return]
     return data_collection_agent_returns

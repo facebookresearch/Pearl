@@ -92,7 +92,6 @@ class PearlAgent(Agent):
 
         # adds the safety module to the policy learner as well
         # @jalaj, we need to follow the practice below for safety module
-        # pyre-fixme[16]: `PolicyLearner` has no attribute `safety_module`.
         self.policy_learner.safety_module = self.safety_module
 
         self.replay_buffer: ReplayBuffer = (

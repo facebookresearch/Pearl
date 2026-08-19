@@ -16,7 +16,6 @@ except ModuleNotFoundError:
     print("gymnasium module is not found")
 
 
-# pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
 class MeanVarBanditEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
     """environment to test if safe RL algorithms
     prefer a policy that achieves lower variance return"""
@@ -27,16 +26,13 @@ class MeanVarBanditEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
     ) -> None:
         super().__init__()
         self._size = 2
-        # pyrefly: ignore [bad-argument-type]
         self._rng = np.random.RandomState(seed)
         high = np.array([1.0] * self._size, dtype=np.float32)
         # pyrefly: ignore [bad-assignment]
         self.action_space = gym.spaces.Discrete(2)
-        # pyre-fixme[6]: gym stubs don't recognize np.float32 as valid dtype
         self.observation_space = gym.spaces.Box(-high, high, dtype=np.float32)
         self.idx: int | None = None
 
-    # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
     def get_observation(self) -> np.ndarray:
         obs = np.zeros(self._size, dtype=np.float32)
         obs[self.idx] = 1.0
@@ -47,7 +43,6 @@ class MeanVarBanditEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
         *,
         seed: int | None = None,
         options: dict[str, float] | None = None,
-        # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
     ) -> tuple[np.ndarray, dict[str, float]]:
         super().reset(seed=seed)
         self.idx = 0
@@ -56,7 +51,6 @@ class MeanVarBanditEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def step(
         self,
-        # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
         action: int | np.ndarray,
         # pyre-fixme[24]: Generic type `np.ndarray` expects 2 type parameters.
     ) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
