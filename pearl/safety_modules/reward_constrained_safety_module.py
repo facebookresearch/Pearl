@@ -215,16 +215,11 @@ class RCSafetyModuleCostCriticContinuousAction(SafetyModule):
     ) -> ActionSpace:
         return action_space
 
-    # pyre-fixme[14]: `learn_batch` overrides method defined in `SafetyModule`
-    #  inconsistently.
-    def learn_batch(
-        self, batch: TransitionBatch, policy_learner: PolicyLearner
-    ) -> None:
+    def learn_batch(self, batch: TransitionBatch) -> None:
         """
         Don't support offline training for now.
         """
-        AssertionError("Offline safety learning is not supported yet.")
-        pass
+        raise AssertionError("Offline safety learning is not supported yet.")
 
     def __str__(self) -> str:
         return "RCSafetyModuleCostCriticContinuousAction"
