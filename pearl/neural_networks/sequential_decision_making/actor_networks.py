@@ -576,7 +576,6 @@ class GaussianActorNetwork(ActorNetwork):
 
         log_prob = normal.log_prob(sample)
         log_prob -= torch.log(
-            # pyrefly: ignore [unsupported-operation]
             self._action_bound * (1 - normalized_action.pow(2)) + epsilon
         )
 
@@ -617,7 +616,6 @@ class GaussianActorNetwork(ActorNetwork):
         unnormalized_action_batch = torch.atanh(normalized_action_batch)
         log_prob = normal.log_prob(unnormalized_action_batch)
         log_prob -= torch.log(
-            # pyrefly: ignore [unsupported-operation]
             self._action_bound * (1 - normalized_action_batch.pow(2)) + epsilon
         )
 

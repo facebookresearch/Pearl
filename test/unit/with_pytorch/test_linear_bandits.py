@@ -240,7 +240,6 @@ class TestLinearBandits(unittest.TestCase):
             num_reps * float(torch.sum(weight).item()),
         )
         self.assertLess(
-            # pyrefly: ignore [bad-index]
             policy_learner.model._b[0].item(),
             num_reps * float(torch.sum(self.batch.reward * weight).item()),
         )

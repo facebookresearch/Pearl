@@ -124,14 +124,12 @@ class SoftActorCritic(ActorCriticBase):
                 torch.nn.Parameter(torch.zeros(1, requires_grad=True)),
             )
             self._entropy_optimizer: torch.optim.Optimizer = optim.Adam(
-                # pyre-fixme[6]: In call `optim.adam.Adam.__init__`, for 1st positional argument,
                 # expected `Union[Iterable[Dict[str, typing.Any]], Iterable[Tuple[str, Tensor]],
                 # Iterable[Tensor]]` but got `List[Union[Module, Tensor]]`.
                 [self._log_entropy],
                 lr=self._critic_learning_rate,
                 eps=1e-4,
             )
-            # pyre-fixme[6]: In call `optim.adam.Adam.__init__`, for 1st positional argument,
             # expected `Union[Iterable[Dict[str, typing.Any]], Iterable[Tuple[str, Tensor]],
             # Iterable[Tensor]]` but got `List[Union[Module, Tensor]]`.
             self.register_buffer("_entropy_coef", torch.exp(self._log_entropy).detach())
@@ -159,7 +157,6 @@ class SoftActorCritic(ActorCriticBase):
                 -(self._action_probs_cache * self._action_log_probs_cache).sum(1).mean()
             )
             entropy_optimizer_loss = (
-                # pyre-fixme[6]: In call `torch._C._VariableFunctions.exp`,
                 # for 1st positional argument, expected `Tensor` but got `Union[Module, Tensor]`.
                 torch.exp(self._log_entropy) * (entropy - self._target_entropy).detach()
             )
@@ -312,7 +309,6 @@ class SoftActorCritic(ActorCriticBase):
                 differences.append(
                     f"_entropy_coef is different: {self._entropy_coef} vs {other._entropy_coef}"
                 )
-            # pyrefly: ignore [bad-argument-type]
             if not torch.allclose(self._target_entropy, other._target_entropy):
                 differences.append(
                     f"_target_entropy is different: {self._target_entropy} vs {other._target_entropy}"

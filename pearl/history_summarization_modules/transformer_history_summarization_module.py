@@ -37,7 +37,6 @@ class SinusoidalPositionalEncoding(nn.Module):
         x: [B, T, d_model]
         """
         T = x.size(1)
-        # pyrefly: ignore [bad-index]
         x = x + self.pe[:T, :].unsqueeze(0)
         return self.dropout(x)
 
@@ -205,7 +204,6 @@ class TransformerHistorySummarizationModule(HistorySummarizationModule):
             act = action.clone().detach().float().view(1, self.action_dim)
 
         # Concatenate (action, observation) for current step
-        # pyrefly: ignore [bad-argument-type]
         pair = torch.cat((act, obs), dim=-1)  # [1, input_dim]
         assert pair.shape[-1] == self.history.shape[-1]
 
@@ -279,7 +277,6 @@ class TransformerHistorySummarizationModule(HistorySummarizationModule):
             )
 
         # Buffers
-        # pyrefly: ignore [bad-argument-type]
         if not torch.allclose(self.default_action, other.default_action):
             differences.append(
                 f"default_action is different: {self.default_action} vs {other.default_action}"
