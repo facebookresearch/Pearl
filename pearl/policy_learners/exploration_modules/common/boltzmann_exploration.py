@@ -91,6 +91,7 @@ class BoltzmannExploration(ScoreExplorationBase):
         assert values is not None
 
         if action_availability_mask is not None:
+            values = values.reshape(-1, action_space.n)
             values = values.masked_fill(action_availability_mask == 0, float("-inf"))
 
         scores = self.get_scores(
