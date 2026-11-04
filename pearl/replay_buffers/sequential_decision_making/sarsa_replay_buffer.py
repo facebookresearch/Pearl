@@ -99,6 +99,6 @@ class SARSAReplayBuffer(TensorBasedReplayBuffer):
                     next_unavailable_actions_mask=next_unavailable_actions_mask,
                     terminated=self._process_single_terminated(terminated),
                     truncated=self._process_single_truncated(truncated),
-                cost=self._process_single_cost(cost),
+                    cost=self._process_single_cost(cost),
                 )
             )
