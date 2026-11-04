@@ -116,6 +116,7 @@ class TestSARSABuffer(unittest.TestCase):
         batch = replay_buffer.sample(1)
         self.assertTrue(batch.terminated[0])
 
+
 class SarsaCostRegressionTest(unittest.TestCase):
     def test_cost_survives_cache_and_terminal_push(self) -> None:
         for terminated, truncated in [(True, False), (False, True)]:
