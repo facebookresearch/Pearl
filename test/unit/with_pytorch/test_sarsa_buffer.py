@@ -122,10 +122,24 @@ class SarsaCostRegressionTest(unittest.TestCase):
             with self.subTest(terminated=terminated, truncated=truncated):
                 buffer = SARSAReplayBuffer(10)
                 buffer.is_action_continuous = True
-                buffer.push(torch.tensor([0.0]), torch.tensor([0.0]), 1.0,
-                            False, False, next_state=torch.tensor([1.0]), cost=0.25)
-                buffer.push(torch.tensor([1.0]), torch.tensor([1.0]), 2.0,
-                            terminated, truncated, next_state=torch.tensor([2.0]), cost=0.75)
+                buffer.push(
+                    torch.tensor([0.0]),
+                    torch.tensor([0.0]),
+                    1.0,
+                    False,
+                    False,
+                    next_state=torch.tensor([1.0]),
+                    cost=0.25,
+                )
+                buffer.push(
+                    torch.tensor([1.0]),
+                    torch.tensor([1.0]),
+                    2.0,
+                    terminated,
+                    truncated,
+                    next_state=torch.tensor([2.0]),
+                    cost=0.75,
+                )
                 self.assertEqual(len(buffer), 2)
                 batch = buffer.sample(2)
                 self.assertIsNotNone(batch.cost)
@@ -134,6 +148,12 @@ class SarsaCostRegressionTest(unittest.TestCase):
     def test_absent_cost_remains_optional(self) -> None:
         buffer = SARSAReplayBuffer(10)
         buffer.is_action_continuous = True
-        buffer.push(torch.tensor([0.0]), torch.tensor([0.0]), 1.0,
-                    True, False, next_state=torch.tensor([1.0]))
+        buffer.push(
+            torch.tensor([0.0]),
+            torch.tensor([0.0]),
+            1.0,
+            True,
+            False,
+            next_state=torch.tensor([1.0]),
+        )
         self.assertIsNone(buffer.sample(1).cost)
