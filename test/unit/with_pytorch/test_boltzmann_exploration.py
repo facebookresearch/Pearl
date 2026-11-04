@@ -151,6 +151,14 @@ class TestBoltzmannExploration(unittest.TestCase):
 
 
 class BoltzmannMaskRegressionTest(unittest.TestCase):
+    def test_mask_preserves_integer_logit_promotion(self) -> None:
+        space = DiscreteActionSpace(actions=[torch.tensor([0.0]), torch.tensor([1.0])])
+        exploration = BoltzmannExploration()
+        values = torch.tensor([[1, 0], [0, 1]], dtype=torch.int64)
+        mask = torch.tensor([[1, 0], [0, 1]])
+        actions = exploration.act(torch.zeros(2, 1), space, values, mask)
+        torch.testing.assert_close(actions, torch.tensor([[0.0], [1.0]]))
+
     def test_mask_accepts_all_reshape_compatible_value_shapes(self) -> None:
         space = DiscreteActionSpace(actions=[torch.tensor([0.0]), torch.tensor([1.0])])
         exploration = BoltzmannExploration()
