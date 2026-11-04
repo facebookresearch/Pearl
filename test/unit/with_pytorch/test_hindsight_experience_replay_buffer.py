@@ -91,3 +91,37 @@ class TestHindsightExperienceReplayBuffer(unittest.TestCase):
             tt.assert_close(
                 batch_state[i][-2:], batch_next_state[i][-2:], rtol=0.0, atol=0.0
             )
+
+
+class HindsightClearRegressionTest(unittest.TestCase):
+    def test_clear_discards_trajectory_before_next_episode(self) -> None:
+        for terminated, truncated in [(True, False), (False, True)]:
+            with self.subTest(terminated=terminated, truncated=truncated):
+                space = DiscreteActionSpace([torch.tensor([0]), torch.tensor([1])])
+                buffer = HindsightExperienceReplayBuffer(10, 2, lambda state, action: -1.0)
+                buffer.push(
+                    torch.tensor([0.0, 0.0, 9.0, 9.0]),
+                    torch.tensor([0]),
+                    -1.0,
+                    False,
+                    False,
+                    space,
+                    torch.tensor([0.0, 1.0, 9.0, 9.0]),
+                    space,
+                )
+                buffer.clear()
+                for index in range(2):
+                    buffer.push(
+                        torch.tensor([10.0 + index, 0.0, 9.0, 9.0]),
+                        torch.tensor([index]),
+                        -1.0,
+                        terminated and index == 1,
+                        truncated and index == 1,
+                        space,
+                        torch.tensor([11.0 + index, 0.0, 9.0, 9.0]),
+                        space,
+                    )
+                self.assertEqual(len(buffer), 4)
+                batch = buffer.sample(4)
+                self.assertTrue(bool((batch.state[:, 0] >= 10.0).all()))
+                self.assertEqual(len(buffer._trajectory), 0)
