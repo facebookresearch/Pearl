@@ -151,6 +151,16 @@ class TestBoltzmannExploration(unittest.TestCase):
 
 
 class BoltzmannMaskRegressionTest(unittest.TestCase):
+    def test_mask_accepts_all_reshape_compatible_value_shapes(self) -> None:
+        space = DiscreteActionSpace(actions=[torch.tensor([0.0]), torch.tensor([1.0])])
+        exploration = BoltzmannExploration()
+        values = torch.tensor([[1.0, 0.0], [0.0, 1.0]])
+        mask = torch.tensor([[1, 0], [0, 1]], dtype=torch.bool)
+        for shape in [(2, 2), (4,), (2, 2, 1)]:
+            with self.subTest(shape=shape):
+                actions = exploration.act(torch.zeros(2, 1), space, values.reshape(shape), mask)
+                torch.testing.assert_close(actions, torch.tensor([[0.0], [1.0]]))
+
     def test_mask_precedes_softmax_for_extreme_logits(self) -> None:
         space = DiscreteActionSpace(actions=[torch.tensor([0.0]), torch.tensor([1.0])])
         exploration = BoltzmannExploration()
