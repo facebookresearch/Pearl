@@ -116,6 +116,7 @@ class TestSARSABuffer(unittest.TestCase):
         batch = replay_buffer.sample(1)
         self.assertTrue(batch.terminated[0])
 
+
 class SarsaLifecycleRegressionTest(unittest.TestCase):
     def test_episode_end_clears_pending_transition(self) -> None:
         for terminated, truncated in [(True, False), (False, True)]:
