@@ -92,6 +92,8 @@ class BoltzmannExploration(ScoreExplorationBase):
 
         if action_availability_mask is not None:
             values = values.reshape(-1, action_space.n)
+            if not values.is_floating_point():
+                values = values.to(torch.get_default_dtype())
             values = values.masked_fill(action_availability_mask == 0, float("-inf"))
 
         scores = self.get_scores(
