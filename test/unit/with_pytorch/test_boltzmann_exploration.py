@@ -148,3 +148,27 @@ class TestBoltzmannExploration(unittest.TestCase):
         )
         # All sampled actions should be action 1 (value 1.0).
         self.assertTrue(torch.all(actions.flatten() == 1.0))
+
+
+class BoltzmannMaskRegressionTest(unittest.TestCase):
+    def test_mask_precedes_softmax_for_extreme_logits(self) -> None:
+        space = DiscreteActionSpace(actions=[torch.tensor([0.0]), torch.tensor([1.0])])
+        exploration = BoltzmannExploration()
+        for dtype in [torch.float32, torch.float64]:
+            with self.subTest(dtype=dtype):
+                values = torch.tensor([[-1000.0, 0.0], [0.0, -1000.0]], dtype=dtype)
+                mask = torch.tensor([[1, 0], [0, 1]], dtype=torch.bool)
+                original = values.clone()
+                actions = exploration.act(torch.zeros(2, 1), space, values, mask)
+                torch.testing.assert_close(actions, torch.tensor([[0.0], [1.0]]))
+                torch.testing.assert_close(values, original)
+
+    def test_all_available_mask_preserves_distribution(self) -> None:
+        space = DiscreteActionSpace(actions=[torch.tensor([0.0]), torch.tensor([1.0])])
+        exploration = BoltzmannExploration()
+        values = torch.tensor([[1.0, 0.7]] * 100)
+        torch.manual_seed(17)
+        unmasked = exploration.act(torch.zeros(100, 1), space, values)
+        torch.manual_seed(17)
+        masked = exploration.act(torch.zeros(100, 1), space, values, torch.ones_like(values))
+        torch.testing.assert_close(masked, unmasked)

@@ -90,17 +90,15 @@ class BoltzmannExploration(ScoreExplorationBase):
         assert isinstance(action_space, DiscreteActionSpace)
         assert values is not None
 
+        if action_availability_mask is not None:
+            values = values.masked_fill(action_availability_mask == 0, float("-inf"))
+
         scores = self.get_scores(
             subjective_state=subjective_state,
             action_space=action_space,
             values=values,
             representation=representation,
         )  # shape: (batch_size, action_count)
-
-        # Mask unavailable actions and renormalize before sampling.
-        if action_availability_mask is not None:
-            scores = scores * action_availability_mask
-            scores = scores / scores.sum(dim=-1, keepdim=True).clamp(min=1e-8)
 
         # Sample one action index per batch row from the categorical distribution.
         action_index_batch = torch.multinomial(scores, num_samples=1).squeeze(-1)
