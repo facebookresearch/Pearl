@@ -97,7 +97,7 @@ class DiscreteSpace(Space):
         Returns:
             A randomly sampled (available) element.
         """
-        mask_np = mask.numpy().astype(int) if mask is not None else None
+        mask_np = mask.numpy().astype("int8") if mask is not None else None
         # pyre-fixme[28]: Unexpected keyword argument `mask`.
         idx = self._gym_space.sample(mask=mask_np)
         # pyrefly: ignore [bad-index]
