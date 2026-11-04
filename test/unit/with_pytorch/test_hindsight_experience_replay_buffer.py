@@ -91,3 +91,64 @@ class TestHindsightExperienceReplayBuffer(unittest.TestCase):
             tt.assert_close(
                 batch_state[i][-2:], batch_next_state[i][-2:], rtol=0.0, atol=0.0
             )
+
+
+class HindsightSnapshotRegressionTest(unittest.TestCase):
+    def test_relabel_preserves_caller_states_and_original_goals(self) -> None:
+        for terminated, truncated in [(True, False), (False, True)]:
+            with self.subTest(terminated=terminated, truncated=truncated):
+                states = [
+                    torch.tensor([0.0, 0.0, 9.0, 9.0]),
+                    torch.tensor([0.0, 1.0, 9.0, 9.0]),
+                    torch.tensor([1.0, 1.0, 9.0, 9.0]),
+                ]
+                snapshots = [state.clone() for state in states]
+                space = DiscreteActionSpace([torch.tensor([0]), torch.tensor([1])])
+
+                def reward_fn(state, action):
+                    reached = snapshots[int(action.item()) + 1][:2]
+                    return 0.0 if torch.equal(reached, state[-2:]) else -1.0
+
+                buffer = HindsightExperienceReplayBuffer(10, 2, reward_fn)
+                for index in range(2):
+                    buffer.push(
+                        states[index],
+                        torch.tensor([index]),
+                        -1.0,
+                        terminated and index == 1,
+                        truncated and index == 1,
+                        space,
+                        states[index + 1],
+                        space,
+                    )
+                self.assertEqual(len(buffer), 4)
+                for actual, expected in zip(states, snapshots):
+                    torch.testing.assert_close(actual, expected)
+                batch = buffer.sample(4)
+                self.assertEqual(int((batch.state[:, -2:] == 9.0).all(dim=1).sum()), 2)
+                self.assertEqual(int((batch.state[:, -2:] == 1.0).all(dim=1).sum()), 2)
+                self.assertTrue(bool((batch.reward == 0.0).any()))
+
+    def test_trajectory_snapshots_inputs_before_later_mutation(self) -> None:
+        space = DiscreteActionSpace([torch.tensor([0]), torch.tensor([1])])
+        buffer = HindsightExperienceReplayBuffer(10, 2, lambda state, action: -1.0)
+        state = torch.tensor([0.0, 0.0, 9.0, 9.0])
+        next_state = torch.tensor([0.0, 1.0, 9.0, 9.0])
+        buffer.push(state, torch.tensor([0]), -1.0, False, False, space, next_state, space)
+        state[:2] = 100.0
+        next_state[:2] = 200.0
+        buffer.push(
+            torch.tensor([0.0, 1.0, 9.0, 9.0]),
+            torch.tensor([1]),
+            -1.0,
+            True,
+            False,
+            space,
+            torch.tensor([1.0, 1.0, 9.0, 9.0]),
+            space,
+        )
+        batch = buffer.sample(4)
+        relabeled = batch.state[(batch.state[:, -2:] == 1.0).all(dim=1)]
+        self.assertEqual(
+            {tuple(row.tolist()) for row in relabeled[:, :2]}, {(0.0, 0.0), (0.0, 1.0)}
+        )
