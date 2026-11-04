@@ -115,3 +115,25 @@ class TestSARSABuffer(unittest.TestCase):
         # expect one sample returned
         batch = replay_buffer.sample(1)
         self.assertTrue(batch.terminated[0])
+
+class SarsaCostRegressionTest(unittest.TestCase):
+    def test_cost_survives_cache_and_terminal_push(self) -> None:
+        for terminated, truncated in [(True, False), (False, True)]:
+            with self.subTest(terminated=terminated, truncated=truncated):
+                buffer = SARSAReplayBuffer(10)
+                buffer.is_action_continuous = True
+                buffer.push(torch.tensor([0.0]), torch.tensor([0.0]), 1.0,
+                            False, False, next_state=torch.tensor([1.0]), cost=0.25)
+                buffer.push(torch.tensor([1.0]), torch.tensor([1.0]), 2.0,
+                            terminated, truncated, next_state=torch.tensor([2.0]), cost=0.75)
+                self.assertEqual(len(buffer), 2)
+                batch = buffer.sample(2)
+                self.assertIsNotNone(batch.cost)
+                torch.testing.assert_close(batch.cost.sort().values, torch.tensor([0.25, 0.75]))
+
+    def test_absent_cost_remains_optional(self) -> None:
+        buffer = SARSAReplayBuffer(10)
+        buffer.is_action_continuous = True
+        buffer.push(torch.tensor([0.0]), torch.tensor([0.0]), 1.0,
+                    True, False, next_state=torch.tensor([1.0]))
+        self.assertIsNone(buffer.sample(1).cost)
