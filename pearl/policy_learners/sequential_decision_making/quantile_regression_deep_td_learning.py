@@ -150,7 +150,9 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
         with torch.no_grad():
             batched_actions_representation = self.action_representation_module(
                 available_action_space.actions_batch.to(subjective_state)
-            ).unsqueeze(0)  # (1, action_space_size, action_dim)
+            ).unsqueeze(
+                0
+            )  # (1, action_space_size, action_dim)
 
             # instead of using the 'get_q_values' method of the QuantileQValueNetwork,
             # we invoke a method from the risk sensitive safety module
@@ -166,10 +168,10 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
             return exploit_action
 
         return self.exploration_module.act(
-            subjective_state,
-            available_action_space,
-            exploit_action,
-            q_values,
+            subjective_state=subjective_state,
+            action_space=available_action_space,
+            exploit_action=exploit_action,
+            values=q_values,
         )
 
     # QR DQN, QR SAC and QR SARSA will implement this differently
@@ -228,7 +230,9 @@ class QuantileRegressionDeepTDLearning(DistributionalPolicyLearner):
                 batch, batch_size
             ) * self._discount_factor * (1 - batch.terminated.float()).unsqueeze(
                 -1
-            ) + batch.reward.unsqueeze(-1)
+            ) + batch.reward.unsqueeze(
+                -1
+            )
 
         """
         Step 3: pairwise distributional quantile loss:
