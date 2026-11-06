@@ -108,7 +108,8 @@ class TestPPO(unittest.TestCase):
             assert isinstance(transition, PPOTransition)
             gae = transition.gae
             assert gae is not None
-            self.assertEqual(true_gaes[i], gae.detach())
+            # Individual and batched critic GEMMs can differ by float32 rounding.
+            tt.assert_close(true_gaes[i], gae.detach(), rtol=1e-6, atol=1e-7)
 
             lam_return = transition.lam_return
             assert lam_return is not None
