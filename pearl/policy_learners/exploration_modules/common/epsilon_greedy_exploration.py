@@ -68,6 +68,9 @@ class EGreedyExploration(UniformExplorationBase):
                 self.curr_epsilon = (
                     self.start_epsilon + (self.end_epsilon - self.start_epsilon) * frac
                 )
+            else:
+                assert self.end_epsilon is not None
+                self.curr_epsilon = self.end_epsilon
         self.time_step += 1
         if exploit_action is None:
             raise ValueError(
