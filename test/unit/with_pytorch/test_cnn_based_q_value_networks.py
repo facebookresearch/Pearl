@@ -8,29 +8,23 @@
 
 import unittest
 
-import numpy as np
 import torch
-import torchvision
 from pearl.neural_networks.sequential_decision_making.q_value_networks import (
     CNNQValueMultiHeadNetwork,
     CNNQValueNetwork,
 )
-from torch.utils.data import DataLoader, Subset
-from torchvision import transforms
+from torch.utils.data import DataLoader, TensorDataset
 
 
 class TestCNNQValueNetworks(unittest.TestCase):
     def setUp(self) -> None:
-        transform = transforms.Compose([transforms.ToTensor()])
-        mnist_dataset = torchvision.datasets.MNIST(
-            root="./", train=True, transform=transform, download=True
-        )
-
+        # The tests only check output shapes, so random MNIST-shaped images
+        # stand in for MNIST and avoid a network download in every run.
+        generator = torch.Generator().manual_seed(0)
         self.num_data_points = 5000
-        self.mnist_train_dataset = Subset(
-            mnist_dataset,
-            np.arange(1, self.num_data_points).tolist(),
-        )
+        images = torch.rand((self.num_data_points, 1, 28, 28), generator=generator)
+        labels = torch.randint(0, 10, (self.num_data_points,), generator=generator)
+        self.mnist_train_dataset = TensorDataset(images, labels)
         self.learning_rate = 0.001
         self.batch_size = 64
         self.num_epochs = 1
