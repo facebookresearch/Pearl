@@ -115,3 +115,60 @@ class TestSARSABuffer(unittest.TestCase):
         # expect one sample returned
         batch = replay_buffer.sample(1)
         self.assertTrue(batch.terminated[0])
+
+
+class SarsaLifecycleRegressionTest(unittest.TestCase):
+    def test_episode_end_clears_pending_transition(self) -> None:
+        for terminated, truncated in [(True, False), (False, True)]:
+            with self.subTest(terminated=terminated, truncated=truncated):
+                buffer = SARSAReplayBuffer(10)
+                buffer.is_action_continuous = True
+                buffer.push(
+                    torch.tensor([0.0]),
+                    torch.tensor([0.0]),
+                    1.0,
+                    False,
+                    False,
+                    next_state=torch.tensor([1.0]),
+                )
+                buffer.push(
+                    torch.tensor([1.0]),
+                    torch.tensor([1.0]),
+                    2.0,
+                    terminated,
+                    truncated,
+                    next_state=torch.tensor([2.0]),
+                )
+                self.assertEqual(len(buffer), 2)
+                buffer.push(
+                    torch.tensor([1.0]),
+                    torch.tensor([2.0]),
+                    3.0,
+                    False,
+                    False,
+                    next_state=torch.tensor([3.0]),
+                )
+                self.assertEqual(len(buffer), 2)
+                self.assertIsNotNone(buffer.cache)
+
+    def test_clear_discards_pending_transition(self) -> None:
+        buffer = SARSAReplayBuffer(10)
+        buffer.is_action_continuous = True
+        buffer.push(
+            torch.tensor([0.0]),
+            torch.tensor([0.0]),
+            1.0,
+            False,
+            False,
+            next_state=torch.tensor([1.0]),
+        )
+        buffer.clear()
+        buffer.push(
+            torch.tensor([1.0]),
+            torch.tensor([1.0]),
+            2.0,
+            False,
+            False,
+            next_state=torch.tensor([2.0]),
+        )
+        self.assertEqual(len(buffer), 0)
