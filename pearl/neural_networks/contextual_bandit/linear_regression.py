@@ -73,7 +73,12 @@ class LinearRegression(MuSigmaCBModel):
         self.register_buffer("_sum_weight", torch.zeros(1))
         self.register_buffer(
             "_inv_A",
-            torch.zeros(feature_dim + 1, feature_dim + 1),
+            # Before learning, A consists only of the regularization term.
+            (
+                torch.eye(feature_dim + 1) / l2_reg_lambda
+                if l2_reg_lambda > 0
+                else torch.zeros(feature_dim + 1, feature_dim + 1)
+            ),
         )
         if initial_coefs is not None:
             assert initial_coefs.shape == (feature_dim + 1,), (
