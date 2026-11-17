@@ -181,4 +181,5 @@ class MaxAndSkipEnv(gym.Wrapper[np.ndarray, int, np.ndarray, int]):
         # doesn't matter
         max_frame = self._obs_buffer.max(axis=0)
 
+        # pyrefly: ignore [unbound-name]
         return max_frame, total_reward, terminated, truncated, info
