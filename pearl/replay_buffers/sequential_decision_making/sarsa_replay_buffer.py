@@ -99,3 +99,8 @@ class SARSAReplayBuffer(TensorBasedReplayBuffer):
                     truncated=self._process_single_truncated(truncated),
                 )
             )
+            self.cache = None
+
+    def clear(self) -> None:
+        super().clear()
+        self.cache = None
