@@ -106,9 +106,9 @@ class HindsightExperienceReplayBuffer(BasicReplayBuffer):
 
         self._trajectory.append(
             (
-                state,
+                assert_is_tensor_like(state).clone(),
                 action,
-                next_state,
+                next_state.clone(),
                 curr_available_actions,
                 next_available_actions,
                 terminated,
