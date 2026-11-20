@@ -37,6 +37,9 @@ class PropensityExploration(ExplorationModule):
     ) -> Action:
         if not isinstance(action_space, DiscreteActionSpace):
             raise TypeError("action space must be discrete")
+        if action_availability_mask is not None:
+            assert values is not None
+            values = values.masked_fill(action_availability_mask == 0, 0)
         action_index = torch.distributions.Categorical(values).sample()
         return action_space.actions[action_index]
 
