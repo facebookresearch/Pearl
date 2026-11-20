@@ -110,5 +110,6 @@ class BootstrapReplayBuffer(BasicReplayBuffer):
             next_unavailable_actions_mask=transition_batch.next_unavailable_actions_mask,
             terminated=transition_batch.terminated,
             truncated=transition_batch.truncated,
+            cost=transition_batch.cost,
             bootstrap_mask=bootstrap_mask_batch,
         )
