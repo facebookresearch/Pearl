@@ -152,3 +152,7 @@ class HindsightExperienceReplayBuffer(BasicReplayBuffer):
                     cost,
                 )
             self._trajectory = []
+
+    def clear(self) -> None:
+        super().clear()
+        self._trajectory.clear()
